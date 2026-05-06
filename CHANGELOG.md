@@ -2,6 +2,32 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [unreleased] — God Mode v2 + Phase 0/1 (May 5–6, 2026)
+
+### Added — Documentation & Strategy
+- **`docs/GOD_MODE_PLAN.md` v2** — full rewrite. Drops CV-padding (Helm, Terraform, webhooks, multi-tenancy, TS rewrite) and bets on three competitive moats (reachability engine, MCP server, learned suppression) plus a blue-ocean wedge (proof-of-exploit + signed provenance attestations). Old plan archived at `docs/archive/GOD_MODE_PLAN_V1.md`.
+- **`docs/GOD_MODE_PLAN.md` §9 Testing Strategy** — 6-layer testing pyramid for security tools. Coverage % is a tripwire, not a target. Ground truth must move to YAML; every thesis number must have a green test that generated it.
+- **`docs/evaluation/PHASE_0_BASELINE.md`** — reality-check report from running ACR-QA on 6 real repos (DVPWA, Pygoat, VulPy, DSVW, Flask, httpx). Captures honest current numbers + 2 real bugs surfaced.
+
+### Fixed — Phase 1 (May 6, 2026)
+- **CUSTOM-* leakage closed** — added Ruff `UP012`/`UP028`/`UP045` to `RULE_MAPPING` (`normalizer.py`) and corresponding `STYLE-027`/`STYLE-028`/`STYLE-029` to `RULE_SEVERITY` (`severity_scorer.py`). DVPWA went from 8 unmapped findings to 0.
+- **DVPWA ground truth corrected** (`scripts/run_evaluation.py`) — file paths fixed (e.g., `config.py` → `config/dev.yaml`), 3 categories now marked `out_of_scope` with explicit reasons (YAML not Python, Bandit B201 only covers Flask, CSRF requires runtime). Recall on Bandit-detectable categories: 3/3 = 100%.
+- **`pipeline.run()` JSON output is now the FILTERED finding set** — previously `findings.json` contained the un-filtered raw normalizer output (1,536 entries on Flask); now it contains the deduped/capped/sorted final output (64 entries on Flask). Major correctness fix for all downstream consumers (autofix, post_pr_comments, generate_report, export_sarif).
+- **`findings.json` per-PID writes** in `pipeline.run()` and `pipeline.run_js()` — partial mitigation for parallel-scan collisions. The deeper architectural collision (intermediate tool outputs `ruff.json`, `bandit.json`, etc. are also shared) is documented in `PHASE_0_BASELINE.md` §6.3 and deferred to a per-process workspace refactor.
+
+### Cleanup
+- Deleted `vscode-extension/` (26MB stub that called Flask `/api/analyze`; replaced by planned MCP server)
+- Deleted dead Flask static files: `FRONTEND/static/dashboard.{html,css,js}`
+- Deleted unused scripts: `scripts/benchmark_models.py`, `scripts/scale_benchmark.py`, `scripts/post_gitlab_comments.py`
+- Pinned `redis==5.2.1` (was 7.1.0 — incompatible with `celery[redis]==5.4.0` upper bound `<6.0.0`)
+
+### Documentation reorg
+- Moved `AGENTS.md` → `docs/AGENTS.md`
+- Moved `CODEBASE_INDEX.md` → `docs/CODEBASE_INDEX.md`
+- Added `.claude/` and `coverage.xml` to `.gitignore`
+
+---
+
 ## [v3.3.0] — FastAPI + Celery + Auth (May 5, 2026)
 
 ### Added — Async API (FastAPI)

@@ -78,11 +78,21 @@
 | [Railway Preview Deploys](setup/RAILWAY_DEPLOY.md) | PR preview environments via Railway (GitHub Student Pack) |
 | [Cloud Deployment](setup/Cloud-Deployment.md) | PythonAnywhere, Replit, ngrok deployment guides |
 
-## 🗺️ Roadmap
+## 🗺️ Strategy & Roadmap
 
 | Document | Description |
 |----------|-------------|
-| [ROADMAP](ROADMAP.md) | Phase 1 (Python v3.0, complete), Phase 1B (JS adapter), Phase 2 (full TS rewrite — architecture, stack, implementation order) |
+| [**God Mode Plan v2**](GOD_MODE_PLAN.md) | **Live source of truth (May 5 2026).** Three competitive moats + blue-ocean wedge. 6-week schedule to v4.0.0 + thesis defense. Includes §9 testing strategy. |
+| [Phase 0 Baseline](evaluation/PHASE_0_BASELINE.md) | Reality check on 6 real repos (May 6 2026); honest current numbers + bugs surfaced + Phase 1 fix log. |
+| [ROADMAP (legacy)](ROADMAP.md) | Pre-v2 plan. Phase 2 TS rewrite section is explicitly killed by the v2 plan; kept for historical context. |
+| [God Mode Plan v1 (archived)](archive/GOD_MODE_PLAN_V1.md) | Original plan — pre-FastAPI/Celery/Auth. Superseded by v2. |
+
+## 🤖 AI Agent Onboarding
+
+| Document | Description |
+|----------|-------------|
+| [AGENTS.md](AGENTS.md) | **Read first.** Universal AI agent instructions: pre-commit checklist, code standards, critical rules, repo layout, environment. |
+| [CODEBASE_INDEX.md](CODEBASE_INDEX.md) | Auto-generated AST map of public functions/classes. May be stale — regenerate if needed. |
 
 ## 📁 Project Root Docs
 

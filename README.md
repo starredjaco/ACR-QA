@@ -6,12 +6,13 @@
 *10 static analysis tools. One canonical schema. RAG-enhanced AI explanations. $0 recurring cost.*
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab?logo=python&logoColor=white)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/Version-3.2.5-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-3.3.0-blue)](CHANGELOG.md)
 [![Tests](https://img.shields.io/badge/Tests-1690%20passing-22c55e?logo=pytest&logoColor=white)](./TESTS/)
-[![Coverage](https://img.shields.io/badge/Coverage-86%25-22c55e?logo=codecov&logoColor=white)](./htmlcov/)
+[![Coverage](https://img.shields.io/badge/Coverage-85%25-22c55e?logo=codecov&logoColor=white)](./htmlcov/)
 [![Precision](https://img.shields.io/badge/Precision-97.1%25-22c55e)](./docs/evaluation/PER_TOOL_EVALUATION.md)
 [![OWASP](https://img.shields.io/badge/OWASP-9%2F10-8b5cf6)](./docs/evaluation/EVALUATION.md)
 [![Languages](https://img.shields.io/badge/Languages-Python%20%7C%20JS%20%7C%20Go-00ADD8)](./CORE/adapters/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-async-009688?logo=fastapi&logoColor=white)](./FRONTEND/api/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI Tests](https://github.com/ahmed-145/ACR-QA/actions/workflows/tests.yml/badge.svg)](https://github.com/ahmed-145/ACR-QA/actions/workflows/tests.yml)
 
@@ -44,9 +45,11 @@ C4Container
     Container_Boundary(sys, "ACR-QA") {
         Container(cli, "CLI / GitHub Action", "Python", "Entry point. Detects language, routes to adapter.")
         Container(core, "Analysis Engine", "Python 3.11", "10 tools → normalise → score → dedup → AI explain → quality gate")
-        Container(dash, "Web Dashboard", "Flask + Jinja2", "22 REST endpoints · findings · trends · compliance · provenance")
-        ContainerDb(pg, "PostgreSQL 15", "", "Provenance: runs · findings · LLM calls · feedback · suppression rules")
-        ContainerDb(redis, "Redis 7", "", "Rate limiting · explanation cache (7-day TTL)")
+        Container(api, "Async REST API", "FastAPI :8000", "28 /v1/ endpoints · JWT + API key auth · Swagger at /docs")
+        Container(worker, "Background Worker", "Celery + Redis", "Async scan execution — POST /v1/scans returns 202 + job_id")
+        Container(dash, "Web Dashboard", "Flask + Jinja2 :5000", "Legacy UI · being migrated onto FastAPI StaticFiles")
+        ContainerDb(pg, "PostgreSQL 15", "", "Provenance: runs · findings · LLM calls · feedback · users · api_keys")
+        ContainerDb(redis, "Redis 5.2", "", "Rate limiting · explanation cache · Celery broker + result backend")
     }
 
     Container_Ext(groq, "Groq API", "LLM", "Llama 3.3-70b explanations · Llama 3.1-8b feasibility · free tier")
