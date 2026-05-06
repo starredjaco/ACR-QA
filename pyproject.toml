@@ -67,6 +67,13 @@ addopts = [
     "--cov-report=html",
     "--cov-report=term-missing",
     "--cov-fail-under=40",
-
-    "-v"
+    # Skip @pytest.mark.slow by default (evaluation harness runs the full
+    # pipeline on real repos — minutes, not seconds). Run them explicitly
+    # via `pytest -m slow` (nightly CI) or `-m "slow or not slow"` (everything).
+    "-m", "not slow",
+    "-v",
+]
+markers = [
+    "slow: end-to-end evaluation tests that invoke the full pipeline against real repos (run nightly, skipped on PR by default)",
+    "integration: tests that require live external services (Postgres, Redis, Celery worker)",
 ]

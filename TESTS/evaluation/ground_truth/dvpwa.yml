@@ -1,0 +1,60 @@
+# DVPWA — Damn Vulnerable Python Web App (aiohttp)
+# https://github.com/anxolerd/dvpwa
+# Paths verified against actual repo on 2026-05-06 (Phase 0).
+
+repo: dvpwa
+url: https://github.com/anxolerd/dvpwa
+language: python
+local_path: test_targets/eval-repos/dvpwa
+
+expected_findings:
+  - id: dvpwa-sqli-student
+    cwe: CWE-89
+    canonical_id: SECURITY-027
+    file: sqli/dao/student.py
+    severity: high
+    description: Raw SQL string formatting allows SQL injection
+
+  - id: dvpwa-weak-hash-md5
+    cwe: CWE-328
+    canonical_id: SECURITY-009
+    file: sqli/dao/user.py
+    severity: medium
+    description: MD5 used for password hashing
+
+  - id: dvpwa-xss-jinja2
+    cwe: CWE-79
+    canonical_id: SECURITY-045
+    file: sqli/app.py
+    severity: high
+    description: autoescape=False on Jinja2 setup
+
+  # ── Out-of-scope categories (documented gaps, not regressions) ──
+  - id: dvpwa-hardcoded-credentials-yaml
+    cwe: CWE-259
+    file: config/dev.yaml
+    severity: high
+    description: Hardcoded credentials in YAML config
+    out_of_scope: yaml_not_python_source
+    rationale: Bandit and Semgrep-OSS do not scan YAML files for secrets.
+
+  - id: dvpwa-debug-mode-aiohttp
+    cwe: CWE-215
+    file: sqli/app.py
+    severity: medium
+    description: aiohttp Application(debug=True)
+    out_of_scope: bandit_b201_only_covers_flask_not_aiohttp
+    rationale: Bandit B201 has a Flask-specific check; aiohttp's debug flag is not pattern-matched.
+
+  - id: dvpwa-no-csrf-protection
+    cwe: CWE-352
+    file: sqli/middlewares.py
+    severity: medium
+    description: CSRF middleware is commented out
+    out_of_scope: architectural_static_analysis_limit
+    rationale: Static analysis cannot detect *missing* runtime middleware.
+
+# ── Targets ──
+# Recall is computed only over findings NOT marked out_of_scope.
+recall_target: 1.0   # 3/3 detectable categories
+precision_target: 0.80
