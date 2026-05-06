@@ -2,7 +2,23 @@
 
 All notable changes to ACR-QA are documented here.
 
-## [unreleased] — God Mode v2 + Phase 0/1 (May 5–6, 2026)
+## [unreleased] — God Mode v2 + Phase 0/1/2 (May 5–6, 2026)
+
+### Added — Phase 2 Test Infrastructure (May 6, 2026)
+- **`TESTS/evaluation/ground_truth/{dvpwa,pygoat,dsvw,vulpy}.yml`** — ground truth moves from Python dicts in `scripts/run_evaluation.py` to versioned YAML. Each YAML declares `expected_findings` (with optional `out_of_scope` reason + rationale), `recall_target`, `precision_target`. Anyone can audit the thesis claims by reading these files.
+- **`TESTS/evaluation/test_recall.py`** — Layer 5 evaluation harness. Runs ACR-QA via subprocess against each ground-truth YAML, computes recall on detectable categories, asserts ≥ target. Findings marked `out_of_scope` are excluded (documented gaps, not regressions). Includes a fast smoke variant on DSVW.
+- **`TESTS/test_no_custom_rules.py`** — regression guard for the `CUSTOM-*` rule leak. Runs DSVW scan and asserts zero `CUSTOM-*` findings; CI fails if anyone adds a tool rule without mapping it. Phase 0 found 35 of these silently leaking.
+- **`TESTS/test_celery_tasks.py`** — 9 tests against `CORE/tasks.py` (was 0% covered): registration, JSON-only serialization config, task-tracking config, success path (single-value + tuple return shapes), `None`/rate-limited path, exception re-raise, kwargs forwarding. Uses `.apply()` + in-memory result backend so tests run without Redis.
+- **`pyproject.toml` markers** — registered `slow` (evaluation tests; skipped by default, run nightly via `-m slow`) and `integration` (live-services tests). Default `addopts` now `-m "not slow"` so the PR-fast suite stays under a minute.
+- **Auto-cleanup fixture** in `test_recall.py` and `test_no_custom_rules.py` removes stale `DATA/outputs/<tool>.json` files before each scan to prevent the parallel-workspace race documented in PHASE_0_BASELINE.md §6.3.
+
+### Phase 2 Surfaced
+- **VulPy CWE-384 (weak session)** — pattern not implementable by Bandit / Semgrep-OSS (architectural, requires understanding session storage intent). Marked `out_of_scope: architectural_static_analysis_limit` in `vulpy.yml`. Same treatment as DVPWA's CSRF + YAML credentials.
+
+### Test counts after Phase 2
+- Default (PR-fast): **1,699 passed**, 13 skipped (was 1,690 — +9 Celery)
+- Slow (nightly): 6 (4 recall battery + 1 smoke + 1 CUSTOM-* guard) — all pass
+- Coverage: **85.65%** (was 84.85% — Celery moved from 0%)
 
 ### Added — Documentation & Strategy
 - **`docs/GOD_MODE_PLAN.md` v2** — full rewrite. Drops CV-padding (Helm, Terraform, webhooks, multi-tenancy, TS rewrite) and bets on three competitive moats (reachability engine, MCP server, learned suppression) plus a blue-ocean wedge (proof-of-exploit + signed provenance attestations). Old plan archived at `docs/archive/GOD_MODE_PLAN_V1.md`.

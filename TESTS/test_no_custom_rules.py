@@ -26,6 +26,29 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+# Tool intermediate outputs in DATA/outputs/ are shared across scans
+# (PHASE_0_BASELINE.md §6.3). Clean between tests to prevent stale-output races.
+_TOOL_OUTPUT_FILES = (
+    "ruff.json",
+    "bandit.json",
+    "semgrep.json",
+    "vulture.json",
+    "radon.json",
+    "jscpd.json",
+    "eslint.json",
+    "semgrep_js.json",
+    "npm_audit.json",
+)
+
+
+@pytest.fixture(autouse=True)
+def _clean_tool_outputs():
+    """Remove stale tool outputs before each test."""
+    for name in _TOOL_OUTPUT_FILES:
+        (REPO_ROOT / "DATA" / "outputs" / name).unlink(missing_ok=True)
+    yield
+
+
 # DSVW is the smallest vulnerable Python repo (~30s scan, single file)
 # and exercises Ruff + Bandit + Semgrep + Vulture + Radon — i.e. enough
 # of the pipeline to surface unmapped rules without the latency tax of

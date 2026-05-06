@@ -30,9 +30,19 @@ Run these three commands in order. All must pass before committing:
 .venv/bin/mypy CORE/ --ignore-missing-imports --no-error-summary | grep "error:"
 # Expected: 0 lines of output (0 errors)
 
-# 3. Tests
+# 3. Tests (default — fast PR suite, slow markers excluded)
 .venv/bin/pytest TESTS/ -q --tb=short
-# Expected: 1690 passed, 13 skipped, 0 failed; coverage ≥ 84% (tripwire: drop > 2pp fails CI)
+# Expected: 1699 passed, 13 skipped, 6 deselected, 0 failed
+# Coverage ≥ 85% (tripwire: drop > 2pp fails CI)
+
+# 3b. Slow suite (only run before pushing thesis-relevant changes; otherwise nightly CI handles it)
+.venv/bin/pytest TESTS/ -m slow -q --no-cov
+# Expected: 6 passed, 1712 deselected
+# Runs the recall battery against DVPWA/Pygoat/DSVW/VulPy + the no-CUSTOM-* guard.
+# Skips cleanly if test_targets/ is missing (gitignored).
+
+# 3c. Everything (rare — confidence check before a release)
+.venv/bin/pytest TESTS/ -m "slow or not slow" -q --no-cov
 ```
 
 > These are also enforced by `.pre-commit-config.yaml` — the commit will be **blocked** if any fail.
@@ -63,7 +73,10 @@ FRONTEND/app.py       ← Legacy Flask dashboard (port 5000) — being migrated 
 FRONTEND/api/         ← FastAPI app (port 8000): main.py, models.py, deps.py + routers/{auth,runs,scans}.py
 FRONTEND/auth/        ← jwt_utils.py, api_key_utils.py
 alembic/              ← DB migrations (baseline + users/api_keys)
-TESTS/                ← pytest (1,690 tests, 13 skipped, ~85% coverage)
+TESTS/                ← pytest (1,699 default + 6 slow; ~85% coverage)
+TESTS/evaluation/     ← Layer 5 — ground-truth YAMLs + recall harness (slow-marked, nightly CI)
+TESTS/test_no_custom_rules.py ← Regression guard: zero CUSTOM-* findings on DSVW (slow)
+TESTS/test_celery_tasks.py    ← CORE/tasks.py coverage (eager mode, no Redis required)
 scripts/              ← CLI utilities (run_evaluation, test_gap_analyzer, feedback_tuner, validate_config, seed_admin, etc.)
 TOOLS/semgrep/        ← Custom Semgrep rules (python-rules.yml + js-rules.yml)
 config/rules.yml      ← Knowledge base: every canonical rule → description + remediation
@@ -77,7 +90,7 @@ config/rules.yml      ← Knowledge base: every canonical rule → description +
 2. **Changing RULE_SEVERITY?** → also update test assertions in `test_deep_coverage.py::TestSeverityScorer`
 3. **Finding field names:** use `file` and `line` — NOT `file_path` / `line_number`
 4. **Run scans sequentially.** Parallel ACR-QA scans on the same workspace currently collide via shared `DATA/outputs/<tool>.json` intermediate files. Per-process workspaces are a planned Phase 2 fix.
-5. **Coverage % is a tripwire, not a target.** Don't pump coverage by writing trivial unit tests — Layer 5 evaluation benchmarks (real repos, ground truth) is what proves the tool works. See `GOD_MODE_PLAN.md` §9.
+5. **Coverage % is a tripwire, not a target.** Don't pump coverage by writing trivial unit tests — Layer 5 evaluation benchmarks (real repos, ground truth) is what proves the tool works. Ground truth lives in YAML at `TESTS/evaluation/ground_truth/`; documented gaps use `out_of_scope: <reason>` rather than fudging recall numbers. See `GOD_MODE_PLAN.md` §9.
 6. **Every session must end with a commit + push** (Ahmed's preference)
 7. **Update docs alongside code** — see Doc Map in `AGENT_NOTES.md`
 8. **Version must stay in sync:** `CORE/__init__.py` and `CORE/main.py` — always same version string
