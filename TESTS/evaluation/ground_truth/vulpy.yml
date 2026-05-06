@@ -1,0 +1,36 @@
+# VulPy — Vulnerable Python Flask app (vulnerabilities live under bad/)
+# https://github.com/fportantier/vulpy
+
+repo: vulpy
+url: https://github.com/fportantier/vulpy
+language: python
+local_path: test_targets/eval-repos/vulpy
+
+expected_findings:
+  - id: vulpy-sqli
+    cwe: CWE-89
+    canonical_id: SECURITY-027
+    file: bad/libuser.py
+    severity: high
+    description: SQL string formatting in login(), create(), password_change()
+
+  - id: vulpy-weak-session
+    cwe: CWE-384
+    file: bad/libsession.py
+    severity: high
+    description: Session stored as unauthenticated base64 JSON (no signature)
+    out_of_scope: architectural_static_analysis_limit
+    rationale: |
+      Detecting "session payload is base64 JSON without HMAC" requires understanding
+      the *intent* of session storage. Bandit and Semgrep-OSS have no pattern for
+      this; it'd require a custom semantic rule. Documented gap, not a regression.
+
+  - id: vulpy-hardcoded-secret
+    cwe: CWE-259
+    canonical_id: SECURITY-005
+    file: bad/vulpy.py
+    severity: high
+    description: Hardcoded secret key in Flask app config
+
+recall_target: 1.0
+precision_target: 0.95

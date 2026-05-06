@@ -1,0 +1,46 @@
+# Pygoat — Deliberately vulnerable Django app
+# https://github.com/adeyosemanputra/pygoat
+
+repo: pygoat
+url: https://github.com/adeyosemanputra/pygoat
+language: python
+local_path: test_targets/eval-repos/pygoat
+
+expected_findings:
+  - id: pygoat-sqli-1
+    cwe: CWE-89
+    canonical_id: SECURITY-027
+    file: introduction/views.py
+    severity: high
+    description: Raw SQL string concatenation in sql_lab() and injection_sql_lab()
+
+  - id: pygoat-pickle-deserialization
+    cwe: CWE-502
+    canonical_id: SECURITY-008
+    file: introduction/views.py
+    severity: high
+    description: pickle.loads() on user-controlled token
+
+  - id: pygoat-cmd-injection
+    cwe: CWE-78
+    canonical_id: SECURITY-021
+    file: introduction/views.py
+    severity: high
+    description: subprocess.Popen with user-controlled shell command
+
+  - id: pygoat-eval
+    cwe: CWE-95
+    canonical_id: SECURITY-001
+    file: introduction/views.py
+    severity: high
+    description: eval() on user-controlled input
+
+  - id: pygoat-yaml-load-unsafe
+    cwe: CWE-20
+    canonical_id: SECURITY-018
+    file: introduction/views.py
+    severity: medium
+    description: yaml.load() with yaml.Loader (arbitrary code execution)
+
+recall_target: 1.0
+precision_target: 0.95

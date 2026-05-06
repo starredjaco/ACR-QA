@@ -1,0 +1,46 @@
+# DSVW — Damn Small Vulnerable Web (single-file Python web app)
+# https://github.com/stamparm/DSVW
+
+repo: dsvw
+url: https://github.com/stamparm/DSVW
+language: python
+local_path: test_targets/eval-repos/dsvw
+
+expected_findings:
+  - id: dsvw-sqli
+    cwe: CWE-89
+    canonical_id: SECURITY-027
+    file: dsvw.py
+    severity: high
+    description: Raw SQL string concatenation on user-controlled input
+
+  - id: dsvw-pickle-deserialization
+    cwe: CWE-502
+    canonical_id: SECURITY-008
+    file: dsvw.py
+    severity: high
+    description: pickle.loads() on user-controlled object parameter
+
+  - id: dsvw-cmd-injection
+    cwe: CWE-78
+    canonical_id: SECURITY-021
+    file: dsvw.py
+    severity: high
+    description: subprocess.run with shell=True on user-controlled domain
+
+  - id: dsvw-ssrf
+    cwe: CWE-918
+    canonical_id: SECURITY-046
+    file: dsvw.py
+    severity: high
+    description: urllib.request.urlopen on user-controlled path/include param
+
+  - id: dsvw-xxe
+    cwe: CWE-611
+    canonical_id: SECURITY-044
+    file: dsvw.py
+    severity: high
+    description: lxml etree parse with resolve_entities=True on user XML
+
+recall_target: 1.0
+precision_target: 0.95
