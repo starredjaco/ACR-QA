@@ -340,6 +340,23 @@ class AnalysisPipeline:
 
         self._gate_passed = not gate.should_block(gate_result)
         self._gate_comment = gate.format_gate_comment(gate_result)
+
+        # Persist FINAL filtered/deduped/capped findings.
+        # Per-PID filename mitigates `findings.json` collisions when scans run
+        # concurrently, but does NOT fix the deeper issue: intermediate tool
+        # outputs (ruff.json, bandit.json, semgrep.json, etc.) in DATA/outputs/
+        # are also shared across processes. Run scans sequentially for correct
+        # results until per-process workspaces are implemented.
+        import json as _json
+        import os as _os
+
+        output_path = Path("DATA/outputs")
+        output_path.mkdir(parents=True, exist_ok=True)
+        with open(output_path / "findings.json", "w") as _fp:
+            _json.dump(findings, _fp, indent=2, default=str)
+        with open(output_path / f"findings_pid{_os.getpid()}.json", "w") as _fp:
+            _json.dump(findings, _fp, indent=2, default=str)
+
         return run_id
 
     def _print_rich_output(self, findings, gate_result, run_id, num_explained):
@@ -826,12 +843,18 @@ class AnalysisPipeline:
         for err in results.get("errors", []):
             logger.info(f"  ⚠️  {err}")
 
-        # Write findings.json so --json flag can read it
+        # Write findings.json so --json flag can read it.
+        # Per-PID filename prevents collisions when multiple scans run concurrently
+        # (run_id may be None if DB is unavailable; PID is always defined).
+        # Legacy `findings.json` kept for backward-compat with helper scripts.
         import json as _json
+        import os as _os
 
         output_path = Path("DATA/outputs")
         output_path.mkdir(parents=True, exist_ok=True)
         with open(output_path / "findings.json", "w") as _fp:
+            _json.dump(findings, _fp, indent=2, default=str)
+        with open(output_path / f"findings_pid{_os.getpid()}.json", "w") as _fp:
             _json.dump(findings, _fp, indent=2, default=str)
 
         return run_id
@@ -1060,12 +1083,15 @@ def main():
             f.setdefault("line_number", f.get("line", 0))
         logger.info(f"      ✓ {len(findings)} findings from Go tools")
 
-        # Save to findings.json
+        # Save to findings.json (legacy) + per-PID file (concurrency-safe).
         output_path = Path("DATA/outputs")
         output_path.mkdir(parents=True, exist_ok=True)
-        with open(output_path / "findings.json", "w") as _fp:
-            import json as _json
+        import json as _json
+        import os as _os
 
+        with open(output_path / "findings.json", "w") as _fp:
+            _json.dump(findings, _fp, indent=2, default=str)
+        with open(output_path / f"findings_pid{_os.getpid()}.json", "w") as _fp:
             _json.dump(findings, _fp, indent=2, default=str)
 
         if args.json_output:
@@ -1108,7 +1134,11 @@ def main():
             rich_output=args.rich,
         )
         if args.json_output and run_id:
-            findings_path = Path("DATA/outputs/findings.json")
+            # Per-PID path avoids collisions when scans run concurrently
+            import os as _os
+
+            per_run_path = Path(f"DATA/outputs/findings_pid{_os.getpid()}.json")
+            findings_path = per_run_path if per_run_path.exists() else Path("DATA/outputs/findings.json")
             if findings_path.exists():
                 with open(findings_path) as fp:
                     import sys as _sys
@@ -1137,7 +1167,11 @@ def main():
 
     # --json: dump findings as JSON to stdout (pipe-friendly, for JS consumers)
     if args.json_output:
-        findings_path = Path("DATA/outputs/findings.json")
+        # Per-PID path avoids collisions when scans run concurrently
+        import os as _os
+
+        per_run_path = Path(f"DATA/outputs/findings_pid{_os.getpid()}.json")
+        findings_path = per_run_path if per_run_path.exists() else Path("DATA/outputs/findings.json")
         if findings_path.exists():
             with open(findings_path) as fp:
                 import sys as _sys

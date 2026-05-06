@@ -199,6 +199,10 @@ RULE_MAPPING = {
     "F601": "BEST-PRACTICE-008",  # Membership test should use `not in` not `not x in`
     "UP008": "STYLE-019",  # Use super() without arguments (PEP 3135)
     "UP015": "STYLE-020",  # Prefer pathlib alternatives to `os.path` operations
+    # ── Ruff: pyupgrade rules (Phase 0 baseline gap — May 6, 2026) ──
+    "UP012": "STYLE-027",  # Unnecessary call to encode as utf-8
+    "UP028": "STYLE-028",  # Replace `yield` over for loop with `yield from`
+    "UP045": "STYLE-029",  # Use `X | None` instead of `Optional[X]` (PEP 604)
 }
 
 # Category Mapping

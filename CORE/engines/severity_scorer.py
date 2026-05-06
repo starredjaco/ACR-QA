@@ -159,6 +159,9 @@ class SeverityScorer:
         "STYLE-024": "low",  # S1039: unnecessary use of fmt.Sprintf (Go)
         "STYLE-025": "low",  # ST1005: incorrectly formatted error string (Go)
         "STYLE-026": "low",  # ST1006: poorly chosen receiver name (Go)
+        "STYLE-027": "low",  # UP012: unnecessary encode utf-8
+        "STYLE-028": "low",  # UP028: yield-from instead of yield in loop
+        "STYLE-029": "low",  # UP045: PEP 604 `X | None` instead of Optional[X]
         "CUSTOM-global-variable": "low",  # Semgrep: global variable usage
         # ── Round 3 deep scan additions ──
         "SECURITY-036": "medium",  # TLS certificate verification disabled
