@@ -6,7 +6,7 @@
 *10 static analysis tools. One canonical schema. RAG-enhanced AI explanations. $0 recurring cost.*
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab?logo=python&logoColor=white)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/Version-3.3.0-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-3.3.0-blue)](docs/CHANGELOG.md)
 [![Tests](https://img.shields.io/badge/Tests-1690%20passing-22c55e?logo=pytest&logoColor=white)](./TESTS/)
 [![Coverage](https://img.shields.io/badge/Coverage-85%25-22c55e?logo=codecov&logoColor=white)](./htmlcov/)
 [![Precision](https://img.shields.io/badge/Precision-97.1%25-22c55e)](./docs/evaluation/PER_TOOL_EVALUATION.md)
@@ -392,7 +392,7 @@ Key design decisions are documented in [`docs/adr/`](docs/adr/):
 | [Per-Tool Evaluation](docs/evaluation/PER_TOOL_EVALUATION.md) | Per-engine accuracy across benchmark repos |
 | [User Study Protocol](docs/evaluation/USER_STUDY_PROTOCOL.md) | 20-minute structured study protocol |
 | [Cloud Deployment](docs/setup/Cloud-Deployment.md) | AWS / GCP / Railway deployment guide |
-| [Changelog](CHANGELOG.md) | Full version history |
+| [Changelog](docs/CHANGELOG.md) | Full version history |
 | [Contributing](CONTRIBUTING.md) | Development setup and contribution guide |
 
 ---

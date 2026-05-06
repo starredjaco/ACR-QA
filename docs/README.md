@@ -99,7 +99,7 @@
 | Document | Description |
 |----------|-------------|
 | [README](../README.md) | Project overview, features, quick start |
-| [CHANGELOG](../CHANGELOG.md) | Version history and release notes |
+| [CHANGELOG](CHANGELOG.md) | Version history and release notes |
 | [CONTRIBUTING](../CONTRIBUTING.md) | Development setup and contribution guidelines |
 | [SECURITY](../SECURITY.md) | Security policy and vulnerability reporting |
 | [PERFORMANCE_BASELINE](PERFORMANCE_BASELINE.md) | Pipeline timing benchmarks |
