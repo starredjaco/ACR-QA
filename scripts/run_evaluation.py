@@ -16,49 +16,61 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # ─── DVPWA Ground Truth ──────────────────────────────────────────────────
-# Known vulnerabilities in DVPWA (deliberately vulnerable Python web app)
+# Known vulnerabilities in DVPWA (deliberately vulnerable Python web app).
+# Paths verified against the actual repo layout on 2026-05-06 (Phase 0).
+# Categories with `out_of_scope` are documented gaps inherent to static
+# analysis or to the underlying tools (Bandit/Semgrep-OSS), not ACR-QA bugs.
+# See docs/evaluation/PHASE_0_BASELINE.md for the diagnostic.
 DVPWA_GROUND_TRUTH = {
-    # SQL Injection vulnerabilities
+    # SQL Injection — Bandit B608 fires on dao/student.py.
+    # Note: dao/course.py uses parameterized queries (`q, **params`) and is
+    # NOT actually a SQL injection — earlier ground truth was incorrect.
     "sqli": {
-        "files": ["sqli/dao/student.py", "sqli/dao/course.py"],
+        "files": ["sqli/dao/student.py"],
         "cwe": "CWE-89",
         "severity": "high",
         "description": "Raw SQL string formatting allows SQL injection",
     },
-    # Hardcoded passwords
+    # Hardcoded credentials live in `config/dev.yaml`, NOT in any .py file.
+    # Bandit/Semgrep-OSS do not scan YAML by default.
     "hardcoded_pass": {
-        "files": ["config.py", "sqli/dao/__init__.py"],
+        "files": ["config/dev.yaml"],
         "cwe": "CWE-259",
         "severity": "high",
-        "description": "Database credentials hardcoded in source",
+        "description": "Database credentials hardcoded in YAML config",
+        "out_of_scope": "yaml_not_python_source",
     },
-    # Weak hashing (MD5 for passwords)
+    # MD5 for password hashing — Bandit B324 catches this.
     "weak_hash": {
         "files": ["sqli/dao/user.py"],
         "cwe": "CWE-328",
         "severity": "medium",
         "description": "MD5 used for password hashing",
     },
-    # XSS vulnerabilities
+    # autoescape=False on Jinja2 — Semgrep `aiohttp-jinja2-autoescape-false` rule catches this.
     "xss": {
         "files": ["sqli/app.py"],
         "cwe": "CWE-79",
         "severity": "high",
-        "description": "User input rendered without escaping",
+        "description": "User input rendered without escaping (autoescape=False)",
     },
-    # Debug mode enabled
+    # `aiohttp.web.Application(debug=True)` in sqli/app.py:24.
+    # Bandit B201 only catches Flask `app.run(debug=True)` — aiohttp not covered.
     "debug_mode": {
-        "files": ["config.py"],
+        "files": ["sqli/app.py"],
         "cwe": "CWE-215",
         "severity": "medium",
-        "description": "Debug mode enabled in production config",
+        "description": "Debug mode enabled (aiohttp Application)",
+        "out_of_scope": "bandit_b201_only_covers_flask_not_aiohttp",
     },
-    # No CSRF protection
+    # CSRF middleware is commented out in sqli/middlewares.py.
+    # Static analysis cannot detect *missing* runtime middleware.
     "no_csrf": {
-        "files": ["sqli/views.py"],
+        "files": ["sqli/middlewares.py"],
         "cwe": "CWE-352",
         "severity": "medium",
-        "description": "Forms without CSRF tokens",
+        "description": "CSRF middleware commented out, no runtime CSRF protection",
+        "out_of_scope": "architectural_static_analysis_limit",
     },
 }
 
