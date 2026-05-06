@@ -89,7 +89,7 @@ config/rules.yml      ← Knowledge base: every canonical rule → description +
 | Doc | Update When |
 |-----|------------|
 | `docs/TESTING_AND_CALIBRATION.md` | Any bug found or fixed |
-| `CHANGELOG.md` | Every version change |
+| `docs/CHANGELOG.md` | Every version change |
 | `README.md` | Badge numbers (tests, version) |
 | `docs/evaluation/EVALUATION.md` | Metrics, precision, coverage |
 | `docs/README.md` | Any new doc created |

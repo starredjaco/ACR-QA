@@ -101,6 +101,6 @@ watch -n5 'curl -s http://localhost:9090/api/v1/query \
 
 ## Post-Incident
 
-1. Document the incident in `CHANGELOG.md` under the next version section
+1. Document the incident in `docs/CHANGELOG.md` under the next version section
 2. Add a test case that would have caught the issue (`TESTS/`)
 3. Update `DATABASE/database.py` if a new "existence check before UPDATE" pattern is needed
