@@ -559,14 +559,16 @@ The thesis chapter on evaluation cites these numbers in a single sentence each, 
 3. **Debug mode detection** — Bandit B201 is the rule. Is it in our `RULE_MAPPING`? *Action:* check Week 1.
 4. **Exploit sandboxing safety** — running LLM-generated payloads in a container is non-trivial. *Action:* require `--network=none`, `--memory=128m`, `--cpus=0.5`, 30s timeout. Test the container itself never escapes.
 
-### 9.10 Week 1 Must-Fix Checklist (Before Any New Feature)
+### 9.10 Week 1 Must-Fix Checklist (Phase 2 done — May 6 2026)
 
-- [ ] Move ground truth YAML files into `TESTS/evaluation/ground_truth/`
-- [ ] Investigate why DVPWA hardcoded password (B105/B106) and debug mode (B201) aren't being caught
-- [ ] Mark CSRF as `out_of_scope: static_analysis_limit`
-- [ ] Add `test_no_custom_rules.py`
-- [ ] Re-run Flask + httpx + requests benchmarks post-cleanup; capture honest current FP numbers
-- [ ] Write 5-10 integration tests against `CORE/tasks.py` (Celery worker lifecycle)
+- [x] Move ground truth YAML files into `TESTS/evaluation/ground_truth/` *(Phase 2a)*
+- [x] Investigate why DVPWA hardcoded password (B105/B106) and debug mode (B201) aren't being caught — root cause: credentials in YAML config not Python source; B201 is Flask-only and DVPWA uses aiohttp; both now marked `out_of_scope` with rationale *(Phase 1)*
+- [x] Mark CSRF as `out_of_scope: architectural_static_analysis_limit` *(Phase 1)*
+- [x] Add `test_no_custom_rules.py` *(Phase 2b)*
+- [x] Re-run Flask + httpx + DVPWA + Pygoat benchmarks; honest current numbers in `evaluation/PHASE_0_BASELINE.md` *(Phase 0)*
+- [x] Write integration tests against `CORE/tasks.py` *(Phase 2c — 9 tests, eager mode)*
+
+**Phase 2 surfaced:** VulPy CWE-384 (weak session) is not pattern-matchable by Bandit / Semgrep-OSS — marked `out_of_scope` with rationale, same treatment as DVPWA's CSRF + YAML credentials. Recall harness now passes 100% on declared detectable categories across all 4 vulnerable repos.
 
 ---
 

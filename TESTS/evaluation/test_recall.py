@@ -30,6 +30,30 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 GROUND_TRUTH_DIR = Path(__file__).parent / "ground_truth"
 
+# Tool intermediate outputs in DATA/outputs/ are shared across scans
+# (PHASE_0_BASELINE.md §6.3 — proper fix is per-process workspaces, deferred).
+# Cleaning between tests avoids stale data from a previous repo's scan
+# bleeding into the next one's normalize_all() pass.
+_TOOL_OUTPUT_FILES = (
+    "ruff.json",
+    "bandit.json",
+    "semgrep.json",
+    "vulture.json",
+    "radon.json",
+    "jscpd.json",
+    "eslint.json",
+    "semgrep_js.json",
+    "npm_audit.json",
+)
+
+
+@pytest.fixture(autouse=True)
+def _clean_tool_outputs():
+    """Remove stale tool intermediate outputs before each scan-running test."""
+    for name in _TOOL_OUTPUT_FILES:
+        (REPO_ROOT / "DATA" / "outputs" / name).unlink(missing_ok=True)
+    yield
+
 
 def _load_ground_truth(yml_path: Path) -> dict:
     """Load and minimally validate a ground-truth YAML."""
