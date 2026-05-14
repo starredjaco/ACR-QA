@@ -11,7 +11,7 @@
 > The "Phase 2 — Full TypeScript/JS Engine Rewrite" section below is **explicitly killed** in the v2 god mode plan. Reasons documented in `GOD_MODE_PLAN.md` §5 ("Don't-do list"): the Python core works, the rewrite is procrastination dressed as ambition, and the same career signals can be earned by shipping the MCP server (PyPI distribution, IDE/agent integration) without a 6-week port.
 >
 > **The current plan (v3.3.0 → v4.0.0):**
-> - Reachability engine (Week 2)
+> - ✅ Reachability engine (Week 2) — **DONE, v3.3.2**
 > - MCP server + learned suppression (Week 3)
 > - Proof-of-Exploit engine (Week 4)
 > - Provenance attestations + Railway deploy + user study (Week 5)
@@ -357,4 +357,4 @@ docs/
 
 ---
 
-*Last updated: May 5, 2026 — ACR-QA v3.2.5*
+*Last updated: May 14, 2026 — ACR-QA v3.3.2*

@@ -1,4 +1,4 @@
-# ACR-QA v3.2.5 Architecture
+# ACR-QA v3.3.2 Architecture
 
 ## System Overview
 
@@ -28,15 +28,16 @@ Source Code
 [3b] Config Filtering         ← .acrqa.yml: disabled rules, ignored paths, min severity
 [3c] Triage Memory            ← Suppress known FPs from learned patterns (Feature 6)
 [3d] Deduplication            ← 2-pass: exact (file+line+rule) + cross-tool category
-[3e] Per-Rule Cap             ← max 5 findings/rule (noise control)
-[3f] Priority Sort            ← security/high first for within-limit AI coverage
+[3e] Call Graph Reachability  ← AST call graph; -20 confidence for dead-code findings (Feature 9a)
+[3f] Per-Rule Cap             ← max 5 findings/rule (noise control)
+[3g] Priority Sort            ← security/high first for within-limit AI coverage
     │
     ▼
 [4]  AI Explanation           ← Groq LLM + RAG from config/rules.yml
      ├── Fix Validation       ← AI code fix extracted + linter-verified (Feature 1)
-     ├── Path Feasibility     ← Reachability check on HIGH findings (Feature 7)
+     ├── Path Feasibility     ← LLM-based path reachability check for HIGH (Feature 7)
      ├── Dep Reachability     ← npm package import analysis (Feature 8)
-     └── Cross-Language Corr  ← Multi-layer vulnerability chains (Feature 9)
+     └── Cross-Language Corr  ← Multi-layer vulnerability chains (Feature 10)
     │
     ▼
 [5]  Quality Gate             ← Configurable thresholds → exit 1 if failed
@@ -182,7 +183,31 @@ Tool priority: `Bandit/Semgrep/Secrets (3) > Vulture/Radon (2) > Ruff/jscpd (1)`
 
 ---
 
-### Stage 3d — Per-Rule Cap
+### Stage 3e — Call Graph Reachability (Feature 9a)
+
+**Component:** `CORE/engines/reachability.py` → `CallGraphReachability.enrich_findings()`
+
+Pure-AST static call graph analysis for Python files. Runs after deduplication, before the per-rule cap.
+
+**Entry-point detection:**
+- Flask/FastAPI routes — `@app.route`, `@router.get`, `@app.post`, etc.
+- Celery tasks — `@app.task`, `@celery_app.task`, `@shared_task`
+- `__main__` blocks — functions called directly under `if __name__ == "__main__":`
+
+**Algorithm:** BFS from detected entry points through the call graph built from AST `Call` nodes. Any function not reachable from any entry point is classified as dead code.
+
+**Effect on findings:**
+- `reachability_status: REACHABLE` — no change to confidence score
+- `reachability_status: UNREACHABLE` — confidence_score −20 (capped at 0)
+- `reachability_status: UNKNOWN` — library files with no entry points, non-Python files, parse errors
+
+**Benchmark results (validated 0% FP rate):** No reachable finding was misclassified as UNREACHABLE across all three fixture repos (Flask, standalone, Celery).
+
+**DB persistence:** `reachability_status` + `reachability_penalty` columns on `findings` table (Alembic migration `0003`).
+
+---
+
+### Stage 3f — Per-Rule Cap
 
 **Component:** `CORE/main.py` → `_cap_per_rule()`
 
@@ -190,7 +215,7 @@ Caps findings at **max 5 per canonical rule ID**. Prevents a single noisy rule (
 
 ---
 
-### Stage 3e — Priority Sort
+### Stage 3g — Priority Sort
 
 **Component:** `CORE/main.py` → `_sort_by_priority()`
 

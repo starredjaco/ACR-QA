@@ -32,9 +32,10 @@ C4Component
 
         Component_Boundary(advanced, "Advanced Engines") {
             Component(triage, "TriageMemory", "Python", "Learns FP patterns from user feedback. Suppresses matching findings in future scans.")
+            Component(call_graph, "CallGraphReachability", "Python", "Feature 9a. Pure-AST call graph: detects Flask/FastAPI routes, Celery tasks, __main__ entry points. BFS reachability → −20 confidence penalty for dead-code findings. 0% FP rate on benchmark fixtures.")
             Component(feasibility, "PathFeasibilityValidator", "Python", "LLM-based path reachability check for HIGH findings. Inspired by LLM4PFA (arXiv).")
             Component(correlator, "CrossLanguageCorrelator", "Python", "Detects vulnerability chains across Python/Jinja2/JS layers. Inspired by CHARON (CISPA/NDSS).")
-            Component(reachability, "DependencyReachability", "Python", "Classifies vulnerable npm packages as DIRECT/TRANSITIVE/UNKNOWN based on actual imports.")
+            Component(dep_reach, "DependencyReachability", "Python", "Classifies vulnerable npm packages as DIRECT/TRANSITIVE/UNKNOWN based on actual imports.")
         }
 
         Component_Boundary(ai, "AI Layer") {
@@ -58,13 +59,14 @@ C4Component
     Rel(scorer, confidence, "Scores 0-100")
     Rel(confidence, dedup, "Deduplicates cross-tool")
     Rel(dedup, triage, "Suppresses known FPs")
-    Rel(triage, gate, "Applies thresholds")
+    Rel(triage, call_graph, "Enriches with reachability status")
+    Rel(call_graph, gate, "Applies thresholds")
     Rel(gate, explainer, "Explains high-priority findings")
     Rel(explainer, feasibility, "Validates HIGH finding paths")
     Rel(explainer, autofix, "Generates + verifies fixes")
     Rel(pipeline, config_loader, "Reads policy at startup")
     Rel(pipeline, correlator, "Enriches with cross-language chains")
-    Rel(js_adapter, reachability, "Checks npm package import status")
+    Rel(js_adapter, dep_reach, "Checks npm package import status")
 ```
 
 ## Component interaction sequence (single Python scan)
@@ -82,6 +84,7 @@ CLI args
         ├─► ConfigLoader.apply_filters()     — ignore_paths, disabled_rules, min_severity
         ├─► TriageMemory.suppress_findings() — DB-backed FP suppression
         ├─► dedup()                          — cross-tool by (file, line, column, rule_id)
+        ├─► CallGraphReachability.enrich()   — AST call graph; −20 confidence for dead code
         ├─► per_rule_cap(5)                  — prevents noisy rules from dominating
         ├─► sort(HIGH → MEDIUM → LOW)
         ├─► CrossLanguageCorrelator.enrich() — confidence boosts for chains
