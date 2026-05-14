@@ -959,11 +959,12 @@ Before tagging v4.0.0, do these by hand once:
 All of these must be ✅ before tagging:
 
 **Engines (Phase A):**
-- [ ] Taint analyzer ships with 30 sources / 15 sinks / 8 sanitizers + migration 0007 + 80 tests
-- [ ] Incremental scanner achieves <8s on 50k LOC repo + migration 0007 reuse + 35 tests
-- [ ] Triage agent multi-step reasoning chain in DB + migration 0008 + 40 tests
-- [ ] Auto-fix PR generator opens real PRs (sandbox repo demo) + 30 tests
-- [ ] Supply-chain engine emits CycloneDX SBOM + migration 0009 + 35 tests
+- [ ] Engine 1: Taint analyzer — 30 sources / 15 sinks / 8 sanitizers + migration 0007 + 80 tests
+- [ ] Engine 2: Incremental scanner — <8s on 50k LOC repo + migration 0007 reuse + 35 tests
+- [ ] Engine 3: Triage agent — multi-step reasoning chain in DB + migration 0008 + 40 tests
+- [ ] Engine 4: Auto-fix PR generator — opens real PRs (sandbox repo demo) + 30 tests
+- [ ] Engine 5: Supply-chain engine — emits CycloneDX SBOM + migration 0009 + 35 tests
+- [ ] Engine 6: Offline mode (§12) — Ollama + OSV-local + egress guard + 3-mode selector + 40 tests + air-gapped pack
 
 **Dashboard (Phase B):**
 - [ ] All `/api/*` → `/v1/*` repointing done
@@ -1050,3 +1051,230 @@ These look appealing but would shred time without thesis value. Skip them all:
 ---
 
 *Plan §11 written May 14, 2026. Replaces the original 5-day compression. The 5 new engines + dashboard rebuild + validation track is what takes ACR-QA from "graded student project" to "publishable open-source platform." All §§0–10 preserved as foundation.*
+
+---
+
+# 12. Offline / Fully-Local Mode — Privacy-First Operation (Engine 6)
+
+**Written:** May 14, 2026
+**Status:** new — added to v4.0.0 PRO scope
+**Why:** every commercial competitor (Snyk, CodeRabbit, Greptile, Semgrep Pro) requires sending source code to their cloud. Defense contractors, healthcare, finance, classified codebases, GDPR-strict EU shops *cannot use them*. ACR-QA shipping a verifiable "zero bytes leave your machine" mode is a moat no closed-source competitor can match.
+
+## 12.0 Why This Exists
+
+Three real customer profiles ACR-QA can win that no competitor can:
+1. **Air-gapped environments** — classified gov / defense, can't reach any cloud at all
+2. **Privacy-strict** — healthcare (HIPAA), finance (PCI), legal (privilege), EU (GDPR data residency)
+3. **Cost-conscious** — students, indie devs, startups burning runway: $0 forever, no key, no signup
+
+Even outside those, *most security engineers don't want to send their company's source to a third-party API* — they just don't have the political capital to fight for an alternative. Giving them one is the entire pitch.
+
+The thesis chapter writes itself: *"ACR-QA is, to our knowledge, the first AI-augmented SAST platform with a verifiable air-gapped mode. We demonstrate full feature parity (explanation, triage, autofix suggestions, reachability, exploit verification) running entirely on a single laptop with no network access, validated via outbound-traffic capture."*
+
+## 12.1 The Three Operational Modes — User Choice
+
+Selected via `ACRQA_MODE` env var (and a settings page in the dashboard that writes to it):
+
+| Mode | LLM | CVE lookup | GitHub API | Telemetry | Egress guard | Use case |
+|---|---|---|---|---|---|---|
+| **`cloud`** *(default)* | Groq | OSV.dev live | Live (autofix PRs) | Sentry + PostHog | Off | OSS projects, demos, public repos |
+| **`hybrid`** | Groq (read-only) | OSV.dev live | Read-only (no PR opens) | Off | Off | Internal corp code, you trust Groq but not GitHub-bot writes |
+| **`offline`** | Ollama (localhost:11434) | Bundled OSV snapshot | Disabled | Off | **Hard on** — refuses any non-localhost HTTP | Air-gapped, classified, regulated |
+
+**Per-feature override:** every AI feature also has its own toggle so users can mix-and-match. E.g., `ACRQA_LLM_PROVIDER=ollama` + `ACRQA_MODE=cloud` runs Ollama-local for AI but still talks to OSV.dev for CVEs.
+
+### Per-feature flags (all default to enabled in `cloud`, disabled in `offline`)
+
+| Flag | Default (cloud) | Default (offline) | Effect |
+|---|---|---|---|
+| `ACRQA_LLM_PROVIDER` | `groq` | `ollama` | Where AI calls go |
+| `ACRQA_OLLAMA_URL` | — | `http://localhost:11434` | Ollama endpoint |
+| `ACRQA_LLM_MODEL` | `llama-3.3-70b-versatile` | `qwen2.5-coder:7b` | Explanation model |
+| `ACRQA_LLM_MODEL_FAST` | `llama-3.1-8b-instant` | `llama3.2:3b` | Feasibility model |
+| `ACRQA_PATH_FEASIBILITY` | `1` | `1` | Path feasibility on/off (already exists) |
+| `ACRQA_AI_DETECTION` | `1` | `1` | AI detection endpoint (already exists) |
+| `ACRQA_AI_TRIAGE` | `1` | `1` | Multi-step triage agent (Engine 3) |
+| `ACRQA_OSV_PROVIDER` | `live` | `local` | OSV.dev vs bundled snapshot |
+| `ACRQA_GITHUB_INTEGRATION` | `1` | `0` | Auto-fix PR generator (Engine 4) |
+| `ACRQA_TELEMETRY` | `1` | `0` | Sentry + PostHog |
+| `ACRQA_OFFLINE_GUARD` | `0` | `1` | Hard-block non-localhost HTTP |
+
+Single-knob default: `ACRQA_MODE` sets sensible defaults for all the above. Power users can override any individual flag.
+
+## 12.2 Engine 6 — Local LLM Provider (Ollama integration)
+
+**File:** `CORE/engines/ollama_provider.py`
+**Interface:** same shape as existing `KeyPool` so the explainer doesn't care which backend it talks to.
+
+**Recommended models** (let user pick via `ACRQA_LLM_MODEL`):
+
+| Model | Size | Speed (CPU) | Quality | Recommendation |
+|---|---|---|---|---|
+| `qwen2.5-coder:7b` | 4.7GB | ~15 tok/s on M1 | Best for code | **Default for offline** — beats Llama 3.1 8B on code benchmarks |
+| `qwen2.5-coder:14b` | 8.4GB | ~7 tok/s on M1 | Closest to GPT-4 | If user has 16GB+ RAM |
+| `deepseek-coder-v2:16b` | 9.5GB | ~6 tok/s | State-of-the-art OSS | Alternative for high-end machines |
+| `llama3.1:8b` | 5GB | ~12 tok/s | General-purpose | Fallback if user already has it |
+| `llama3.2:3b` | 2GB | ~30 tok/s | Fast, smaller | Recommended for path feasibility (small model is fine) |
+| `phi3.5:3.8b` | 2.2GB | ~25 tok/s | Microsoft's tiny model | Cheap laptops |
+
+**Setup commands the dashboard / docs walk the user through:**
+```bash
+# One-time install
+curl -fsSL https://ollama.com/install.sh | sh
+ollama pull qwen2.5-coder:7b
+ollama pull llama3.2:3b
+ollama serve   # background, listens on :11434
+
+# Then in .env
+ACRQA_MODE=offline
+```
+
+**Implementation:**
+- `OllamaProvider` class with `chat_completion(messages, model, max_tokens, temperature)` → calls `POST localhost:11434/api/chat`
+- OpenAI-compatible response shape so no upstream code changes
+- `is_available()` ping `/api/tags` on startup; if Ollama isn't running, log a clear error and fall back to "no AI" mode (existing KeyPool degradation already handles this)
+- `KeyPool.__init__` reads `ACRQA_LLM_PROVIDER`: `groq` → existing, `agentrouter` → existing, `ollama` → new, `none` → empty pool (already handled)
+- `explainer.py` `_explain_one_async` dispatches based on provider — Ollama uses streaming response parsing
+- `path_feasibility.py` same — uses smaller model via `ACRQA_LLM_MODEL_FAST`
+- `triage_agent.py` (Engine 3) same — tool-calling works via Ollama's function-calling support (Qwen2.5-coder supports it natively)
+
+## 12.3 Local CVE Database — `CORE/engines/osv_offline.py`
+
+For the supply-chain engine (Engine 5) to work offline:
+
+- Bundle the OSV database via the `osv-scanner` project's offline mode OR use **`osv-offline`** Python package
+- Daily snapshot job (`scripts/sync_osv_db.py`) downloads the OSV ZIP, extracts to `~/.cache/acrqa/osv-db/`
+- `SupplyChainEngine` reads `ACRQA_OSV_PROVIDER`: `live` → HTTP, `local` → query SQLite snapshot
+- DB size: ~500MB compressed, ~2GB uncompressed
+- Update cadence: user-controlled (`acrqa osv-sync` CLI command). Stale-but-known beats hard-fail.
+
+## 12.4 Network Egress Guard — `CORE/utils/egress_guard.py`
+
+The privacy guarantee needs **enforcement**, not just trust:
+
+- Monkey-patches `httpx.Client.send` and `requests.Session.send` when `ACRQA_OFFLINE_GUARD=1`
+- Blocks any non-localhost target with `EgressBlockedError`
+- Allowlist: `127.0.0.1`, `::1`, `localhost`, any `host.docker.internal` (for Ollama in Docker)
+- Logs every blocked attempt with the calling stack frame — turns silent privacy leaks into loud test failures
+- Wired into `FRONTEND/api/main.py` startup if env var set
+
+**Demo value:** turn off Wi-Fi, run a full scan, dashboard works, AI explanation appears, exploit verifies. Mic-drop moment.
+
+## 12.5 Air-Gapped Install — `make offline-pack`
+
+For users who literally can't `pip install` on the target machine:
+
+```bash
+# On internet-connected build machine
+make offline-pack
+# → produces acr-qa-offline-v4.0.0.tar.gz (~6GB):
+#   - acr-qa source
+#   - Python wheel mirror (all deps as .whl files)
+#   - Ollama Linux binary + models pre-pulled
+#   - OSV DB snapshot
+#   - Postgres + Redis as standalone binaries (or docker-compose offline images)
+#   - Setup script: ./install-offline.sh
+
+# Transfer via USB / approved media to air-gapped machine
+# On air-gapped machine
+tar xzf acr-qa-offline-v4.0.0.tar.gz
+cd acr-qa-offline-v4.0.0
+./install-offline.sh
+# → installs everything, starts services, prints local URL
+```
+
+Bonus: include the **GPG signature + SHA256 manifest** so an admin can verify nothing was tampered with in transit (closes the loop with Engine attestation work — same crypto, applied to the install bundle).
+
+## 12.6 Privacy Guarantees Document — `docs/PRIVACY.md` (new)
+
+Required for the thesis defense (and any enterprise sales conversation later):
+
+**Per-mode disclosure table — what data goes where:**
+
+| Data | `cloud` | `hybrid` | `offline` |
+|---|---|---|---|
+| Source code snippets (for AI explanation) | Sent to Groq | Sent to Groq | Stays local (Ollama) |
+| File paths | Sent to Groq | Sent to Groq | Stays local |
+| Repo metadata (name, commit SHA) | Sent to Sentry + PostHog | Not sent | Not sent |
+| Dependency names | Sent to OSV.dev | Sent to OSV.dev | Stays local (snapshot) |
+| Runtime errors | Sent to Sentry | Not sent | Not sent |
+| Dashboard usage events | Sent to PostHog | Not sent | Not sent |
+| Findings DB | Local Postgres | Local Postgres | Local Postgres |
+| AI explanation cache | Local Redis | Local Redis | Local Redis |
+
+**Verification:** `TESTS/test_offline_mode.py` captures outbound network traffic via `aiohttp` test server interception. Asserts: in offline mode, total bytes sent to non-localhost = 0.
+
+## 12.7 Dashboard — Mode Selector + Indicator
+
+Settings page (new tab in dashboard):
+
+```
+┌────────────────────────────────────────────────────────┐
+│  Privacy Mode                                          │
+│                                                        │
+│  ○ Cloud — Groq + OSV.dev + GitHub  (free, fastest)  │
+│  ○ Hybrid — Groq read-only, no GitHub writes          │
+│  ● Offline — Ollama local, zero network               │
+│                                                        │
+│  Status:  🟢 Ollama running (qwen2.5-coder:7b)        │
+│           🟢 OSV DB synced 2 hours ago                │
+│           🟢 Egress guard active (0 blocked / hour)   │
+│           ⚪ Sentry disabled                          │
+│           ⚪ PostHog disabled                         │
+│                                                        │
+│  [Test current mode]  [Sync OSV DB]  [Pull model]    │
+└────────────────────────────────────────────────────────┘
+```
+
+Persistent header badge across all pages: `🌐 Cloud Mode` / `🔒 Hybrid Mode` / `🛡️ Offline Mode` — examiner can see at a glance which mode is active in the demo.
+
+## 12.8 Tests — `TESTS/test_offline_mode.py`
+
+| Test | Asserts |
+|---|---|
+| `test_ollama_provider_chat_completion` | Mock Ollama endpoint, verify shape |
+| `test_keypool_dispatches_to_ollama` | `ACRQA_LLM_PROVIDER=ollama` → uses OllamaProvider |
+| `test_explainer_works_with_ollama` | Full explanation flow against mocked Ollama |
+| `test_path_feasibility_with_ollama` | Same for feasibility |
+| `test_triage_agent_with_ollama` | Same for Engine 3 |
+| `test_osv_offline_lookup` | `ACRQA_OSV_PROVIDER=local` returns same shape as live |
+| `test_egress_guard_blocks_external` | `httpx.get("https://groq.com")` raises `EgressBlockedError` |
+| `test_egress_guard_allows_localhost` | `httpx.get("http://localhost:11434")` works |
+| `test_egress_guard_logs_attempts` | Blocked call gets logged with caller frame |
+| `test_offline_mode_zero_egress` | Full scan in offline mode → 0 bytes outbound to non-localhost (network interception harness) |
+| `test_mode_switching` | Runtime switch cloud → offline reloads provider |
+| `test_dashboard_settings_persist` | POST `/v1/settings/mode` → reflected in next `/health` |
+
+Target: ~40 new tests + 1 integration test that does a real full scan in offline mode with Ollama running (skipped if Ollama not installed; marked `@pytest.mark.offline`).
+
+## 12.9 Acceptance Criteria for Engine 6
+
+- [ ] `CORE/engines/ollama_provider.py` — passes 40+ tests
+- [ ] `CORE/engines/osv_offline.py` — bundled OSV snapshot, daily sync script
+- [ ] `CORE/utils/egress_guard.py` — verified zero-egress test passes
+- [ ] `KeyPool` dispatches based on `ACRQA_LLM_PROVIDER`
+- [ ] `explainer.py`, `path_feasibility.py`, `triage_agent.py` all work with Ollama
+- [ ] `supply_chain.py` works with local OSV DB
+- [ ] `Makefile` target `make offline-pack` produces installable bundle <8GB
+- [ ] `docs/PRIVACY.md` written, per-mode data-flow table complete
+- [ ] `docs/setup/OFFLINE_SETUP.md` written, walks user through Ollama install
+- [ ] Dashboard settings page with 3-mode selector + live status
+- [ ] Persistent header badge showing current mode
+- [ ] Demo recorded: laptop in airplane mode, full scan + AI explanation + exploit verify
+- [ ] `THIRD_PARTY_VALIDATION.md` row: "Offline mode: 0 bytes sent to non-localhost (verified via tcpdump)"
+
+## 12.10 Why This Is The Strongest Thesis Card
+
+The other engines (taint, incremental, triage agent, autofix PR, supply chain) all have OSS or commercial competitors who do roughly the same thing. *None of those competitors offer fully-local mode.* The closest is:
+
+- **Semgrep CE** — local, but no AI explanation, no exploit verification, no attestations
+- **Bandit** — local, but pattern-only, no AI, no triage, no autofix
+- **CodeQL** — local execution but ships SARIF; no AI augmentation, no proof-of-exploit
+
+ACR-QA in offline mode = *every v3.x and v4.x feature* (RAG explanation + reachability + learned suppression + exploit verifier + signed attestations + taint + incremental + AI triage + auto-fix-PR-diff + SBOM) running on a laptop, with cryptographic egress proof.
+
+That's the headline. That's what gets the blog post on Hacker News and the paper through review.
+
+---
+
+*Section 12 written May 14, 2026. Engine 6 + the 3-mode user-selectable architecture is the ACR-QA differentiator no commercial competitor can match. Built on top of all §11 engines — the engines work in any mode; this just chooses where the AI calls and CVE lookups land.*
