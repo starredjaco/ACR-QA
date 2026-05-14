@@ -808,9 +808,14 @@ class TestFastAPIEndpoints:
 # ═════════════════════════════════════════════════════════════
 class TestDatabaseDeep:
     def setup_method(self):
+        import pytest
+
         from DATABASE.database import Database
 
-        self.db = Database()
+        try:
+            self.db = Database()
+        except Exception:
+            pytest.skip("PostgreSQL not available")
 
     def teardown_method(self):
         self.db.close()

@@ -1,11 +1,20 @@
 # ACR-QA REST API Reference
 
-**Base URL:** `http://localhost:5000`
-**Version:** v3.2.5
+**Base URL:** `http://localhost:8000`
+**Version:** v3.8.0
 **Format:** All responses are `application/json`
+**Auth:** All `/v1/` endpoints require `Authorization: Bearer <token>` or `X-API-Key: <key>`
 
-> This document covers all 22 REST endpoints exposed by `FRONTEND/app.py`.
-> These endpoints are stable and ready for consumption by JS frontends, VS Code extensions, or CI integrations.
+> ⚠️ Flask is fully removed (v3.6.1). The only server is FastAPI at `:8000`. Swagger UI is at `/docs`.
+> This document covers the 32 async endpoints under `/v1/` in `FRONTEND/api/routers/`.
+
+**Get a token:**
+```bash
+TOKEN=$(curl -s -X POST http://localhost:8000/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@acrqa.local","password":"changeme123!"}' \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+```
 
 ---
 
@@ -275,4 +284,120 @@ console.log(`Found ${data.total} issues`);
 
 ---
 
-*Last updated: May 5, 2026 — ACR-QA v3.2.5*
+## New Endpoints (v3.6.0 – v3.8.0)
+
+### `GET /v1/runs/{run_id}/attestation` [v3.6.0]
+
+Returns the SLSA-grade provenance attestation for a completed scan run.
+
+**Response:**
+```json
+{
+  "run_id": 42,
+  "key_id": "sha256:abc123",
+  "created_at": "2026-05-15T10:00:00",
+  "signature_algorithms": ["ECDSA-P256", "Dilithium3"],
+  "post_quantum": true,
+  "signature_valid": true,
+  "bundle": { "attestation": {...}, "signatures": [...] }
+}
+```
+
+---
+
+### `GET /v1/runs/{run_id}/findings/{finding_id}/autofix` [v3.7.0]
+
+Generate an LLM-powered unified-diff patch for a specific finding. Falls back to rule-based fix if LLM unavailable.
+
+**Response:**
+```json
+{
+  "finding_id": 7,
+  "run_id": 42,
+  "rule_id": "SECURITY-027",
+  "patch": "--- original\n+++ fixed\n...",
+  "confidence": 0.85,
+  "explanation": "Replaced f-string SQL query with parameterized ?",
+  "valid": true,
+  "validation_note": "re_scan_passed"
+}
+```
+
+---
+
+### `GET /v1/runs/{run_id}/sbom` [v3.8.0]
+
+Return the CycloneDX 1.4 Software Bill of Materials for a run. Returns stored SBOM if available; generates on-the-fly from `dependency_findings` otherwise.
+
+**Response:**
+```json
+{
+  "success": true,
+  "run_id": 42,
+  "sbom": {
+    "bomFormat": "CycloneDX",
+    "specVersion": "1.4",
+    "serialNumber": "urn:uuid:...",
+    "metadata": { "timestamp": "...", "component": {...}, "tools": [...] },
+    "components": [{"type":"library","name":"requests","version":"2.28.0","purl":"pkg:pypi/requests@2.28.0"}],
+    "vulnerabilities": [...]
+  }
+}
+```
+
+---
+
+### `GET /v1/runs/{run_id}/supply-chain` [v3.8.0]
+
+Return dependency findings with CVE data and risk scores.
+
+**Query params:** `?risk_level=high|medium|low` (optional filter)
+
+**Response:**
+```json
+{
+  "success": true,
+  "run_id": 42,
+  "summary": {
+    "total": 45,
+    "high_risk": 3,
+    "medium_risk": 12,
+    "low_risk": 30,
+    "total_cves": 7
+  },
+  "dependencies": [
+    {
+      "name": "requests",
+      "version": "2.28.0",
+      "ecosystem": "PyPI",
+      "risk_score": 45,
+      "risk_level": "medium",
+      "cve_count": 1,
+      "cve_ids": ["CVE-2023-32681"],
+      "stars": 51000,
+      "last_commit_days": 14,
+      "contributors": 780,
+      "archived": false
+    }
+  ]
+}
+```
+
+---
+
+## Findings Response Fields (v3.6.3+)
+
+The `GET /v1/runs/{id}/findings` response now includes taint and triage fields:
+
+| Field | Type | Source | Since |
+|---|---|---|---|
+| `taint_source` | string\|null | TaintAnalyzer | v3.6.3 |
+| `taint_path` | string\|null | TaintAnalyzer | v3.6.3 |
+| `taint_confidence` | float\|null | TaintAnalyzer | v3.6.3 |
+| `triage_verdict` | `true_positive`\|`false_positive`\|`needs_review`\|null | TriageAgent | v3.6.5 |
+| `triage_reasoning` | string\|null | TriageAgent | v3.6.5 |
+| `triage_confidence_delta` | float\|null | TriageAgent (±applied to confidence) | v3.6.5 |
+
+---
+
+*Last updated: May 15, 2026 — ACR-QA v3.8.0*
