@@ -1339,5 +1339,159 @@ if __name__ == "__main__":
         assert len(fps) == 0, f"FP misclassifications: {fps}"
 
 
+class TestLearnedSuppressionGodMode:
+    """God-mode tests for Feature 10: embedding-based learned suppression."""
+
+    def test_engine_importable(self):
+        from CORE.engines.learned_suppression import LearnedSuppressionEngine
+
+        assert LearnedSuppressionEngine is not None
+
+    def test_threshold_constant_sane(self):
+        from CORE.engines.learned_suppression import SIMILARITY_THRESHOLD
+
+        assert 0.80 <= SIMILARITY_THRESHOLD <= 0.99
+
+    def test_model_name_defined(self):
+        from CORE.engines.learned_suppression import MODEL_NAME
+
+        assert isinstance(MODEL_NAME, str) and len(MODEL_NAME) > 0
+
+    def test_cosine_similarity_identity(self):
+        from CORE.engines.learned_suppression import _cosine_similarity
+
+        v = [0.5, 0.3, 0.8, -0.1]
+        assert abs(_cosine_similarity(v, v) - 1.0) < 1e-5
+
+    def test_suppress_returns_tuple_of_two(self):
+        from unittest.mock import MagicMock
+
+        from CORE.engines.learned_suppression import LearnedSuppressionEngine
+
+        db = MagicMock()
+        db.get_all_finding_embeddings.return_value = []
+        result = LearnedSuppressionEngine().suppress([], db)
+        assert isinstance(result, tuple) and len(result) == 2
+
+    def test_suppress_does_not_drop_findings(self):
+        from unittest.mock import MagicMock
+
+        from CORE.engines.learned_suppression import LearnedSuppressionEngine
+
+        db = MagicMock()
+        db.get_all_finding_embeddings.return_value = []
+        findings = [{"canonical_rule_id": "SEC-001", "message": "x", "file": "a.py", "line": 1}] * 5
+        kept, _ = LearnedSuppressionEngine().suppress(findings, db)
+        assert len(kept) == 5
+
+    def test_store_dismissed_graceful_on_missing(self):
+        from unittest.mock import MagicMock
+
+        from CORE.engines.learned_suppression import LearnedSuppressionEngine
+
+        db = MagicMock()
+        db.execute.return_value = []
+        assert LearnedSuppressionEngine().store_dismissed(99999, db) is False
+
+    def test_migration_0004_exists(self):
+        migrations = list(Path("/home/ahmeed/Documents/KSIU/GRAD/SOLO/alembic/versions").glob("*_finding_embeddings*"))
+        assert migrations, "Alembic migration 0004 (finding_embeddings) not found"
+
+    def test_db_has_embedding_methods(self):
+        from DATABASE.database import Database
+
+        for method in (
+            "insert_finding_embedding",
+            "get_all_finding_embeddings",
+            "get_finding_embeddings_by_rule",
+            "delete_finding_embedding",
+        ):
+            assert hasattr(Database, method), f"Database missing method: {method}"
+
+    def test_triage_memory_embeds_on_fp(self):
+        src = Path("/home/ahmeed/Documents/KSIU/GRAD/SOLO/CORE/engines/triage_memory.py").read_text()
+        assert "store_dismissed" in src
+        assert "LearnedSuppressionEngine" in src
+
+    def test_pipeline_wires_suppression(self):
+        src = Path("/home/ahmeed/Documents/KSIU/GRAD/SOLO/CORE/main.py").read_text()
+        assert src.count("LearnedSuppressionEngine") >= 2
+
+    def test_is_available_returns_bool(self):
+        from CORE.engines.learned_suppression import LearnedSuppressionEngine
+
+        assert isinstance(LearnedSuppressionEngine().is_available(), bool)
+
+
+class TestMCPServerGodMode:
+    """God-mode tests for Feature 11: MCP server."""
+
+    def test_server_py_exists(self):
+        assert (Path("/home/ahmeed/Documents/KSIU/GRAD/SOLO/acrqa-mcp") / "server.py").exists()
+
+    def test_pyproject_toml_exists(self):
+        assert (Path("/home/ahmeed/Documents/KSIU/GRAD/SOLO/acrqa-mcp") / "pyproject.toml").exists()
+
+    def test_three_tool_functions_defined(self):
+        src = (Path("/home/ahmeed/Documents/KSIU/GRAD/SOLO/acrqa-mcp") / "server.py").read_text()
+        for fn in ("_tool_scan", "_tool_explain", "_tool_fix"):
+            assert fn in src, f"Missing tool function: {fn}"
+
+    def test_env_var_config(self):
+        src = (Path("/home/ahmeed/Documents/KSIU/GRAD/SOLO/acrqa-mcp") / "server.py").read_text()
+        assert "ACRQA_URL" in src and "ACRQA_TOKEN" in src
+
+    def test_config_file_path(self):
+        src = (Path("/home/ahmeed/Documents/KSIU/GRAD/SOLO/acrqa-mcp") / "server.py").read_text()
+        assert ".config/acrqa/config.json" in src
+
+    def test_scan_error_returns_dict_not_raises(self):
+        import httpx
+
+        mcp_dir = str(Path("/home/ahmeed/Documents/KSIU/GRAD/SOLO/acrqa-mcp"))
+        if mcp_dir not in sys.path:
+            sys.path.insert(0, mcp_dir)
+        import server
+
+        with patch.object(server, "_post", side_effect=httpx.HTTPError("no host")):
+            result = server._tool_scan("/tmp/nonexistent")
+        assert isinstance(result, dict)
+
+    def test_explain_error_returns_dict(self):
+        import httpx
+
+        mcp_dir = str(Path("/home/ahmeed/Documents/KSIU/GRAD/SOLO/acrqa-mcp"))
+        if mcp_dir not in sys.path:
+            sys.path.insert(0, mcp_dir)
+        import server
+
+        with patch.object(server, "_get", side_effect=httpx.HTTPError("err")):
+            result = server._tool_explain(1)
+        assert "error" in result
+
+    def test_fix_error_returns_cannot_fix(self):
+        import httpx
+
+        mcp_dir = str(Path("/home/ahmeed/Documents/KSIU/GRAD/SOLO/acrqa-mcp"))
+        if mcp_dir not in sys.path:
+            sys.path.insert(0, mcp_dir)
+        import server
+
+        with patch.object(server, "_get", side_effect=httpx.HTTPError("err")):
+            result = server._tool_fix(1)
+        assert result["can_fix"] is False
+
+    def test_version_one_zero_zero(self):
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "acrqa_mcp_init",
+            Path("/home/ahmeed/Documents/KSIU/GRAD/SOLO/acrqa-mcp/__init__.py"),
+        )
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        assert mod.__version__ == "1.0.0"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])

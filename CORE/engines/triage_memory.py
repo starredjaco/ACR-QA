@@ -61,6 +61,15 @@ class TriageMemory:
                 canonical_rule_id,
                 file_pattern,
             )
+
+            # Also store a semantic embedding for similarity-based suppression (Feature 10)
+            try:
+                from CORE.engines.learned_suppression import LearnedSuppressionEngine
+
+                LearnedSuppressionEngine().store_dismissed(finding_id, db)
+            except Exception as _emb_err:
+                logger.debug("Embedding store skipped: %s", _emb_err)
+
             return rule_id
 
         except Exception:

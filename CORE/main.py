@@ -167,6 +167,16 @@ class AnalysisPipeline:
         if suppressed:
             logger.info(f"      - Triage Memory: suppressed {suppressed} known false positive(s)")
 
+        # Learned Suppression: semantic embedding-based FP suppression (Feature 10)
+        try:
+            from CORE.engines.learned_suppression import LearnedSuppressionEngine
+
+            findings, sem_suppressed = LearnedSuppressionEngine().suppress(findings, self.db)
+            if sem_suppressed:
+                logger.info(f"      - Learned Suppression: {sem_suppressed} finding(s) zeroed by embedding similarity")
+        except Exception as _ls_err:
+            logger.warning(f"Learned suppression skipped: {_ls_err}")
+
         # Deduplicate findings (same file+line+rule from different tools)
         findings = self._deduplicate_findings(findings)
 
@@ -744,6 +754,16 @@ class AnalysisPipeline:
         findings, suppressed = TriageMemory().suppress_findings(findings, self.db)
         if suppressed:
             logger.info(f"      - Triage Memory: suppressed {suppressed} known false positive(s)")
+
+        # Learned Suppression: semantic embedding-based FP suppression (Feature 10)
+        try:
+            from CORE.engines.learned_suppression import LearnedSuppressionEngine
+
+            findings, sem_suppressed = LearnedSuppressionEngine().suppress(findings, self.db)
+            if sem_suppressed:
+                logger.info(f"      - Learned Suppression: {sem_suppressed} finding(s) zeroed by embedding similarity")
+        except Exception as _ls_err:
+            logger.warning(f"Learned suppression skipped: {_ls_err}")
 
         findings = self._deduplicate_findings(findings)
 
