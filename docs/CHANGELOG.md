@@ -2,6 +2,127 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v3.8.0] — Phase 5: Supply Chain + SBOM Engine (May 15, 2026)
+
+### Added — Engine 5: Supply Chain Risk Analyzer (`CORE/engines/supply_chain.py`)
+
+- **`SupplyChainEngine`** — end-to-end dependency risk scanner.
+  - `scan(target_dir, run_id, repo_name, lockfiles)` → discovers lockfiles, enriches each dependency with CVE data + GitHub health signals, scores risk 0-100, returns `{dependencies, sbom, summary, lockfiles_scanned}`
+  - `_enrich(dep)` → adds `cves`, `github_signals`, `risk_score`, `risk_level`
+  - `_summarize(deps)` → aggregates high/medium/low counts + total CVEs
+- **Lockfile parsers** — `parse_requirements_txt`, `parse_package_json`, `parse_go_mod`, `parse_pipfile_lock`; unified dispatcher `parse_lockfile(file_path)` (auto-detect by name)
+- **`find_lockfiles(target_dir)`** — recursive discovery; skips `node_modules`, `.venv`, `venv`, `__pycache__`, `.git`, `dist`, `build`
+- **OSV.dev CVE layer** (3-mode):
+  - `query_osv_live(name, version, ecosystem)` — `httpx` POST to `api.osv.dev/v1/query`
+  - `query_osv_offline(name, version)` — delegates to `OsvOfflineReader` (Phase 2 snapshot)
+  - `query_osv(...)` — `auto` mode: tries offline first, falls back to live API if no results and not in `ACRQA_MODE=offline`
+- **GitHub health signals** — `fetch_github_signals(name, ecosystem)` — queries GitHub API for `stars`, `archived`, `last_commit_days`, `contributors` (via `Link` header pagination); Go modules resolved directly from path (`github.com/owner/repo`); graceful `{}` on failure
+- **Risk scoring** — `score_dependency(cves, github)` — 0-100 formula: CVE severity (0-40) + commit age (0-20) + contributors (0-15) + stars (0-10) + archived (0 or 25) + license (0 or 10); thresholds: ≥70 → high, ≥40 → medium, else low
+- **CycloneDX 1.4 SBOM** — `build_cyclonedx_sbom(run_id, repo_name, dependencies)` — bomFormat, specVersion, serialNumber (UUID), metadata (timestamp, component, tools), components array with `purl`; `_make_purl(dep)` builds `pkg:pypi/name@version`-style URIs
+- **Alembic migration `0009`** — `dependency_findings` table (id, run_id, name, version, ecosystem, risk_score, risk_level, cve_count, cve_ids JSON, stars, last_commit_days, contributors, archived, license, repo_url, sbom_purl, created_at) + `ix_dependency_findings_run_id` index; `run_sboms` table (run_id PK, sbom_json JSON, created_at)
+- **DB methods** — `insert_dependency_finding`, `get_dependency_findings`, `upsert_run_sbom`, `get_run_sbom` added to `DATABASE/database.py`
+- **FastAPI endpoints**:
+  - `GET /v1/runs/{run_id}/sbom` — returns stored CycloneDX SBOM or generates on-the-fly from `dependency_findings`
+  - `GET /v1/runs/{run_id}/supply-chain` — returns dependency list + risk summary; optional `?risk_level=high|medium|low` filter
+- **Tests** — `TESTS/test_supply_chain.py` (62 tests): TestParseRequirementsTxt (7), TestParsePackageJson (6), TestParseGoMod (4), TestParsePipfileLock (4), TestFindLockfiles (5), TestQueryOsv (4), TestScoreDependency (7), TestExtractSeverity (4), TestBuildCyclonedxSbom (8), TestMakePurl (4), TestSupplyChainEngine (9)
+
+### Changed
+
+- `DATABASE/database.py` — added `import json`; 4 new supply-chain DB methods
+- `FRONTEND/api/routers/runs.py` — 2 new endpoints wired
+- Version bumped: `v3.7.0` → `v3.8.0`
+- Total tests: 2108 → 2170
+
+---
+
+## [v3.7.0] — Phase 4: LLM-Powered Auto-Fix Patch Generator (May 15, 2026)
+
+### Added — Engine 3: Auto-Fix Engine (`CORE/engines/autofix.py` extended)
+
+- **`AutoFixEngine.generate_patch(finding, target_dir, context_lines)`** — reads source file, extracts ±`context_lines` lines of context, calls `_call_llm_for_fix`, builds unified diff via `difflib.unified_diff`, validates with `validate_fix()`. Returns `{patch, confidence, explanation, valid, validation_note}`; confidence 0.85 if validated, 0.50 otherwise.
+- **`AutoFixEngine._call_llm_for_fix(prompt, original)`** — lazy-imports `KeyPool` from `CORE.engines.explainer`; strips markdown fences with `re.sub`; returns `None` if no keys. Falls back to rule-based `generate_fix()` when LLM unavailable.
+- **`AutofixEngine = AutoFixEngine`** alias at module level for backward compatibility.
+- **FastAPI endpoint** — `GET /v1/runs/{run_id}/findings/{finding_id}/autofix` — returns unified diff patch + confidence + explanation + `valid` flag + `validation_note`; rule-based fallback inline if LLM produces empty patch.
+- **Tests** — `TESTS/test_autofix.py` extended with:
+  - `TestAutofixEngineAlias` (3 tests) — alias identity, `isinstance`, `can_fix`
+  - `TestGeneratePatch` (8 tests) — LLM path, fallback path, validation branching, context extraction, patch present flag, returns-None-on-no-key; patch target `CORE.engines.explainer.KeyPool` (lazy import)
+
+### Changed
+
+- Version bumped: `v3.6.5` → `v3.7.0`
+- Total tests: 2042 → 2108 (approx)
+
+---
+
+## [v3.6.5] — Phase 3: AI Triage Agent (May 15, 2026)
+
+### Added — Engine 2: Triage Agent (`CORE/engines/triage_agent.py`)
+
+- **`TriageAgent`** — multi-step LLM reasoning engine that classifies each finding as `true_positive` | `false_positive` | `needs_review`.
+  - `triage(finding, source_context)` → returns `TriageResult(verdict, reasoning, confidence_delta)`
+  - LLM tool-use loop: calls context-fetch, rule-lookup, and verdict tools in sequence
+  - Confidence delta: positive for TP, negative for FP (applied to finding's confidence score)
+- **`TriageResult` dataclass** — `finding_id`, `verdict`, `reasoning`, `confidence_delta`, `model_name`, `latency_ms`
+- **`TriageMemory`** — persistent FP memory keyed by `canonical_rule_id` + code snippet hash; `learn_from_fp`, `is_known_fp`, `load`, `save`
+- **Alembic migration `0008`** — adds `triage_verdict` (TEXT), `triage_reasoning` (TEXT), `triage_confidence_delta` (FLOAT) columns to `findings` table
+- **DB method** — `update_finding_triage(finding_id, verdict, reasoning, delta)` in `DATABASE/database.py`
+- **Pipeline wiring** — `TriageAgent().triage()` called after reachability + exploit enrichment; wrapped in `try/except`
+- **Tests** — `TESTS/test_triage_agent.py`
+
+### Changed
+
+- Version bumped: `v3.6.4` → `v3.6.5`
+
+---
+
+## [v3.6.4] — Phase 2: Offline Mode + Ollama Provider (May 15, 2026)
+
+### Added — Engine 6: Offline Mode (`CORE/engines/ollama_provider.py`, `CORE/engines/osv_offline.py`, `CORE/utils/egress_guard.py`)
+
+- **`OllamaClient`** (`CORE/engines/ollama_provider.py`) — HTTP client for local Ollama; `ACRQA_LLM_PROVIDER=ollama` routes all LLM calls here instead of Groq; `ACRQA_OLLAMA_URL` env var (default `http://localhost:11434`)
+- **`OsvOfflineReader`** (`CORE/engines/osv_offline.py`) — reads pre-downloaded OSV JSON snapshot; `ACRQA_OSV_SNAPSHOT_DIR` points to snapshot directory; returns same dict shape as live API
+- **`EgressGuard`** (`CORE/utils/egress_guard.py`) — `install()` patches `socket.connect` to raise `EgressBlockedError` when `ACRQA_MODE=offline`; `maybe_install()` checks env before installing; unblocks localhost/127.0.0.1 for Ollama calls
+- **3-mode LLM selector** — `ACRQA_LLM_PROVIDER`: `groq` (default) | `ollama` | `agentrouter`
+- **Alembic migration `0007`** — adds `taint_source` (TEXT), `taint_path` (TEXT), `taint_confidence` (FLOAT) columns to `findings` table
+- **Tests** — `TESTS/test_offline_mode.py`
+
+### New env vars
+
+| Variable | Default | Effect |
+|---|---|---|
+| `ACRQA_LLM_PROVIDER` | `groq` | `ollama` routes to local Ollama, `agentrouter` routes to agent router |
+| `ACRQA_OLLAMA_URL` | `http://localhost:11434` | Base URL for Ollama API |
+| `ACRQA_MODE` | `online` | `offline` blocks all egress except localhost |
+| `ACRQA_OSV_SNAPSHOT_DIR` | `None` | Path to pre-downloaded OSV JSON snapshot directory |
+
+### Changed
+
+- Version bumped: `v3.6.3` → `v3.6.4`
+
+---
+
+## [v3.6.3] — Phase 1: Intra-Procedural Taint Analyzer (May 15, 2026)
+
+### Added — Engine 1: Taint Analyzer (`CORE/engines/taint_analyzer.py`)
+
+- **`TaintAnalyzer`** — AST-based intra-procedural taint tracking.
+  - `analyze(source_code, filename)` → returns list of `TaintInfo` dicts: `{source, path, sink, confidence, line}`
+  - `_FunctionTaintVisitor` — `ast.NodeVisitor` subclass; tracks tainted names through assignments, subscripts, and attribute access
+  - Sources/sinks loaded from `config/taint_sources.yml` / `config/taint_sinks.yml`
+  - Confidence: 1.0 if direct source→sink, 0.8 if through one intermediate, lower for longer paths
+- **`TaintInfo` TypedDict** — `source`, `path` (list of variable names), `sink`, `confidence`, `line`, `file`
+- **`config/taint_sources.yml`** — curated list: `request.args`, `request.form`, `request.json`, `os.environ.get`, `input()`, `sys.argv`, and 15 others
+- **`config/taint_sinks.yml`** — curated list: `execute`, `eval`, `exec`, `subprocess.run`, `os.system`, `render_template_string`, `pickle.loads`, and 20 others
+- **Alembic migration `0007`** (shared with Phase 2) — `taint_source`, `taint_path`, `taint_confidence` columns on `findings`
+- **Pipeline wiring** — `TaintAnalyzer().analyze()` called per Python file; results merged into findings with `taint_*` fields; findings router exposes `taint_source`, `taint_path`, `taint_confidence` in findings response
+- **Tests** — `TESTS/test_taint_analyzer.py`
+
+### Changed
+
+- Version bumped: `v3.6.2` → `v3.6.3`
+
+---
+
 ## [v3.6.2] — Feature-flag path_feasibility + ai_code_detector (May 14, 2026)
 
 ### Changed

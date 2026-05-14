@@ -1,10 +1,12 @@
 # LLM Provider Configuration
 
-**Last Updated:** May 14, 2026 (v3.6.2)
+**Last Updated:** May 15, 2026 (v3.8.0)
 
-ACR-QA uses LLMs for two tasks:
+ACR-QA uses LLMs for four tasks:
 1. **Explanation Engine** — generates natural-language explanations for findings (`CORE/engines/explainer.py`)
 2. **Path Feasibility Validator** — checks if HIGH-severity security paths are reachable (`CORE/engines/path_feasibility.py`)
+3. **Triage Agent** — multi-step tool-use reasoning to classify TP/FP/needs_review (`CORE/engines/triage_agent.py`)
+4. **Auto-Fix Generator** — generates unified diff patches for findings (`CORE/engines/autofix.py`)
 
 > **Graceful degradation (v3.6.2):** Both engines degrade cleanly when no GROQ key is present. The app starts without errors; AI features are simply skipped. Set `ACRQA_PATH_FEASIBILITY=0` to disable feasibility calls explicitly (no Groq charge), or `ACRQA_AI_DETECTION=0` to disable the AI code detector endpoint.
 
@@ -40,6 +42,51 @@ See [TOKEN_SETUP.md](TOKEN_SETUP.md) for key generation instructions.
 |---|---|---|
 | `ACRQA_PATH_FEASIBILITY` | `1` | Set to `0` to skip path feasibility AI calls entirely |
 | `ACRQA_AI_DETECTION` | `1` | Set to `0` to disable `POST /v1/scans/ai-detection` (returns HTTP 503) |
+
+---
+
+## Offline Provider: Ollama (Local, Air-Gapped) [NEW v3.6.4]
+
+Set `ACRQA_LLM_PROVIDER=ollama` to route all LLM calls to a locally running Ollama instance. No API keys needed. No internet. Works with `ACRQA_MODE=offline`.
+
+| Setting | Value |
+|---------|-------|
+| **SDK** | `CORE/engines/ollama_provider.py` (`OllamaClient`) |
+| **Base URL** | `ACRQA_OLLAMA_URL` env (default: `http://localhost:11434`) |
+| **Models** | Any model pulled in Ollama (e.g., `llama3.2`, `codellama`, `mistral`) |
+| **Cost** | $0 — runs locally |
+| **Egress** | Blocked when `ACRQA_MODE=offline`; Ollama on localhost is always allowed |
+
+### Setup
+
+```bash
+# 1. Install Ollama
+curl -fsSL https://ollama.ai/install.sh | sh
+
+# 2. Pull a model
+ollama pull llama3.2
+
+# 3. Configure ACR-QA
+echo "ACRQA_LLM_PROVIDER=ollama" >> .env
+echo "ACRQA_OLLAMA_URL=http://localhost:11434" >> .env
+
+# 4. (Optional) Full offline mode — blocks all internet egress
+echo "ACRQA_MODE=offline" >> .env
+echo "ACRQA_OSV_SNAPSHOT_DIR=/path/to/osv-snapshot" >> .env
+```
+
+### Offline OSV Setup
+
+To scan dependencies offline, download an OSV snapshot:
+
+```bash
+# Download snapshot (run once, with internet)
+python scripts/download_osv_snapshot.py --output /data/osv-snapshot
+
+# Then set:
+ACRQA_OSV_SNAPSHOT_DIR=/data/osv-snapshot
+ACRQA_MODE=offline
+```
 
 ---
 

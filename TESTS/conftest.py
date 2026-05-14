@@ -8,6 +8,49 @@ from unittest.mock import MagicMock, Mock, patch
 import pytest
 
 
+def _db_reachable() -> bool:
+    """Return True if PostgreSQL is reachable."""
+    try:
+        import os
+
+        import psycopg2
+
+        url = os.environ.get("DATABASE_URL", "")
+        if url:
+            psycopg2.connect(url, connect_timeout=2).close()
+        else:
+            psycopg2.connect(
+                host=os.environ.get("DB_HOST", "localhost"),
+                port=int(os.environ.get("DB_PORT", 5432)),
+                dbname=os.environ.get("DB_NAME", "acrqa"),
+                user=os.environ.get("DB_USER", "acrqa"),
+                password=os.environ.get("DB_PASSWORD", ""),
+                connect_timeout=2,
+            ).close()
+        return True
+    except Exception:
+        return False
+
+
+_DB_AVAILABLE = None  # cached after first check
+
+
+def require_db(func):
+    """Decorator: skip test if PostgreSQL is unavailable."""
+    import functools
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        global _DB_AVAILABLE
+        if _DB_AVAILABLE is None:
+            _DB_AVAILABLE = _db_reachable()
+        if not _DB_AVAILABLE:
+            pytest.skip("PostgreSQL not available")
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
 @pytest.fixture(autouse=True)
 def mock_env(monkeypatch):
     """Automatically mock environment variables for all tests to prevent ValueError."""
