@@ -2,6 +2,17 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v3.3.1] — Observability & Grafana Finalization (May 14, 2026)
+
+### Fixed
+- **Prometheus Metrics Generation**: Fixed a double-brace `{{` bug in the histogram metric generation inside `CORE/utils/metrics.py` that was causing Prometheus scrape formatting failures.
+- **Histogram `_bucket` Suffix**: Fixed a bug where histogram buckets were emitted without the `_bucket` suffix when labels were present. This broke the `histogram_quantile()` PromQL calculations in Grafana for P95 latency.
+- **Global Request Tracking**: The `@track_request` decorator was previously imported but never applied to routes, causing the `/metrics` endpoint to remain empty. Removed the redundant decorators and replaced them with global `@app.before_request` and `@app.after_request` hooks in `FRONTEND/app.py` to auto-track all HTTP traffic.
+- **Grafana Datasource UID**: Fixed "Datasource not found" errors in the Grafana dashboard by explicitly pinning the `uid: prometheus` in `config/grafana/provisioning/datasources/prometheus.yml` to match the exported dashboard JSON.
+- **Dashboard SLO Panels**: Updated the SLO availability and latency queries to use the `status_code` labels that are now correctly exported by the global request hooks. Also reduced timeline windows from `[30d]` and `[7d]` to `[5m]` so that fresh deployments can instantly visualize SLO adherence without waiting days for minimum scrape point requirements.
+
+---
+
 ## [unreleased] — God Mode v2 + Phase 0/1/2 (May 5–6, 2026)
 
 ### Added — Phase 2 Test Infrastructure (May 6, 2026)

@@ -389,7 +389,7 @@
             "datasource": {"type": "prometheus", "uid": "prometheus"},
             "targets": [
                 {
-                    "expr": "(1 - sum(rate(acrqa_http_requests_total{status_code=~\"5..\"}[30d])) / sum(rate(acrqa_http_requests_total[30d]))) * 100",
+                    "expr": "(1 - sum(rate(acrqa_http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(acrqa_http_requests_total[5m]))) * 100",
                     "legendFormat": "Availability %",
                     "refId": "A"
                 }
@@ -423,7 +423,7 @@
             "datasource": {"type": "prometheus", "uid": "prometheus"},
             "targets": [
                 {
-                    "expr": "histogram_quantile(0.95, rate(acrqa_http_request_duration_seconds_bucket[7d])) * 1000",
+                    "expr": "histogram_quantile(0.95, sum(rate(acrqa_http_request_duration_seconds_bucket[5m])) by (le)) * 1000",
                     "legendFormat": "P95 ms",
                     "refId": "A"
                 }

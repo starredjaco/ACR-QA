@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./DATABASE/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
@@ -28,7 +28,7 @@ services:
     image: redis:7-alpine
     container_name: acr-qa-redis
     ports:
-      - "6379:6379"
+      - "6380:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -64,7 +64,7 @@ services:
       FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:-acr-qa-dev-secret}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-jwt-secret-change-in-prod}
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes: &app-volumes
       - ./CORE:/app/CORE
       - ./DATABASE:/app/DATABASE
@@ -95,7 +95,7 @@ services:
     command: uvicorn FRONTEND.api.main:app --host 0.0.0.0 --port 8000 --workers 4
     environment: *app-env
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes: *app-volumes
     depends_on:
       postgres:
@@ -139,7 +139,7 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--web.enable-lifecycle'
     ports:
-      - "9090:9090"
+      - "9091:9090"
     volumes:
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -159,7 +159,7 @@ services:
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/acr-qa-dashboard.json
     ports:
-      - "3000:3000"
+      - "3005:3000"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./config/grafana/provisioning:/etc/grafana/provisioning:ro

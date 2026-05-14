@@ -36,6 +36,11 @@ RUN pip install --no-cache-dir --upgrade pip \
 # ── Stage 2: Go security tools ────────────────────────────────────────────────
 FROM golang:1.22-alpine AS go-tools
 
+RUN apk add --no-cache git
+
+# Fix for proxy.golang.org DNS/Network timeouts
+ENV GOPROXY=https://goproxy.io,direct
+
 RUN go install github.com/securego/gosec/v2/cmd/gosec@v2.18.2 \
     && go install honnef.co/go/tools/cmd/staticcheck@v0.4.3
 

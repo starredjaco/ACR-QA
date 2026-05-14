@@ -97,19 +97,21 @@ class MetricsCollector:
                 lines.append(f"# TYPE {name} histogram")
                 seen_hist_names.add(name)
 
-            base_labels = key[key.index("{") : key.index("}")] + "," if "{" in key else ""
+            # Extract label content (between { and }) to avoid double-brace bug
+            base_labels = key[key.index("{") + 1 : key.index("}")] + "," if "{" in key else ""
+            # Always use _bucket suffix — required for histogram_quantile() in PromQL
             prefix = name
 
             cumulative = 0
             for bucket, count in sorted(data["buckets"].items()):
                 cumulative += count
                 if base_labels:
-                    lines.append(f'{prefix}{{{base_labels}le="{bucket}"}} {cumulative}')
+                    lines.append(f'{prefix}_bucket{{{base_labels}le="{bucket}"}} {cumulative}')
                 else:
                     lines.append(f'{prefix}_bucket{{le="{bucket}"}} {cumulative}')
 
             if base_labels:
-                lines.append(f'{prefix}{{{base_labels}le="+Inf"}} {data["count"]}')
+                lines.append(f'{prefix}_bucket{{{base_labels}le="+Inf"}} {data["count"]}')
             else:
                 lines.append(f'{prefix}_bucket{{le="+Inf"}} {data["count"]}')
             lines.append(f"{prefix}_sum {data['sum']}")
