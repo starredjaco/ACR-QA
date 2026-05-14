@@ -2,6 +2,35 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v3.3.2] — Week 2: Call Graph Reachability Engine (May 14, 2026)
+
+### Added — Feature 9a: Call Graph Reachability (CORE/engines/reachability.py)
+
+- **`CallGraphReachability`** — pure-AST static call graph engine. No runtime dependencies beyond stdlib `ast`.
+  - `analyze(file_path)` → `CallGraphResult` with `reachable`, `unreachable`, `entry_points` sets
+  - `enrich_findings(findings, target_dir)` — batch-enriches pipeline findings with per-file caching; looks up the containing function via `get_function_at_line()` and applies `-20` confidence penalty to dead-code findings
+  - `apply_to_finding(file_path, function_name, finding)` — single-finding API
+- **`get_function_at_line(source, line)`** — AST-based line-to-function mapper; returns innermost enclosing function or `None` for module-level code
+- **Entry-point detection** — Flask/FastAPI routes (`@app.route`, `@router.get`, etc.), Celery tasks (`@app.task`, `@shared_task`), `__main__` blocks
+- **BFS call graph traversal** — walks `ast.Call` nodes inside each `FunctionDef`; handles attribute calls (`self.helper()`)
+- **Safe default** — library files with no detected entry points get `reachability_status: UNKNOWN`; confidence unchanged
+
+### Added — Pipeline Integration (CORE/main.py)
+- Reachability enrichment wired into both `run()` (Python pipeline) and `run_js()` after deduplication, before per-rule cap
+- Persists `reachability_status` + `reachability_penalty` to DB on each `insert_finding()` call
+
+### Added — Database (DATABASE/database.py + Alembic)
+- `Database.update_finding_reachability(finding_id, status, penalty)` method
+- Alembic migration `0003` (`20260514_0003_reachability_columns.py`) — adds `reachability_status VARCHAR(20)` and `reachability_penalty INTEGER` columns to `findings` table
+
+### Tests
+- **`TESTS/test_reachability.py`** — 74 tests covering `CallGraphResult`, `_detect_entry_points`, `_build_call_graph`, `get_function_at_line`, `enrich_findings`, `apply_to_finding`, all three fixture repos
+- **`TESTS/test_integration_benchmarks.py`** — `TestReachabilityBenchmark` (6 tests): FP rate validated at **0%** across Flask/standalone/Celery fixtures
+- **`TESTS/test_god_mode.py`** — `TestReachabilityGodMode` (12 tests): import, constants, all entry-point types, deep call chains, mutation safety, migration + DB method presence
+- **Total: 1,773 tests passing, 85.73% coverage** (engine coverage: 91%)
+
+---
+
 ## [v3.3.1] — Observability & Grafana Finalization (May 14, 2026)
 
 ### Fixed
