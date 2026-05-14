@@ -28,9 +28,11 @@ Source Code
 [3b] Config Filtering         ← .acrqa.yml: disabled rules, ignored paths, min severity
 [3c] Triage Memory            ← Suppress known FPs from learned patterns (Feature 6)
 [3d] Deduplication            ← 2-pass: exact (file+line+rule) + cross-tool category
-[3e] Call Graph Reachability  ← AST call graph; -20 confidence for dead-code findings (Feature 9a)
+[3e] Taint Analyzer           ← Intra-procedural AST taint flow; source → sink detection (Phase 1)
+[3f] Call Graph Reachability  ← AST call graph; -20 confidence for dead-code findings (Feature 9a)
 [3f] Per-Rule Cap             ← max 5 findings/rule (noise control)
-[3g] Priority Sort            ← security/high first for within-limit AI coverage
+[3g] Per-Rule Cap             ← max 5 findings/rule (noise control)
+[3h] Priority Sort            ← security/high first for within-limit AI coverage
     │
     ▼
 [4]  AI Explanation           ← Groq LLM + RAG from config/rules.yml
