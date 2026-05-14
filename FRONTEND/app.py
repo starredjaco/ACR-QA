@@ -15,7 +15,9 @@ from werkzeug.exceptions import HTTPException
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from CORE.utils.metrics import register_metrics_endpoint, track_request
+import time as _time
+
+from CORE.utils.metrics import metrics, register_metrics_endpoint
 from DATABASE.database import Database
 
 logger = logging.getLogger(__name__)
@@ -28,6 +30,27 @@ app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", os.urandom(32).hex())
 
 # Register Prometheus /metrics endpoint for observability
 register_metrics_endpoint(app)
+
+
+# Automatically track ALL requests for Prometheus metrics
+@app.before_request
+def _start_timer():
+    from flask import g
+
+    g._start_time = _time.time()
+
+
+@app.after_request
+def _track_request_metrics(response):
+    from flask import g
+    from flask import request as req
+
+    duration = _time.time() - getattr(g, "_start_time", _time.time())
+    endpoint = req.path
+    metrics.inc_counter("acrqa_http_requests_total", {"endpoint": endpoint, "status_code": str(response.status_code)})
+    metrics.observe_histogram("acrqa_http_request_duration_seconds", duration, {"endpoint": endpoint})
+    return response
+
 
 db = Database()
 
@@ -859,7 +882,6 @@ def scan_ai_code():
 
 
 @app.route("/api/cost-benefit/<int:run_id>")
-@track_request("/api/cost-benefit")
 def cost_benefit(run_id):
     """N4: Cost-benefit analysis for an analysis run."""
     try:
@@ -907,7 +929,6 @@ def cost_benefit(run_id):
 
 
 @app.route("/api/findings/<int:finding_id>/mark-false-positive", methods=["POST"])
-@track_request("/api/findings/mark-false-positive")
 def mark_false_positive(finding_id):
     """Mark a finding as a false positive via user feedback."""
     try:
@@ -951,7 +972,6 @@ def mark_false_positive(finding_id):
 
 
 @app.route("/api/suppression-rules", methods=["GET"])
-@track_request("/api/suppression-rules")
 def get_suppression_rules():
     """Return all active suppression rules learned from FP feedback (Feature 6)."""
     try:
@@ -966,7 +986,6 @@ def get_suppression_rules():
 
 
 @app.route("/api/findings/<int:finding_id>/feedback", methods=["POST"])
-@track_request("/api/findings/feedback")
 def submit_feedback(finding_id):
     """Submit general feedback (helpful/not helpful) for a finding."""
     try:

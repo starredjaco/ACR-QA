@@ -196,7 +196,7 @@ These appeared in v1. They're still wrong.
 - [ ] Can a stranger run the project with one command? (`make up && make db-migrate && make seed-admin`)
 - [ ] Is there a live URL anyone can hit? (Railway)
 - [ ] Does CI deploy on every merge to main?
-- [ ] Can I show a Grafana screenshot of real traffic?
+- [x] Can I show a Grafana screenshot of real traffic? (Yes! See the live dashboard.)
 - [ ] Is the FP rate on Flask/httpx below 5% (down from 10.3%)? (Reachability engine)
 - [ ] Can I demo ACR-QA running inside Claude Code or Cursor? (MCP server)
 - [ ] Can I show an exploit being executed in a sandboxed container? (PoC engine)

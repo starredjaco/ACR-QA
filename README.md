@@ -81,9 +81,10 @@ make up
 
 | Service | URL |
 |---------|-----|
-| Dashboard + API | http://localhost:5000 |
-| Grafana | http://localhost:3000 (admin/admin) |
-| Prometheus | http://localhost:9090 |
+| Dashboard + App | http://localhost:5001 |
+| FastAPI | http://localhost:8001 |
+| Grafana | http://localhost:3005 (admin/admin) |
+| Prometheus | http://localhost:9091 |
 
 ### Option B — Local
 
@@ -91,7 +92,7 @@ make up
 pip install -r requirements.txt
 createdb acrqa && psql -d acrqa -f DATABASE/schema.sql
 cp .env.example .env && source .env
-python3 FRONTEND/app.py       # → http://localhost:5000
+python3 FRONTEND/app.py       # → http://localhost:5001
 ```
 
 ### Run your first analysis
@@ -285,7 +286,7 @@ acr-qa review
 
 ## Monitoring
 
-Prometheus scrapes `/metrics` every 15 s. Grafana dashboard at **http://localhost:3000** (admin/admin):
+Prometheus scrapes `/metrics` every 15 s. Grafana dashboard at **http://localhost:3005** (admin/admin):
 
 | Panel | Metric |
 |-------|--------|
