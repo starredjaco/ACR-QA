@@ -1,13 +1,36 @@
 #!/usr/bin/env python3
 """
 ACR-QA Auto-fix Engine
-Generates code fixes for common issues
+Generates code fixes for common issues.
+
+Phase 4 adds generate_patch() — LLM-powered unified diff generation.
 """
 
+from __future__ import annotations
+
+import difflib
 import logging
 import re
+from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
+
+_PATCH_PROMPT = """You are a security engineer. Fix the vulnerability in the code below.
+
+Finding:
+  Rule:     {rule_id}
+  Severity: {severity}
+  File:     {file_path}:{line_number}
+  Message:  {message}
+
+Original code (lines {start_line}–{end_line}):
+```python
+{code_snippet}
+```
+
+Return ONLY the fixed version of the code block above — no explanation, no markdown fences,
+no extra text. Preserve indentation exactly. The fix must eliminate the vulnerability."""
 
 
 class AutoFixEngine:
@@ -270,6 +293,108 @@ class AutoFixEngine:
             "description": "Remove dead/unreachable code",
         }
 
+    # ── LLM-powered patch generation (Phase 4) ──────────────────────────────
+
+    def generate_patch(
+        self,
+        finding: dict[str, Any],
+        target_dir: str | None = None,
+        context_lines: int = 10,
+    ) -> dict[str, Any]:
+        file_path = finding.get("file", finding.get("file_path", ""))
+        line_num = int(finding.get("line", finding.get("line_number", 0)))
+        rule_id = finding.get("canonical_rule_id", finding.get("rule_id", "UNKNOWN"))
+        severity = finding.get("severity", "unknown")
+        message = finding.get("message", "")
+
+        try:
+            full_path = (
+                Path(target_dir) / file_path if target_dir and not Path(file_path).is_absolute() else Path(file_path)
+            )
+            source_lines = full_path.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
+        except OSError as e:
+            return {
+                "patch": "",
+                "confidence": 0.0,
+                "explanation": f"Cannot read file: {e}",
+                "valid": False,
+                "validation_note": "file_not_found",
+            }
+
+        start = max(0, line_num - context_lines - 1)
+        end = min(len(source_lines), line_num + context_lines)
+        snippet = "".join(source_lines[start:end])
+
+        prompt = _PATCH_PROMPT.format(
+            rule_id=rule_id,
+            severity=severity,
+            file_path=file_path,
+            line_number=line_num,
+            message=message,
+            start_line=start + 1,
+            end_line=end,
+            code_snippet=snippet,
+        )
+
+        fixed_snippet = self._call_llm_for_fix(prompt, snippet)
+        if fixed_snippet is None:
+            return {
+                "patch": "",
+                "confidence": 0.0,
+                "explanation": "LLM unavailable — rule-based fix only",
+                "valid": False,
+                "validation_note": "no_llm_key",
+            }
+
+        diff = list(
+            difflib.unified_diff(
+                snippet.splitlines(keepends=True),
+                (fixed_snippet + "\n").splitlines(keepends=True),
+                fromfile=f"a/{file_path}",
+                tofile=f"b/{file_path}",
+                lineterm="\n",
+            )
+        )
+        patch_str = "".join(diff)
+
+        validation = validate_fix(
+            original_code=snippet,
+            fixed_code=fixed_snippet,
+            language="python",
+            rule_id=rule_id,
+        )
+
+        confidence = 0.85 if validation["valid"] else 0.50
+        return {
+            "patch": patch_str,
+            "confidence": confidence,
+            "explanation": f"Fixes {rule_id}: {message[:120]}",
+            "valid": validation["valid"],
+            "validation_note": validation["validation_note"],
+        }
+
+    def _call_llm_for_fix(self, prompt: str, original: str) -> str | None:
+        try:
+            from CORE.engines.explainer import KeyPool
+
+            pool = KeyPool()
+            if not pool.has_keys:
+                return None
+            client = pool.next_client()
+            completion = client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model=pool._model_override or "llama-3.1-8b-instant",
+                max_tokens=600,
+                temperature=0.1,
+            )
+            text = completion.choices[0].message.content.strip()
+            text = re.sub(r"^```[a-z]*\n?", "", text, flags=re.MULTILINE)
+            text = re.sub(r"\n?```$", "", text, flags=re.MULTILINE)
+            return text.strip()
+        except Exception as e:
+            logger.debug(f"Autofix LLM call failed: {e}")
+            return None
+
 
 def apply_fixes(fixes: list[dict]) -> dict[str, list[str]]:
     """
@@ -527,6 +652,10 @@ def validate_fix(
             os.unlink(temp_path)
         except OSError:
             pass
+
+
+# Alias for plan-consistent naming (plan uses lowercase f)
+AutofixEngine = AutoFixEngine
 
 
 if __name__ == "__main__":

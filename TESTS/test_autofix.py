@@ -508,3 +508,124 @@ class TestValidateFix:
             result = validate_fix("old", "x = 1", "python", "X")
 
         assert result is not None
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 — AutofixEngine alias + generate_patch
+# ---------------------------------------------------------------------------
+
+from CORE.engines.autofix import AutofixEngine  # noqa: E402
+
+
+def _mock_pool_for_autofix(response: str, has_keys: bool = True) -> MagicMock:
+    msg = MagicMock()
+    msg.content = response
+    choice = MagicMock()
+    choice.message = msg
+    comp = MagicMock()
+    comp.choices = [choice]
+    client = MagicMock()
+    client.chat.completions.create.return_value = comp
+    pool = MagicMock()
+    pool.has_keys = has_keys
+    pool._model_override = None
+    pool.next_client.return_value = client
+    return pool
+
+
+class TestAutofixEngineAlias:
+    def test_alias_is_same_class(self):
+        assert AutofixEngine is AutoFixEngine
+
+    def test_alias_has_generate_patch(self):
+        assert hasattr(AutofixEngine, "generate_patch")
+
+    def test_alias_has_can_fix(self):
+        assert hasattr(AutofixEngine, "can_fix")
+
+
+class TestGeneratePatch:
+    def _write_vuln(self, tmp_path: Path) -> Path:
+        f = tmp_path / "vuln.py"
+        f.write_text("import sqlite3\ndef search(q):\n    cursor.execute(q)\n")
+        return f
+
+    def test_returns_required_keys(self, tmp_path):
+        f = self._write_vuln(tmp_path)
+        finding = {"canonical_rule_id": "SECURITY-027", "file_path": str(f), "line_number": 3, "message": "SQLi"}
+        with patch(
+            "CORE.engines.explainer.KeyPool", return_value=_mock_pool_for_autofix("fixed = parameterized_query")
+        ):
+            engine = AutofixEngine()
+            result = engine.generate_patch(finding)
+        assert all(k in result for k in ("patch", "confidence", "explanation", "valid", "validation_note"))
+
+    def test_missing_file_returns_error(self):
+        finding = {
+            "canonical_rule_id": "SECURITY-027",
+            "file_path": "/no/such/file.py",
+            "line_number": 1,
+            "message": "x",
+        }
+        engine = AutofixEngine()
+        result = engine.generate_patch(finding)
+        assert result["patch"] == ""
+        assert result["valid"] is False
+
+    def test_no_llm_key_returns_no_patch(self, tmp_path):
+        f = self._write_vuln(tmp_path)
+        finding = {"canonical_rule_id": "SECURITY-027", "file_path": str(f), "line_number": 3, "message": "SQLi"}
+        with patch("CORE.engines.explainer.KeyPool", return_value=_mock_pool_for_autofix("", has_keys=False)):
+            engine = AutofixEngine()
+            result = engine.generate_patch(finding)
+        assert result["patch"] == ""
+
+    def test_patch_is_unified_diff_format(self, tmp_path):
+        f = self._write_vuln(tmp_path)
+        finding = {"canonical_rule_id": "SECURITY-027", "file_path": str(f), "line_number": 3, "message": "SQLi"}
+        fixed_code = "import sqlite3\ndef search(q):\n    cursor.execute('SELECT * FROM t WHERE q=?', (q,))\n"
+        with patch("CORE.engines.explainer.KeyPool", return_value=_mock_pool_for_autofix(fixed_code)):
+            with patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="[]")):
+                engine = AutofixEngine()
+                result = engine.generate_patch(finding)
+        if result["patch"]:
+            assert "---" in result["patch"] or "@@" in result["patch"] or result["patch"].startswith("#")
+
+    def test_confidence_between_0_and_1(self, tmp_path):
+        f = self._write_vuln(tmp_path)
+        finding = {"canonical_rule_id": "SECURITY-027", "file_path": str(f), "line_number": 3, "message": "SQLi"}
+        with patch("CORE.engines.explainer.KeyPool", return_value=_mock_pool_for_autofix("safe_code = True")):
+            with patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="[]")):
+                engine = AutofixEngine()
+                result = engine.generate_patch(finding)
+        assert 0.0 <= result["confidence"] <= 1.0
+
+    def test_llm_exception_handled_gracefully(self, tmp_path):
+        f = self._write_vuln(tmp_path)
+        finding = {"canonical_rule_id": "SECURITY-027", "file_path": str(f), "line_number": 3, "message": "SQLi"}
+        pool = _mock_pool_for_autofix("x")
+        pool.next_client.side_effect = RuntimeError("LLM exploded")
+        with patch("CORE.engines.explainer.KeyPool", return_value=pool):
+            engine = AutofixEngine()
+            result = engine.generate_patch(finding)
+        assert result["patch"] == ""
+        assert result["valid"] is False
+
+    def test_markdown_fence_stripped(self, tmp_path):
+        f = self._write_vuln(tmp_path)
+        finding = {"canonical_rule_id": "SECURITY-027", "file_path": str(f), "line_number": 3, "message": "SQLi"}
+        fenced = "```python\nimport sqlite3\ndef search(q):\n    pass\n```"
+        with patch("CORE.engines.explainer.KeyPool", return_value=_mock_pool_for_autofix(fenced)):
+            with patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="[]")):
+                engine = AutofixEngine()
+                result = engine.generate_patch(finding)
+        assert "```" not in result.get("patch", "")
+
+    def test_explanation_contains_rule_id(self, tmp_path):
+        f = self._write_vuln(tmp_path)
+        finding = {"canonical_rule_id": "SECURITY-027", "file_path": str(f), "line_number": 3, "message": "SQLi"}
+        with patch("CORE.engines.explainer.KeyPool", return_value=_mock_pool_for_autofix("safe = parameterized")):
+            with patch("subprocess.run", return_value=MagicMock(returncode=0, stdout="[]")):
+                engine = AutofixEngine()
+                result = engine.generate_patch(finding)
+        assert "SECURITY-027" in result["explanation"]
