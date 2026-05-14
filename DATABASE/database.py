@@ -572,6 +572,49 @@ class Database:
         rows = self.execute(query, fetch=True)
         return [r["repo_name"] for r in rows] if rows else []
 
+    # ===== FINDING EMBEDDINGS (learned suppression v2) =====
+
+    def insert_finding_embedding(
+        self,
+        rule_id: str,
+        embedding_json: str,
+        code_context: str | None = None,
+        finding_id: int | None = None,
+    ) -> int | None:
+        """Store a sentence-transformer embedding for a dismissed finding."""
+        query = """
+            INSERT INTO finding_embeddings (finding_id, rule_id, code_context, embedding_json)
+            VALUES (%s, %s, %s, %s)
+            RETURNING id
+        """
+        result = self.execute(query, (finding_id, rule_id, code_context, embedding_json), fetch=True)
+        return result[0]["id"] if result else None
+
+    def get_all_finding_embeddings(self) -> list[dict]:
+        """Return all stored dismissal embeddings for similarity matching."""
+        query = """
+            SELECT id, finding_id, rule_id, code_context, embedding_json
+            FROM finding_embeddings
+            ORDER BY suppressed_at DESC
+        """
+        rows = self.execute(query, fetch=True)
+        return [dict(r) for r in rows] if rows else []
+
+    def get_finding_embeddings_by_rule(self, rule_id: str) -> list[dict]:
+        """Return embeddings filtered to a specific canonical rule_id."""
+        query = """
+            SELECT id, finding_id, rule_id, code_context, embedding_json
+            FROM finding_embeddings
+            WHERE rule_id = %s
+            ORDER BY suppressed_at DESC
+        """
+        rows = self.execute(query, (rule_id,), fetch=True)
+        return [dict(r) for r in rows] if rows else []
+
+    def delete_finding_embedding(self, embedding_id: int) -> None:
+        """Remove a stored embedding (e.g. when a suppression is reverted)."""
+        self.execute("DELETE FROM finding_embeddings WHERE id = %s", (embedding_id,))
+
     def close(self):
         """Close database connection pool"""
         if Database._pool:
