@@ -1442,7 +1442,7 @@ That's the headline. That's what gets the blog post on Hacker News and the paper
 
 ---
 
-> ## ➡️ NEXT PHASE: **Phase 0 — Foundation (Cloud + Observability)**
+> ## ➡️ NEXT PHASE: **Phase 2 — Engine 6: Offline Mode**
 >
 > Phase order (authoritative): **0 → 9 → 1 → 2 → 6 → 3 → 4 → 5 → 7 → 10 → 11 → 8 → 12**
 >
@@ -1464,17 +1464,17 @@ That's the headline. That's what gets the blog post on Hacker News and the paper
 
 > **Scope decision (May 14 2026):** MVP only. 5 sources + 3 sinks + no sanitizers. Intra-procedural, single function scope. Enough to claim "Snyk-level taint analysis" in the thesis; inter-procedural + sanitizer support is post-defense.
 
-- [ ] **1.1** `config/taint_sources.yml` — 5 sources: `request.args`, `request.form`, `request.json`, `request.cookies`, `os.environ`
-- [ ] **1.2** `config/taint_sinks.yml` — 3 sinks: `execute(`, `eval(`, `subprocess.`
-- [ ] **1.3** `CORE/engines/taint_analyzer.py` — AST visitor, intra-procedural propagation
-- [ ] **1.4** Multi-hop tracking (assign / fstring / format / call / attr / subscript)
-- [ ] **1.5** Pipeline wiring in `CORE/main.py.run()` after Bandit, before reachability
-- [ ] **1.6** Alembic migration `0007` — `taint_source`, `taint_path`, `taint_confidence` columns
-- [ ] **1.7** DB methods in `DATABASE/database.py` for taint fields
-- [ ] **1.8** `GET /v1/runs/{id}/findings` returns taint fields
-- [ ] **1.9** 4 fixture files in `TESTS/fixtures/taint/`
-- [ ] **1.10** `TESTS/test_taint_analyzer.py` — ~40 tests
-- [ ] **1.11** Docs: `docs/architecture/ARCHITECTURE.md` + ADR for taint engine
+- [x] **1.1** `config/taint_sources.yml` — 5 sources: `request.args`, `request.form`, `request.json`, `request.cookies`, `os.environ`
+- [x] **1.2** `config/taint_sinks.yml` — 3 sinks: `execute(`, `eval(`, `subprocess.`
+- [x] **1.3** `CORE/engines/taint_analyzer.py` — AST visitor, intra-procedural propagation
+- [x] **1.4** Multi-hop tracking (assign / fstring / format / call / attr / subscript)
+- [x] **1.5** Pipeline wiring in `CORE/main.py.run()` after Bandit, before reachability
+- [x] **1.6** Alembic migration `0007` — `taint_source`, `taint_path`, `taint_confidence` columns
+- [x] **1.7** DB methods in `DATABASE/database.py` for taint fields
+- [x] **1.8** `GET /v1/runs/{id}/findings` returns taint fields
+- [x] **1.9** 4 fixture files in `TESTS/fixtures/taint/`
+- [x] **1.10** `TESTS/test_taint_analyzer.py` — ~40 tests
+- [x] **1.11** Docs: `docs/architecture/ARCHITECTURE.md` + ADR for taint engine
 
 ## Phase 2 — Engine 6: Offline Mode (privacy moat, also unlocks airplane-mode demo)
 
@@ -1638,7 +1638,7 @@ Phase 9  — Third-Party Audit       [ ▱▱▱▱▱▱▱ ]  0/7
 Phase 10 — Testing Layers          [ ▱▱▱▱▱▱▱▱ ]  0/8
 Phase 11 — Closeout                [ ▱▱▱▱▱▱▱▱▱▱▱▱▱▱ ]  0/14
 
-OVERALL: 16/128 tasks · 13% complete · ➡️ NEXT: Phase 1 (Taint Analyzer MVP)
+OVERALL: 27/128 tasks · 21% complete · ➡️ NEXT: Phase 2 (Offline Mode)
 ```
 
 ## 13.2 THE Execution Order (authoritative — do exactly this)

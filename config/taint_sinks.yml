@@ -1,0 +1,21 @@
+# Taint sinks — dangerous call sites where tainted data must not arrive.
+# Each entry names the sink function and the canonical rule it violates.
+
+sinks:
+  - name: execute
+    description: "Database cursor .execute() — SQL injection"
+    canonical_rule_id: SECURITY-027
+    cwe: CWE-89
+    severity: high
+
+  - name: eval
+    description: "Python eval() / exec() — arbitrary code execution"
+    canonical_rule_id: SECURITY-001
+    cwe: CWE-94
+    severity: high
+
+  - name: subprocess
+    description: "subprocess.run/call/Popen/check_output with shell=True or tainted args"
+    canonical_rule_id: SECURITY-021
+    cwe: CWE-78
+    severity: high

@@ -180,6 +180,14 @@ class AnalysisPipeline:
         # Deduplicate findings (same file+line+rule from different tools)
         findings = self._deduplicate_findings(findings)
 
+        # Taint Analyzer: detect user-input → dangerous-sink flows (Feature Phase-1)
+        try:
+            from CORE.engines.taint_analyzer import TaintAnalyzer
+
+            findings = TaintAnalyzer().enrich_findings(findings, str(self.target_dir))
+        except Exception as _ta_err:
+            logger.warning(f"Taint analysis skipped: {_ta_err}")
+
         # Call Graph Reachability: penalise findings in dead-code functions (Feature 9)
         try:
             from CORE.engines.reachability import CallGraphReachability

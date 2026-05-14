@@ -1,0 +1,34 @@
+# Taint sources — user-controlled data entry points tracked by the taint analyzer.
+# Each entry defines an attribute path that the AST visitor recognises as tainted.
+
+sources:
+  - name: request.args
+    description: "Flask/FastAPI URL query parameters"
+    patterns:
+      - "request.args"
+      - "request.args.get"
+
+  - name: request.form
+    description: "HTML form POST body fields"
+    patterns:
+      - "request.form"
+      - "request.form.get"
+
+  - name: request.json
+    description: "JSON request body (parsed)"
+    patterns:
+      - "request.json"
+      - "request.get_json"
+
+  - name: request.cookies
+    description: "HTTP cookies"
+    patterns:
+      - "request.cookies"
+      - "request.cookies.get"
+
+  - name: os.environ
+    description: "Environment variables (may carry secrets from untrusted deployments)"
+    patterns:
+      - "os.environ"
+      - "os.environ.get"
+      - "os.getenv"

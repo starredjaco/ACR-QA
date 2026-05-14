@@ -199,6 +199,21 @@ class Database:
         """
         self.execute(query, (status, penalty, finding_id))
 
+    def update_finding_taint(
+        self,
+        finding_id: int,
+        taint_source: str,
+        taint_path: list,
+        taint_confidence: float,
+    ) -> None:
+        """Persist taint analysis result for a finding (Phase 1)."""
+        query = """
+            UPDATE findings
+            SET taint_source = %s, taint_path = %s, taint_confidence = %s
+            WHERE id = %s
+        """
+        self.execute(query, (taint_source, Json(taint_path), taint_confidence, finding_id))
+
     def update_finding_correlation(self, finding_id, confidence_score, evidence):
         """Update a finding's confidence and evidence with cross-language correlation data"""
         query = """

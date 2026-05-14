@@ -86,6 +86,9 @@ async def get_findings(
                 "tool": f.get("tool"),
                 "confidence": confidence,
                 "ground_truth": f.get("ground_truth"),
+                "taint_source": f.get("taint_source"),
+                "taint_path": f.get("taint_path"),
+                "taint_confidence": f.get("taint_confidence"),
             }
         )
 
