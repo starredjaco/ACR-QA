@@ -1442,7 +1442,7 @@ That's the headline. That's what gets the blog post on Hacker News and the paper
 
 ---
 
-> ## ➡️ NEXT PHASE: **Phase 4 — Engine 4: Auto-Fix Patch Generator**
+> ## ➡️ NEXT PHASE: **Phase 5 — Engine 5: Supply Chain + SBOM**
 >
 > Phase order (authoritative): **0 → 9 → 1 → 2 → 6 → 3 → 4 → 5 → 7 → 10 → 11 → 8 → 12**
 >
@@ -1506,10 +1506,10 @@ That's the headline. That's what gets the blog post on Hacker News and the paper
 
 > **Scope decision (May 14 2026):** Generates patch diff + shows it in the dashboard. NO GitHub PR creation (complex, fragile, risky for a thesis demo). "Here's the suggested fix" is 80% of the value at 30% of the work.
 
-- [ ] **5.1** `CORE/engines/autofix.py` — `AutofixEngine.generate_patch(finding)` → unified diff string
-- [ ] **5.2** Endpoint `GET /v1/runs/{id}/findings/{fid}/autofix` returns `{patch, confidence, explanation}`
-- [ ] **5.3** Patch validation: re-scan patched snippet, assert no new findings
-- [ ] **5.4** `TESTS/test_autofix.py` — ~25 tests with fixture code snippets
+- [x] **5.1** `CORE/engines/autofix.py` — `AutofixEngine.generate_patch(finding)` → unified diff string
+- [x] **5.2** Endpoint `GET /v1/runs/{id}/findings/{fid}/autofix` returns `{patch, confidence, explanation}`
+- [x] **5.3** Patch validation: re-scan patched snippet, assert no new findings
+- [x] **5.4** `TESTS/test_autofix.py` — ~25 tests with fixture code snippets
 
 ## Phase 5 — Engine 5: Supply Chain + SBOM
 
@@ -1629,7 +1629,7 @@ Phase 0  — Foundation              [ ██▱▱▱▱▱ ]  3/7  (4 deferred
 Phase 1  — Taint Analyzer MVP      [ ▱▱▱▱▱▱▱▱▱▱▱ ]  0/11
 Phase 2  — Offline Mode            [ ████████████▱ ] 12/13
 Phase 3  — AI Triage Agent         [ ▱▱▱▱▱▱▱ ]  0/7
-Phase 4  — Auto-Fix Patch          [ ▱▱▱▱ ]  0/4
+Phase 4  — Auto-Fix Patch          [ ████ ]  4/4 ✅
 Phase 5  — Supply Chain            [ ▱▱▱▱▱▱▱▱ ]  0/8
 Phase 6  — Dashboard React/shadcn  [ ▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ ]  0/29
 Phase 7  — Marimo Notebook         [ ▱▱▱▱▱▱▱ ]  0/7
@@ -1638,7 +1638,7 @@ Phase 9  — Third-Party Audit       [ ▱▱▱▱▱▱▱ ]  0/7
 Phase 10 — Testing Layers          [ ▱▱▱▱▱▱▱▱ ]  0/8
 Phase 11 — Closeout                [ ▱▱▱▱▱▱▱▱▱▱▱▱▱▱ ]  0/14
 
-OVERALL: 46/128 tasks · 36% complete · ➡️ NEXT: Phase 4 (Auto-Fix Patch Generator)
+OVERALL: 50/128 tasks · 39% complete · ➡️ NEXT: Phase 5 (Supply Chain + SBOM)
 ```
 
 ## 13.2 THE Execution Order (authoritative — do exactly this)
