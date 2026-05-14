@@ -1,0 +1,55 @@
+# =============================================================================
+# ACR-QA — Production Deploy (Railway)
+# =============================================================================
+# Auto-deploys to Railway production on every push to main.
+# Requires: RAILWAY_TOKEN secret set in repo Settings → Secrets.
+# =============================================================================
+
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Railway
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to production
+        run: |
+          railway up \
+            --service acr-qa \
+            --environment production \
+            --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Wait for health check
+        run: |
+          echo "Waiting for deployment to become healthy..."
+          for i in $(seq 1 24); do
+            STATUS=$(curl -sf "${{ secrets.RAILWAY_PRODUCTION_URL }}/health" \
+              -o /dev/null -w "%{http_code}" 2>/dev/null || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Deployment healthy (attempt $i)"
+              exit 0
+            fi
+            echo "⏳ Attempt $i/24 — status $STATUS, retrying in 10s..."
+            sleep 10
+          done
+          echo "❌ Health check timed out after 4 minutes"
+          exit 1
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}

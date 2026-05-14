@@ -8,6 +8,9 @@ pydantic-settings==2.3.4
 redis==5.2.1
 httpx==0.28.1
 
+# Observability
+sentry-sdk[fastapi]==2.22.0
+
 # Async API (FastAPI)
 fastapi==0.115.0
 starlette>=0.37.2,<0.39.0

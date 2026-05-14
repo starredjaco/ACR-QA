@@ -10,20 +10,35 @@ Public endpoints: GET /health, GET /docs, GET /openapi.json
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, Query
-from fastapi.middleware.cors import CORSMiddleware
-
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from CORE import __version__
-from CORE.utils.metrics import metrics
-from DATABASE.database import Database
-from FRONTEND.api.deps import get_current_user, get_db
-from FRONTEND.api.models import HealthOut
-from FRONTEND.api.routers import auth, runs, scans
+from fastapi import Depends, FastAPI, Query  # noqa: E402
+from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
+
+from CORE import __version__  # noqa: E402
+from CORE.utils.metrics import metrics  # noqa: E402
+from DATABASE.database import Database  # noqa: E402
+from FRONTEND.api.deps import get_current_user, get_db  # noqa: E402
+from FRONTEND.api.models import HealthOut  # noqa: E402
+from FRONTEND.api.routers import auth, runs, scans  # noqa: E402
+
+# Sentry — degrades silently when SENTRY_DSN is not set
+_sentry_dsn = os.getenv("SENTRY_DSN")
+if _sentry_dsn:
+    import sentry_sdk
+    from sentry_sdk.integrations.fastapi import FastApiIntegration
+    from sentry_sdk.integrations.starlette import StarletteIntegration
+
+    sentry_sdk.init(
+        dsn=_sentry_dsn,
+        integrations=[StarletteIntegration(), FastApiIntegration()],
+        traces_sample_rate=0.1,
+        environment=os.getenv("RAILWAY_ENVIRONMENT", "development"),
+    )
 
 app = FastAPI(
     title="ACR-QA",

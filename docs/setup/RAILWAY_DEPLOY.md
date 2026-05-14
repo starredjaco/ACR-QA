@@ -39,13 +39,14 @@ GROQ_API_KEY_1=gsk_...
 GROQ_API_KEY_2=gsk_...
 GROQ_API_KEY_3=gsk_...
 GROQ_API_KEY_4=gsk_...
-FLASK_SECRET_KEY=<random 32 char string>
+JWT_SECRET_KEY=<random 32 char string>
 GITHUB_TOKEN=ghp_...
+SENTRY_DSN=https://...@sentry.io/...   # optional — get from sentry.io project settings
 ```
 
 `DATABASE_URL` and `REDIS_URL` are provided automatically — do not set them manually.
 
-### Step 4: Add RAILWAY_TOKEN to GitHub secrets
+### Step 4: Add GitHub secrets
 
 ```bash
 railway whoami --token   # prints your token
@@ -55,7 +56,8 @@ Go to: **GitHub repo → Settings → Secrets and variables → Actions → New 
 
 | Name | Value |
 |------|-------|
-| `RAILWAY_TOKEN` | `<token from above>` |
+| `RAILWAY_TOKEN` | `<token from railway whoami --token>` |
+| `RAILWAY_PRODUCTION_URL` | `https://acr-qa.up.railway.app` (your Railway domain) |
 
 ### Step 5: Push to trigger the first deploy
 
@@ -63,7 +65,8 @@ Go to: **GitHub repo → Settings → Secrets and variables → Actions → New 
 git push origin main
 ```
 
-The `deploy-preview.yml` workflow activates on the next PR opened against `main`.
+- `deploy.yml` — triggers on every push to `main`, deploys to production
+- `deploy-preview.yml` — triggers on every PR, deploys a throwaway preview environment
 
 ---
 
