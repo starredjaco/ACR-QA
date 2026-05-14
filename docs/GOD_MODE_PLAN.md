@@ -1582,18 +1582,15 @@ That's the headline. That's what gets the blog post on Hacker News and the paper
 
 ## Phase 9 — Third-Party Audit Layer (validation track)
 
+> **Scope decision (May 14 2026):** Keep the three tools that produce competitive comparison data (Snyk, CodeQL, SonarCloud) + two free automations (Dependabot, Codecov). Cut GitGuardian, Trivy, Lighthouse CI, PostHog — moved to post-defense parking lot.
+
 - [ ] **9.1** `.github/workflows/snyk.yml` — PR comment integration
 - [ ] **9.2** `.github/workflows/codeql.yml` — weekly scheduled scan
 - [ ] **9.3** `.github/dependabot.yml` — enable dep updates
-- [ ] **9.4** GitGuardian GitHub App installed
-- [ ] **9.5** `sonar-project.properties` + `.github/workflows/sonar.yml`
-- [ ] **9.6** `.github/workflows/trivy.yml` — Docker image scanning
-- [ ] **9.7** Codecov integration — replace local `htmlcov/`
-- [ ] **9.8** `.github/workflows/lighthouse.yml` — perf budget on live URL
-- [ ] **9.9** PostHog `<script>` in `dashboard/index.html`, events fired
-- [ ] **9.10** Run Snyk + CodeQL + SonarCloud on all 10 eval repos
-- [ ] **9.11** `docs/evaluation/COMPETITIVE_BASELINE.md` — full table, zero `?` cells
-- [ ] **9.12** `docs/evaluation/THIRD_PARTY_VALIDATION.md` — agreement tracker
+- [ ] **9.4** `sonar-project.properties` + `.github/workflows/sonar.yml`
+- [ ] **9.5** Codecov integration — replace local `htmlcov/`
+- [ ] **9.6** `docs/evaluation/COMPETITIVE_BASELINE.md` — full table, zero `?` cells
+- [ ] **9.7** `docs/evaluation/THIRD_PARTY_VALIDATION.md` — agreement tracker
 
 ## Phase 10 — Testing Layers (target ≥2,200 tests at v4.0.0)
 
@@ -1637,11 +1634,11 @@ Phase 5  — Supply Chain            [ ▱▱▱▱▱▱▱▱ ]  0/8
 Phase 6  — Dashboard React/shadcn  [ ▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ ]  0/29
 Phase 7  — Marimo Notebook         [ ▱▱▱▱▱▱▱ ]  0/7
 Phase 8  — Eval Expansion          [ ▱▱▱▱▱▱▱▱▱▱▱▱▱ ]  0/13
-Phase 9  — Third-Party Audit       [ ▱▱▱▱▱▱▱▱▱▱▱▱ ]  0/12
+Phase 9  — Third-Party Audit       [ ▱▱▱▱▱▱▱ ]  0/7
 Phase 10 — Testing Layers          [ ▱▱▱▱▱▱▱▱ ]  0/8
 Phase 11 — Closeout                [ ▱▱▱▱▱▱▱▱▱▱▱▱▱▱ ]  0/14
 
-OVERALL: 0/133 tasks · 0% complete
+OVERALL: 0/128 tasks · 0% complete · ➡️ NEXT: Phase 0
 ```
 
 ## 13.2 THE Execution Order (authoritative — do exactly this)
@@ -1655,7 +1652,7 @@ This order is the single answer to "what's next." It's derived from three rules:
 
 ### 1️⃣ Phase 0 — Foundation
 **Why first:** Cloud must be live for Sentry/UptimeRobot/PostHog/demo video. Doesn't block engine work, but every later phase wants a live URL to validate against. Set it up once, forget it.
-**Blocks:** nothing strictly, but unblocks: 9.8 (Lighthouse on live URL), 10.5 (live smoke test), 11.3 (demo video shoots against live URL).
+**Blocks:** nothing strictly, but unblocks: 10.5 (live smoke test), 11.3 (demo video shoots against live URL).
 
 ### 2️⃣ Phase 8 — Evaluation Expansion
 **Why second:** Pure repo-cloning + ground-truth YAML writing. **Zero engine dependencies.** Doing this NOW means every engine in Phases 1-6 immediately has 10 benchmark repos to measure recall + FP rate against. Doing it last means you discover engine weaknesses with no time to fix them.
@@ -1683,7 +1680,7 @@ This order is the single answer to "what's next." It's derived from three rules:
 
 ### 8️⃣ Phase 6 — Dashboard PRO Rebuild
 **Why eighth:** All 5 engines complete = real data to wire, zero stale mocks, no double-work. Dashboard is purely a *view* over the engines; building it last avoids rebuilding it three times as engines evolve. ~29 tasks, the heaviest single phase.
-**Blocks:** 7 (Marimo demo also benefits from dashboard screenshots), 9.9 (PostHog needs the React app), 10.1-10.2 (Playwright needs the React app), 11.3 (demo video screencasts the dashboard).
+**Blocks:** 7 (Marimo demo also benefits from dashboard screenshots), 10.1-10.2 (Playwright needs the React app), 11.3 (demo video screencasts the dashboard).
 
 ### 9️⃣ Phase 9 — Third-Party Audit + Competitive Baseline
 **Why ninth:** Needs Phase 8's 10 eval repos AND a stable codebase to point Snyk/CodeQL/SonarCloud at. Running these tools mid-development against changing engines = noisy reports. Running them after engines stabilize = clean comparison.
@@ -1761,3 +1758,29 @@ The MVP taint engine ships with 5 sources + 3 sinks + no sanitizers. Post-defens
 - Expand to 30 sources (Django, sys.argv, file reads, network sockets)
 - Expand to 15 sinks (template injection, path traversal, pickle, YAML load, etc.)
 - Inter-procedural propagation (cross-function taint flows)
+
+### Auto-Fix PR Creation (v4.1)
+
+The shipped Phase 4 generates a patch diff shown in the dashboard. Post-defense, wire it to GitHub:
+- `PyGithub` or `httpx`-based GitHub API integration
+- Clone → patch → validation re-scan → push branch → open PR with signed-by trailer
+- Per-category PR grouping (SQL injection in one PR, XSS in another)
+- SLSA attestation in PR comment
+- Safeguards: no default-branch push, no `.github/workflows/*` mods, max 10 files / 100 LoC
+- ~25 extra tests covering GitHub API mocking + tempdir git
+
+### Third-Party Tooling Extras (v4.1)
+
+Dropped from Phase 9 — none are needed for the competitive baseline story:
+- **GitGuardian** GitHub App — secrets scanning
+- **Trivy** `.github/workflows/trivy.yml` — Docker image CVE scanning
+- **Lighthouse CI** `.github/workflows/lighthouse.yml` — perf budget gate on live URL
+- **PostHog** analytics `<script>` in dashboard — usage telemetry
+
+### Dashboard Polish (v4.1+)
+
+Phase 6 ships a clean, functional React dashboard. Post-defense extras:
+- Keyboard shortcuts (cmdk command palette + `j/k` navigation)
+- Full mobile responsive pass
+- Lighthouse audit ≥90 perf / ≥95 a11y
+- Dark/light mode persistence in localStorage
