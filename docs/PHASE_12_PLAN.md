@@ -228,9 +228,9 @@ Week 2 — Engine Depth + Benchmark  [ ███████ ]  7/7 ✅
 Week 3 — DevOps Portfolio          [ █████ ]  5/5 ✅
 Week 4 — UI Production Polish      [ █████████ ]  9/9 ✅
 Week 5 — Chaos + Observability     [ ██████ ]  6/6 ✅
-Week 6 — Closeout v4.5.0           [ ▱▱▱▱▱▱ ]  0/6
+Week 6 — Closeout v4.5.0           [ ████▱▱ ]  4/6 (12.35 video + 12.36 YouTube = human tasks)
 
-OVERALL: 29/39 tasks · 74% complete
+OVERALL: 33/39 tasks · 85% complete
 <!-- Last updated: May 15, 2026 -->
 ```
 
@@ -256,6 +256,17 @@ OVERALL: 29/39 tasks · 74% complete
 | **12.11** | Hold-out test set | ✅ DONE | `docs/evaluation/HOLD_OUT_SPLIT.md` — 4 training repos vs 6 hold-out repos declared. Reporting convention: thesis abstract cites hold-out numbers only. |
 | **12.12** | Trivy adapter | ✅ DONE | `CORE/engines/trivy_adapter.py` — vuln + misconfig + secret parsing, graceful degradation. 13 tests. Wired into `run_extra_scanners()`. |
 | **12.13** | TruffleHog adapter | ✅ DONE | `CORE/engines/trufflehog_adapter.py` — NDJSON parsing, verified=high/unverified=medium, credential masking. 17 tests. Wired into `run_extra_scanners()`. |
+
+### Week 6 Status (4/6 done)
+
+| # | Task | Status | Result |
+|---|------|--------|--------|
+| **12.34** | Re-run full eval suite | ✅ DONE | EVALUATION.md updated: tests 2162→2297, endpoints 32→33, migrations 9→10, engines 12→14; added chaos/SLO/FinOps/a11y/IaC rows; differentiators table +5 Phase 12 rows |
+| **12.35** | Demo video (OBS, 5min) | ⏳ HUMAN | Requires physical screen recording |
+| **12.36** | YouTube upload + README link | ⏳ HUMAN | Follows 12.35 |
+| **12.37** | Phase 12 retrospective | ✅ DONE | `docs/PHASE_12_RETROSPECTIVE.md` — what went well, surprises, left-out items, 10 new thesis claims, v4.0.0→v4.5.0 delta table |
+| **12.38** | `git tag v4.5.0` + release | ✅ DONE | Annotated tag v4.5.0 with full release notes |
+| **12.39** | Thesis appendix update | ✅ DONE | `docs/thesis/Phase12-appendix.md` — 13 defendable claims, metrics table, all Phase 12 deliverables listed |
 
 ### Week 5 Status ✅ COMPLETE
 

@@ -2,6 +2,36 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Phase 12 Week 6 — Closeout, v4.5.0 Tagged] (May 15, 2026)
+
+### Summary
+
+Week 6 of Phase 12: evaluation suite re-run, Phase 12 retrospective, v4.5.0 annotated tag,
+and thesis appendix. 4/6 tasks done (12.35 demo video + 12.36 YouTube upload need human recording).
+
+### Added
+
+- **`docs/PHASE_12_RETROSPECTIVE.md`** — Post-mortem: what went well (God Mode model, pre-commit hooks,
+  chaos tests as design debt discovery), surprises (importlib.reload poisoning, _connect() cascade),
+  left-out items with reasons, 10 new thesis-defensible claims, v4.0.0→v4.5.0 delta table
+- **`docs/thesis/Phase12-appendix.md`** — Thesis appendix section: 13 claims (B1–B13), quantitative
+  metrics table, complete deliverables list by week, remaining human tasks
+
+### Changed
+
+- **`docs/evaluation/EVALUATION.md`** — Production Readiness Metrics updated:
+  - Tests: 2,162 → 2,297 (2,232 Python + 65 TS)
+  - Endpoints: 32 → 33, Migrations: 9 → 10, Engines: 12 → 14
+  - Added: chaos resilience, load test, SLO alerting, supply chain, OTel, WCAG, i18n, IaC rows
+  - Competitive table: +5 Phase 12 rows (Helm/Terraform, WCAG/i18n, chaos, SLO, FinOps)
+  - Version footer: v3.9.5 → v4.0.0 (Phase 12 Week 5)
+
+### Tagged
+
+- **`v4.5.0`** — Annotated git tag with full release notes covering all Phase 12 Weeks 1–5 deliverables
+
+---
+
 ## [Phase 12 Week 5 — Complete] — Chaos + Observability Hardening (May 15, 2026)
 
 ### Summary
