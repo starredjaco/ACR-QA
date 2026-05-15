@@ -16,6 +16,8 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-async-009688?logo=fastapi&logoColor=white)](./FRONTEND/api/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI Tests](https://github.com/ahmed-145/ACR-QA/actions/workflows/tests.yml/badge.svg)](https://github.com/ahmed-145/ACR-QA/actions/workflows/tests.yml)
+[![WCAG 2.1 AA](https://img.shields.io/badge/WCAG-2.1%20AA-1a6496?logo=w3c&logoColor=white)](./dashboard/e2e/accessibility.spec.ts)
+[![i18n](https://img.shields.io/badge/i18n-EN%20%7C%20AR%20RTL-orange)](./dashboard/src/locales/)
 [![Helm](https://img.shields.io/badge/Helm-chart-0f1689?logo=helm&logoColor=white)](./deploy/helm/acrqa/)
 [![Terraform](https://img.shields.io/badge/Terraform-AWS-7B42BC?logo=terraform&logoColor=white)](./deploy/terraform/aws/)
 [![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-traces-425CC7?logo=opentelemetry&logoColor=white)](./FRONTEND/api/main.py)
