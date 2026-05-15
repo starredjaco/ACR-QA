@@ -2,6 +2,18 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v3.9.4] — Fix: test_new_engines.py DB-connection failures (May 15, 2026)
+
+### Fixed
+
+- **`TESTS/test_new_engines.py`** — 17 tests in `TestFeature4AutofixPR`, `TestConfidenceScorer`, `TestTriageMemory`, `TestPathFeasibility`, `TestFeature10TrendDashboard` were instantiating `Database()` directly without mocking, causing `psycopg2.OperationalError` when Postgres is not running locally. All 17 tests now use `@patch("DATABASE.database.Database")` with `MagicMock` configured to return realistic values. Full suite: **2,151 passed, 0 failed, 84.80% coverage**.
+
+### Stats
+
+- Tests: 2,151 passed (was 2,134 + 17 failed)
+- Coverage: 84.80%
+- `test_new_engines.py`: 117 tests (all passing)
+
 ## [v3.9.3] — Phase 10: Testing Layers (May 15, 2026)
 
 ### Added — Testing Infrastructure

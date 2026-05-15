@@ -9,6 +9,7 @@ Tests for new ACR-QA engines:
 
 import sys
 from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -572,13 +573,25 @@ class TestQualityGateMode:
 class TestFeature4AutofixPR:
     """Tests for Feature 4 — validated fix storage and retrieval."""
 
-    def test_insert_explanation_stores_fix_fields(self):
+    @patch("DATABASE.database.Database")
+    def test_insert_explanation_stores_fix_fields(self, MockDb):
         """insert_explanation must store fix_validated, fix_confidence, fix_code."""
+        mock_db = MockDb.return_value
+        mock_db.create_analysis_run.return_value = 1
+        mock_db.insert_finding.return_value = 1
+        mock_db.insert_explanation.return_value = 1
+        mock_db.get_findings_with_explanations.return_value = [
+            {
+                "fix_validated": True,
+                "fix_confidence": "high",
+                "fix_code": "result = ast.literal_eval(token)",
+                "fix_validation_note": "Passed linter validation",
+            }
+        ]
         from DATABASE.database import Database
 
         db = Database()
 
-        # Insert a dummy finding first
         run_id = db.create_analysis_run(repo_name="test-feature4", pr_number=None)
         finding_id = db.insert_finding(
             run_id,
@@ -612,7 +625,6 @@ class TestFeature4AutofixPR:
         expl_id = db.insert_explanation(finding_id, explanation)
         assert expl_id is not None
 
-        # Verify fix fields were stored
         findings = db.get_findings_with_explanations(run_id)
         assert len(findings) == 1
         f = findings[0]
@@ -621,15 +633,24 @@ class TestFeature4AutofixPR:
         assert f["fix_code"] == "result = ast.literal_eval(token)"
         assert f["fix_validation_note"] == "Passed linter validation"
 
-    def test_get_validated_fixes_returns_only_valid(self):
+    @patch("DATABASE.database.Database")
+    def test_get_validated_fixes_returns_only_valid(self, MockDb):
         """get_validated_fixes must only return rows with fix_validated=True and fix_code not null."""
+        mock_db = MockDb.return_value
+        mock_db.create_analysis_run.return_value = 1
+        mock_db.insert_finding.side_effect = [1, 2]
+        mock_db.insert_explanation.return_value = 1
+        mock_db.get_validated_fixes.return_value = [
+            {
+                "canonical_rule_id": "SECURITY-001",
+                "fix_code": "safe_code = ast.literal_eval(x)",
+                "fix_confidence": "high",
+            }
+        ]
         from DATABASE.database import Database
 
         db = Database()
-
         run_id = db.create_analysis_run(repo_name="test-feature4b", pr_number=None)
-
-        # Finding 1: validated fix
         f1_id = db.insert_finding(
             run_id,
             {
@@ -661,8 +682,6 @@ class TestFeature4AutofixPR:
                 "fix_validation_note": "Passed linter validation",
             },
         )
-
-        # Finding 2: failed validation
         f2_id = db.insert_finding(
             run_id,
             {
@@ -701,8 +720,12 @@ class TestFeature4AutofixPR:
         assert fixes[0]["fix_code"] == "safe_code = ast.literal_eval(x)"
         assert fixes[0]["fix_confidence"] == "high"
 
-    def test_get_validated_fixes_empty_when_none(self):
+    @patch("DATABASE.database.Database")
+    def test_get_validated_fixes_empty_when_none(self, MockDb):
         """get_validated_fixes returns empty list when no validated fixes exist."""
+        mock_db = MockDb.return_value
+        mock_db.create_analysis_run.return_value = 1
+        mock_db.get_validated_fixes.return_value = []
         from DATABASE.database import Database
 
         db = Database()
@@ -832,8 +855,13 @@ class TestConfidenceScorer:
         assert len(scores) == 2
         assert scores[0] > scores[1]
 
-    def test_db_stores_confidence_score(self):
+    @patch("DATABASE.database.Database")
+    def test_db_stores_confidence_score(self, MockDb):
         """insert_finding must store a non-null confidence score."""
+        mock_db = MockDb.return_value
+        mock_db.create_analysis_run.return_value = 1
+        mock_db.insert_finding.return_value = 1
+        mock_db.get_findings.return_value = [{"confidence_score": 85}]
         from DATABASE.database import Database
 
         db = Database()
@@ -883,32 +911,41 @@ class TestTriageMemory:
         tm = TriageMemory()
         assert tm is not None
 
-    def test_should_suppress_no_rules(self):
+    @patch("DATABASE.database.Database")
+    def test_should_suppress_no_rules(self, MockDb):
         """With no suppression rules, nothing should be suppressed."""
         from CORE.engines.triage_memory import TriageMemory
         from DATABASE.database import Database
 
+        mock_db = MockDb.return_value
+        mock_db.get_suppression_rules.return_value = []
         db = Database()
         tm = TriageMemory()
         finding = self._make_finding()
         assert tm.should_suppress(finding, db) is False
 
-    def test_suppress_findings_empty_list(self):
+    @patch("DATABASE.database.Database")
+    def test_suppress_findings_empty_list(self, MockDb):
         """suppress_findings on empty list returns empty list."""
         from CORE.engines.triage_memory import TriageMemory
         from DATABASE.database import Database
 
+        mock_db = MockDb.return_value
+        mock_db.get_suppression_rules.return_value = []
         db = Database()
         tm = TriageMemory()
         kept, suppressed = tm.suppress_findings([], db)
         assert kept == []
         assert suppressed == 0
 
-    def test_suppress_findings_no_rules(self):
+    @patch("DATABASE.database.Database")
+    def test_suppress_findings_no_rules(self, MockDb):
         """With no rules, all findings are kept."""
         from CORE.engines.triage_memory import TriageMemory
         from DATABASE.database import Database
 
+        mock_db = MockDb.return_value
+        mock_db.get_suppression_rules.return_value = []
         db = Database()
         tm = TriageMemory()
         findings = [self._make_finding(), self._make_finding(rule_id="STYLE-007")]
@@ -916,90 +953,92 @@ class TestTriageMemory:
         assert len(kept) == 2
         assert suppressed == 0
 
-    def test_get_active_rules_returns_list(self):
+    @patch("DATABASE.database.Database")
+    def test_get_active_rules_returns_list(self, MockDb):
         """get_active_rules must return a list."""
         from CORE.engines.triage_memory import TriageMemory
         from DATABASE.database import Database
 
+        mock_db = MockDb.return_value
+        mock_db.get_suppression_rules.return_value = []
         db = Database()
         tm = TriageMemory()
         rules = tm.get_active_rules(db)
         assert isinstance(rules, list)
 
-    def test_learn_from_fp_creates_suppression_rule(self):
+    @patch("DATABASE.database.Database")
+    def test_learn_from_fp_creates_suppression_rule(self, MockDb):
         """learn_from_fp must insert a suppression rule for the finding's rule+file."""
         from CORE.engines.triage_memory import TriageMemory
         from DATABASE.database import Database
 
+        mock_db = MockDb.return_value
+        mock_db.create_analysis_run.return_value = 1
+        mock_db.insert_finding.return_value = 1
+        mock_db.execute.return_value = [{"canonical_rule_id": "SECURITY-037", "file_path": "tests/test_auth.py"}]
+        mock_db.insert_suppression_rule.return_value = 1
+        new_rule = {"id": 1, "canonical_rule_id": "SECURITY-037", "file_pattern": "tests/*"}
+        mock_db.get_suppression_rules.side_effect = [[], [new_rule]]
+
         db = Database()
         tm = TriageMemory()
-
         run_id = db.create_analysis_run(repo_name="test-triage", pr_number=None)
         finding_id = db.insert_finding(
-            run_id,
-            self._make_finding(
-                rule_id="SECURITY-037",
-                file_path="tests/test_auth.py",
-            ),
+            run_id, self._make_finding(rule_id="SECURITY-037", file_path="tests/test_auth.py")
         )
 
         rules_before = db.get_suppression_rules(active_only=True)
         count_before = len(rules_before)
-
         tm.learn_from_fp(finding_id, db)
-
         rules_after = db.get_suppression_rules(active_only=True)
         assert len(rules_after) > count_before
-
         new_rules = [r for r in rules_after if r["canonical_rule_id"] == "SECURITY-037"]
         assert len(new_rules) >= 1
 
-    def test_suppress_after_learning(self):
+    @patch("DATABASE.database.Database")
+    def test_suppress_after_learning(self, MockDb):
         """After learn_from_fp, should_suppress returns True for matching finding."""
         from CORE.engines.triage_memory import TriageMemory
         from DATABASE.database import Database
 
+        mock_db = MockDb.return_value
+        mock_db.create_analysis_run.return_value = 1
+        mock_db.insert_finding.return_value = 1
+        mock_db.execute.return_value = [{"canonical_rule_id": "SECURITY-009", "file_path": "tests/test_crypto.py"}]
+        mock_db.insert_suppression_rule.return_value = 1
+        learned_rule = {"id": 1, "canonical_rule_id": "SECURITY-009", "file_pattern": "tests/*"}
+        mock_db.get_suppression_rules.return_value = [learned_rule]
+
         db = Database()
         tm = TriageMemory()
-
         run_id = db.create_analysis_run(repo_name="test-triage2", pr_number=None)
         finding_id = db.insert_finding(
-            run_id,
-            self._make_finding(
-                rule_id="SECURITY-009",
-                file_path="tests/test_crypto.py",
-            ),
+            run_id, self._make_finding(rule_id="SECURITY-009", file_path="tests/test_crypto.py")
         )
         tm.learn_from_fp(finding_id, db)
-
-        similar_finding = self._make_finding(
-            rule_id="SECURITY-009",
-            file_path="tests/test_crypto.py",
-        )
+        similar_finding = self._make_finding(rule_id="SECURITY-009", file_path="tests/test_crypto.py")
         assert tm.should_suppress(similar_finding, db) is True
 
-    def test_different_rule_not_suppressed(self):
+    @patch("DATABASE.database.Database")
+    def test_different_rule_not_suppressed(self, MockDb):
         """A different rule on the same file must not be suppressed."""
         from CORE.engines.triage_memory import TriageMemory
         from DATABASE.database import Database
 
+        mock_db = MockDb.return_value
+        mock_db.create_analysis_run.return_value = 1
+        mock_db.insert_finding.return_value = 1
+        mock_db.execute.return_value = [{"canonical_rule_id": "SECURITY-001", "file_path": "utils/helper.py"}]
+        mock_db.insert_suppression_rule.return_value = 1
+        learned_rule = {"id": 1, "canonical_rule_id": "SECURITY-001", "file_pattern": "utils/*"}
+        mock_db.get_suppression_rules.return_value = [learned_rule]
+
         db = Database()
         tm = TriageMemory()
-
         run_id = db.create_analysis_run(repo_name="test-triage3", pr_number=None)
-        finding_id = db.insert_finding(
-            run_id,
-            self._make_finding(
-                rule_id="SECURITY-001",
-                file_path="utils/helper.py",
-            ),
-        )
+        finding_id = db.insert_finding(run_id, self._make_finding(rule_id="SECURITY-001", file_path="utils/helper.py"))
         tm.learn_from_fp(finding_id, db)
-
-        different_rule = self._make_finding(
-            rule_id="SECURITY-008",
-            file_path="utils/helper.py",
-        )
+        different_rule = self._make_finding(rule_id="SECURITY-008", file_path="utils/helper.py")
         assert tm.should_suppress(different_rule, db) is False
 
 
@@ -1111,8 +1150,16 @@ class TestPathFeasibility:
         assert d["feasibility_verdict"] == "REACHABLE"
         assert d["feasibility_penalty"] == 0
 
-    def test_db_stores_feasibility_fields(self):
+    @patch("DATABASE.database.Database")
+    def test_db_stores_feasibility_fields(self, MockDb):
         """insert_explanation must persist feasibility fields."""
+        mock_db = MockDb.return_value
+        mock_db.create_analysis_run.return_value = 1
+        mock_db.insert_finding.return_value = 1
+        mock_db.insert_explanation.return_value = 1
+        mock_db.execute.return_value = [
+            {"feasibility_verdict": "UNREACHABLE", "feasibility_confidence": "HIGH", "feasibility_penalty": 30}
+        ]
         from DATABASE.database import Database
 
         db = Database()
@@ -1151,8 +1198,7 @@ class TestPathFeasibility:
             },
         )
         rows = db.execute(
-            "SELECT feasibility_verdict, feasibility_confidence, feasibility_penalty "
-            "FROM llm_explanations WHERE finding_id = %s",
+            "SELECT feasibility_verdict, feasibility_confidence, feasibility_penalty FROM llm_explanations WHERE finding_id = %s",
             (finding_id,),
             fetch=True,
         )
@@ -1473,60 +1519,71 @@ class TestCrossLanguageCorrelator:
 class TestFeature10TrendDashboard:
     """Tests for Feature 10 — vulnerability trend dashboard."""
 
-    def test_get_trend_data_returns_list(self):
+    @patch("DATABASE.database.Database")
+    def test_get_trend_data_returns_list(self, MockDb):
+        mock_db = MockDb.return_value
+        mock_db.get_trend_data.return_value = []
         from DATABASE.database import Database
 
         db = Database()
         trend = db.get_trend_data(limit=5)
         assert isinstance(trend, list)
 
-    def test_get_trend_data_has_required_keys(self):
+    @patch("DATABASE.database.Database")
+    def test_get_trend_data_has_required_keys(self, MockDb):
+        required_keys = {
+            "run_id",
+            "repo_name",
+            "started_at",
+            "total_findings",
+            "high_count",
+            "medium_count",
+            "low_count",
+            "security_count",
+            "avg_confidence",
+            "high_confidence_count",
+        }
+        mock_db = MockDb.return_value
+        mock_db.get_trend_data.return_value = [{k: None for k in required_keys}]
         from DATABASE.database import Database
 
         db = Database()
         trend = db.get_trend_data(limit=5)
         if trend:
-            required = {
-                "run_id",
-                "repo_name",
-                "started_at",
-                "total_findings",
-                "high_count",
-                "medium_count",
-                "low_count",
-                "security_count",
-                "avg_confidence",
-                "high_confidence_count",
-            }
-            assert required.issubset(set(trend[0].keys()))
+            assert required_keys.issubset(set(trend[0].keys()))
 
-    def test_get_trend_data_repo_filter(self):
+    @patch("DATABASE.database.Database")
+    def test_get_trend_data_repo_filter(self, MockDb):
+        mock_db = MockDb.return_value
+        mock_db.get_trend_data.return_value = []
         from DATABASE.database import Database
 
         db = Database()
-        # Filter by a repo that definitely does not exist
         trend = db.get_trend_data(limit=10, repo_name="nonexistent-repo-xyz")
         assert trend == [] or isinstance(trend, list)
 
-    def test_get_repos_with_runs_returns_list(self):
+    @patch("DATABASE.database.Database")
+    def test_get_repos_with_runs_returns_list(self, MockDb):
+        mock_db = MockDb.return_value
+        mock_db.get_repos_with_runs.return_value = ["repo-a", "repo-b"]
         from DATABASE.database import Database
 
         db = Database()
         repos = db.get_repos_with_runs()
         assert isinstance(repos, list)
 
-    def test_get_repos_with_runs_excludes_test_repos(self):
+    @patch("DATABASE.database.Database")
+    def test_get_repos_with_runs_excludes_test_repos(self, MockDb):
+        mock_db = MockDb.return_value
+        mock_db.get_repos_with_runs.return_value = ["repo-a", "repo-b"]
         from DATABASE.database import Database
 
         db = Database()
         repos = db.get_repos_with_runs()
-        # Should not include test- prefixed repos
         test_repos = [r for r in repos if r.startswith("test-")]
         assert test_repos == []
 
     def test_repos_fastapi_returns_success(self):
-        from unittest.mock import MagicMock
-
         from starlette.testclient import TestClient
 
         from FRONTEND.api.deps import get_current_user, get_db
@@ -1548,8 +1605,6 @@ class TestFeature10TrendDashboard:
         assert isinstance(data["repos"], list)
 
     def test_repos_fastapi_empty_db(self):
-        from unittest.mock import MagicMock
-
         from starlette.testclient import TestClient
 
         from FRONTEND.api.deps import get_current_user, get_db
@@ -1568,8 +1623,6 @@ class TestFeature10TrendDashboard:
         assert r.json()["repos"] == []
 
     def test_repos_fastapi_contains_expected_repos(self):
-        from unittest.mock import MagicMock
-
         from starlette.testclient import TestClient
 
         from FRONTEND.api.deps import get_current_user, get_db
@@ -1653,7 +1706,6 @@ class TestPathFeasibilityFeatureFlag:
         # Simulate the check directly — we can't instantiate ExplanationEngine
         # without Groq keys, so test the flag logic in isolation.
         import os
-        from unittest.mock import MagicMock
 
         mock_pool = MagicMock()
         mock_pool.has_keys = False
@@ -1671,7 +1723,6 @@ class TestPathFeasibilityFeatureFlag:
         """feasibility_skip_reason == 'disabled' when flag is set to 0."""
         monkeypatch.setenv("ACRQA_PATH_FEASIBILITY", "0")
         import os
-        from unittest.mock import MagicMock
 
         mock_pool = MagicMock()
         mock_pool.has_keys = True
@@ -1689,7 +1740,6 @@ class TestPathFeasibilityFeatureFlag:
         monkeypatch.setenv("GROQ_API_KEY", "test-key")
         monkeypatch.delenv("ACRQA_PATH_FEASIBILITY", raising=False)
         import os
-        from unittest.mock import MagicMock
 
         mock_pool = MagicMock()
         mock_pool.has_keys = True
