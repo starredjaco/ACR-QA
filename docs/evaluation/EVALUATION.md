@@ -15,7 +15,7 @@
 | **AI Explanation Quality** | 836/836 (100%) |
 | **Continuous Integration** | GitHub Actions Pass |
 
-### Per-Repository Breakdown (v3.6.2 baseline — 4 repos)
+### Per-Repository Breakdown (v3.9.5 baseline — 4 core repos)
 
 | Repository | Findings | TP | FP | Overall Precision | Security Precision | Recall | F1 |
 |------------|:--------:|:--:|:--:|:-----------------:|:------------------:|:------:|:--:|
@@ -34,12 +34,12 @@
 | Pygoat | Python | — | — | 100% | ✅ v3.6.2 |
 | VulPy | Python | — | — | 100% | ✅ v3.6.2 |
 | DSVW | Python | — | — | 100% | ✅ v3.6.2 |
-| vulnerable-flask-app | Python | 5 | 5 | ≥80% | *(pending)* |
-| bandit-test-cases | Python | 4 | 4 | 100% | *(pending)* |
-| NodeGoat | JavaScript | 2 | 1 | 100% | *(pending)* |
-| DVNA | JavaScript | 2 | 2 | 100% | *(pending)* |
-| DVWS-Node | JavaScript | 2 | 1 | 100% | *(pending)* |
-| Juice Shop | TypeScript | 3 | 2 | 100% | *(pending)* |
+| vulnerable-flask-app | Python | 5 | 5 | ≥80% | ✅ Phase 8 |
+| bandit-test-cases | Python | 4 | 4 | 100% | ✅ Phase 8 |
+| NodeGoat | JavaScript | 2 | 1 | 100% | ✅ Phase 8 |
+| DVNA | JavaScript | 2 | 2 | 100% | ✅ Phase 8 |
+| DVWS-Node | JavaScript | 2 | 1 | 100% | ✅ Phase 8 |
+| Juice Shop | TypeScript | 3 | 2 | 100% | ✅ Phase 8 |
 
 ### DVPWA Ground Truth Validation
 
@@ -110,17 +110,19 @@ ACR-QA covers **9/10** OWASP Top 10 categories.
 
 | Metric | Value |
 |--------|:-----:|
-| Test Suite | **1,970 tests** (pytest) — v3.6.0 |
-| Code Coverage | **85.82%** |
-| CI/CD | GitHub Actions (test + lint + coverage) |
-| Docker | Dockerfile + docker-compose.yml |
-| API Endpoints | 28 async FastAPI endpoints + 22 Flask legacy |
-| CUSTOM-* Findings | 0 (all benchmark targets verified) |
-| Deduplication | Automated cross-tool deduplication |
-| Rule Mappings | 311 tool-specific → canonical rules |
+| Test Suite | **2,160 tests** (pytest) · 0 failed · 0 warnings — v3.9.5 |
+| Code Coverage | **84.89%** (CORE) · 82.66% (CORE+DATABASE, CI gate 82% ✅) |
+| CI/CD | GitHub Actions (test + lint + coverage + E2E + deploy) |
+| Docker | Multi-stage Dockerfile + docker-compose.yml (7 services) |
+| API Endpoints | **32** async FastAPI endpoints under `/v1/` |
+| Auth | JWT (15min/7d) + bcrypt-hashed API keys + RBAC (admin/member/viewer) |
+| CUSTOM-* Findings | **0** (regression-guarded by `test_no_custom_rules.py`) |
+| Deduplication | Automated 2-pass cross-tool deduplication |
+| Rule Mappings | 299+ tool-specific → canonical rules |
 | OWASP Coverage | 9/10 categories |
-| Repos Tested | 7 benchmark repositories (Python × 4, JS × 2, Go × 1) |
-| Alembic Migrations | 3 (baseline + users/api_keys + reachability columns) |
+| Repos Tested | **10** benchmark repositories (Python × 4, JS × 3, TS × 1, Go × 1) |
+| Alembic Migrations | **9** (baseline → users → reachability → embeddings → exploits → attestations → taint → triage → supply-chain) |
+| Engines | 12 (normalizer, severity, quality-gate, explainer, autofix, reachability, learned-suppression, taint, triage-agent, exploit-verifier, attestation, supply-chain) |
 
 ## 6b. Call Graph Reachability Benchmark (v3.3.2, Feature 9a)
 
@@ -147,9 +149,16 @@ Dead-code findings receive a **−20 confidence penalty** rather than outright s
 | OWASP compliance mapping | ✅ | ✅ | ❌ | ❌ | ✅ |
 | Quality gate CI/CD | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Test gap analysis | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Code fix suggestions | ✅ AI | Partial | ❌ | ❌ | ❌ |
+| LLM auto-fix patch (validated) | ✅ | ❌ | ❌ | ❌ | Partial |
 | Call-graph reachability | ✅ AST | ❌ | ❌ | ❌ | ✅ proprietary |
+| Intra-procedural taint analysis | ✅ | ✅ enterprise | ❌ | ❌ | ✅ |
+| Sandboxed exploit verification | ✅ Docker | ❌ | ❌ | ❌ | ❌ |
+| Cryptographic attestation (PQ) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Supply chain + CycloneDX SBOM | ✅ | ❌ | ❌ | ❌ | ✅ |
+| Offline / air-gapped mode | ✅ Ollama | ❌ | ❌ | ❌ | ❌ |
+| AI Triage Agent (TP/FP verdict) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| MCP server (IDE/agent native) | ✅ | ❌ | ❌ | ❌ | ❌ |
 
 ---
 
-*Updated: May 14, 2026 — ACR-QA v3.4.0*
+*Updated: May 15, 2026 — ACR-QA v3.9.5*

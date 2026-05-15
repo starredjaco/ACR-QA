@@ -26,12 +26,15 @@
 
 | Document | Description |
 |----------|-------------|
-| [REST API Reference](API_REFERENCE.md) | All 22 HTTP endpoints, CLI reference, JS fetch() integration example [v3.0] |
-| [REST API (legacy)](setup/API-Documentation.md) | Original 11 HTTP endpoints reference (v2.7) |
+| [REST API Reference](API_REFERENCE.md) | All 32 FastAPI endpoints under `/v1/`, CLI reference, auth flows [v3.9.5] |
+| [REST API (legacy)](setup/API-Documentation.md) | Original 11 HTTP endpoints reference (v2.7, archived) |
 | [Cloud Deployment](setup/Cloud-Deployment.md) | PythonAnywhere, Replit, ngrok deployment guides |
 | [Token Setup](setup/TOKEN_SETUP.md) | GitHub, GitLab, and Groq API key configuration |
-| [LLM Providers](setup/LLM_PROVIDERS.md) | Groq (default) + AgentRouter integration plan, model comparison, budget planning |
+| [LLM Providers](setup/LLM_PROVIDERS.md) | Groq (default) + Ollama (offline) + AgentRouter; model comparison, `ACRQA_LLM_PROVIDER` env var |
+| [Offline Setup](setup/OFFLINE_SETUP.md) | Air-gapped mode — Ollama + OSV snapshot; `ACRQA_MODE=offline` walkthrough |
+| [Privacy](PRIVACY.md) | Per-mode data-flow disclosure: cloud / hybrid / offline egress table |
 | [Policy Engine](POLICY_ENGINE.md) | `.acrqa.yml` config reference — rules, thresholds, autofix, AI |
+| [Railway Deploy](setup/RAILWAY_DEPLOY.md) | Cloud deploy with PostgreSQL + Redis + Alembic migrations |
 
 ## 🧪 Testing & Quality
 
