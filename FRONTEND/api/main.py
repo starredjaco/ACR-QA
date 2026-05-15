@@ -26,6 +26,20 @@ from FRONTEND.api.deps import get_current_user, get_db  # noqa: E402
 from FRONTEND.api.models import HealthOut  # noqa: E402
 from FRONTEND.api.routers import auth, runs, scans  # noqa: E402
 
+# OpenTelemetry — degrades silently when OTEL_EXPORTER_OTLP_ENDPOINT is not set
+_otel_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
+if _otel_endpoint:
+    from opentelemetry import trace
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+    _resource = Resource(attributes={SERVICE_NAME: "acrqa-api"})
+    _provider = TracerProvider(resource=_resource)
+    _provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=_otel_endpoint)))
+    trace.set_tracer_provider(_provider)
+
 # Sentry — degrades silently when SENTRY_DSN is not set
 _sentry_dsn = os.getenv("SENTRY_DSN")
 if _sentry_dsn:
@@ -48,6 +62,11 @@ app = FastAPI(
     redoc_url="/redoc",
     openapi_url="/openapi.json",
 )
+
+if _otel_endpoint:
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
+    FastAPIInstrumentor.instrument_app(app)
 
 app.add_middleware(
     CORSMiddleware,
