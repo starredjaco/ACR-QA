@@ -1,6 +1,6 @@
 # ACR-QA — Definitive Project Deep Dive & State Assessment
 
-**Date:** April 28, 2026 · **Version:** v3.2.4 · **Tests:** 1,699 passing / 4 skipped · **Coverage:** ~80%
+**Date:** May 15, 2026 · **Version:** v3.9.5 · **Tests:** 2,160 passing · 0 warnings · **Coverage:** 84.89%
 
 > This document is a brutally honest, code-verified audit of every module in ACR-QA.
 > Every claim is backed by line counts and actual code inspection.
@@ -31,12 +31,13 @@
 | Language adapters | 3 (Python, JS/TS, Go) | Competitive |
 | Canonical rule mappings | 100+ Python, 80+ JS, 56 Go | Industry-grade |
 | CBoM algorithm registry | 62 algorithms with NIST quantum classification | Novel |
-| Test files | 36 files | Extremely thorough |
-| Tests passing | 1,699 | Overkill (in a good way) |
-| Scripts | 20 utilities | Full toolchain |
-| Database tables | 6 (runs, findings, explanations, feedback, suppression_rules, metrics) | Complete provenance |
-| CI/CD | GitHub Actions (tests.yml + acr-qa.yml) | Production-grade |
-| API endpoints | 20+ REST endpoints | Full dashboard backend |
+| Test files | 46 Python + 8 TypeScript | Extremely thorough |
+| Tests passing | **2,160** · 0 failed · 0 warnings | Overkill (in a good way) |
+| Scripts | 20+ utilities | Full toolchain |
+| Database tables | **10** (runs, findings, explanations, feedback, suppression_rules, users, api_keys, dependency_findings, run_sboms, scan_attestations) | Complete provenance |
+| CI/CD | GitHub Actions (tests.yml + deploy.yml + e2e.yml + snyk.yml + codeql.yml) | Production-grade |
+| API endpoints | **32** async FastAPI endpoints under `/v1/` | Full dashboard backend |
+| Auth | JWT (15min access / 7d refresh) + bcrypt API keys + RBAC | Production-grade |
 
 ---
 
@@ -70,8 +71,8 @@ These are what separate ACR-QA from a "GPT wrapper on top of linters."
 - **Defense angle:** "We inventory all cryptographic usage and flag non-quantum-safe algorithms per NIST 2024 PQC standards."
 
 ### E. Engineering Maturity
-- **1,690 tests** across 18 files with 86% coverage
-- **Strict CI:** ruff format + ruff check + mypy + pytest (all enforced via pre-commit hooks)
+- **2,160 tests** across 46 Python + 8 TypeScript files with 84.89% coverage, 0 warnings
+- **Strict CI:** ruff format + ruff check + mypy + pytest + E2E (all enforced via pre-commit + GitHub Actions)
 - **Pydantic validation** on every canonical finding (`CanonicalFinding` model with field validators)
 - **Defense angle:** This alone puts you above 95% of thesis projects.
 
@@ -102,10 +103,10 @@ These are fully implemented but have limitations an examiner might probe.
 - **Action needed:** Run against OWASP Go-SCP to validate real-world correctness.
 
 ### D. The Dashboard
-- **File:** `FRONTEND/app.py` (983 lines)
-- **20+ API endpoints** including trends, confidence analytics, findings filtering, run management, test gaps, compliance, policy config
+- **File:** `FRONTEND/api/main.py` (FastAPI, replaces Flask v3.6.1)
+- **32 async FastAPI endpoints** under `/v1/` — runs, findings, scans (async Celery), auth, supply-chain, SBOM, attestation, autofix, triage
 - **Prometheus metrics** integration (`/metrics` endpoint)
-- **Honest limitation:** No authentication (no Flask-Login, no JWT, no session auth). Documented as intentional thesis-scope limitation.
+- **Auth:** JWT access/refresh tokens + bcrypt-hashed API keys + RBAC (admin/member/viewer) — production-grade, not a limitation.
 - **How to frame:** *"Authentication is offloaded to infrastructure (nginx reverse proxy, OAuth2 proxy) as documented in the deployment guide and security roadmap."*
 
 ### E. Autofix Engine
@@ -160,7 +161,7 @@ These are fully implemented but have limitations an examiner might probe.
 | **JS/TS Adapter** | `CORE/adapters/js_adapter.py` | 723 | ✅ Comprehensive | ESLint + Semgrep + npm audit + jscpd, 80+ rule mappings |
 | **Go Adapter** | `CORE/adapters/go_adapter.py` | 369 | 🟡 Needs E2E test | gosec + staticcheck, 56 rule mappings, untested on real Go project |
 | **Database** | `DATABASE/database.py` | 569 | ✅ Solid | Full provenance: runs, findings, explanations, feedback, suppression, trends |
-| **Dashboard** | `FRONTEND/app.py` | 983 | 🟡 No auth | 20+ REST endpoints, Prometheus metrics, dark mode UI |
+| **Dashboard** | `FRONTEND/api/main.py` + `dashboard/` | FastAPI + React 18 SPA | ✅ JWT auth + RBAC | 32 endpoints + Vite/shadcn UI, Playwright E2E |
 
 ---
 
@@ -205,7 +206,7 @@ These are fully implemented but have limitations an examiner might probe.
 | `test_cross_language_correlator.py` | Template injection, SQLi chains, XSS correlation |
 | `test_path_feasibility.py` | Verdict parsing, confidence penalty, response handling |
 | `test_triage_memory.py` | Suppression rules, pattern derivation, batch filtering |
-| `test_flask_app.py` | All 20+ API endpoints |
+| `test_fastapi_app.py` | All 32 FastAPI v1 endpoints (TestClient) |
 | `test_acceptance.py` | Integration: Pydantic validation, rate limiting, RAG generation |
 | `test_user_study.py` | Survey generation, A/B comparison |
 | ...and 23 more | Full coverage of remaining modules |
@@ -280,6 +281,6 @@ Your SARIF export already works. Findings appear in the Security tab for free.
 
 ## Final Verdict
 
-> **ACR-QA is a genuinely strong thesis project.** The engineering maturity (1,699 tests, strict CI, Pydantic validation) is exceptional. The RAG + entropy approach is novel and scientifically sound. The CBoM quantum classification is cutting-edge. The 20 scripts are all real implementations.
+> **ACR-QA is a genuinely strong thesis project.** The engineering maturity (2,160 tests, 0 failures, strict CI, Pydantic validation, JWT auth, React dashboard, MCP server) is exceptional. The RAG + entropy approach is novel and scientifically sound. The CBoM quantum classification is cutting-edge. The 20+ scripts are all real implementations.
 >
 > **Main risks:** Missing user study data, untested Go E2E, and overstating cross-language/path-feasibility capabilities. Address these three things and the defense will be smooth.

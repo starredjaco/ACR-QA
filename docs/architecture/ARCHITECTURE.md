@@ -1,4 +1,4 @@
-# ACR-QA v3.3.2 Architecture
+# ACR-QA v3.9.5 Architecture
 
 ## System Overview
 
@@ -26,20 +26,26 @@ Source Code
     ▼
 [3a] Normalization            ← tool outputs → canonical schema (normalizer.py)
 [3b] Config Filtering         ← .acrqa.yml: disabled rules, ignored paths, min severity
-[3c] Triage Memory            ← Suppress known FPs from learned patterns (Feature 6)
-[3d] Deduplication            ← 2-pass: exact (file+line+rule) + cross-tool category
-[3e] Taint Analyzer           ← Intra-procedural AST taint flow; source → sink detection (Phase 1)
-[3f] Call Graph Reachability  ← AST call graph; -20 confidence for dead-code findings (Feature 9a)
-[3f] Per-Rule Cap             ← max 5 findings/rule (noise control)
-[3g] Per-Rule Cap             ← max 5 findings/rule (noise control)
-[3h] Priority Sort            ← security/high first for within-limit AI coverage
+[3c] Triage Memory            ← Suppress known FPs from learned patterns (triage_memory.py)
+[3d] Learned Suppression      ← Embedding cosine-similarity FP suppression (learned_suppression.py)
+[3e] Deduplication            ← 2-pass: exact (file+line+rule) + cross-tool category
+[3f] Taint Analyzer           ← Intra-procedural AST taint flow; source → sink detection (taint_analyzer.py)
+[3g] Call Graph Reachability  ← AST call graph; -20 confidence for dead-code findings (reachability.py)
+[3h] Per-Rule Cap             ← max 5 findings/rule (noise control)
+[3i] Priority Sort            ← security/high first for within-limit AI coverage
     │
     ▼
-[4]  AI Explanation           ← Groq LLM + RAG from config/rules.yml
-     ├── Fix Validation       ← AI code fix extracted + linter-verified (Feature 1)
-     ├── Path Feasibility     ← LLM-based path reachability check for HIGH (Feature 7)
-     ├── Dep Reachability     ← npm package import analysis (Feature 8)
-     └── Cross-Language Corr  ← Multi-layer vulnerability chains (Feature 10)
+[4]  AI Explanation           ← Groq/Ollama LLM + RAG from config/rules.yml (explainer.py)
+     ├── Path Feasibility     ← LLM path reachability for HIGH severity (path_feasibility.py)
+     ├── AI Triage Agent      ← Multi-step LLM TP/FP verdict engine (triage_agent.py)
+     ├── Auto-Fix Patch       ← LLM unified diff + ruff validation (autofix.py)
+     └── Exploit Verifier     ← Docker sandbox PoC: SQLi/CMDI/SSTI (exploit_verifier.py)
+    │
+    ▼
+[4b] Attestation              ← ECDSA-P256 + Dilithium3 PQ signing (attestation.py)
+    │
+    ▼
+[4c] Supply Chain             ← Lockfile parsers + OSV CVE + CycloneDX SBOM (supply_chain.py)
     │
     ▼
 [5]  Quality Gate             ← Configurable thresholds → exit 1 if failed
@@ -273,13 +279,15 @@ Returns **exit code 1** when thresholds are exceeded and `mode: block` is set �
 
 | Output | Component | Format |
 |--------|-----------|--------|
-| PostgreSQL | `DATABASE/database.py` | 5 tables |
+| PostgreSQL | `DATABASE/database.py` | 10 tables |
 | PR Comments | `scripts/post_pr_comments.py` + GitHub Actions | Inline PR comments via GitHub API |
-| MR Comments | `scripts/post_gitlab_comments.py` | GitLab API |
 | SARIF Export | `scripts/export_sarif.py` | SARIF v2.1.0 |
-| Dashboard | `FRONTEND/app.py` | Flask + 20+ REST API endpoints |
+| CycloneDX SBOM | `GET /v1/runs/{id}/sbom` | CycloneDX 1.4 JSON |
+| Attestation | `GET /v1/runs/{id}/attestation` | ECDSA-P256 + Dilithium3 signature |
+| Dashboard | `FRONTEND/api/main.py` | FastAPI + React 18 SPA (32 endpoints) |
 | Rich CLI | `CORE/main.py --rich` | Terminal tables |
-| Prometheus | `/metrics` endpoint | Prometheus text |
+| Prometheus | `/metrics` endpoint | Prometheus text format |
+| MCP Tools | `acrqa-mcp/` package | scan / explain / fix (Claude Code / Cursor) |
 
 #### PR Bot — GitHub Actions Integration
 

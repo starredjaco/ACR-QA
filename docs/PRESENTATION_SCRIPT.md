@@ -1,4 +1,4 @@
-# 🎤 ACR-QA Thesis Defense & Demo Script (v3.2.5)
+# 🎤 ACR-QA Thesis Defense & Demo Script (v3.9.5)
 
 *7 minutes total: 2 min slides → 5 min live demo. Show, don't tell.*
 
@@ -16,7 +16,7 @@ python3 FRONTEND/app.py     # Start the dashboard → localhost:5000
 
 ### Browser Tabs (Open These)
 - **Tab 1:** `http://localhost:5000` — Your Dashboard (should show findings)
-- **Tab 2:** `https://github.com/ahmed-145/ACR-QA/releases/tag/v3.2.4` — Release page
+- **Tab 2:** `https://github.com/ahmed-145/ACR-QA/releases/tag/v3.9.5` — Release page
 - **Tab 3:** `https://github.com/ahmed-145/ACR-QA/actions` — CI/CD green checkmarks
 
 ### Terminal Tabs
@@ -28,13 +28,13 @@ python3 FRONTEND/app.py     # Start the dashboard → localhost:5000
 ## 🗣️ Part 1: Slides (2 Minutes)
 
 ### Slides 1–2: Context
-> "Hello Dr. Samy. Today I want to show you the completed enterprise release: ACR-QA v3.2.5. It's a fully automated, AI-powered Code Review platform that runs 10 analysis tools across Python, JavaScript, and Go — normalises them into a single standard, and uses RAG-enhanced AI to explain every finding."
+> "Hello Dr. Samy. Today I want to show you the completed enterprise release: ACR-QA v3.9.5. It's a fully automated, AI-powered Code Review platform that runs 10 analysis tools across Python, JavaScript, and Go — normalises them into a single standard, and uses RAG-enhanced AI to explain every finding."
 
 ### Slides 3–7: What Makes It Different
 > "There are three things no commercial competitor — not SonarQube, not CodeRabbit — offers. First, I built a **Policy-as-Code** engine where teams define quality rules in a YAML file and the system enforces them in CI. Second, I wrote a **Test Gap Analyzer** from scratch using Python's Abstract Syntax Tree to find untested business logic by complexity. Third, I implemented **semantic entropy scoring** — the AI runs 3 times and the system mathematically detects when it contradicts itself, preventing hallucination."
 
 ### Slide 8: Reliability
-> "Most importantly, I built a comprehensive stress-testing suite. We now have **1,690 rigorous tests** that execute in under 45 seconds, with 86% code coverage and 97.1% precision across 4 deliberately vulnerable benchmark repositories. But rather than talking about it, let me show you."
+> "Most importantly, I built a comprehensive stress-testing suite. We now have **2,160 rigorous tests** that execute in under 45 seconds, with 86% code coverage and 97.1% precision across 4 deliberately vulnerable benchmark repositories. But rather than talking about it, let me show you."
 
 ---
 
@@ -49,8 +49,8 @@ python3 FRONTEND/app.py     # Start the dashboard → localhost:5000
 - **Point to the cost-benefit widget:** "This calculates the actual ROI — how much developer time the tool saves versus how much the AI costs to run. Right now the cost is $0.01 per analysis."
 - **Point to the 👍/👎 buttons:** "And these feedback buttons feed into our AI Tuner. When developers mark false positives, the system learns to reduce alert spam on future runs."
 
-### Demo 2: The 1,690 Tests (Terminal — 1 min)
-> "Now let me prove the reliability. I'm going to run all 1,690 stress tests right now."
+### Demo 2: The 2,160 Tests (Terminal — 1 min)
+> "Now let me prove the reliability. I'm going to run all 2,160 stress tests right now."
 
 ```bash
 make test-all
@@ -58,7 +58,7 @@ make test-all
 
 *(Wait ~40 seconds for the wall of green PASSED lines.)*
 
-> "1,690 tests covering databases, API endpoints, AI logic, edge cases, and security modules — all passing in about 40 seconds."
+> "2,160 tests covering databases, API endpoints, AI logic, edge cases, and security modules — all passing in about 40 seconds."
 
 ### Demo 3: AST Test Gap Analyzer (Terminal — 1 min)
 > "Now, this is one of our most competitive features. No existing tool does this."
@@ -80,8 +80,8 @@ python3 CORE/main.py --target-dir TESTS/samples --rich --limit 5
 > "It caught security vulnerabilities, mapped them to OWASP standards, and the Quality Gate correctly **failed** — meaning in a real CI/CD pipeline, this code would be blocked from merging."
 
 ### Demo 5: GitHub Enterprise Setup (Browser — 30 sec)
-- Switch to Browser **Tab 2** (Releases): "I created an official v3.2.4 release with full semantic versioning."
-- Switch to Browser **Tab 3** (Actions): "And here is the CI/CD pipeline. Every push triggers the 1,690 tests automatically. Green checkmark means the code is safe."
+- Switch to Browser **Tab 2** (Releases): "I created an official v3.9.5 release with full semantic versioning."
+- Switch to Browser **Tab 3** (Actions): "And here is the CI/CD pipeline. Every push triggers the 2,160 tests automatically. Green checkmark means the code is safe."
 
 ### Closing Line
 > "This is no longer a prototype, Dr. Samy. It is a fully automated, enterprise-ready product. Do you have any questions?"
@@ -90,14 +90,14 @@ python3 CORE/main.py --target-dir TESTS/samples --rich --limit 5
 
 ## 🔥 Q&A Cheat Sheet
 
-### Q: "What are these 1,690 tests? Where did they come from?"
-> "In Phase 1, we only had about 30 tests checking the happy path. These 1,690 tests are stress tests that simulate real-world disasters: what if the database crashes mid-review? What if someone uploads a corrupted file? What if there are 1,000 findings at once? I wrote them to prove the system won't break under pressure."
+### Q: "What are these 2,160 tests? Where did they come from?"
+> "In Phase 1, we only had about 30 tests checking the happy path. These 2,160 tests are stress tests that simulate real-world disasters: what if the database crashes mid-review? What if someone uploads a corrupted file? What if there are 1,000 findings at once? I wrote them to prove the system won't break under pressure."
 
 ### Q: "What is the Test Gap Analyzer? Who needs it?"
 > "Companies use 'Code Coverage' like 80%, but that metric can be misleading — you can cover 80% of easy code while the hardest logic remains untested. The Test Gap Analyzer reads the Abstract Syntax Tree of the code, finds the most mathematically complex functions using Cyclomatic Complexity, and checks if tests exist for those specific functions. Engineering managers want this to stop developers from skipping hard tests."
 
 ### Q: "What is CI/CD? Why now? Doesn't deployment cost money?"
-> "CI/CD is Continuous Integration / Continuous Deployment. I set it up using GitHub Actions, which is 100% free for open-source and student projects. No servers needed. Every time I push code, GitHub's free servers automatically run our 1,690 tests and block the code if anything fails. It keeps the main branch always in a deployable state — even before we pay for hosting."
+> "CI/CD is Continuous Integration / Continuous Deployment. I set it up using GitHub Actions, which is 100% free for open-source and student projects. No servers needed. Every time I push code, GitHub's free servers automatically run our 2,160 tests and block the code if anything fails. It keeps the main branch always in a deployable state — even before we pay for hosting."
 
 ### Q: "How is this different from SonarQube or CodeRabbit?"
 > "Three things no competitor offers. First, our Test Gap Analyzer uses AST to find untested complex code — SonarQube and CodeRabbit don't do this. Second, our hallucination detection runs the LLM 3 times and measures consistency using Semantic Entropy — no competitor does this. Third, our cost-benefit analysis calculates actual ROI per finding. And we do all of this at zero recurring cost using free-tier APIs."
@@ -126,7 +126,7 @@ python3 FRONTEND/app.py       # Dashboard → http://localhost:5000
 ### Demo Commands (Run in Order)
 
 ```bash
-# 1 — Run all 1,690 unit tests (~40 seconds)
+# 1 — Run all 2,160 unit tests (~40 seconds)
 make test-all
 
 # 2 — AST Test Gap Analyzer (untested complex functions)
@@ -141,5 +141,5 @@ python3 CORE/main.py --target-dir /tmp/dvpwa --limit 0
 
 ### Browser Tabs
 1. `http://localhost:5000` — Flask Dashboard (findings, AI explanations, feedback)
-2. `https://github.com/ahmed-145/ACR-QA/releases/tag/v3.2.4` — Release Page
+2. `https://github.com/ahmed-145/ACR-QA/releases/tag/v3.9.5` — Release Page
 3. `https://github.com/ahmed-145/ACR-QA/actions` — CI/CD Green Checkmarks

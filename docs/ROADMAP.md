@@ -15,7 +15,8 @@
 > - ✅ MCP server + learned suppression (Week 3) — **DONE, v3.4.0**
 > - ✅ Proof-of-Exploit engine (Week 4) — **DONE, v3.5.0**
 > - ✅ Provenance attestations + Railway deploy (Week 5) — **DONE, v3.6.0**
-> - v4.0.0 release + demo video + thesis defense (Week 6)
+> - ✅ FastAPI migration + auth + 2,160 tests (Phases 7–10) — **DONE, v3.9.5**
+> - v4.0.0 release + demo video + thesis defense (Phase 11)
 >
 > See `GOD_MODE_PLAN.md` and `evaluation/PHASE_0_BASELINE.md` for the live source of truth.
 
@@ -25,7 +26,7 @@
 
 ```mermaid
 graph TD
-    subgraph "ACR-QA v3.2.5 — Current"
+    subgraph "ACR-QA v3.9.5 — Current"
         CLI["CLI --lang auto|python|javascript"]
         DETECT["Language Detector\ndetect_language()"]
         CLI --> DETECT
