@@ -104,3 +104,9 @@ INTERVIEW_CHEATSHEET.md
 ACR-QA-Book.zip
 docs/PRESENTATION_SCRIPT.md
 docs/INSTRUCTOR_MEETING.md
+docs/INSTRUCTOR_MEETING.md
+
+# Dashboard build output (large bundles)
+FRONTEND/static/dashboard/
+dashboard/node_modules/
+dashboard/dist/
