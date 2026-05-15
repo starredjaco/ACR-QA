@@ -54,6 +54,7 @@
 | [User Study](evaluation/USER_STUDY.md) | A/B comparison materials: raw tool output vs ACR-QA with AI explanations |
 | [User Study Protocol](evaluation/USER_STUDY_PROTOCOL.md) | 20-minute structured user study protocol, 3 test scenarios, researcher script, data recording table |
 | [User Study Survey](evaluation/USER_STUDY_SURVEY.md) | 15-question participant questionnaire for formal evaluation |
+| [User Study Results](evaluation/USER_STUDY_RESULTS.md) | Participant responses tracker — ≥10 participants, A/B fix time + confidence scores |
 
 ## 🎓 Presentation
 
@@ -62,6 +63,7 @@
 | [Presentation Script](PRESENTATION_SCRIPT.md) | 7-min presentation script, Q&A cheat sheet, demo commands (all in one) |
 | [Demo Video Script](DEMO_VIDEO_SCRIPT.md) | 5-minute structured demo video script with timestamps and voiceover narration |
 | [LaTeX Slides](acr_qa_presentation.tex) | Formal presentation slide source |
+| [Blog Post Draft](BLOG_POST_DRAFT.md) | 1500-word technical post — taint+autofix combo, competitive moats, engineering discipline |
 | [Phase 1 Extras](thesis/Phase1-extras.md) | Additional Phase 1 implementation details |
 
 ## 🚨 SRE & Operations
