@@ -1,6 +1,6 @@
 # ACR-QA — Definitive Project Deep Dive & State Assessment
 
-**Date:** May 15, 2026 · **Version:** v3.9.5 · **Tests:** 2,160 passing · 0 warnings · **Coverage:** 84.89%
+**Date:** May 15, 2026 · **Version:** v4.0.0 · **Tests:** 2,219 passing (2162 Python + 57 TS) · 0 warnings · **Coverage:** 84.89%
 
 > This document is a brutally honest, code-verified audit of every module in ACR-QA.
 > Every claim is backed by line counts and actual code inspection.
@@ -32,7 +32,7 @@
 | Canonical rule mappings | 100+ Python, 80+ JS, 56 Go | Industry-grade |
 | CBoM algorithm registry | 62 algorithms with NIST quantum classification | Novel |
 | Test files | 46 Python + 8 TypeScript | Extremely thorough |
-| Tests passing | **2,160** · 0 failed · 0 warnings | Overkill (in a good way) |
+| Tests passing | **2,219** (2162 Python + 57 TS) · 0 failed · 0 warnings | Overkill (in a good way) |
 | Scripts | 20+ utilities | Full toolchain |
 | Database tables | **10** (runs, findings, explanations, feedback, suppression_rules, users, api_keys, dependency_findings, run_sboms, scan_attestations) | Complete provenance |
 | CI/CD | GitHub Actions (tests.yml + deploy.yml + e2e.yml + snyk.yml + codeql.yml) | Production-grade |

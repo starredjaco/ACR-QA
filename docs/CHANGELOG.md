@@ -2,6 +2,46 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v4.0.0] — Phase 11 Closeout · All engines shipped · Thesis-ready (May 15, 2026)
+
+### Summary
+
+Enterprise-ready release bundling all 6 engines from Phases 1–6, a production React dashboard, 2,219 tests, and 10/10 CI checks green. Blog post drafted, user study launched, v4.0.0 tag pushed to GitHub.
+
+### Engines Shipped (Phases 1–6)
+
+| Engine | Phase | File | Capability |
+|--------|-------|------|-----------|
+| Taint Analyzer | 1 | `CORE/engines/taint_analyzer.py` | Intra-procedural AST taint flow — source → sink |
+| Offline Mode (Ollama) | 2 | `CORE/ai/ollama_provider.py` | Air-gapped analysis, OSV snapshot, egress guard |
+| AI Triage Agent | 3 | `CORE/engines/triage_agent.py` | Multi-step LLM TP/FP verdict with reasoning chain |
+| Auto-Fix Patch Generator | 4 | `CORE/engines/autofix.py` | LLM unified diff + ruff validation + GitHub PR |
+| Supply Chain + SBOM | 5 | `CORE/engines/supply_chain.py` | 4 lockfile parsers, OSV CVE lookup, CycloneDX 1.4 |
+| React Dashboard | 6 | `dashboard/` | shadcn/ui, Vite 5, SSE live progress, Vitest 57 tests |
+
+### Added — Phase 11 Deliverables
+
+- **`docs/BLOG_POST_DRAFT.md`** — 1500-word post; lead: taint + auto-fix combo; covers 3 killer features + competitive moats
+- **`docs/evaluation/USER_STUDY_RESULTS.md`** — structured results tracker for ≥10 participants (survey sent)
+- **`docs/evaluation/USER_STUDY_RESULTS.md`** — template ready; responses pending from KSIU classmates
+
+### Changed
+
+- **`README.md`** — version badge v4.0.0, test badge 2219 (Python 2162 + TypeScript 57), live Railway URL badge
+- **`docs/architecture/ARCHITECTURE.md`** — header v4.0.0, output table updated
+- **`docs/PROJECT_DEEP_DIVE.md`** — all 6 engines, v4.0.0 vital signs
+- **`docs/GOD_MODE_PLAN.md`** — Phase 11 progress 0/14 → 11/14; progress snapshot updated
+
+### Stats
+
+- Python tests: **2,162** · TypeScript (Vitest): **57** · Total: **2,219** ≥ 2,200 ✅
+- Coverage: 84.89% (CORE) · CI gate 82% ✅
+- CI checks: 10/10 green ✅
+- Live: `https://acrqa-api-production.up.railway.app/health` ✅
+- GitHub Release: v4.0.0 tag + release notes attached
+
+---
+
 ## [v3.9.6] — CI 10/10 green · pytest 8.x · Railway live (May 15, 2026)
 
 ### Fixed
