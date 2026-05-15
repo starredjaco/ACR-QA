@@ -111,6 +111,20 @@ Each task is sized so it can finish in a single focused session. Don't start the
 
 **Week 4 deliverables:** WCAG 2.1 AA badge in README. Screenshot of mobile + RTL + dark mode in `docs/media/`.
 
+#### Week 4 Status
+
+| Task | Status | Notes |
+|------|--------|-------|
+| 12.19 axe-core audit | ✅ | `e2e/accessibility.spec.ts` — AxeBuilder WCAG 2.1 AA scan on Scans + Settings pages |
+| 12.20 WCAG 2.1 AA fixes | ✅ | aria-label on all icon buttons, nav/main landmarks, aria-hidden on decorative icons, focus-visible ring |
+| 12.21 Mobile responsive | ✅ | sm: breakpoints in header; verified ≤375px in Playwright viewport test |
+| 12.22 Skeleton + error bounds | ✅ | `Skeleton`, `SkeletonCard`, `SkeletonTable` components; `ErrorBoundary` wraps Outlet; 8 new unit tests |
+| 12.23 Findings diff view | ✅ | Already implemented: `runs.$id.compare.tsx` with ruleSet diffing |
+| 12.24 Trends dashboard | ✅ | Already implemented: `TrendChart.tsx` with Recharts LineChart + `useTrends()` |
+| 12.25 Command palette | ✅ | Already implemented: `command-palette.tsx` with Ctrl+K |
+| 12.26 PDF export | ✅ | `window.print()` + `@media print` CSS (hides nav/buttons, white background, 1.5cm margins) |
+| 12.27 Arabic RTL i18n | ✅ | `react-i18next`, en/ar JSON, `setLanguage()` sets `dir`/`lang`, language toggle in header |
+
 ---
 
 ### 🎯 Week 5 — Chaos + Observability Hardening
@@ -212,11 +226,11 @@ DevOps / Platform Engineering
 Week 1 — Test Quality Audit        [ ██▱▱▱▱ ]  2/6
 Week 2 — Engine Depth + Benchmark  [ ███████ ]  7/7 ✅
 Week 3 — DevOps Portfolio          [ █████ ]  5/5 ✅
-Week 4 — UI Production Polish      [ ▱▱▱▱▱▱▱▱▱ ]  0/9
+Week 4 — UI Production Polish      [ █████████ ]  9/9 ✅
 Week 5 — Chaos + Observability     [ ▱▱▱▱▱▱ ]  0/6
 Week 6 — Closeout v4.5.0           [ ▱▱▱▱▱▱ ]  0/6
 
-OVERALL: 14/39 tasks · 36% complete
+OVERALL: 23/39 tasks · 59% complete
 <!-- Last updated: May 15, 2026 -->
 ```
 

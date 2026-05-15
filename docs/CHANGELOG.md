@@ -2,6 +2,77 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Phase 12 Week 4 — Complete] — UI Production Polish (May 15, 2026)
+
+### Summary
+
+Week 4 of Phase 12: WCAG 2.1 AA compliance, Arabic RTL internationalisation,
+skeleton loading states, error boundaries, PDF export, and automated axe-core
+accessibility e2e tests. 9/9 tasks done. TypeScript unit tests: 57 → 65 (+8).
+
+### Added
+
+- **`dashboard/e2e/accessibility.spec.ts`** — axe-core Playwright audit (Task 12.19 + 12.21):
+  - WCAG 2.1 AA scans on Scans page and Settings page (critical/serious only)
+  - Mobile 375px viewport tests: body width check, header/nav visibility
+  - RTL tests: language toggle sets `dir="rtl"` / `dir="ltr"` on `<html>`
+
+- **`dashboard/src/components/ui/skeleton.tsx`** — skeleton loading components (Task 12.22):
+  - `Skeleton` — base animated pulse rectangle
+  - `SkeletonCard` — 3-line card placeholder
+  - `SkeletonTable` — header + N-row table placeholder
+
+- **`dashboard/src/components/ui/error-boundary.tsx`** — React ErrorBoundary (Task 12.22):
+  - Class-based boundary with `role="alert"` fallback
+  - "Try again" button to reset state
+  - Wraps `<Outlet />` in layout (catches all route crashes)
+
+- **`dashboard/src/lib/i18n.ts`** — react-i18next setup (Task 12.27):
+  - English + Arabic bundles with nav/scans/settings/common keys
+  - `setLanguage(lang)` sets `dir` + `lang` attributes and persists to localStorage
+
+- **`dashboard/src/locales/en.json`** + **`ar.json`** — translation bundles
+
+- **`dashboard/src/test/components/Skeleton.test.tsx`** — 8 unit tests
+
+### Changed
+
+- **`dashboard/src/routes/_layout.tsx`** (Tasks 12.20, 12.27):
+  - `<header role="banner">`, `<nav aria-label="Main navigation">`, `<main role="main" id="main-content">`
+  - Language toggle button (Languages icon) wired to `setLanguage()`
+  - All icon-only buttons now have descriptive `aria-label`
+  - `aria-hidden` on all decorative icons
+  - `focus-visible:ring-2` on nav links
+  - ErrorBoundary wrapping Outlet
+
+- **`dashboard/src/routes/runs.$id.tsx`** (Tasks 12.22, 12.26):
+  - Stats row uses `SkeletonCard` grid instead of center-spinner
+  - "Export PDF" button → `window.print()` (translated via i18n)
+
+- **`dashboard/src/routes/index.tsx`** (Task 12.20):
+  - Refresh + New Scan buttons have `aria-label`
+
+- **`dashboard/src/styles/globals.css`** (Tasks 12.20, 12.21, 12.26, 12.27):
+  - `@media print` rules: hide header/nav/buttons, white background, @page margins
+  - RTL CSS helpers: `[dir="rtl"]` margin reversals
+  - Global `focus-visible` ring for keyboard navigation (WCAG 2.1 AA 2.4.7)
+
+- **`dashboard/package.json`** — added `@axe-core/playwright`, `react-i18next`, `i18next`
+
+### Pre-existing (counted as done in Week 4 plan)
+
+- **12.23 Findings diff** — `runs.$id.compare.tsx` was built in an earlier phase
+- **12.24 Trends chart** — `TrendChart.tsx` with Recharts was built in an earlier phase
+- **12.25 Command palette** — `command-palette.tsx` with Ctrl+K was built in an earlier phase
+
+### Stats
+
+- Total tasks: **23/39** (Week 4: 9 done)
+- TS unit tests: **65** (was 57; +8 skeleton/error-boundary tests)
+- New e2e tests: 14 (accessibility + mobile + RTL)
+
+---
+
 ## [Phase 12 Week 3 — Complete] — DevOps Portfolio (May 15, 2026)
 
 ### Summary
