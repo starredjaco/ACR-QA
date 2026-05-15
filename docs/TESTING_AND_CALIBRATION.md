@@ -1,7 +1,7 @@
 # ACR-QA Testing & Calibration Report
 
-**Latest Run:** May 6, 2026 · **Version:** v3.3.0 (towards v4.0.0)
-**Unit Tests:** 1,690 passed, 13 skipped · **Coverage:** 84.85%
+**Latest Run:** May 15, 2026 · **Version:** v3.9.4
+**Unit Tests:** 2,151 passed, 52 skipped · **Coverage:** 84.80%
 
 > 📋 **For the strategic testing plan** (6-layer pyramid, ground-truth-as-evidence approach, why coverage is a tripwire not a target), see [`GOD_MODE_PLAN.md` §9](GOD_MODE_PLAN.md#9-testing-strategy--read-this-before-writing-any-code).
 > 📊 **For honest current numbers** on 6 real repos, see [`evaluation/PHASE_0_BASELINE.md`](evaluation/PHASE_0_BASELINE.md).
@@ -50,7 +50,7 @@
 | `TESTS/test_batch2_engines.py` | 96 | v3.2.1 |
 | `TESTS/test_batch3_detectors.py` | 100 | v3.2.1 |
 | `TESTS/test_normalizer_scorer.py` | 134 | v3.2.1 |
-| `TESTS/test_new_engines.py` | 102 | v3.1.2 — Features 4-9 |
+| `TESTS/test_new_engines.py` | 117 | v3.9.4 — all DB tests mocked, 0 failures |
 | `TESTS/test_coverage_boost.py` | 77 | v2.9 |
 | `TESTS/test_god_mode.py` | 78 | v2.7 |
 | `TESTS/test_deep_coverage.py` | 98 | v2.6 |
@@ -446,7 +446,7 @@ vulnerabilities to stress-test the full pipeline.
 
 | File | Tests | Added In |
 |------|:---:|:---:|
-| `TESTS/test_new_engines.py` | **92** | v3.1.1 — Features 4-8 |
+| `TESTS/test_new_engines.py` | **117** | v3.9.4 — Features 4-10, all DB tests mocked |
 | `TESTS/test_coverage_boost.py` | **77** | v2.9 |
 | `TESTS/test_god_mode.py` | 78 | v2.7 |
 | `TESTS/test_deep_coverage.py` | 98 | v2.6 |
