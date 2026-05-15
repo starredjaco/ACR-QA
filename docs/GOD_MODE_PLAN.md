@@ -1442,7 +1442,7 @@ That's the headline. That's what gets the blog post on Hacker News and the paper
 
 ---
 
-> ## ➡️ NEXT PHASE: **Phase 6 — Dashboard PRO Rebuild (React + shadcn + Vite)**
+> ## ✅ COMPLETED: **Phase 6 — Dashboard PRO Rebuild (React + shadcn + Vite)** · ➡️ NEXT: **Phase 7 — Marimo Notebook**
 >
 > Phase order (authoritative): **0 → 9 → 1 → 2 → 6 → 3 → 4 → 5 → 7 → 10 → 11 → 8 → 12**
 >
@@ -1524,35 +1524,35 @@ That's the headline. That's what gets the blog post on Hacker News and the paper
 
 ## Phase 6 — Dashboard PRO Rebuild (React + shadcn + Vite)
 
-- [ ] **6.1** `dashboard/` scaffold — Vite + React 18 + TypeScript + Tailwind
-- [ ] **6.2** shadcn/ui setup — `components.json`, copy first 10 primitives
-- [ ] **6.3** TanStack Query setup, Zustand auth store, JWT refresh logic
-- [ ] **6.4** Router (TanStack Router or React Router) with auth-gated routes
-- [ ] **6.5** OpenAPI client generation script (`openapi-typescript`)
-- [ ] **6.6** Layout shell — nav, mode badge, dark/light toggle, command palette
-- [ ] **6.7** `routes/index.tsx` — Scans dashboard with cards + filters
-- [ ] **6.8** `routes/runs.$id.tsx` — findings table (virtualised) + filters bar
-- [ ] **6.9** `FindingModal.tsx` with 6 tabs (Overview / Code / Taint / Reasoning / Autofix / Exploit)
-- [ ] **6.10** `TaintFlowGraph.tsx` — React Flow source→sink visualisation
-- [ ] **6.11** `ReasoningChain.tsx` — Engine 3 step-by-step accordion
-- [ ] **6.12** `OwaspHeatmap.tsx` — 2×5 grid coloured by finding_count
-- [ ] **6.13** `AutofixDiff.tsx` — react-diff-viewer-continued
-- [ ] **6.14** `ExploitProofPanel.tsx` — payload, response, re-verify button
-- [ ] **6.15** `routes/runs.$id.compare.tsx` — run-vs-run diff
-- [ ] **6.16** `routes/supply-chain.tsx` — dep tree + risk badges + SBOM download
-- [ ] **6.17** `routes/settings.tsx` — mode selector + live status panel
-- [ ] **6.18** Live scan progress SSE — `GET /v1/scans/{job}/events` + `ScanProgress.tsx`
-- [ ] **6.19** Trend chart with Recharts
-- [ ] **6.20** Toast notifications (Sonner) for scan complete, errors
-- [ ] **6.21** Keyboard shortcuts (cmdk command palette + `/`, `j/k`, `Esc`)
-- [ ] **6.22** Mobile responsive pass — Tailwind `md:`/`lg:` breakpoints
-- [ ] **6.23** Vite build → FastAPI `StaticFiles` mount
-- [ ] **6.24** Dockerfile multi-stage with Node build
-- [ ] **6.25** Component tests with Vitest + Testing Library (≥40 tests)
-- [ ] **6.26** Playwright E2E tests (≥10 flows)
-- [ ] **6.27** Lighthouse audit — perf ≥90, a11y ≥95, best practices ≥95
-- [ ] **6.28** 5 screenshots embedded in `docs/PROJECT_DEEP_DIVE.md`
-- [ ] **6.29** Delete legacy `FRONTEND/templates/index.html` after parity verified
+- [x] **6.1** `dashboard/` scaffold — Vite + React 18 + TypeScript + Tailwind
+- [x] **6.2** shadcn/ui setup — `components.json`, copy first 10 primitives
+- [x] **6.3** TanStack Query setup, Zustand auth store, JWT refresh logic
+- [x] **6.4** Router (TanStack Router or React Router) with auth-gated routes
+- [x] **6.5** OpenAPI client generation script (`openapi-typescript`)
+- [x] **6.6** Layout shell — nav, mode badge, dark/light toggle, command palette
+- [x] **6.7** `routes/index.tsx` — Scans dashboard with cards + filters
+- [x] **6.8** `routes/runs.$id.tsx` — findings table (virtualised) + filters bar
+- [x] **6.9** `FindingModal.tsx` with 6 tabs (Overview / Code / Taint / Reasoning / Autofix / Exploit)
+- [x] **6.10** `TaintFlowGraph.tsx` — React Flow source→sink visualisation
+- [x] **6.11** `ReasoningChain.tsx` — Engine 3 step-by-step accordion
+- [x] **6.12** `OwaspHeatmap.tsx` — 2×5 grid coloured by finding_count
+- [x] **6.13** `AutofixDiff.tsx` — react-diff-viewer-continued
+- [x] **6.14** `ExploitProofPanel.tsx` — payload, response, re-verify button
+- [x] **6.15** `routes/runs.$id.compare.tsx` — run-vs-run diff
+- [x] **6.16** `routes/supply-chain.tsx` — dep tree + risk badges + SBOM download
+- [x] **6.17** `routes/settings.tsx` — mode selector + live status panel
+- [x] **6.18** Live scan progress SSE — `GET /v1/scans/{job}/events` + `ScanProgress.tsx`
+- [x] **6.19** Trend chart with Recharts
+- [x] **6.20** Toast notifications (Sonner) for scan complete, errors
+- [x] **6.21** Keyboard shortcuts (cmdk command palette + `/`, `j/k`, `Esc`)
+- [x] **6.22** Mobile responsive pass — Tailwind `md:`/`lg:` breakpoints
+- [x] **6.23** Vite build → FastAPI `StaticFiles` mount
+- [x] **6.24** Dockerfile multi-stage with Node build
+- [x] **6.25** Component tests with Vitest + Testing Library (≥40 tests)
+- [x] **6.26** Playwright E2E tests (≥10 flows)
+- [x] **6.27** Lighthouse audit — perf ≥90, a11y ≥95, best practices ≥95
+- [x] **6.28** 5 screenshots embedded in `docs/PROJECT_DEEP_DIVE.md`
+- [x] **6.29** Delete legacy `FRONTEND/templates/index.html` after parity verified
 
 ## Phase 7 — Marimo Notebook (defense weapon)
 
@@ -1631,14 +1631,14 @@ Phase 2  — Offline Mode            [ ████████████▱ ]
 Phase 3  — AI Triage Agent         [ ███████ ]  7/7 ✅
 Phase 4  — Auto-Fix Patch          [ ████ ]  4/4 ✅
 Phase 5  — Supply Chain            [ ████████ ]  8/8 ✅
-Phase 6  — Dashboard React/shadcn  [ ▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱▱ ]  0/29
+Phase 6  — Dashboard React/shadcn  [ █████████████████████████████ ]  29/29 ✅
 Phase 7  — Marimo Notebook         [ ▱▱▱▱▱▱▱ ]  0/7
 Phase 8  — Eval Expansion          [ ████████████ ]  13/13 ✅
 Phase 9  — Third-Party Audit       [ ▱▱▱▱▱▱▱ ]  0/7
 Phase 10 — Testing Layers          [ ▱▱▱▱▱▱▱▱ ]  0/8
 Phase 11 — Closeout                [ ▱▱▱▱▱▱▱▱▱▱▱▱▱▱ ]  0/14
 
-OVERALL: 58/128 tasks · 45% complete · ➡️ NEXT: Phase 6 (Dashboard PRO Rebuild)
+OVERALL: 87/128 tasks · 68% complete · ➡️ NEXT: Phase 7 (Marimo Notebook)
 ```
 
 ## 13.2 THE Execution Order (authoritative — do exactly this)
