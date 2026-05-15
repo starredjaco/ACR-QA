@@ -2,6 +2,70 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v3.9.1] — Phase 7: Marimo Defense Notebooks (May 15, 2026)
+
+### Added — Interactive Demo Notebooks (`notebooks/`)
+
+- **`notebooks/walkthrough.py`** — 12-cell full-pipeline walkthrough: target selector → static analysis → taint → triage → autofix → supply chain → attestation → quality gate → performance metrics. All cells have try/except with demo-mode fallback (no infrastructure required).
+- **`notebooks/engine_demos/taint.py`** — TaintAnalyzer interactive demo: fixture selector (direct_sqli, multihop_sqli, fstring_eval, clean), live analysis, taint flow visualisation with `mo.callout(kind="danger")`.
+- **`notebooks/engine_demos/exploit.py`** — ExploitVerifier demo: category radio (sqli/cmdi/ssti/safe), `mo.ui.run_button` for live Docker run, static EXPECTED dict for demo, 3-tier verdict table.
+- **`notebooks/engine_demos/attestation.py`** — AttestationEngine demo: run_id slider, bundle generation, tamper detection proof, post-quantum hybrid explanation.
+- **`notebooks/engine_demos/offline.py`** — Zero-egress mode demo: mode switch (online/offline), EgressGuard test, Ollama health check, OSV offline reader, network egress map table.
+- **Static HTML exports** — `docs/walkthrough.html`, `docs/demo_taint.html`, `docs/demo_exploit.html`, `docs/demo_attestation.html`, `docs/demo_offline.html` (5× exported via `marimo export html`).
+- `README.md` — "Interactive Demo Notebooks" section with 5-notebook table + `marimo run`/`marimo edit` usage.
+
+### Changed
+
+- Version: v3.8.0 → v3.9.1
+- `docs/GOD_MODE_PLAN.md` — Phase 7 all 7 tasks ticked; overall 94/128 (73%); ➡️ NEXT pointer updated to Phase 9.
+
+---
+
+## [v3.9.0] — Phase 6: Dashboard PRO Rebuild (React 18 + Vite 5 + shadcn/ui) (May 15, 2026)
+
+### Added — Full React SPA (`dashboard/`)
+
+- **React 18 + TypeScript + Vite 5** SPA — replaces the legacy Flask `templates/index.html` Tailwind SPA.
+- **Build output** → `FRONTEND/static/dashboard/` (served by FastAPI `StaticFiles`; gitignored, generated at build time).
+- **shadcn/ui component library** (hand-written Radix/Tailwind primitives — no npm package required):
+  - `Button`, `Badge`, `Card`, `Input`, `Dialog`, `Tabs`/`TabsList`/`TabsTrigger`/`TabsContent` (compound API), `Select`, `Skeleton`, `Toast`/`Toaster`
+  - CVA + clsx + tailwind-merge pattern throughout.
+- **Pages (5 routes):**
+  - `ScansPage` — runs table, new scan dialog, SSE progress bar.
+  - `RunDetailPage` — 3-tab layout: Findings (filter/sort/severity badges) | OWASP Heatmap | Supply Chain.
+  - `RunComparePage` — run-vs-run diff; severity delta counters.
+  - `SupplyChainPage` — run selector, stats cards, risk breakdown, high-risk alerts, full DependencyTree.
+  - `SettingsPage` — health cards (FastAPI + Celery), mode card, API token copy.
+- **Shared components:**
+  - `Layout` — sidebar nav, dark mode toggle, user avatar dropdown.
+  - `CommandPalette` — Ctrl+K / `/` keyboard shortcut; ESC closes; arrow nav; Enter selects.
+  - `FindingModal` — compound Tabs, taint flow, exploit proof panel, autofix patch.
+  - `ExploitProofPanel` — 3-tier verdict display.
+  - `OwaspHeatmap` — OWASP Top 10 compliance heatmap (fetches own data by runId).
+  - `DependencyTree` — supply chain risk tree.
+  - `ScanProgress` — SSE EventSource real-time progress.
+- **Data layer:**
+  - TanStack Query v5 — `useQuery`/`useMutation`; `useFindings`, `useStats`, `useSupplyChain`, `useRuns`, `useHealthCheck`.
+  - Zustand v5 persist — auth store (`acrqa_auth`) in localStorage.
+  - SSE hook — `useScanProgress` via `EventSource`.
+  - Vite proxy — `/v1` → `http://localhost:8000`.
+- **Test suite (57 tests, all passing):**
+  - Unit: `Button`, `Badge`, `Card`, `Input`, `Dialog`, `ScanCard`, `FindingsTable`, `utils` (cn, severityColor, riskColor, truncate, formatDate).
+  - Vitest v2 + happy-dom (replaced jsdom due to ESM conflict); `@testing-library/react`.
+  - E2E: Playwright — `auth.spec.ts` (5 flows), `dashboard.spec.ts` (10 flows).
+- **FastAPI `StaticFiles` mount** in `FRONTEND/api/main.py` — serves SPA at `/dashboard/*` with HTML fallback.
+- **4-stage Dockerfile** — `node-builder` (npm ci + vite build) → `py-builder` → `go-tools` → `runtime`.
+- `.gitignore` — added `FRONTEND/static/dashboard/`, `dashboard/node_modules/`, `dashboard/dist/`.
+
+### Changed
+
+- `FRONTEND/templates/index.html` → renamed to `index.html.retired`.
+- `dashboard/tsconfig.app.json` / `tsconfig.node.json` — no JS-style comments (pre-commit `check-json` compatibility).
+- `dashboard/vite.config.ts` — `environment: "happy-dom"`, test `include`/`exclude` patterns.
+- Version: v3.8.0 → v3.9.0
+
+---
+
 ## [v3.8.0] — Phase 5: Supply Chain + SBOM Engine (May 15, 2026)
 
 ### Added — Engine 5: Supply Chain Risk Analyzer (`CORE/engines/supply_chain.py`)

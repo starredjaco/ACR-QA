@@ -306,7 +306,7 @@ make run               # pipeline on sample files
 | Test File | Tests | Coverage |
 |-----------|------:|----------|
 | `test_acceptance.py` | 4 | Pipeline E2E with mocked LLM |
-| `test_api.py` | 9 | All Flask endpoints |
+| `test_api.py` | 9 | FastAPI endpoints |
 | `test_normalizer.py` | 7 | Ruff / Bandit / Semgrep normalisation |
 | `test_new_engines.py` | 56 | Secrets, SCA, CBoM, autofix, quality gate |
 | `test_deep_coverage.py` | 100 | 12-module deep coverage |
@@ -364,7 +364,8 @@ Key design decisions are documented in [`docs/adr/`](docs/adr/):
 | Layer | Technology |
 |-------|-----------|
 | Language | Python 3.11+ |
-| Web Framework | Flask 3.x |
+| Web Framework | FastAPI 0.111+ (async) |
+| Frontend | React 18 + TypeScript + Vite 5 + shadcn/ui |
 | Database | PostgreSQL 15 |
 | Cache / Rate Limiting | Redis 7 |
 | AI Model | Groq Llama 3.3-70b (explanations) · Llama 3.1-8b (feasibility) |
