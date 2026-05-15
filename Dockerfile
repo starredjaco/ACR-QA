@@ -87,7 +87,7 @@ WORKDIR /app
 COPY . .
 
 # Copy pre-built dashboard from node-builder stage
-COPY --from=node-builder /build/dashboard/dist /app/FRONTEND/static/dashboard
+COPY --from=node-builder /build/FRONTEND/static/dashboard /app/FRONTEND/static/dashboard
 
 RUN mkdir -p DATA/outputs DATA/provenance DATA/reports \
     && chmod +x TOOLS/*.sh 2>/dev/null || true \
