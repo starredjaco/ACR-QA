@@ -1088,6 +1088,34 @@ class AnalysisPipeline:
         except Exception as e:
             logger.error(f"        ✗ CBoM scan error: {e}")
 
+        try:
+            from CORE.engines.trivy_adapter import TrivyAdapter
+
+            adapter = TrivyAdapter()
+            if adapter.available:
+                logger.info("      - Trivy (container/IaC/dependency scan)")
+                trivy_findings = adapter.scan_directory(target_dir)
+                extra_findings.extend(trivy_findings)
+                logger.info(f"        → {len(trivy_findings)} finding(s)")
+            else:
+                logger.debug("Trivy not installed — skipping")
+        except Exception as e:
+            logger.error(f"        ✗ Trivy scan error: {e}")
+
+        try:
+            from CORE.engines.trufflehog_adapter import TruffleHogAdapter
+
+            adapter = TruffleHogAdapter()
+            if adapter.available:
+                logger.info("      - TruffleHog (verified secrets detection)")
+                th_findings = adapter.scan_directory(target_dir)
+                extra_findings.extend(th_findings)
+                logger.info(f"        → {len(th_findings)} secret(s)")
+            else:
+                logger.debug("TruffleHog not installed — regex secrets detector active")
+        except Exception as e:
+            logger.error(f"        ✗ TruffleHog scan error: {e}")
+
         return extra_findings
 
     def _load_findings(self):
