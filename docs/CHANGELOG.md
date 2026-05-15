@@ -2,6 +2,41 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Phase 12 Week 1 — In Progress] — Test Quality Audit (May 15, 2026)
+
+### Summary
+
+Week 1 of Phase 12 "Make It Bulletproof" — mutation testing + property-based tests reveal real gaps and parser bugs.
+
+### Added
+
+- **`TESTS/test_property_based.py`** — 17 Hypothesis property-based tests across 3 classes:
+  - `TestCanonicalFindingInvariants` — 7 properties on `CanonicalFinding.create()`: never raises, canonical_rule_id never empty, severity always valid, `to_dict` always has required keys, unknown rules → `CUSTOM-*`, known rules never → `CUSTOM-*`, language from extension
+  - `TestNormalizerParserInvariants` — 5 properties: normalize_ruff/bandit/semgrep never raise, always return `list[CanonicalFinding]`
+  - `TestRuleMappingInvariants` — 5 structural invariants: valid prefixes, numeric suffix, no CUSTOM-* values, no empty keys/values
+- **`setup.cfg`** — mutmut configuration: 3 target files, TESTS dir + all dependencies in `also_copy`, 9 slow/external test files ignored
+
+### Fixed (bugs Hypothesis found)
+
+- **`normalize_ruff`**: crashed on dict input (expected list); crashed on non-dict items in list; `location` field not guarded for dict type
+- **`normalize_bandit`**: crashed on `None`, `[]`, or non-dict input; per-item exceptions propagated instead of being skipped
+- **`normalize_semgrep`**: crashed on `None` / non-dict input; `check_id` crash when value is `list` or `None`; `extra` and `start` fields not guarded for dict type
+- **`test_to_dict_always_serializable`**: checked for `rule_id` key but model field is `original_rule_id`
+- **`test_all_canonical_ids_have_prefix`**: `ASSERT` prefix exists in `RULE_MAPPING` but was missing from the valid_prefixes set
+
+### Changed
+
+- **`requirements.txt`** — pinned `hypothesis==6.152.7` and `pytest-benchmark==5.1.0`
+- **`CORE/engines/normalizer.py`** — all 3 normalizers now defensive: type-guard at entry, per-item try/except, type annotations for `findings: list[CanonicalFinding] = []`
+
+### Findings (Task 12.1 — Mutation Testing)
+
+- **Mutation score: 0%** on `confidence_scorer.py`, `quality_gate.py`, `severity_scorer.py`
+- 210 mutants generated, 0 killed — these 3 files have no direct unit tests exercising their logic
+- Action (Task 12.6): write dedicated unit tests for all 3 scorer files
+
+---
+
 ## [v4.0.0] — Phase 11 Closeout · All engines shipped · Thesis-ready (May 15, 2026)
 
 ### Summary

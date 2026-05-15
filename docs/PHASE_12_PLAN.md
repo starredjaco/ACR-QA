@@ -199,15 +199,27 @@ DevOps / Platform Engineering
 ## Progress Tracking
 
 ```
-Week 1 — Test Quality Audit        [ ▱▱▱▱▱▱ ]  0/6
+Week 1 — Test Quality Audit        [ ██▱▱▱▱ ]  2/6
 Week 2 — Engine Depth + Benchmark  [ ▱▱▱▱▱▱▱ ]  0/7
 Week 3 — DevOps Portfolio          [ ▱▱▱▱▱ ]  0/5
 Week 4 — UI Production Polish      [ ▱▱▱▱▱▱▱▱▱ ]  0/9
 Week 5 — Chaos + Observability     [ ▱▱▱▱▱▱ ]  0/6
 Week 6 — Closeout v4.5.0           [ ▱▱▱▱▱▱ ]  0/6
 
-OVERALL: 0/39 tasks · ➡️ START: Week 1 (12.1 — Mutation testing)
+OVERALL: 2/39 tasks · 5% complete
+<!-- Last updated: May 15, 2026 -->
 ```
+
+### Week 1 Status
+
+| # | Task | Status | Result |
+|---|------|--------|--------|
+| **12.1** | Mutation testing (mutmut) | ✅ DONE | **0% mutation score** on 3 files — confidence_scorer, quality_gate, severity_scorer have no direct unit tests catching mutations. 210 mutants, 0 killed. Action: add targeted unit tests in 12.6. |
+| **12.2** | Property-based tests (Hypothesis) | ✅ DONE | 17 tests, **4 real bugs found** — normalize_ruff/bandit/semgrep crashed on None/non-dict input; check_id crash on list type; ASSERT prefix missing from valid_prefixes. All fixed + committed. |
+| **12.3** | Fuzzing parsers (atheris) | ⏳ TODO | atheris needs Clang to build — use Hypothesis `st.binary()` strategies instead |
+| **12.4** | Snapshot tests (AI explainer) | ⏳ TODO | — |
+| **12.5** | Performance regression CI gate | ⏳ TODO | — |
+| **12.6** | Fix bugs surfaced by Week 1 | ⏳ TODO | Add unit tests for confidence_scorer/quality_gate/severity_scorer |
 
 ---
 
@@ -219,4 +231,4 @@ OVERALL: 0/39 tasks · ➡️ START: Week 1 (12.1 — Mutation testing)
 4. **Update progress tracker** after each commit.
 5. **Week 6 is locked** — no new features after 12.34. Just stabilize and ship.
 
-**Next action:** `12.1 — Run mutmut on CORE/engines/` (2h estimate).
+**Next action:** `12.3 — Fuzz parsers with Hypothesis st.binary()` (atheris unavailable — adapt the approach).
