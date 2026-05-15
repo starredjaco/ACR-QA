@@ -110,19 +110,27 @@ ACR-QA covers **9/10** OWASP Top 10 categories.
 
 | Metric | Value |
 |--------|:-----:|
-| Test Suite | **2,162 tests** (pytest) · 0 failed · 0 warnings — v3.9.6 |
+| Test Suite | **2,297 passing** (2,232 Python + 65 TypeScript) — Phase 12 Week 5 |
 | Code Coverage | **84.89%** (CORE) · 82.66% (CORE+DATABASE, CI gate 82% ✅) |
-| CI/CD | GitHub Actions (test + lint + coverage + E2E + deploy) |
-| Docker | Multi-stage Dockerfile + docker-compose.yml (7 services) |
-| API Endpoints | **32** async FastAPI endpoints under `/v1/` |
+| CI/CD | GitHub Actions (test + lint + coverage + E2E + deploy + cosign sign) |
+| Docker | Multi-stage Dockerfile + docker-compose.yml (8 services incl. Jaeger) |
+| API Endpoints | **33** async FastAPI endpoints under `/v1/` |
 | Auth | JWT (15min/7d) + bcrypt-hashed API keys + RBAC (admin/member/viewer) |
 | CUSTOM-* Findings | **0** (regression-guarded by `test_no_custom_rules.py`) |
 | Deduplication | Automated 2-pass cross-tool deduplication |
 | Rule Mappings | 299+ tool-specific → canonical rules |
 | OWASP Coverage | 9/10 categories |
 | Repos Tested | **10** benchmark repositories (Python × 4, JS × 3, TS × 1, Go × 1) |
-| Alembic Migrations | **9** (baseline → users → reachability → embeddings → exploits → attestations → taint → triage → supply-chain) |
-| Engines | 12 (normalizer, severity, quality-gate, explainer, autofix, reachability, learned-suppression, taint, triage-agent, exploit-verifier, attestation, supply-chain) |
+| Alembic Migrations | **10** (baseline → users → reachability → embeddings → exploits → attestations → taint → triage → supply-chain → cost-telemetry) |
+| Engines | 14 (normalizer, severity, quality-gate, explainer, autofix, reachability, learned-suppression, taint, triage-agent, exploit-verifier, attestation, supply-chain, trivy-adapter, trufflehog-adapter) |
+| Chaos Resilience | Postgres + Redis failure tests (13 tests) — graceful degradation verified |
+| Load Tested | 500 RPS Locust test — p99 target < 2s |
+| SLO Alerting | Multi-window burn-rate rules (1h+5h fast, 6h+1d slow) in Prometheus |
+| Supply Chain | Cosign keyless signing (SLSA Level 2) + Sigstore/Fulcio OIDC |
+| Observability | OpenTelemetry distributed tracing → Jaeger; Prometheus → Grafana |
+| Accessibility | WCAG 2.1 AA verified by axe-core Playwright e2e tests |
+| i18n | English + Arabic RTL (react-i18next) |
+| IaC | Helm chart (HPA 2→20) + Terraform (VPC, RDS, ECS Fargate, ALB) |
 
 ## 6b. Call Graph Reachability Benchmark (v3.3.2, Feature 9a)
 
@@ -158,7 +166,12 @@ Dead-code findings receive a **−20 confidence penalty** rather than outright s
 | Offline / air-gapped mode | ✅ Ollama | ❌ | ❌ | ❌ | ❌ |
 | AI Triage Agent (TP/FP verdict) | ✅ | ❌ | ❌ | ❌ | ❌ |
 | MCP server (IDE/agent native) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Helm + Terraform IaC | ✅ | ❌ | ❌ | ❌ | ❌ |
+| WCAG 2.1 AA dashboard + RTL i18n | ✅ | Partial | ❌ | ❌ | ❌ |
+| Chaos engineering test suite | ✅ | ❌ | ❌ | ❌ | ❌ |
+| SLO burn-rate alerting | ✅ | ❌ | ❌ | ❌ | ❌ |
+| FinOps cost telemetry per scan | ✅ | ❌ | ❌ | ❌ | Partial |
 
 ---
 
-*Updated: May 15, 2026 — ACR-QA v3.9.5*
+*Updated: May 15, 2026 — ACR-QA v4.0.0 (Phase 12 Week 5 complete, targeting v4.5.0)*
