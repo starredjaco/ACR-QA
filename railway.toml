@@ -4,7 +4,7 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 preDeployCommand = "alembic upgrade head"
-startCommand = "uvicorn FRONTEND.api.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 4"
+startCommand = "sh -c 'uvicorn FRONTEND.api.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 4'"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
