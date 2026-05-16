@@ -26,7 +26,7 @@
 
 | Document | Description |
 |----------|-------------|
-| [REST API Reference](API_REFERENCE.md) | All 32 FastAPI endpoints under `/v1/`, CLI reference, auth flows [v3.9.5] |
+| [REST API Reference](API_REFERENCE.md) | All 36 FastAPI endpoints under `/v1/`, CLI reference, auth flows [v4.5.0] |
 | [REST API (legacy)](setup/API-Documentation.md) | Original 11 HTTP endpoints reference (v2.7, archived) |
 | [Cloud Deployment](setup/Cloud-Deployment.md) | PythonAnywhere, Replit, ngrok deployment guides |
 | [Token Setup](setup/TOKEN_SETUP.md) | GitHub, GitLab, and Groq API key configuration |
@@ -94,6 +94,23 @@
 | [ROADMAP (legacy)](ROADMAP.md) | Pre-v2 plan. Phase 2 TS rewrite section is explicitly killed by the v2 plan; kept for historical context. |
 | [God Mode Plan v1 (archived)](archive/GOD_MODE_PLAN_V1.md) | Original plan — pre-FastAPI/Celery/Auth. Superseded by v2. |
 
+## 🖥 Static UI Dashboard (v4.5.0)
+
+9-page HTML dashboard served at `/ui/` by FastAPI StaticFiles. All pages share dark/light theme,
+⌘K command palette, toast notifications, and JWT auth.
+
+| Page | File | Key Feature |
+|------|------|-------------|
+| Login | `login.html` | JWT login |
+| Overview | `index.html` | Gate, stats, quick-action cards |
+| Findings | `finding.html` | Detail panel; auto-fix patch; attestation |
+| Runs | `runs.html` | Run history; compare + supply-chain deep-links |
+| Trends | `trends.html` | SVG trend charts |
+| New Scan | `scan.html` | Form + live progress log |
+| Compare | `compare.html` | Run-vs-run diff; added/fixed/persisting |
+| Supply Chain | `supply-chain.html` | OSV CVEs, dep risk, SBOM export |
+| Settings | `settings.html` | Profile, API keys, policy viewer |
+
 ## 🤖 AI Agent Onboarding
 
 | Document | Description |
@@ -121,4 +138,4 @@ During analysis runs, ACR-QA generates:
 
 ---
 
-**Last Updated:** May 5, 2026
+**Last Updated:** May 16, 2026

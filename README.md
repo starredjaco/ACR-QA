@@ -39,7 +39,7 @@ ACR-QA is a **provenance-first, AI-augmented code review platform** built as a g
 | **LLM hallucination** — AI assistants give confident but wrong security advice | RAG: the LLM can only explain rules it can cite from a curated 66-rule knowledge base; semantic entropy (3× runs) detects contradictions |
 | **Invisible test gaps** — code coverage % doesn't tell you *which* complex functions have no test | AST-based Test Gap Analyzer ranks untested symbols by cyclomatic complexity |
 
-**Key numbers:** 97.1% precision · 9/10 OWASP Top 10 · **2,339 tests** (2,274 Python + 65 TypeScript) · $0 recurring cost
+**Key numbers:** 97.1% precision · 9/10 OWASP Top 10 · **2,339 tests** (2,274 Python + 65 TypeScript) · 36 async API endpoints · $0 recurring cost
 
 ---
 
@@ -54,7 +54,7 @@ C4Container
     Container_Boundary(sys, "ACR-QA") {
         Container(cli, "CLI / GitHub Action", "Python", "Entry point. Detects language, routes to adapter.")
         Container(core, "Analysis Engine", "Python 3.11", "10 tools → normalise → score → dedup → AI explain → quality gate")
-        Container(api, "Async REST API", "FastAPI :8000", "32 /v1/ endpoints · JWT + API key auth · Swagger at /docs")
+        Container(api, "Async REST API", "FastAPI :8000", "36 /v1/ endpoints · JWT + API key auth · Swagger at /docs")
         Container(worker, "Background Worker", "Celery + Redis", "Async scan execution — POST /v1/scans returns 202 + job_id")
         ContainerDb(pg, "PostgreSQL 15", "", "Provenance: runs · findings · LLM calls · feedback · users · api_keys")
         ContainerDb(redis, "Redis 5.2", "", "Rate limiting · explanation cache · Celery broker + result backend")
@@ -307,7 +307,7 @@ Prometheus scrapes `/metrics` every 15 s. Grafana dashboard at **http://localhos
 ## Testing
 
 ```bash
-make test-all          # 1,690 tests (full suite)
+make test-all          # 2,339 tests (full suite)
 make test              # acceptance tests only
 make run               # pipeline on sample files
 ```
@@ -317,15 +317,20 @@ make run               # pipeline on sample files
 | `test_acceptance.py` | 4 | Pipeline E2E with mocked LLM |
 | `test_api.py` | 9 | FastAPI endpoints |
 | `test_normalizer.py` | 7 | Ruff / Bandit / Semgrep normalisation |
-| `test_new_engines.py` | 56 | Secrets, SCA, CBoM, autofix, quality gate |
+| `test_new_engines.py` | 117 | Secrets, SCA, CBoM, autofix, quality gate, KeyPool |
 | `test_deep_coverage.py` | 100 | 12-module deep coverage |
-| `test_god_mode.py` | 84 | All features + regression + edge cases |
+| `test_god_mode.py` | 96 | All features + regression + edge cases |
 | `test_js_adapter.py` | 63 | JS/TS adapter, E2E pipeline, CLI routing |
-| `test_go_adapter.py` | 51 | Go adapter, tools, Semgrep local rules |
-| `test_explainer.py` | 90+ | RAG, entropy, self-eval, Redis cache |
-| `test_autofix.py` | 70 | Every fix type + verification |
-| `test_fastapi_app.py` | 32 | FastAPI endpoint tests with mocked DB + auth |
-| *(+ 7 more files)* | 1,049 | Additional coverage |
+| `test_reachability.py` | 74 | Call-graph engine, fixtures, enrich_findings |
+| `test_taint_analyzer.py` | 65+ | Inter-procedural taint, sanitizer recognition |
+| `test_supply_chain.py` | 62 | Lockfile parsers, OSV CVE, risk scoring, SBOM |
+| `test_attestation.py` | 60 | AttestationEngine, ECDSA-P256, Dilithium3 PQ |
+| `test_exploit_verifier.py` | 59 | Docker sandbox, 3-tier verdict |
+| `test_fastapi_app.py` | 32 | FastAPI TestClient — all v1 endpoints |
+| `test_chaos.py` | 13 | Postgres/Redis failure injection |
+| `test_week1_completion.py` | 42 | Fuzz/snapshot/perf-gate/mutation-killing |
+| *(+ 31 more files)* | 1,536 | Additional coverage |
+| **TypeScript (Vitest)** | 65 | Button, Badge, Card, ScanCard, FindingsTable… |
 
 ---
 
@@ -373,7 +378,7 @@ Key design decisions are documented in [`docs/adr/`](docs/adr/):
 | Layer | Technology |
 |-------|-----------|
 | Language | Python 3.11+ |
-| Web Framework | FastAPI 0.111+ (async) |
+| Web Framework | FastAPI 0.115 (async) |
 | Frontend | React 18 + TypeScript + Vite 5 + shadcn/ui |
 | Database | PostgreSQL 15 |
 | Cache / Rate Limiting | Redis 7 |
@@ -436,13 +441,14 @@ marimo edit notebooks/walkthrough.py
 | **Supervisor** | Dr. Samy AbdelNabi |
 | **Institution** | King Salman International University (KSIU) |
 | **Timeline** | October 2025 – June 2026 |
-| **Status** | Feature-complete · Evaluation complete · User study pending |
+| **Status** | v4.5.0 · Feature-complete · Evaluation complete · Cloud-deployed · 37/39 tasks done |
 
 ### Remaining Thesis Work
 
-- [ ] User study (8–10 participants) — protocol at [`docs/evaluation/USER_STUDY_PROTOCOL.md`](docs/evaluation/USER_STUDY_PROTOCOL.md)
-- [ ] Cloud deployment (Railway / DigitalOcean)
-- [ ] 5-minute demo video
+- [x] Cloud deployment — live at [acrqa-api-production.up.railway.app](https://acrqa-api-production.up.railway.app/health) (Railway + PostgreSQL + Redis)
+- [x] User study protocol — [`docs/evaluation/USER_STUDY_PROTOCOL.md`](docs/evaluation/USER_STUDY_PROTOCOL.md)
+- [ ] 5-minute demo video ([script](docs/DEMO_VIDEO_SCRIPT.md)) **← human task**
+- [ ] YouTube upload (follows demo video) **← human task**
 
 ---
 
