@@ -2,6 +2,24 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [CI Fixes — v4.5.1] (May 16, 2026)
+
+### Fixed
+
+- **WCAG 2.1 AA color-contrast** — React Settings page `--destructive` CSS variable darkened from
+  `hsl(0 84.2% 60.2%)` (#ef4444 red-500, contrast 3.59:1) to `hsl(0 72.2% 40.8%)` (#b91c1c red-700,
+  contrast 6.18:1). Resolves Playwright/axe-core E2E failure on `.bg-destructive` logout button.
+- **SonarCloud coverage gate** — Root cause: `sonar.yml` called `.venv/bin/pytest` which does not
+  exist in GitHub Actions runners; the `|| true` silently swallowed the failure so `coverage.xml`
+  was never generated. Fixed: use `python -m pytest`, add postgres service + alembic migration step
+  mirroring `tests.yml`, drop `--cov=FRONTEND/api`. Removed `FRONTEND/api` from `sonar.sources`
+  (thin FastAPI wrapper, no dedicated unit tests; CORE has full coverage).
+- **Ruff format** — `scripts/run_owasp_benchmark.py` reformatted to comply with `ruff==0.6.0` CI
+  lint gate (1 file was reformatted).
+- **FastAPI attestation route** — `FRONTEND/api/routers/runs.py` had `@router.get("/runs/{run_id}/attestation")`
+  which doubled the `/v1/runs` router prefix to produce `/v1/runs/runs/{id}/attestation`. Corrected
+  to `@router.get("/{run_id}/attestation")`.
+
 ## [UI Phase 2 — God Mode] — 9-Page UI Overhaul (May 16, 2026)
 
 ### Summary
