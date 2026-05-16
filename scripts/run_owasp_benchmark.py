@@ -42,11 +42,11 @@ BENCHMARK_DIR = "TESTS/evaluation/owasp_benchmark_java"
 # OWASP Benchmark vulnerability categories we can detect (subset we handle)
 DETECTABLE_CATEGORIES = {
     "commandinjection": "SECURITY-021",  # subprocess / shell injection
-    "sqli": "SECURITY-027",             # SQL injection (cursor.execute)
-    "xss": "SECURITY-001",              # XSS (eval / unsafe render)
-    "weakrandomness": "SECURITY-037",   # B311: Standard pseudo-random
-    "crypto": "SECURITY-009",           # weak hash (MD5, DES)
-    "pathtraversal": "SECURITY-011",    # mktemp / path traversal
+    "sqli": "SECURITY-027",  # SQL injection (cursor.execute)
+    "xss": "SECURITY-001",  # XSS (eval / unsafe render)
+    "weakrandomness": "SECURITY-037",  # B311: Standard pseudo-random
+    "crypto": "SECURITY-009",  # weak hash (MD5, DES)
+    "pathtraversal": "SECURITY-011",  # mktemp / path traversal
     "trustboundaryviolation": "SECURITY-001",
 }
 

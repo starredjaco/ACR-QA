@@ -230,7 +230,7 @@ async def cost_benefit(
     }
 
 
-@router.get("/runs/{run_id}/attestation")
+@router.get("/{run_id}/attestation")
 async def get_attestation(
     run_id: int,
     db: Database = Depends(get_db),
