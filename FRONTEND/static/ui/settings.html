@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ACR-QA — Settings</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="app.css">
+<style>
+  .settings-layout { display:grid; grid-template-columns:200px 1fr; gap:24px; }
+  .settings-nav { display:flex; flex-direction:column; gap:2px; position:sticky; top:80px; }
+  .sn-item { padding:8px 12px; border-radius:8px; font-size:13px; color:var(--fg-4); cursor:pointer; display:flex; align-items:center; gap:10px; }
+  .sn-item:hover { background:rgba(255,255,255,.03); color:var(--fg); }
+  .sn-item.on { background:rgba(255,255,255,.05); color:var(--fg); font-weight:500; }
+  .sn-ico { font-size:14px; }
+
+  .settings-section { display:none; }
+  .settings-section.on { display:block; }
+
+  .field-row { display:flex; flex-direction:column; gap:6px; margin-bottom:18px; }
+  .field-row label { font-size:11px; font-weight:700; color:var(--fg-5); text-transform:uppercase; letter-spacing:.08em; }
+  .field-input { height:38px; padding:0 14px; background:var(--bg-3); border:1px solid var(--border-2); border-radius:9px; color:var(--fg); font-size:13px; font-family:inherit; }
+  .field-input:focus { outline:none; border-color:var(--purple); }
+  .field-note { font-size:11.5px; color:var(--fg-5); }
+
+  .profile-head { display:flex; align-items:center; gap:18px; margin-bottom:24px; padding-bottom:24px; border-bottom:1px solid var(--border); }
+  .profile-avatar { width:64px; height:64px; border-radius:50%; background:linear-gradient(135deg,#6366f1,#34d399); display:grid; place-items:center; font-size:26px; font-weight:700; color:#fff; flex-shrink:0; }
+  .profile-info .name { font-size:17px; font-weight:700; color:var(--fg); letter-spacing:-.01em; }
+  .profile-info .email { font-size:13px; color:var(--fg-4); font-family:var(--mono); margin-top:2px; }
+  .profile-info .role-badge { display:inline-block; font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; background:var(--ai-bg); border:1px solid var(--ai-bdr); color:var(--purple); margin-top:6px; }
+
+  .key-card {
+    display:flex; align-items:center; gap:14px;
+    background:var(--bg-3); border:1px solid var(--border);
+    border-radius:10px; padding:14px 16px; margin-bottom:10px;
+  }
+  .key-icon { width:34px; height:34px; border-radius:8px; background:rgba(96,165,250,.10); border:1px solid rgba(96,165,250,.25); display:grid; place-items:center; color:var(--blue); font-size:16px; flex-shrink:0; }
+  .key-body { flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .key-name { font-size:13px; font-weight:500; color:var(--fg); }
+  .key-meta { font-family:var(--mono); font-size:11px; color:var(--fg-5); }
+  .key-val  { font-family:var(--mono); font-size:12px; color:var(--fg-4); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:320px; }
+  .key-actions { display:flex; gap:8px; flex-shrink:0; }
+  .btn-sm { height:28px; padding:0 12px; border-radius:7px; font-size:11.5px; font-weight:600; font-family:inherit; cursor:pointer; }
+  .btn-sm.copy { background:rgba(255,255,255,.05); border:1px solid var(--border-2); color:var(--fg-3); }
+  .btn-sm.copy:hover { background:rgba(255,255,255,.09); color:var(--fg); }
+  .btn-sm.del  { background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.20); color:var(--high-fg); }
+  .btn-sm.del:hover { background:rgba(239,68,68,.14); }
+
+  .new-key-form { background:var(--bg-3); border:1px dashed var(--border-2); border-radius:10px; padding:16px; display:flex; align-items:center; gap:12px; margin-top:16px; }
+  .new-key-form input { flex:1; height:34px; padding:0 12px; background:var(--bg-2); border:1px solid var(--border-2); border-radius:8px; color:var(--fg); font-size:13px; font-family:inherit; }
+  .new-key-form input:focus { outline:none; border-color:var(--purple); }
+  .btn-create { height:34px; padding:0 16px; background:var(--purple); border:none; border-radius:8px; color:#fff; font-size:12.5px; font-weight:700; font-family:inherit; cursor:pointer; }
+  .btn-create:hover { opacity:.9; }
+
+  .policy-yaml {
+    background:var(--bg); border:1px solid var(--border);
+    border-radius:10px; padding:16px 18px;
+    font-family:var(--mono); font-size:12px; color:var(--fg-3);
+    white-space:pre; overflow-x:auto; line-height:1.6;
+    max-height:400px; overflow-y:auto;
+  }
+  .kw-green { color:var(--low); }
+  .kw-blue  { color:var(--blue); }
+  .kw-yellow{ color:var(--med-fg); }
+
+  .kv-table { width:100%; border-collapse:collapse; }
+  .kv-table tr td { padding:9px 14px; border-bottom:1px solid var(--border); font-size:12.5px; }
+  .kv-table tr:last-child td { border-bottom:none; }
+  .kv-table td:first-child { font-family:var(--mono); font-size:11.5px; color:var(--fg-4); width:35%; }
+  .kv-table td:last-child { color:var(--fg); font-weight:500; }
+
+  .kbd-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .kbd-row { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:var(--bg-3); border:1px solid var(--border); border-radius:8px; }
+  .kbd-desc { font-size:12.5px; color:var(--fg); }
+  .kbd-keys { display:flex; gap:4px; }
+  .kbd-keys .kbd { font-size:10.5px; }
+
+  .section-sep { height:1px; background:var(--border); margin:20px 0; }
+  .save-row { display:flex; justify-content:flex-end; margin-top:16px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand-row">
+      <div class="logo">🛡️</div>
+      <div class="wm-stack"><span class="wm">ACR-QA</span><span class="ver">v4.5.0</span></div>
+    </div>
+    <div class="nav-section">Workspace</div>
+    <a class="nav-item" href="index.html"><span class="ico">⌂</span> Overview</a>
+    <a class="nav-item" href="finding.html"><span class="ico">⊜</span> Findings <span class="cnt" id="nav-findings-cnt">—</span></a>
+    <a class="nav-item" href="runs.html"><span class="ico">≡</span> Runs <span class="cnt" id="nav-runs-cnt">—</span></a>
+    <a class="nav-item" href="trends.html"><span class="ico">∿</span> Trends</a>
+    <div class="nav-section">Analysis</div>
+    <a class="nav-item" href="scan.html"><span class="ico">▷</span> New Scan</a>
+    <a class="nav-item" href="compare.html"><span class="ico">⇄</span> Compare Runs</a>
+    <div class="nav-section">Security</div>
+    <a class="nav-item" href="supply-chain.html"><span class="ico">⛓</span> Supply Chain</a>
+    <a class="nav-item on" href="settings.html"><span class="ico">⚙</span> Settings</a>
+    <div class="sb-footer">
+      <div class="sb-status"><span class="led"></span><span>API online · acr-qa</span>
+        <button onclick="logout()" style="margin-left:auto;background:none;border:none;color:var(--fg-5);font-family:var(--mono);font-size:10.5px;cursor:pointer;padding:0">sign out</button>
+      </div>
+      <div class="sb-acct">
+        <div class="avatar" id="sb-avatar">A</div>
+        <div class="stack"><span class="nm" id="sb-user-name">…</span><span class="sub" id="sb-user-role">KSIU · thesis</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="crumbs"><a href="index.html">Workspace</a><span class="sep">/</span><span class="cur">Settings</span></div>
+      <div class="grow"></div>
+      <button class="btn-icon theme-btn" id="theme-toggle" title="Toggle light/dark">☀</button>
+    </header>
+
+    <div class="page-pad">
+      <h1 class="title">Settings</h1>
+      <p class="subtitle">Profile · API keys · quality gate policy · keyboard shortcuts</p>
+
+      <div class="settings-layout">
+        <nav class="settings-nav">
+          <div class="sn-item on" onclick="showSection('profile',this)"><span class="sn-ico">👤</span> Profile</div>
+          <div class="sn-item" onclick="showSection('apikeys',this)"><span class="sn-ico">🔑</span> API Keys</div>
+          <div class="sn-item" onclick="showSection('policy',this)"><span class="sn-ico">📋</span> Policy</div>
+          <div class="sn-item" onclick="showSection('shortcuts',this)"><span class="sn-ico">⌨</span> Shortcuts</div>
+          <div class="sn-item" onclick="showSection('about',this)"><span class="sn-ico">ℹ</span> About</div>
+        </nav>
+
+        <div>
+          <!-- PROFILE -->
+          <div class="settings-section on" id="section-profile">
+            <div class="panel">
+              <div class="profile-head">
+                <div class="profile-avatar" id="prof-avatar">A</div>
+                <div class="profile-info">
+                  <div class="name" id="prof-name">—</div>
+                  <div class="email" id="prof-email">—</div>
+                  <div class="role-badge" id="prof-role">member</div>
+                </div>
+              </div>
+              <div class="field-row">
+                <label>Email</label>
+                <input class="field-input" id="prof-email-input" readonly>
+                <span class="field-note">Email cannot be changed. Contact your administrator.</span>
+              </div>
+              <div class="field-row">
+                <label>Display name</label>
+                <input class="field-input" id="prof-name-input" placeholder="Your name">
+              </div>
+              <div class="section-sep"></div>
+              <div class="field-row">
+                <label>Appearance</label>
+                <div style="display:flex;gap:10px">
+                  <button class="btn-sm copy" onclick="setTheme('dark')" id="btn-dark">Dark (default)</button>
+                  <button class="btn-sm copy" onclick="setTheme('light')" id="btn-light">Light mode</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- API KEYS -->
+          <div class="settings-section" id="section-apikeys">
+            <div class="panel">
+              <div class="panel-head"><span class="panel-title">API Keys</span><span class="panel-sub">Use in X-API-Key header</span></div>
+              <div id="keys-list"><div style="font-size:12px;color:var(--fg-5);font-family:var(--mono)">Loading…</div></div>
+              <div class="new-key-form">
+                <input id="new-key-name" placeholder="Key name (e.g. CI pipeline)">
+                <button class="btn-create" onclick="createKey()">+ Create key</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- POLICY -->
+          <div class="settings-section" id="section-policy">
+            <div class="panel">
+              <div class="panel-head">
+                <span class="panel-title">Quality Gate Policy</span>
+                <a href="/v1/policy" target="_blank" class="btn-sm copy" style="text-decoration:none">Raw JSON ↗</a>
+              </div>
+              <div id="policy-content"><div style="font-size:12px;color:var(--fg-5);font-family:var(--mono)">Loading policy…</div></div>
+            </div>
+          </div>
+
+          <!-- SHORTCUTS -->
+          <div class="settings-section" id="section-shortcuts">
+            <div class="panel">
+              <div class="panel-head"><span class="panel-title">Keyboard Shortcuts</span></div>
+              <div class="kbd-grid">
+                <div class="kbd-row"><span class="kbd-desc">Command palette</span><div class="kbd-keys"><kbd class="kbd">⌘</kbd><kbd class="kbd">K</kbd></div></div>
+                <div class="kbd-row"><span class="kbd-desc">Search / palette</span><div class="kbd-keys"><kbd class="kbd">/</kbd></div></div>
+                <div class="kbd-row"><span class="kbd-desc">New scan</span><div class="kbd-keys"><kbd class="kbd">N</kbd></div></div>
+                <div class="kbd-row"><span class="kbd-desc">Go to Overview</span><div class="kbd-keys"><kbd class="kbd">G</kbd><kbd class="kbd">O</kbd></div></div>
+                <div class="kbd-row"><span class="kbd-desc">Go to Findings</span><div class="kbd-keys"><kbd class="kbd">G</kbd><kbd class="kbd">F</kbd></div></div>
+                <div class="kbd-row"><span class="kbd-desc">Go to Runs</span><div class="kbd-keys"><kbd class="kbd">G</kbd><kbd class="kbd">R</kbd></div></div>
+                <div class="kbd-row"><span class="kbd-desc">Go to Trends</span><div class="kbd-keys"><kbd class="kbd">G</kbd><kbd class="kbd">T</kbd></div></div>
+                <div class="kbd-row"><span class="kbd-desc">Reload page</span><div class="kbd-keys"><kbd class="kbd">R</kbd></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ABOUT -->
+          <div class="settings-section" id="section-about">
+            <div class="panel">
+              <div class="panel-head"><span class="panel-title">About ACR-QA</span></div>
+              <table class="kv-table">
+                <tr><td>Version</td><td>v4.5.0 (Phase 12)</td></tr>
+                <tr><td>Stack</td><td>Python 3.11 · FastAPI 0.115 · Celery 5.4 · PostgreSQL 15</td></tr>
+                <tr><td>Analysis engines</td><td>Bandit · Semgrep · Ruff · Vulture · Radon · jscpd · gosec · staticcheck</td></tr>
+                <tr><td>AI triage model</td><td>Groq Llama 3.3-70b (via GROQ_API_KEY)</td></tr>
+                <tr><td>Attestation</td><td>ECDSA-P256 + Dilithium3 (CRYSTALS PQC)</td></tr>
+                <tr><td>SBOM format</td><td>CycloneDX 1.4 JSON (purl)</td></tr>
+                <tr><td>Supply chain</td><td>OSV.dev CVE database (real-time)</td></tr>
+                <tr><td>Canonical rules</td><td>127 rules across 5 categories</td></tr>
+                <tr><td>Test suite</td><td>2274 pytest + 65 TypeScript = 2339 total</td></tr>
+                <tr><td>Author</td><td>Ahmed — KSIU Graduation Thesis 2026</td></tr>
+                <tr><td>Supervisor</td><td>Dr. Samy</td></tr>
+                <tr><td>License</td><td>MIT</td></tr>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-host"></div>
+
+<script>
+const authToken = localStorage.getItem('acrqa_token');
+if (!authToken) location.href = 'login.html';
+const api = async (path, opts={}) => {
+  const r = await fetch(path, { headers: { Authorization: 'Bearer ' + authToken, 'Content-Type':'application/json' }, ...opts });
+  if (r.status === 401) { localStorage.clear(); location.href = 'login.html'; throw 401; }
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+};
+const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+const esc = s => String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function logout() { localStorage.clear(); location.href = 'login.html'; }
+function toast(msg, type='info') {
+  const icons={success:'✅',error:'❌',info:'ℹ️'};
+  const t=document.createElement('div'); t.className='toast '+type;
+  t.innerHTML=`<span class="toast-icon">${icons[type]}</span><span class="toast-body">${esc(msg)}</span><span class="toast-close" onclick="this.parentElement.remove()">×</span>`;
+  document.getElementById('toast-host').appendChild(t); setTimeout(()=>t.remove(),4000);
+}
+
+const themeBtn=document.getElementById('theme-toggle');
+function applyTheme(){const l=localStorage.getItem('acrqa_light')==='1';document.body.classList.toggle('light',l);themeBtn.textContent=l?'☽':'☀';}
+applyTheme();
+themeBtn.onclick=()=>{setTheme(document.body.classList.contains('light')?'dark':'light');};
+function setTheme(t){localStorage.setItem('acrqa_light',t==='light'?'1':'0');applyTheme();toast('Theme changed to '+t,'success');}
+
+function showSection(name, el){
+  document.querySelectorAll('.settings-section').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.sn-item').forEach(s=>s.classList.remove('on'));
+  document.getElementById('section-'+name).classList.add('on');
+  el.classList.add('on');
+  if(name==='apikeys')loadKeys();
+  if(name==='policy')loadPolicy();
+}
+
+(async()=>{
+  try{
+    const [me,stats]=await Promise.all([api('/v1/auth/me'),api('/v1/quick-stats')]);
+    if(me.email){
+      const nm=me.email.split('@')[0];
+      set('sb-user-name',nm); set('sb-user-role',(me.role||'member')+' · KSIU');
+      const av=document.getElementById('sb-avatar'); if(av) av.textContent=nm[0].toUpperCase();
+      set('prof-name',nm); set('prof-email',me.email);
+      const inp=document.getElementById('prof-email-input'); if(inp) inp.value=me.email;
+      const ni=document.getElementById('prof-name-input'); if(ni) ni.value=nm;
+      const pa=document.getElementById('prof-avatar'); if(pa) pa.textContent=nm[0].toUpperCase();
+      const pr=document.getElementById('prof-role'); if(pr) pr.textContent=me.role||'member';
+    }
+    const s=stats.stats; set('nav-findings-cnt',s.total_findings); set('nav-runs-cnt',s.total_runs);
+  }catch(e){if(e!==401)console.warn(e);}
+})();
+
+async function loadKeys(){
+  try{
+    const data=await api('/v1/auth/api-keys');
+    const keys=data.api_keys||data.keys||[];
+    const el=document.getElementById('keys-list');
+    if(!keys.length){
+      el.innerHTML='<div class="empty-state"><div class="es-icon">🔑</div><div class="es-title">No API keys yet</div><div class="es-sub">Create a key below to authenticate programmatically via <code>X-API-Key</code> header.</div></div>';
+      return;
+    }
+    el.innerHTML=keys.map(k=>`
+      <div class="key-card">
+        <div class="key-icon">🔑</div>
+        <div class="key-body">
+          <span class="key-name">${esc(k.name||k.label||'Unnamed key')}</span>
+          <span class="key-val">${esc(k.key_prefix||k.prefix||k.key||'acrqa_…')}</span>
+          <span class="key-meta">Created ${esc(k.created_at?k.created_at.slice(0,10):'?')} · Last used ${esc(k.last_used_at?k.last_used_at.slice(0,10):'never')}</span>
+        </div>
+        <div class="key-actions">
+          <button class="btn-sm copy" onclick="copyKey('${esc(k.key_prefix||k.key||'')}')">Copy</button>
+          <button class="btn-sm del" onclick="deleteKey(${k.id||'null'})">Revoke</button>
+        </div>
+      </div>`).join('');
+  }catch(e){document.getElementById('keys-list').innerHTML=`<div style="font-size:12px;color:var(--high);font-family:var(--mono)">Failed to load keys: ${esc(e.message)}</div>`;}
+}
+
+async function createKey(){
+  const name=document.getElementById('new-key-name').value.trim();
+  if(!name){toast('Enter a key name','error');return;}
+  try{
+    const data=await api('/v1/auth/api-keys',{method:'POST',body:JSON.stringify({name})});
+    const rawKey=data.key||data.api_key||data.raw_key;
+    if(rawKey){
+      await navigator.clipboard.writeText(rawKey).catch(()=>{});
+      toast('Key created & copied: '+rawKey.slice(0,20)+'…','success');
+    }else toast('Key created','success');
+    document.getElementById('new-key-name').value='';
+    loadKeys();
+  }catch(e){toast('Failed to create key: '+e.message,'error');}
+}
+
+async function deleteKey(id){
+  if(!confirm('Revoke this API key? This cannot be undone.'))return;
+  try{await api('/v1/auth/api-keys/'+id,{method:'DELETE'});toast('Key revoked','success');loadKeys();}
+  catch(e){toast('Failed to revoke: '+e.message,'error');}
+}
+
+function copyKey(val){
+  navigator.clipboard.writeText(val).then(()=>toast('Copied to clipboard','success')).catch(()=>toast('Copy failed','error'));
+}
+
+async function loadPolicy(){
+  try{
+    const data=await api('/v1/policy');
+    const el=document.getElementById('policy-content');
+    const p=data.policy||data;
+    el.innerHTML=`<div class="policy-yaml">${formatPolicy(p)}</div>`;
+  }catch(e){document.getElementById('policy-content').innerHTML=`<div style="font-size:12px;color:var(--high);font-family:var(--mono)">Failed to load policy: ${esc(e.message)}<br><br>Default policy is read from <code>.acrqa.yml</code> in the scanned repo.</div>`;}
+}
+
+function formatPolicy(p){
+  const yaml=JSON.stringify(p,null,2).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return yaml
+    .replace(/"([^"]+)":/g,'<span class="kw-blue">"$1"</span>:')
+    .replace(/: "(.*?)"/g,': <span class="kw-yellow">"$1"</span>')
+    .replace(/: (true|false)/g,': <span class="kw-green">$1</span>')
+    .replace(/: (\d+)/g,': <span class="kw-yellow">$1</span>');
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  if(e.key==='n')location.href='scan.html';
+  if(e.key==='r')location.reload();
+});
+</script>
+</body>
+</html>

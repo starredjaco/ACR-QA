@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ACR-QA — Compare Runs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="app.css">
+<style>
+  .compare-sel { display:grid; grid-template-columns:1fr 64px 1fr; align-items:center; gap:16px; margin-bottom:24px; }
+  .compare-sel .vs { text-align:center; font-family:var(--mono); font-size:11px; color:var(--fg-5); font-weight:700; }
+  .run-pick {
+    background:var(--bg-2); border:1px solid var(--border-2); border-radius:10px;
+    padding:14px 16px; display:flex; flex-direction:column; gap:6px;
+  }
+  .run-pick label { font-size:10px; font-weight:700; color:var(--fg-5); text-transform:uppercase; letter-spacing:.08em; }
+  .run-pick select { background:transparent; border:none; color:var(--fg); font-size:13.5px; font-family:var(--mono); font-weight:600; outline:none; width:100%; cursor:pointer; }
+
+  .diff-banner { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px; }
+  .diff-stat { border-radius:12px; padding:18px 20px; display:flex; flex-direction:column; gap:6px; border:1px solid; }
+  .diff-stat.added   { border-color:var(--high-bdr); background:rgba(239,68,68,.06); }
+  .diff-stat.fixed   { border-color:var(--low-bdr);  background:rgba(16,185,129,.06); }
+  .diff-stat.same    { border-color:var(--border);    background:var(--bg-2); }
+  .diff-stat .n      { font-size:36px; font-weight:800; letter-spacing:-.04em; font-family:var(--mono); font-variant-numeric:tabular-nums; }
+  .diff-stat.added .n { color:var(--high); }
+  .diff-stat.fixed .n { color:var(--low); }
+  .diff-stat.same  .n { color:var(--fg); }
+  .diff-stat .lbl  { font-size:11px; color:var(--fg-4); font-weight:600; text-transform:uppercase; letter-spacing:.08em; }
+  .diff-stat .sub  { font-size:11.5px; color:var(--fg-4); font-family:var(--mono); }
+
+  .diff-controls { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+  .filter-chips { display:flex; gap:8px; }
+  .chip { padding:5px 12px; border-radius:20px; font-size:11.5px; font-weight:600; border:1px solid var(--border-2); color:var(--fg-4); cursor:pointer; background:transparent; font-family:inherit; }
+  .chip:hover { color:var(--fg); }
+  .chip.on.added { background:rgba(239,68,68,.12); color:var(--high-fg); border-color:var(--high-bdr); }
+  .chip.on.fixed { background:rgba(16,185,129,.12); color:var(--low-fg); border-color:var(--low-bdr); }
+  .chip.on.same  { background:rgba(255,255,255,.06); color:var(--fg-2); border-color:var(--border-2); }
+
+  .diff-row {
+    display:grid; grid-template-columns:auto 1fr 1fr auto auto;
+    align-items:center; gap:14px;
+    padding:11px 16px; border-radius:9px;
+    margin-bottom:6px;
+    border:1px solid var(--border);
+    background:var(--bg-2);
+  }
+  .diff-row.added { border-color:rgba(239,68,68,.20); background:rgba(239,68,68,.04); }
+  .diff-row.fixed { border-color:rgba(16,185,129,.20); background:rgba(16,185,129,.04); }
+  .diff-row.same  { opacity:.70; }
+  .diff-marker { width:14px; height:14px; border-radius:50%; flex-shrink:0; }
+  .diff-row.added .diff-marker { background:var(--high); }
+  .diff-row.fixed .diff-marker { background:var(--low); }
+  .diff-row.same  .diff-marker { background:var(--fg-5); }
+  .diff-label { font-family:var(--mono); font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:4px; }
+  .diff-label.added { background:rgba(239,68,68,.12); color:var(--high-fg); }
+  .diff-label.fixed { background:rgba(16,185,129,.12); color:var(--low-fg); }
+  .diff-label.same  { background:rgba(255,255,255,.04); color:var(--fg-5); }
+  .diff-body { display:flex; flex-direction:column; gap:2px; min-width:0; }
+  .diff-rule { font-family:var(--mono); font-size:12px; font-weight:600; color:var(--fg); }
+  .diff-loc  { font-size:11px; color:var(--fg-4); font-family:var(--mono); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .diff-msg  { font-size:12px; color:var(--fg-3); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .legend { display:flex; align-items:center; gap:16px; font-size:11.5px; color:var(--fg-4); }
+  .legend .dot { width:9px; height:9px; border-radius:50%; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand-row">
+      <div class="logo">🛡️</div>
+      <div class="wm-stack"><span class="wm">ACR-QA</span><span class="ver">v4.5.0</span></div>
+    </div>
+    <div class="nav-section">Workspace</div>
+    <a class="nav-item" href="index.html"><span class="ico">⌂</span> Overview</a>
+    <a class="nav-item" href="finding.html"><span class="ico">⊜</span> Findings <span class="cnt" id="nav-findings-cnt">—</span></a>
+    <a class="nav-item" href="runs.html"><span class="ico">≡</span> Runs <span class="cnt" id="nav-runs-cnt">—</span></a>
+    <a class="nav-item" href="trends.html"><span class="ico">∿</span> Trends</a>
+    <div class="nav-section">Analysis</div>
+    <a class="nav-item" href="scan.html"><span class="ico">▷</span> New Scan</a>
+    <a class="nav-item on" href="compare.html"><span class="ico">⇄</span> Compare Runs</a>
+    <div class="nav-section">Security</div>
+    <a class="nav-item" href="supply-chain.html"><span class="ico">⛓</span> Supply Chain</a>
+    <a class="nav-item" href="settings.html"><span class="ico">⚙</span> Settings</a>
+    <div class="sb-footer">
+      <div class="sb-status"><span class="led"></span><span>API online · acr-qa</span>
+        <button onclick="logout()" style="margin-left:auto;background:none;border:none;color:var(--fg-5);font-family:var(--mono);font-size:10.5px;cursor:pointer;padding:0">sign out</button>
+      </div>
+      <div class="sb-acct">
+        <div class="avatar" id="sb-avatar">A</div>
+        <div class="stack"><span class="nm" id="sb-user-name">…</span><span class="sub" id="sb-user-role">KSIU · thesis</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="crumbs"><a href="index.html">Workspace</a><span class="sep">/</span><span class="cur">Compare Runs</span></div>
+      <div class="grow"></div>
+      <button class="btn-icon theme-btn" id="theme-toggle" title="Toggle light/dark">☀</button>
+    </header>
+
+    <div class="page-pad">
+      <h1 class="title">Compare Runs</h1>
+      <p class="subtitle">Diff two scan runs — see exactly what was added, fixed, or unchanged.</p>
+
+      <div class="compare-sel">
+        <div class="run-pick">
+          <label>Baseline (older)</label>
+          <select id="run-a" onchange="maybeCompare()"><option value="">— pick a run —</option></select>
+        </div>
+        <div class="vs">VS</div>
+        <div class="run-pick">
+          <label>Target (newer)</label>
+          <select id="run-b" onchange="maybeCompare()"><option value="">— pick a run —</option></select>
+        </div>
+      </div>
+
+      <div id="compare-content">
+        <div class="empty-state">
+          <div class="es-icon">⇄</div>
+          <div class="es-title">Select two runs to compare</div>
+          <div class="es-sub">Pick a baseline and a target run above. ACR-QA will diff the findings and show you what regressed, what improved, and what stayed the same.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-host"></div>
+<div id="cmd-backdrop" onclick="closePalette()">
+  <div id="cmd-box" onclick="event.stopPropagation()">
+    <div id="cmd-input-wrap"><span class="cmd-icon">⌘</span><input id="cmd-input" placeholder="Go to page…" oninput="filterCmd(this.value)" onkeydown="cmdKey(event)"></div>
+    <div class="cmd-list" id="cmd-list"></div>
+  </div>
+</div>
+
+<script>
+const authToken = localStorage.getItem('acrqa_token');
+if (!authToken) location.href = 'login.html';
+const api = async (path) => {
+  const r = await fetch(path, { headers: { Authorization: 'Bearer ' + authToken } });
+  if (r.status === 401) { localStorage.clear(); location.href = 'login.html'; throw 401; }
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+};
+const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+const esc = s => String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function logout() { localStorage.clear(); location.href = 'login.html'; }
+function toast(msg, type='info') {
+  const icons={success:'✅',error:'❌',info:'ℹ️'};
+  const t=document.createElement('div'); t.className='toast '+type;
+  t.innerHTML=`<span class="toast-icon">${icons[type]}</span><span class="toast-body">${esc(msg)}</span><span class="toast-close" onclick="this.parentElement.remove()">×</span>`;
+  document.getElementById('toast-host').appendChild(t); setTimeout(()=>t.remove(),4000);
+}
+const themeBtn=document.getElementById('theme-toggle');
+function applyTheme(){const l=localStorage.getItem('acrqa_light')==='1';document.body.classList.toggle('light',l);themeBtn.textContent=l?'☽':'☀';}
+applyTheme(); themeBtn.onclick=()=>{localStorage.setItem('acrqa_light',document.body.classList.contains('light')?'0':'1');applyTheme();};
+
+const CMD_ITEMS=[{group:'Navigate',items:[
+  {icon:'⌂',label:'Overview',action:()=>location.href='index.html'},
+  {icon:'⊜',label:'Findings',action:()=>location.href='finding.html'},
+  {icon:'≡',label:'Runs',action:()=>location.href='runs.html'},
+  {icon:'▷',label:'New Scan',action:()=>location.href='scan.html'},
+  {icon:'⛓',label:'Supply Chain',action:()=>location.href='supply-chain.html'},
+]}];
+let cmdActive=-1;
+function openPalette(){document.getElementById('cmd-backdrop').classList.add('open');document.getElementById('cmd-input').value='';renderCmd('');document.getElementById('cmd-input').focus();}
+function closePalette(){document.getElementById('cmd-backdrop').classList.remove('open');}
+function renderCmd(q){const list=document.getElementById('cmd-list');let html='';CMD_ITEMS.forEach(g=>{const items=g.items.filter(i=>!q||i.label.toLowerCase().includes(q.toLowerCase()));if(!items.length)return;html+=`<div class="cmd-group-label">${esc(g.group)}</div>`;items.forEach(item=>{html+=`<div class="cmd-item" onclick="(${item.action.toString()})()">${item.icon} <span class="ci-label">${esc(item.label)}</span></div>`;});});list.innerHTML=html||'<div class="cmd-group-label">No results</div>';}
+function filterCmd(q){renderCmd(q);}
+function cmdKey(e){if(e.key==='Escape')closePalette();}
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openPalette();}if(e.key==='/')openPalette();if(e.key==='n')location.href='scan.html';});
+
+let allRuns=[];
+let activeFilter='all';
+
+(async()=>{
+  try {
+    const [me,stats,runsData]=await Promise.all([api('/v1/auth/me'),api('/v1/quick-stats'),api('/v1/runs?limit=100')]);
+    if(me.email){const nm=me.email.split('@')[0];set('sb-user-name',nm);set('sb-user-role',(me.role||'member')+' · KSIU');const av=document.getElementById('sb-avatar');if(av)av.textContent=nm[0].toUpperCase();}
+    const s=stats.stats; set('nav-findings-cnt',s.total_findings); set('nav-runs-cnt',s.total_runs);
+    allRuns=runsData.runs||[];
+    const selA=document.getElementById('run-a'), selB=document.getElementById('run-b');
+    allRuns.forEach(r=>{
+      const makeOpt=()=>{const o=document.createElement('option');o.value=r.id;o.textContent=`#${r.id} — ${r.repo_name||'unknown'} (${r.started_at?r.started_at.slice(0,10):'?'})`;return o;};
+      selA.appendChild(makeOpt()); selB.appendChild(makeOpt());
+    });
+    const params=new URLSearchParams(location.search);
+    if(params.get('a'))selA.value=params.get('a');
+    if(params.get('b')){selB.value=params.get('b');maybeCompare();}
+    else if(allRuns.length>=2){selA.value=allRuns[1].id;selB.value=allRuns[0].id;}
+  } catch(e){if(e!==401){console.warn(e);toast('Failed to load runs','error');}}
+})();
+
+let diffData=[];
+async function maybeCompare(){
+  const a=document.getElementById('run-a').value, b=document.getElementById('run-b').value;
+  if(!a||!b||a===b)return;
+  const el=document.getElementById('compare-content');
+  el.innerHTML='<div class="empty-state"><div class="es-icon">⏳</div><div class="es-title">Comparing runs…</div></div>';
+  try{
+    const [findA,findB]=await Promise.all([
+      api(`/v1/runs/${a}/findings?limit=500`),
+      api(`/v1/runs/${b}/findings?limit=500`),
+    ]);
+    const fa=findA.findings||[], fb=findB.findings||[];
+    diffData=computeDiff(fa,fb);
+    renderDiff(diffData);
+  }catch(e){el.innerHTML=`<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-title">Compare failed</div><div class="es-sub">${esc(String(e))}</div></div>`;toast('Compare failed','error');}
+}
+
+function findingKey(f){return `${f.rule_id||f.canonical_id}::${f.file}::${f.line}`;}
+
+function computeDiff(fa,fb){
+  const keyA=new Set(fa.map(findingKey));
+  const keyB=new Set(fb.map(findingKey));
+  const added=fb.filter(f=>!keyA.has(findingKey(f))).map(f=>({...f,_diff:'added'}));
+  const fixed=fa.filter(f=>!keyB.has(findingKey(f))).map(f=>({...f,_diff:'fixed'}));
+  const same=fb.filter(f=>keyA.has(findingKey(f))).map(f=>({...f,_diff:'same'}));
+  return [...added,...fixed,...same];
+}
+
+function renderDiff(diff){
+  const added=diff.filter(d=>d._diff==='added');
+  const fixed=diff.filter(d=>d._diff==='fixed');
+  const same=diff.filter(d=>d._diff==='same');
+  const el=document.getElementById('compare-content');
+  el.innerHTML=`
+    <div class="diff-banner">
+      <div class="diff-stat added">
+        <div class="n">${added.length}</div>
+        <div class="lbl">New findings</div>
+        <div class="sub">Appeared in target run</div>
+      </div>
+      <div class="diff-stat fixed">
+        <div class="n">${fixed.length}</div>
+        <div class="lbl">Fixed</div>
+        <div class="sub">Resolved since baseline</div>
+      </div>
+      <div class="diff-stat same">
+        <div class="n">${same.length}</div>
+        <div class="lbl">Persisting</div>
+        <div class="sub">Unchanged between runs</div>
+      </div>
+    </div>
+
+    <div class="diff-controls">
+      <div class="filter-chips">
+        <button class="chip on added" onclick="setFilter('added',this)">▲ ${added.length} Added</button>
+        <button class="chip on fixed" onclick="setFilter('fixed',this)">▼ ${fixed.length} Fixed</button>
+        <button class="chip on same" onclick="setFilter('same',this)">= ${same.length} Same</button>
+      </div>
+      <div class="legend">
+        <span style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--high)"></span>New regression</span>
+        <span style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--low)"></span>Fixed</span>
+        <span style="display:flex;align-items:center;gap:6px"><span class="dot" style="background:var(--fg-5)"></span>Persisting</span>
+      </div>
+    </div>
+
+    <div id="diff-list">${renderDiffList(diff,'all')}</div>
+  `;
+}
+
+function setFilter(type, btn){
+  if(type===activeFilter){activeFilter='all';}else{activeFilter=type;}
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  if(activeFilter!=='all'){document.querySelectorAll('.chip').forEach(c=>{if(c.textContent.toLowerCase().includes(activeFilter))c.classList.add('on');});}
+  else{document.querySelectorAll('.chip').forEach(c=>c.classList.add('on'));}
+  document.getElementById('diff-list').innerHTML=renderDiffList(diffData,activeFilter);
+}
+
+function renderDiffList(diff,filter){
+  const items=filter==='all'?diff:diff.filter(d=>d._diff===filter);
+  if(!items.length)return'<div class="empty-state"><div class="es-icon">✅</div><div class="es-title">No findings for this filter</div></div>';
+  return items.slice(0,300).map(d=>`
+    <div class="diff-row ${d._diff}">
+      <div class="diff-marker"></div>
+      <span class="diff-label ${d._diff}">${d._diff.toUpperCase()}</span>
+      <div class="diff-body">
+        <span class="diff-rule">${esc(d.rule_id||d.canonical_id||'?')}</span>
+        <span class="diff-loc">${esc(d.file||'')}${d.line?':'+d.line:''}</span>
+      </div>
+      <div class="diff-body" style="min-width:0">
+        <span class="diff-msg">${esc(d.message||d.description||'')}</span>
+      </div>
+      <span class="sev ${(d.severity||'').toLowerCase()}">${esc(d.severity||'?')}</span>
+    </div>`).join('');
+}
+</script>
+</body>
+</html>

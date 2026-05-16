@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ACR-QA — Supply Chain</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="app.css">
+<style>
+  .sc-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+  .sc-full { grid-column:1/-1; }
+  .risk-banner {
+    border-radius:12px; padding:20px 22px;
+    display:flex; align-items:center; gap:18px;
+    border:1px solid;
+  }
+  .risk-banner.critical { border-color:var(--high-bdr); background:linear-gradient(90deg,rgba(239,68,68,.10) 0%,transparent 100%); }
+  .risk-banner.moderate { border-color:var(--med-bdr); background:linear-gradient(90deg,rgba(245,158,11,.10) 0%,transparent 100%); }
+  .risk-banner.good     { border-color:var(--low-bdr);  background:linear-gradient(90deg,rgba(16,185,129,.10) 0%,transparent 100%); }
+  .risk-icon { width:44px; height:44px; border-radius:50%; display:grid; place-items:center; font-size:20px; flex-shrink:0; }
+  .risk-icon.critical { background:rgba(239,68,68,.16); color:var(--high); }
+  .risk-icon.moderate { background:rgba(245,158,11,.16); color:var(--med); }
+  .risk-icon.good     { background:rgba(16,185,129,.16); color:var(--low); }
+  .risk-text { flex:1; }
+  .risk-text .h { font-size:17px; font-weight:700; color:var(--fg); letter-spacing:-.015em; }
+  .risk-text .sub { font-size:12.5px; color:var(--fg-4); font-family:var(--mono); margin-top:3px; }
+  .risk-scores { display:flex; gap:20px; }
+  .rs { display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .rs .n { font-size:26px; font-weight:800; letter-spacing:-.03em; font-family:var(--mono); }
+  .rs .l { font-size:9.5px; color:var(--fg-5); text-transform:uppercase; letter-spacing:.08em; font-weight:600; }
+
+  .dep-table { width:100%; border-collapse:collapse; }
+  .dep-table th { text-align:left; font-size:10px; font-weight:700; color:var(--fg-5); text-transform:uppercase; letter-spacing:.08em; padding:0 12px 10px; border-bottom:1px solid var(--border); }
+  .dep-table td { padding:10px 12px; border-bottom:1px solid var(--border); font-size:12.5px; vertical-align:middle; }
+  .dep-table tr:last-child td { border-bottom:none; }
+  .dep-table tr:hover td { background:rgba(255,255,255,.02); }
+  .dep-name { font-family:var(--mono); color:var(--fg); font-weight:500; }
+  .dep-ver  { font-family:var(--mono); color:var(--fg-4); font-size:11.5px; }
+  .cve-badge { display:inline-flex; align-items:center; gap:5px; font-family:var(--mono); font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; }
+  .cve-badge.critical { background:rgba(239,68,68,.12); color:var(--high-fg); }
+  .cve-badge.high     { background:rgba(239,68,68,.09); color:var(--high-fg); }
+  .cve-badge.medium   { background:rgba(245,158,11,.12); color:var(--med-fg); }
+  .cve-badge.low      { background:rgba(16,185,129,.12); color:var(--low-fg); }
+  .cve-badge.none     { background:rgba(255,255,255,.04); color:var(--fg-5); }
+  .score-pill {
+    display:inline-block; padding:2px 8px; border-radius:4px;
+    font-family:var(--mono); font-size:11px; font-weight:700;
+  }
+  .score-pill.h { background:rgba(239,68,68,.10); color:var(--high-fg); }
+  .score-pill.m { background:rgba(245,158,11,.10); color:var(--med-fg); }
+  .score-pill.l { background:rgba(16,185,129,.10); color:var(--low-fg); }
+  .score-pill.n { background:rgba(255,255,255,.04); color:var(--fg-5); }
+
+  .cve-list { display:flex; flex-direction:column; gap:10px; }
+  .cve-card {
+    background:var(--bg-3); border:1px solid var(--border);
+    border-radius:10px; padding:14px 16px;
+  }
+  .cve-card.critical { border-color:var(--high-bdr); }
+  .cve-card.high     { border-color:rgba(239,68,68,.20); }
+  .cve-card.medium   { border-color:var(--med-bdr); }
+  .cve-card-head { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .cve-id { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--fg); }
+  .cve-score { font-family:var(--mono); font-size:10.5px; color:var(--fg-4); }
+  .cve-pkg  { font-family:var(--mono); font-size:11px; color:var(--purple); background:var(--ai-bg); border:1px solid var(--ai-bdr); padding:1px 6px; border-radius:4px; }
+  .cve-desc { font-size:12px; color:var(--fg-3); line-height:1.5; }
+  .cve-fix  { margin-top:8px; font-size:11.5px; color:var(--low); font-family:var(--mono); }
+
+  .sbom-row { display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid var(--border); }
+  .sbom-row:last-child { border-bottom:none; }
+  .sbom-row .comp-name { font-family:var(--mono); font-size:12.5px; color:var(--fg); flex:1; }
+  .sbom-row .comp-type { font-size:11px; color:var(--fg-4); }
+  .sbom-row .comp-lic  { font-family:var(--mono); font-size:11px; color:var(--blue); }
+  .sbom-row .comp-purl { font-family:var(--mono); font-size:10.5px; color:var(--fg-5); flex:2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .run-sel { height:34px; padding:0 12px; background:var(--bg-2); border:1px solid var(--border-2); border-radius:8px; color:var(--fg-2); font-size:13px; font-family:inherit; }
+  .tab-bar { display:flex; gap:4px; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:0; }
+  .tab { padding:8px 16px 10px; font-size:13px; font-weight:500; color:var(--fg-4); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-1px; }
+  .tab:hover { color:var(--fg); }
+  .tab.on { color:var(--fg); border-bottom-color:var(--purple); }
+  .tab-content { display:none; }
+  .tab-content.on { display:block; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand-row">
+      <div class="logo">🛡️</div>
+      <div class="wm-stack"><span class="wm">ACR-QA</span><span class="ver">v4.5.0</span></div>
+    </div>
+    <div class="nav-section">Workspace</div>
+    <a class="nav-item" href="index.html"><span class="ico">⌂</span> Overview</a>
+    <a class="nav-item" href="finding.html"><span class="ico">⊜</span> Findings <span class="cnt" id="nav-findings-cnt">—</span></a>
+    <a class="nav-item" href="runs.html"><span class="ico">≡</span> Runs <span class="cnt" id="nav-runs-cnt">—</span></a>
+    <a class="nav-item" href="trends.html"><span class="ico">∿</span> Trends</a>
+    <div class="nav-section">Analysis</div>
+    <a class="nav-item" href="scan.html"><span class="ico">▷</span> New Scan</a>
+    <a class="nav-item" href="compare.html"><span class="ico">⇄</span> Compare Runs</a>
+    <div class="nav-section">Security</div>
+    <a class="nav-item on" href="supply-chain.html"><span class="ico">⛓</span> Supply Chain</a>
+    <a class="nav-item" href="settings.html"><span class="ico">⚙</span> Settings</a>
+    <div class="sb-footer">
+      <div class="sb-status"><span class="led"></span><span>API online · acr-qa</span>
+        <button onclick="logout()" style="margin-left:auto;background:none;border:none;color:var(--fg-5);font-family:var(--mono);font-size:10.5px;cursor:pointer;padding:0">sign out</button>
+      </div>
+      <div class="sb-acct">
+        <div class="avatar" id="sb-avatar">A</div>
+        <div class="stack"><span class="nm" id="sb-user-name">…</span><span class="sub" id="sb-user-role">KSIU · thesis</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="crumbs"><a href="index.html">Workspace</a><span class="sep">/</span><span class="cur">Supply Chain</span></div>
+      <div class="grow"></div>
+      <select class="run-sel" id="run-sel" onchange="loadRun(this.value)">
+        <option value="">— Select a run —</option>
+      </select>
+      <button class="btn-icon theme-btn" id="theme-toggle" title="Toggle light/dark mode">☀</button>
+      <button class="btn-icon" onclick="location.reload()">↻</button>
+    </header>
+
+    <div class="page-pad">
+      <h1 class="title">Supply Chain Security</h1>
+      <p class="subtitle">OSV CVE analysis · dependency risk scoring · CycloneDX SBOM</p>
+
+      <div id="sc-content">
+        <div class="empty-state">
+          <div class="es-icon">⛓</div>
+          <div class="es-title">Select a run to view supply chain data</div>
+          <div class="es-sub">Choose a completed scan run from the dropdown above to see OSV CVE findings, dependency risk scores, and the SBOM.</div>
+          <a class="btn-prim" href="scan.html">▷ Start new scan</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-host"></div>
+<div id="cmd-backdrop" onclick="closePalette()">
+  <div id="cmd-box" onclick="event.stopPropagation()">
+    <div id="cmd-input-wrap">
+      <span class="cmd-icon">⌘</span>
+      <input id="cmd-input" placeholder="Go to page, action…" oninput="filterCmd(this.value)" onkeydown="cmdKey(event)">
+    </div>
+    <div class="cmd-list" id="cmd-list"></div>
+  </div>
+</div>
+
+<script>
+const authToken = localStorage.getItem('acrqa_token');
+if (!authToken) location.href = 'login.html';
+
+const api = async (path, opts={}) => {
+  const r = await fetch(path, { headers: { Authorization: 'Bearer ' + authToken, 'Content-Type':'application/json' }, ...opts });
+  if (r.status === 401) { localStorage.clear(); location.href = 'login.html'; throw 401; }
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+};
+const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+const esc = s => String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function logout() { localStorage.clear(); location.href = 'login.html'; }
+function toast(msg, type='info') {
+  const icons = {success:'✅',error:'❌',info:'ℹ️'};
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<span class="toast-icon">${icons[type]||'ℹ️'}</span><span class="toast-body">${esc(msg)}</span><span class="toast-close" onclick="this.parentElement.remove()">×</span>`;
+  document.getElementById('toast-host').appendChild(t);
+  setTimeout(()=>t.remove(), 4000);
+}
+
+// Light mode
+const themeBtn = document.getElementById('theme-toggle');
+function applyTheme() {
+  const light = localStorage.getItem('acrqa_light') === '1';
+  document.body.classList.toggle('light', light);
+  themeBtn.textContent = light ? '☽' : '☀';
+}
+applyTheme();
+themeBtn.onclick = () => { localStorage.setItem('acrqa_light', document.body.classList.contains('light')?'0':'1'); applyTheme(); };
+
+// Command palette
+const CMD_ITEMS = [
+  {group:'Navigate', items:[
+    {icon:'⌂', label:'Overview', kbd:'g o', action:()=>location.href='index.html'},
+    {icon:'⊜', label:'Findings', kbd:'g f', action:()=>location.href='finding.html'},
+    {icon:'≡', label:'Runs', kbd:'g r', action:()=>location.href='runs.html'},
+    {icon:'∿', label:'Trends', kbd:'g t', action:()=>location.href='trends.html'},
+    {icon:'▷', label:'New Scan', kbd:'n', action:()=>location.href='scan.html'},
+    {icon:'⇄', label:'Compare Runs', action:()=>location.href='compare.html'},
+    {icon:'⛓', label:'Supply Chain', action:()=>location.href='supply-chain.html'},
+    {icon:'⚙', label:'Settings', action:()=>location.href='settings.html'},
+  ]},
+  {group:'Actions', items:[
+    {icon:'⬇', label:'Export SBOM', action:()=>exportSbom()},
+    {icon:'↻', label:'Reload page', action:()=>location.reload()},
+  ]},
+];
+let cmdActive = -1;
+function openPalette() { document.getElementById('cmd-backdrop').classList.add('open'); document.getElementById('cmd-input').value=''; renderCmd(''); document.getElementById('cmd-input').focus(); }
+function closePalette() { document.getElementById('cmd-backdrop').classList.remove('open'); cmdActive=-1; }
+function renderCmd(q) {
+  const list = document.getElementById('cmd-list');
+  let html = '';
+  CMD_ITEMS.forEach(g => {
+    const items = g.items.filter(i => !q || i.label.toLowerCase().includes(q.toLowerCase()));
+    if (!items.length) return;
+    html += `<div class="cmd-group-label">${esc(g.group)}</div>`;
+    items.forEach((item,i) => {
+      html += `<div class="cmd-item" onclick="(${item.action.toString()})()" data-idx="${i}">
+        <span class="ci-icon">${item.icon}</span>
+        <span class="ci-label">${esc(item.label)}</span>
+        ${item.kbd?`<span class="ci-kbd">${esc(item.kbd)}</span>`:''}
+      </div>`;
+    });
+  });
+  list.innerHTML = html || '<div class="cmd-group-label">No results</div>';
+}
+function filterCmd(q) { renderCmd(q); cmdActive=-1; }
+function cmdKey(e) {
+  const items = document.querySelectorAll('.cmd-item');
+  if (e.key==='ArrowDown') { cmdActive=Math.min(cmdActive+1,items.length-1); items.forEach((el,i)=>el.classList.toggle('active',i===cmdActive)); e.preventDefault(); }
+  else if (e.key==='ArrowUp') { cmdActive=Math.max(cmdActive-1,0); items.forEach((el,i)=>el.classList.toggle('active',i===cmdActive)); e.preventDefault(); }
+  else if (e.key==='Enter' && cmdActive>=0) { items[cmdActive].click(); closePalette(); }
+  else if (e.key==='Escape') { closePalette(); }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT') return;
+  if ((e.metaKey||e.ctrlKey) && e.key==='k') { e.preventDefault(); openPalette(); return; }
+  if (e.key==='/') { e.preventDefault(); openPalette(); return; }
+  if (e.key==='n') location.href='scan.html';
+  if (e.key==='g') {
+    const next = new Promise(r => document.addEventListener('keydown',r,{once:true}));
+    next.then(e2 => {
+      if (e2.key==='o') location.href='index.html';
+      if (e2.key==='f') location.href='finding.html';
+      if (e2.key==='r') location.href='runs.html';
+      if (e2.key==='t') location.href='trends.html';
+    });
+  }
+});
+
+// Main logic
+(async () => {
+  try {
+    const [me, stats, runsData] = await Promise.all([
+      api('/v1/auth/me'),
+      api('/v1/quick-stats'),
+      api('/v1/runs?limit=100'),
+    ]);
+    if (me.email) {
+      const nm = me.email.split('@')[0];
+      set('sb-user-name', nm); set('sb-user-role', (me.role||'member')+' · KSIU');
+      const av = document.getElementById('sb-avatar'); if(av) av.textContent = nm[0].toUpperCase();
+    }
+    const s = stats.stats;
+    set('nav-findings-cnt', s.total_findings);
+    set('nav-runs-cnt', s.total_runs);
+
+    const runs = runsData.runs || [];
+    const sel = document.getElementById('run-sel');
+    runs.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.id;
+      opt.textContent = `#${r.id} — ${r.repo_name||'unknown'} (${r.started_at?r.started_at.slice(0,10):'?'})`;
+      sel.appendChild(opt);
+    });
+
+    const params = new URLSearchParams(location.search);
+    if (params.get('run')) { sel.value = params.get('run'); loadRun(params.get('run')); }
+    else if (runs.length) { sel.value = runs[0].id; loadRun(runs[0].id); }
+  } catch(e) { if(e!==401) { console.warn(e); toast('Failed to load data','error'); } }
+})();
+
+let currentRunId = null;
+
+async function loadRun(runId) {
+  if (!runId) return;
+  currentRunId = runId;
+  const el = document.getElementById('sc-content');
+  el.innerHTML = '<div class="empty-state"><div class="es-icon">⏳</div><div class="es-title">Loading supply chain data…</div></div>';
+  try {
+    const [scData, sbomData] = await Promise.all([
+      api(`/v1/runs/${runId}/supply-chain`).catch(()=>null),
+      api(`/v1/runs/${runId}/sbom`).catch(()=>null),
+    ]);
+    renderSC(runId, scData, sbomData);
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-title">Could not load supply chain</div><div class="es-sub">${esc(String(e))}</div></div>`;
+  }
+}
+
+function renderSC(runId, sc, sbom) {
+  const el = document.getElementById('sc-content');
+  const deps = sc?.dependencies || [];
+  const cves = sc?.vulnerabilities || [];
+  const riskLevel = sc?.risk_level || (cves.some(c=>c.severity==='critical')?'critical': cves.length?'moderate':'good');
+  const totalCves = cves.length;
+  const criticalCves = cves.filter(c=>c.severity==='critical'||c.severity==='HIGH').length;
+  const components = sbom?.components || sbom?.packages || [];
+
+  const bannerClass = riskLevel==='critical'?'critical': riskLevel==='moderate'?'moderate':'good';
+  const bannerIcon = riskLevel==='critical'?'🚨': riskLevel==='moderate'?'⚠️':'✅';
+  const bannerTitle = riskLevel==='critical'?'Critical supply chain risk':
+                      riskLevel==='moderate'?'Moderate supply chain risk':
+                      'Supply chain looks healthy';
+
+  el.innerHTML = `
+    <div class="risk-banner ${bannerClass}" style="margin-bottom:20px">
+      <div class="risk-icon ${bannerClass}">${bannerIcon}</div>
+      <div class="risk-text">
+        <div class="h">${bannerTitle}</div>
+        <div class="sub">${deps.length} packages scanned · ${totalCves} CVEs found · ${criticalCves} critical</div>
+      </div>
+      <div class="risk-scores">
+        <div class="rs"><span class="n" style="color:${totalCves?'var(--high)':'var(--low)'}">${totalCves}</span><span class="l">CVEs</span></div>
+        <div class="rs"><span class="n" style="color:${criticalCves?'var(--high)':'var(--fg)'}">${criticalCves}</span><span class="l">Critical</span></div>
+        <div class="rs"><span class="n" style="color:var(--fg)">${deps.length}</span><span class="l">Packages</span></div>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab on" onclick="switchTab('cves',this)">CVE Findings (${totalCves})</div>
+      <div class="tab" onclick="switchTab('deps',this)">Dependencies (${deps.length})</div>
+      <div class="tab" onclick="switchTab('sbom',this)">SBOM (${components.length} components)</div>
+    </div>
+
+    <div id="tab-cves" class="tab-content on">
+      ${totalCves ? renderCves(cves) : `<div class="empty-state"><div class="es-icon">🎉</div><div class="es-title">No CVEs found</div><div class="es-sub">No known vulnerabilities detected in your dependencies via OSV.</div></div>`}
+    </div>
+
+    <div id="tab-deps" class="tab-content">
+      ${deps.length ? renderDepsTable(deps) : `<div class="empty-state"><div class="es-icon">📦</div><div class="es-title">No dependency data</div><div class="es-sub">Run a supply chain scan to see dependency details.</div></div>`}
+    </div>
+
+    <div id="tab-sbom" class="tab-content">
+      ${renderSbomTab(components, runId)}
+    </div>
+  `;
+}
+
+function renderCves(cves) {
+  return `<div class="cve-list">${cves.map(c => {
+    const sev = (c.severity||'').toLowerCase();
+    return `<div class="cve-card ${sev}">
+      <div class="cve-card-head">
+        <span class="cve-badge ${sev}">${(c.severity||'?').toUpperCase()}</span>
+        <span class="cve-id">${esc(c.id||c.cve_id||'N/A')}</span>
+        ${c.cvss_score?`<span class="cve-score">CVSS ${c.cvss_score}</span>`:''}
+        ${c.package?`<span class="cve-pkg">${esc(c.package)}</span>`:''}
+        <span style="margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--fg-5)">${esc(c.published||'')}</span>
+      </div>
+      <div class="cve-desc">${esc(c.summary||c.description||'No description available.')}</div>
+      ${c.fixed_in?`<div class="cve-fix">✓ Fixed in v${esc(c.fixed_in)} — update recommended</div>`:''}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+function renderDepsTable(deps) {
+  return `<div class="panel">
+    <table class="dep-table">
+      <thead><tr>
+        <th>Package</th><th>Version</th><th>License</th><th>Vulnerabilities</th><th>Risk score</th>
+      </tr></thead>
+      <tbody>${deps.map(d => {
+        const vulns = d.vulnerabilities||[];
+        const hasCrit = vulns.some(v=>(v.severity||'').toLowerCase()==='critical');
+        const hasHigh = vulns.some(v=>(v.severity||'').toLowerCase()==='high');
+        const scoreClass = hasCrit?'h':hasHigh?'m':vulns.length?'m':'l';
+        const score = d.risk_score != null ? d.risk_score : (hasCrit?9:hasHigh?7:vulns.length?4:0);
+        return `<tr>
+          <td><span class="dep-name">${esc(d.name||d.package||d.id)}</span></td>
+          <td><span class="dep-ver">${esc(d.version||'?')}</span></td>
+          <td><span style="font-family:var(--mono);font-size:11px;color:var(--blue)">${esc(d.license||'N/A')}</span></td>
+          <td>${vulns.length ? vulns.map(v=>`<span class="cve-badge ${(v.severity||'').toLowerCase()}">${esc(v.id||v.cve_id||'CVE')}</span>`).join(' ') : '<span class="cve-badge none">None</span>'}</td>
+          <td><span class="score-pill ${scoreClass}">${score}/10</span></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  </div>`;
+}
+
+function renderSbomTab(components, runId) {
+  const hasComponents = components.length > 0;
+  return `<div class="panel">
+    <div class="panel-head">
+      <span class="panel-title">CycloneDX SBOM · ${components.length} components</span>
+      <button class="btn-prim" onclick="exportSbom()" style="height:28px;font-size:12px;padding:0 12px">⬇ Export JSON</button>
+    </div>
+    ${hasComponents ? `<div>${components.slice(0,100).map(c => `
+      <div class="sbom-row">
+        <span class="comp-name">${esc(c.name||c['bom-ref']||'unknown')}</span>
+        <span class="comp-type">${esc(c.type||c.component_type||'library')}</span>
+        <span class="comp-lic">${esc((c.licenses&&c.licenses[0]?.license?.id)||c.license||'—')}</span>
+        <span class="comp-purl">${esc(c.purl||'')}</span>
+        <span class="dep-ver">${esc(c.version||'')}</span>
+      </div>`).join('')}
+    </div>` : `<div class="empty-state"><div class="es-icon">📋</div><div class="es-title">SBOM not generated</div><div class="es-sub">The SBOM is generated automatically when supply chain scanning is enabled.</div></div>`}
+  </div>`;
+}
+
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('tab-'+name).classList.add('on');
+}
+
+async function exportSbom() {
+  if (!currentRunId) { toast('Select a run first','error'); return; }
+  try {
+    const sbom = await api(`/v1/runs/${currentRunId}/sbom`);
+    const blob = new Blob([JSON.stringify(sbom, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `sbom-run-${currentRunId}.json`;
+    a.click();
+    toast('SBOM exported successfully','success');
+  } catch(e) { toast('Export failed: '+e.message,'error'); }
+}
+</script>
+</body>
+</html>
