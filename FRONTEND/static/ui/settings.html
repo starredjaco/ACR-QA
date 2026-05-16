@@ -346,11 +346,36 @@ function formatPolicy(p){
     .replace(/: (\d+)/g,': <span class="kw-yellow">$1</span>');
 }
 
+// Command palette
+const CMD_ITEMS_ST=[{group:'Navigate',items:[
+  {icon:'⌂',label:'Overview',action:()=>location.href='index.html'},
+  {icon:'⊜',label:'Findings',action:()=>location.href='finding.html'},
+  {icon:'≡',label:'Runs',action:()=>location.href='runs.html'},
+  {icon:'∿',label:'Trends',action:()=>location.href='trends.html'},
+  {icon:'▷',label:'New Scan',action:()=>location.href='scan.html'},
+  {icon:'⇄',label:'Compare Runs',action:()=>location.href='compare.html'},
+  {icon:'⛓',label:'Supply Chain',action:()=>location.href='supply-chain.html'},
+]}];
+function openPalette(){const b=document.getElementById('cmd-backdrop');if(!b)return;b.classList.add('open');document.getElementById('cmd-input').value='';renderCmd('');document.getElementById('cmd-input').focus();}
+function closePalette(){const b=document.getElementById('cmd-backdrop');if(b)b.classList.remove('open');}
+function renderCmd(q){const list=document.getElementById('cmd-list');if(!list)return;let html='';CMD_ITEMS_ST.forEach(g=>{const items=g.items.filter(i=>!q||i.label.toLowerCase().includes(q.toLowerCase()));if(!items.length)return;html+=`<div class="cmd-group-label">${g.group}</div>`;items.forEach(item=>{html+=`<div class="cmd-item" onclick="(${item.action.toString()})();closePalette()"><span class="ci-icon">${item.icon}</span><span class="ci-label">${item.label}</span></div>`;});});list.innerHTML=html||'<div class="cmd-group-label">No results</div>';}
+function filterCmd(q){renderCmd(q);}
+function cmdKey(e){if(e.key==='Escape')closePalette();}
+
 document.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openPalette();return;}
+  if(e.key==='/')openPalette();
   if(e.key==='n')location.href='scan.html';
   if(e.key==='r')location.reload();
 });
 </script>
+
+<div id="cmd-backdrop" onclick="closePalette()">
+  <div id="cmd-box" onclick="event.stopPropagation()">
+    <div id="cmd-input-wrap"><span class="cmd-icon">⌘</span><input id="cmd-input" placeholder="Go to page…" oninput="filterCmd(this.value)" onkeydown="cmdKey(event)"></div>
+    <div class="cmd-list" id="cmd-list"></div>
+  </div>
+</div>
 </body>
 </html>

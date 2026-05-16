@@ -190,6 +190,8 @@ function filterRuns() {
   renderRuns(filtered);
 }
 
+function toast(msg,type='info'){const icons={success:'✅',error:'❌',info:'ℹ️'};const t=document.createElement('div');t.className='toast '+type;t.innerHTML=`<span class="toast-icon">${icons[type]}</span><span class="toast-body">${esc(msg)}</span><span class="toast-close" onclick="this.parentElement.remove()">×</span>`;document.getElementById('toast-host').appendChild(t);setTimeout(()=>t.remove(),4000);}
+
 // Theme
 const themeBtn=document.getElementById('theme-toggle');
 function applyTheme(){const l=localStorage.getItem('acrqa_light')==='1';document.body.classList.toggle('light',l);if(themeBtn)themeBtn.textContent=l?'☽':'☀';}

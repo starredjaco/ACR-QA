@@ -33,8 +33,12 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt \
+RUN pip install --no-cache-dir --upgrade pip
+
+# ← torch cached as its own layer so it never re-downloads on rebuild
+RUN pip install --no-cache-dir torch==2.12.0
+
+RUN pip install --no-cache-dir -r requirements.txt \
     && pip install --no-cache-dir \
         ruff==0.6.0 \
         semgrep==1.45.0 \
