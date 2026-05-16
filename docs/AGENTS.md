@@ -11,7 +11,7 @@
 
 **ACR-QA** — Automated Code Review & Quality Assurance
 Graduation thesis project for Ahmed at KSIU. Supervisor: Dr. Samy.
-**Version:** v4.5.0 (Phase 12 complete — all automated tasks done; 12.35 demo video + 12.36 YouTube = human tasks)
+**Version:** v4.5.0 (Phase 12 complete + UI Phase 2 — all automated tasks done; 12.35 demo video + 12.36 YouTube = human tasks)
 **Stack:** Python 3.11+ · FastAPI 0.115 (async, port 8000) · Celery 5.4 · PostgreSQL 15 · Redis 5.2 · Semgrep · Bandit · Ruff · Vulture · gosec · staticcheck · ESLint · npm audit · Trivy · TruffleHog · JWT + API keys
 **Repo:** `ahmed-145/ACR-QA` · **Branch:** always push to `main`
 
@@ -117,6 +117,26 @@ config/rules.yml      ← Knowledge base: every canonical rule → description +
 - **Dashboard (legacy Flask):** `python3 FRONTEND/app.py` → http://localhost:5000
 - **API (FastAPI):** `make api` → http://localhost:8000 (Swagger at `/docs`)
 - **Background worker:** `make worker` (Celery)
+
+---
+
+## UI Pages (FRONTEND/static/ui/)
+
+9 HTML pages served via FastAPI StaticFiles at `/ui/`:
+
+| Page | File | Notes |
+|------|------|-------|
+| Login | `login.html` | JWT login, redirects to index |
+| Overview | `index.html` | Dashboard: gate, stats, pipeline, findings |
+| Findings | `finding.html` | List + detail panel; J/K nav; auto-fix; attestation |
+| Runs | `runs.html` | Run history; per-card compare + supply-chain links |
+| Trends | `trends.html` | SVG trend charts, repo filter |
+| New Scan | `scan.html` | Trigger scan; live progress log; result card |
+| Compare | `compare.html` | Run-vs-run diff; added/fixed/persisting filter |
+| Supply Chain | `supply-chain.html` | OSV CVEs, dep risk, SBOM export |
+| Settings | `settings.html` | Profile, API keys, policy viewer, shortcuts |
+
+**Shared features (all pages):** Light/dark mode toggle (localStorage), ⌘K command palette, keyboard shortcuts (n=new scan, g+o/f/r/t=navigate), toast notifications, empty states with scan CTA.
 
 ---
 

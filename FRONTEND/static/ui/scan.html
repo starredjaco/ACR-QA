@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ACR-QA — New Scan</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="app.css">
+<style>
+  .scan-layout { display:grid; grid-template-columns:1.1fr .9fr; gap:24px; }
+  .form-section { display:flex; flex-direction:column; gap:20px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-group label { font-size:11px; font-weight:700; color:var(--fg-4); text-transform:uppercase; letter-spacing:.08em; }
+  .form-input {
+    height:38px; padding:0 14px;
+    background:var(--bg-2); border:1px solid var(--border-2); border-radius:9px;
+    color:var(--fg); font-size:13px; font-family:inherit;
+    transition:border-color .15s;
+  }
+  .form-input:focus { outline:none; border-color:var(--purple); }
+  .form-input::placeholder { color:var(--fg-5); }
+  .form-textarea {
+    padding:12px 14px; min-height:80px; resize:vertical;
+    background:var(--bg-2); border:1px solid var(--border-2); border-radius:9px;
+    color:var(--fg); font-size:13px; font-family:inherit;
+    transition:border-color .15s;
+  }
+  .form-textarea:focus { outline:none; border-color:var(--purple); }
+  .form-hint { font-size:11.5px; color:var(--fg-5); }
+
+  .toggle-row { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg-2); border:1px solid var(--border); border-radius:9px; }
+  .toggle-info { display:flex; flex-direction:column; gap:2px; }
+  .toggle-info .h { font-size:13px; color:var(--fg); font-weight:500; }
+  .toggle-info .s { font-size:11px; color:var(--fg-4); }
+  .toggle { position:relative; width:40px; height:22px; flex-shrink:0; }
+  .toggle input { display:none; }
+  .toggle-track { position:absolute; inset:0; border-radius:999px; background:rgba(255,255,255,.08); cursor:pointer; transition:background .2s; }
+  .toggle input:checked ~ .toggle-track { background:var(--purple); }
+  .toggle-thumb { position:absolute; left:2px; top:2px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .2s; pointer-events:none; }
+  .toggle input:checked ~ .toggle-thumb { transform:translateX(18px); }
+
+  .btn-scan {
+    height:44px; border-radius:10px;
+    background:var(--gradient); border:none;
+    color:#fff; font-size:14px; font-weight:700;
+    font-family:inherit; cursor:pointer; letter-spacing:-.01em;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    transition:opacity .2s, transform .15s;
+  }
+  .btn-scan:hover { opacity:.9; transform:translateY(-1px); }
+  .btn-scan:active { transform:translateY(0); }
+  .btn-scan:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+  .progress-panel { position:sticky; top:80px; }
+  .progress-card {
+    background:var(--bg-2); border:1px solid var(--border);
+    border-radius:14px; padding:22px 24px; display:flex; flex-direction:column; gap:18px;
+  }
+  .prog-header { display:flex; align-items:center; gap:12px; }
+  .prog-spinner {
+    width:28px; height:28px; border-radius:50%;
+    border:2.5px solid rgba(255,255,255,.08);
+    border-top-color:var(--purple);
+    animation:spin 0.8s linear infinite; flex-shrink:0;
+  }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  .prog-state { font-size:14px; font-weight:600; color:var(--fg); }
+  .prog-sub   { font-size:11.5px; color:var(--fg-4); font-family:var(--mono); }
+
+  .prog-bar-wrap { background:rgba(255,255,255,.05); border-radius:999px; height:6px; overflow:hidden; }
+  .prog-bar { height:100%; border-radius:999px; background:var(--gradient); transition:width .4s ease; }
+
+  .log-box {
+    background:var(--bg); border:1px solid var(--border); border-radius:8px;
+    padding:12px 14px; max-height:220px; overflow-y:auto;
+    font-family:var(--mono); font-size:11.5px; color:var(--fg-3);
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .log-line { line-height:1.4; }
+  .log-line.ok   { color:var(--low); }
+  .log-line.err  { color:var(--high); }
+  .log-line.info { color:var(--blue); }
+
+  .result-card {
+    border-radius:12px; padding:20px 22px; margin-top:16px;
+    border:1px solid var(--border);
+  }
+  .result-card.success { border-color:var(--low-bdr); background:rgba(16,185,129,.06); }
+  .result-card.error   { border-color:var(--high-bdr); background:rgba(239,68,68,.06); }
+  .result-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:14px; }
+  .rg { display:flex; flex-direction:column; gap:2px; }
+  .rg .n { font-size:22px; font-weight:800; letter-spacing:-.03em; font-family:var(--mono); color:var(--fg); }
+  .rg .l { font-size:10px; color:var(--fg-5); text-transform:uppercase; letter-spacing:.08em; font-weight:600; }
+
+  .recent-runs { display:flex; flex-direction:column; gap:8px; }
+  .rr-card { display:flex; align-items:center; gap:12px; padding:10px 14px; background:var(--bg-2); border:1px solid var(--border); border-radius:9px; text-decoration:none; color:inherit; cursor:pointer; }
+  .rr-card:hover { border-color:var(--border-2); }
+  .rr-id { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--fg); width:36px; }
+  .rr-repo { font-size:12.5px; color:var(--fg); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rr-total { font-family:var(--mono); font-size:14px; font-weight:700; color:var(--fg); }
+  .rr-status { font-family:var(--mono); font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:700; }
+  .rr-status.completed { background:rgba(16,185,129,.10); color:var(--low-fg); }
+  .rr-status.running   { background:rgba(96,165,250,.10); color:#93c5fd; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand-row">
+      <div class="logo">🛡️</div>
+      <div class="wm-stack"><span class="wm">ACR-QA</span><span class="ver">v4.5.0</span></div>
+    </div>
+    <div class="nav-section">Workspace</div>
+    <a class="nav-item" href="index.html"><span class="ico">⌂</span> Overview</a>
+    <a class="nav-item" href="finding.html"><span class="ico">⊜</span> Findings <span class="cnt" id="nav-findings-cnt">—</span></a>
+    <a class="nav-item" href="runs.html"><span class="ico">≡</span> Runs <span class="cnt" id="nav-runs-cnt">—</span></a>
+    <a class="nav-item" href="trends.html"><span class="ico">∿</span> Trends</a>
+    <div class="nav-section">Analysis</div>
+    <a class="nav-item on" href="scan.html"><span class="ico">▷</span> New Scan</a>
+    <a class="nav-item" href="compare.html"><span class="ico">⇄</span> Compare Runs</a>
+    <div class="nav-section">Security</div>
+    <a class="nav-item" href="supply-chain.html"><span class="ico">⛓</span> Supply Chain</a>
+    <a class="nav-item" href="settings.html"><span class="ico">⚙</span> Settings</a>
+    <div class="sb-footer">
+      <div class="sb-status"><span class="led"></span><span>API online · acr-qa</span>
+        <button onclick="logout()" style="margin-left:auto;background:none;border:none;color:var(--fg-5);font-family:var(--mono);font-size:10.5px;cursor:pointer;padding:0">sign out</button>
+      </div>
+      <div class="sb-acct">
+        <div class="avatar" id="sb-avatar">A</div>
+        <div class="stack"><span class="nm" id="sb-user-name">…</span><span class="sub" id="sb-user-role">KSIU · thesis</span></div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="crumbs"><a href="index.html">Workspace</a><span class="sep">/</span><span class="cur">New Scan</span></div>
+      <div class="grow"></div>
+      <button class="btn-icon theme-btn" id="theme-toggle" title="Toggle light/dark">☀</button>
+    </header>
+
+    <div class="page-pad">
+      <h1 class="title">New Scan</h1>
+      <p class="subtitle">Trigger a full ACR-QA analysis. Results stream in real-time.</p>
+
+      <div class="scan-layout">
+        <!-- FORM -->
+        <div class="form-section">
+          <div class="panel">
+            <div class="panel-head"><span class="panel-title">Scan configuration</span></div>
+
+            <div class="form-group">
+              <label>Target directory</label>
+              <input class="form-input" id="target-dir" placeholder="e.g. /path/to/repo or TESTS/samples/comprehensive-issues" value="TESTS/samples/comprehensive-issues">
+              <span class="form-hint">Absolute or relative path to the codebase to scan.</span>
+            </div>
+
+            <div class="form-group" style="margin-top:16px">
+              <label>Repository name</label>
+              <input class="form-input" id="repo-name" placeholder="e.g. my-project">
+            </div>
+
+            <div class="form-group" style="margin-top:16px">
+              <label>PR number (optional)</label>
+              <input class="form-input" id="pr-number" placeholder="123" type="number" min="1">
+            </div>
+
+            <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px">
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <span class="h">Supply chain scan</span>
+                  <span class="s">Run OSV CVE lookup on dependencies</span>
+                </div>
+                <label class="toggle"><input type="checkbox" id="opt-sc" checked><span class="toggle-track"></span><span class="toggle-thumb"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <span class="h">AI triage</span>
+                  <span class="s">LLM-based true/false positive classification</span>
+                </div>
+                <label class="toggle"><input type="checkbox" id="opt-ai"><span class="toggle-track"></span><span class="toggle-thumb"></span></label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <span class="h">AI auto-fix</span>
+                  <span class="s">Generate unified diff patches for high findings</span>
+                </div>
+                <label class="toggle"><input type="checkbox" id="opt-fix"><span class="toggle-track"></span><span class="toggle-thumb"></span></label>
+              </div>
+            </div>
+
+            <button class="btn-scan" id="scan-btn" onclick="startScan()" style="margin-top:24px">
+              <span>▷</span> Start Scan
+            </button>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><span class="panel-title">Recent scans</span><span class="panel-sub" id="recent-sub">Loading…</span></div>
+            <div class="recent-runs" id="recent-runs">
+              <div style="font-size:12px;color:var(--fg-5);font-family:var(--mono)">Loading recent runs…</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROGRESS -->
+        <div class="progress-panel">
+          <div class="progress-card" id="progress-card" style="display:none">
+            <div class="prog-header">
+              <div class="prog-spinner" id="prog-spinner"></div>
+              <div>
+                <div class="prog-state" id="prog-state">Initializing…</div>
+                <div class="prog-sub" id="prog-sub">Connecting to scan worker</div>
+              </div>
+            </div>
+            <div class="prog-bar-wrap"><div class="prog-bar" id="prog-bar" style="width:0%"></div></div>
+            <div class="log-box" id="log-box"></div>
+          </div>
+
+          <div id="result-area"></div>
+
+          <div class="panel" style="margin-top:16px">
+            <div class="panel-head"><span class="panel-title">How it works</span></div>
+            <div style="display:flex;flex-direction:column;gap:12px;font-size:12.5px;color:var(--fg-4);line-height:1.55">
+              <div>🔍 <strong style="color:var(--fg)">SAST scan</strong> — Bandit, Semgrep, Ruff, Vulture, Radon analyze your code for security vulnerabilities, code quality issues, and complexity.</div>
+              <div>🔗 <strong style="color:var(--fg)">Supply chain</strong> — Dependencies checked against OSV.dev CVE database in real-time.</div>
+              <div>🤖 <strong style="color:var(--fg)">AI triage</strong> — Groq Llama 3.3-70b classifies each finding as true or false positive, reducing noise by ~40%.</div>
+              <div>🔧 <strong style="color:var(--fg)">Auto-fix</strong> — Unified diff patches generated for HIGH severity findings.</div>
+              <div>📋 <strong style="color:var(--fg)">SBOM</strong> — CycloneDX 1.4 bill of materials with purl identifiers exported.</div>
+              <div>🔐 <strong style="color:var(--fg)">Attestation</strong> — ECDSA-P256 + Dilithium3 post-quantum signature on every scan result.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-host"></div>
+
+<script>
+const authToken = localStorage.getItem('acrqa_token');
+if (!authToken) location.href = 'login.html';
+const api = async (path, opts={}) => {
+  const r = await fetch(path, { headers: { Authorization: 'Bearer ' + authToken, 'Content-Type':'application/json' }, ...opts });
+  if (r.status === 401) { localStorage.clear(); location.href = 'login.html'; throw 401; }
+  if (!r.ok) { const t=await r.text(); throw new Error(t); }
+  return r.json();
+};
+const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+const esc = s => String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function logout() { localStorage.clear(); location.href = 'login.html'; }
+function toast(msg, type='info') {
+  const icons={success:'✅',error:'❌',info:'ℹ️'};
+  const t=document.createElement('div'); t.className='toast '+type;
+  t.innerHTML=`<span class="toast-icon">${icons[type]}</span><span class="toast-body">${esc(msg)}</span><span class="toast-close" onclick="this.parentElement.remove()">×</span>`;
+  document.getElementById('toast-host').appendChild(t); setTimeout(()=>t.remove(),5000);
+}
+const themeBtn=document.getElementById('theme-toggle');
+function applyTheme(){const l=localStorage.getItem('acrqa_light')==='1';document.body.classList.toggle('light',l);themeBtn.textContent=l?'☽':'☀';}
+applyTheme(); themeBtn.onclick=()=>{localStorage.setItem('acrqa_light',document.body.classList.contains('light')?'0':'1');applyTheme();};
+
+// Load user + recent runs
+(async()=>{
+  try{
+    const [me,stats,runsData]=await Promise.all([api('/v1/auth/me'),api('/v1/quick-stats'),api('/v1/runs?limit=8')]);
+    if(me.email){const nm=me.email.split('@')[0];set('sb-user-name',nm);set('sb-user-role',(me.role||'member')+' · KSIU');const av=document.getElementById('sb-avatar');if(av)av.textContent=nm[0].toUpperCase();}
+    const s=stats.stats; set('nav-findings-cnt',s.total_findings); set('nav-runs-cnt',s.total_runs);
+    const runs=runsData.runs||[];
+    set('recent-sub', runs.length+' recent');
+    const rr=document.getElementById('recent-runs');
+    if(!runs.length){rr.innerHTML='<div style="font-size:12px;color:var(--fg-5);font-family:var(--mono)">No scans yet — submit your first scan above.</div>';return;}
+    rr.innerHTML=runs.slice(0,5).map(r=>`
+      <a class="rr-card" href="finding.html?run=${r.id}">
+        <span class="rr-id">#${r.id}</span>
+        <span class="rr-repo">${esc(r.repo_name||'unknown')}</span>
+        <span class="rr-total">${r.total_findings}</span>
+        <span class="rr-status ${r.status||'completed'}">${r.status||'completed'}</span>
+      </a>`).join('');
+  }catch(e){if(e!==401)console.warn(e);}
+})();
+
+let scanJobId=null;
+let pollInterval=null;
+
+async function startScan(){
+  const targetDir=document.getElementById('target-dir').value.trim();
+  const repoName=document.getElementById('repo-name').value.trim();
+  const prNum=document.getElementById('pr-number').value.trim();
+  if(!targetDir){toast('Target directory is required','error');return;}
+
+  const btn=document.getElementById('scan-btn');
+  btn.disabled=true; btn.innerHTML='<span class="prog-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block"></span> Submitting…';
+
+  const body={target_dir:targetDir};
+  if(repoName)body.repo_name=repoName;
+  if(prNum)body.pr_number=parseInt(prNum);
+
+  document.getElementById('progress-card').style.display='';
+  document.getElementById('result-area').innerHTML='';
+  const logBox=document.getElementById('log-box');
+  logBox.innerHTML='';
+  setProgress(0,'Submitting scan job…','Sending request to worker');
+
+  try{
+    addLog('Submitting scan…');
+    const data=await api('/v1/scans',{method:'POST',body:JSON.stringify(body)});
+    scanJobId=data.job_id||data.run_id||data.id;
+    addLog(`Job submitted: ${scanJobId}`,'info');
+    setProgress(10,'Scan queued','Waiting for Celery worker to pick up job');
+    toast('Scan submitted — job '+scanJobId,'success');
+    pollScanStatus(scanJobId);
+  }catch(e){
+    btn.disabled=false; btn.innerHTML='<span>▷</span> Start Scan';
+    toast('Scan failed: '+e.message,'error');
+    addLog('Error: '+e.message,'err');
+    setProgress(0,'Submission failed',e.message);
+  }
+}
+
+function pollScanStatus(jobId){
+  let elapsed=0;
+  const stages=[
+    {at:15,state:'Running SAST engines',sub:'Bandit · Semgrep · Ruff · Vulture · Radon',pct:30},
+    {at:25,state:'Normalizing findings',sub:'Deduplicating across tools',pct:50},
+    {at:35,state:'Scoring severity',sub:'CWE mapping · priority ranking',pct:65},
+    {at:45,state:'AI triage',sub:'Classifying true/false positives',pct:80},
+    {at:55,state:'Generating attestation',sub:'ECDSA-P256 + Dilithium3 signature',pct:90},
+  ];
+
+  pollInterval=setInterval(async()=>{
+    elapsed++;
+    const stage=stages.findLast(s=>elapsed>=s.at);
+    if(stage)setProgress(stage.pct,stage.state,stage.sub);
+    if(elapsed===15)addLog('SAST engines running…');
+    if(elapsed===25)addLog('Normalizing findings…');
+    if(elapsed===35)addLog('AI triage running…');
+
+    try{
+      const data=await api(`/v1/scans/${jobId}`);
+      const status=data.status||data.state||'';
+      if(status==='completed'||status==='SUCCESS'){
+        clearInterval(pollInterval);
+        setProgress(100,'Scan complete','All engines finished');
+        document.getElementById('prog-spinner').style.animationDuration='0s';
+        document.getElementById('prog-spinner').style.border='2.5px solid var(--low)';
+        addLog('Scan completed successfully!','ok');
+        const runId=data.run_id||data.result?.run_id||jobId;
+        showResult(runId,data);
+        document.getElementById('scan-btn').disabled=false;
+        document.getElementById('scan-btn').innerHTML='<span>▷</span> Start Scan';
+        toast('Scan complete — '+runId+' findings','success');
+      }else if(status==='failed'||status==='FAILURE'){
+        clearInterval(pollInterval);
+        addLog('Scan failed: '+(data.error||data.message||'unknown error'),'err');
+        setProgress(0,'Scan failed',data.error||'Check Celery worker logs');
+        document.getElementById('scan-btn').disabled=false;
+        document.getElementById('scan-btn').innerHTML='<span>▷</span> Start Scan';
+        toast('Scan failed','error');
+      }
+    }catch(e){addLog('Status check error: '+e.message,'err');}
+
+    if(elapsed>120){clearInterval(pollInterval);addLog('Timeout — check the Celery worker','err');document.getElementById('scan-btn').disabled=false;document.getElementById('scan-btn').innerHTML='<span>▷</span> Start Scan';}
+  },1000);
+}
+
+function setProgress(pct,state,sub){
+  document.getElementById('prog-bar').style.width=pct+'%';
+  set('prog-state',state); set('prog-sub',sub);
+}
+
+function addLog(msg,cls=''){
+  const logBox=document.getElementById('log-box');
+  const line=document.createElement('div');
+  line.className='log-line '+(cls||'');
+  const ts=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  line.textContent=`[${ts}] ${msg}`;
+  logBox.appendChild(line);
+  logBox.scrollTop=logBox.scrollHeight;
+}
+
+function showResult(runId,data){
+  const findings=data.result?.total_findings??data.total_findings??'?';
+  const high=data.result?.high??data.high_count??'?';
+  const medium=data.result?.medium??data.medium_count??'?';
+  const passed=data.result?.quality_gate_passed??data.quality_gate_passed;
+  document.getElementById('result-area').innerHTML=`
+    <div class="result-card success">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:24px">✅</span>
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--fg)">Scan complete — Run #${esc(String(runId))}</div>
+          <div style="font-size:12px;color:var(--low);font-family:var(--mono);margin-top:2px">Quality gate: ${passed===false?'❌ Failed':'✅ Passed'}</div>
+        </div>
+      </div>
+      <div class="result-grid">
+        <div class="rg"><span class="n">${esc(String(findings))}</span><span class="l">Total findings</span></div>
+        <div class="rg"><span class="n" style="color:var(--high)">${esc(String(high))}</span><span class="l">High severity</span></div>
+        <div class="rg"><span class="n" style="color:var(--med)">${esc(String(medium))}</span><span class="l">Medium</span></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <a class="btn-prim" href="finding.html?run=${esc(String(runId))}" style="text-decoration:none;height:34px;font-size:12.5px">View findings →</a>
+        <a class="btn-prim" href="supply-chain.html?run=${esc(String(runId))}" style="text-decoration:none;height:34px;font-size:12.5px;background:var(--bg-3);color:var(--fg);border:1px solid var(--border-2)">Supply chain →</a>
+      </div>
+    </div>`;
+}
+</script>
+</body>
+</html>

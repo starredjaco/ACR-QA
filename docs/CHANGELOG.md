@@ -2,6 +2,53 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [UI Phase 2 — God Mode] — 9-Page UI Overhaul (May 16, 2026)
+
+### Summary
+
+Full god-mode UI Phase 2 execution — 4 new pages + enhancements to all 5 existing pages + shared
+polish across the entire frontend. The static HTML UI is now a complete product-grade dashboard.
+
+### Added
+
+- **`FRONTEND/static/ui/supply-chain.html`** — New page: OSV CVE analysis, dependency risk scoring,
+  SBOM explorer (3 tabs: CVEs, Dependencies table, CycloneDX SBOM). Wired to `/v1/runs/{id}/supply-chain`
+  and `/v1/runs/{id}/sbom`. One-click JSON export of the full SBOM.
+- **`FRONTEND/static/ui/compare.html`** — New page: Run-vs-run diff. Picks two runs (baseline vs target),
+  computes added/fixed/persisting findings client-side. Filter chips per category. Deep-link via `?a=&b=`.
+- **`FRONTEND/static/ui/scan.html`** — New page: Trigger new scans from UI. Form with toggles for
+  supply chain, AI triage, auto-fix. Live progress log with staged updates. Shows result card on completion.
+- **`FRONTEND/static/ui/settings.html`** — New page: Profile, API key management (create/copy/revoke),
+  quality gate policy viewer (formatted YAML), keyboard shortcuts reference, About panel.
+
+### Changed (Phase B — Enhanced existing pages)
+
+- **`index.html`** — Updated sidebar with new nav structure. Added "▷ New Scan" button to topbar.
+  Added "New scan" quick-action card in the hero section.
+- **`finding.html`** — Added "🔧 Auto-fix patch" button that loads unified diff inline. Added
+  "🔐 Attestation" button that shows post-quantum signature details. Added "▷ New Scan" to topbar.
+- **`runs.html`** — Added "⇄ Compare" and "⛓ Supply Chain" toolbar buttons. Each run card now has
+  inline "⛓ supply chain" and "⇄ compare" deep-links. "▷ New Scan" in topbar.
+- **`trends.html`** — Updated sidebar, "▷ New Scan" in topbar.
+
+### Added (Phase C — Polish)
+
+- **`app.css`** — Light mode CSS variables (`.light` class on `<body>`). Toast notification styles
+  (`#toast-host`, `.toast.success/.error/.info`). Command palette styles (`#cmd-backdrop`, `#cmd-box`).
+  Empty state component (`.empty-state`). Theme toggle button style.
+- **All pages** — Theme toggle (☀/☽) persisted in `localStorage`. Command palette (⌘K or /) with
+  full page navigation. Keyboard shortcuts: `n`=new scan, `g o/f/r/t`=navigate, `Esc`=close.
+  Toast notifications for actions (SBOM export, scan submission, key creation, theme change).
+- **All pages** — Consistent empty states with "Start your first scan" CTAs when no data.
+
+### Sidebar navigation (unified across all 9 pages)
+
+```
+Workspace: Overview · Findings [N] · Runs [N] · Trends
+Analysis:  New Scan · Compare Runs
+Security:  Supply Chain · Settings
+```
+
 ## [Phase 12 Week 1 — Complete] — Test Quality Audit (May 16, 2026)
 
 ### Summary

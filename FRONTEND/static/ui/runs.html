@@ -52,16 +52,14 @@
     <div class="nav-section">Workspace</div>
     <a class="nav-item" href="index.html"><span class="ico">⌂</span> Overview</a>
     <a class="nav-item" href="finding.html"><span class="ico">⊜</span> Findings <span class="cnt" id="nav-findings-cnt">—</span></a>
-    <a class="nav-item" href="trends.html"><span class="ico">∿</span> Trends</a>
     <a class="nav-item on" href="runs.html"><span class="ico">≡</span> Runs <span class="cnt" id="nav-runs-cnt">—</span></a>
-    <div class="nav-section">Engine</div>
-    <a class="nav-item" href="/docs" target="_blank"><span class="ico">⚡</span> API Docs</a>
-    <a class="nav-item" href="finding.html?filter=high"><span class="ico">⚙</span> High severity</a>
-    <a class="nav-item" href="/v1/policy" target="_blank"><span class="ico">⛏</span> Policy</a>
-    <div class="nav-section">Compliance</div>
-    <a class="nav-item" href="trends.html"><span class="ico">⌖</span> Trend analysis</a>
-    <a class="nav-item" href="index.html"><span class="ico">◉</span> Overview</a>
-    <a class="nav-item" href="/v1/cost-summary" target="_blank"><span class="ico">⌘</span> Cost summary</a>
+    <a class="nav-item" href="trends.html"><span class="ico">∿</span> Trends</a>
+    <div class="nav-section">Analysis</div>
+    <a class="nav-item" href="scan.html"><span class="ico">▷</span> New Scan</a>
+    <a class="nav-item" href="compare.html"><span class="ico">⇄</span> Compare Runs</a>
+    <div class="nav-section">Security</div>
+    <a class="nav-item" href="supply-chain.html"><span class="ico">⛓</span> Supply Chain</a>
+    <a class="nav-item" href="settings.html"><span class="ico">⚙</span> Settings</a>
     <div class="sb-footer">
       <div class="sb-status"><span class="led"></span><span>API online · acr-qa</span>
         <button onclick="logout()" style="margin-left:auto;background:none;border:none;color:var(--fg-5);font-family:var(--mono);font-size:10.5px;cursor:pointer;padding:0">sign out</button>
@@ -77,8 +75,9 @@
     <header class="topbar">
       <div class="crumbs"><a href="index.html">Workspace</a><span class="sep">/</span><span class="cur">Runs</span></div>
       <div class="grow"></div>
+      <button class="btn-icon theme-btn" id="theme-toggle" title="Toggle light/dark">☀</button>
       <button class="btn-icon" onclick="location.reload()">↻</button>
-      <a class="btn-prim" href="/v1/runs" target="_blank">Raw API</a>
+      <a class="btn-prim" href="scan.html">▷ New Scan</a>
     </header>
 
     <div class="page-pad">
@@ -95,6 +94,10 @@
       <div class="controls">
         <input class="search-input" id="search" placeholder="Search repo, run ID…" oninput="filterRuns()">
         <span style="font-size:12px;color:var(--fg-5);font-family:var(--mono)" id="run-count">Loading…</span>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <a href="compare.html" style="height:32px;padding:0 12px;border-radius:8px;background:var(--bg-2);border:1px solid var(--border-2);color:var(--fg-3);font-size:12.5px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">⇄ Compare</a>
+          <a href="supply-chain.html" style="height:32px;padding:0 12px;border-radius:8px;background:var(--bg-2);border:1px solid var(--border-2);color:var(--fg-3);font-size:12.5px;display:inline-flex;align-items:center;gap:6px;text-decoration:none">⛓ Supply Chain</a>
+        </div>
       </div>
 
       <div id="runs-list">
@@ -155,13 +158,15 @@ function renderRuns(runs) {
   document.getElementById('runs-list').innerHTML = runs.map(r => {
     const date = r.started_at ? r.started_at.slice(0,10) : '?';
     const time = r.started_at ? r.started_at.slice(11,16) : '';
-    return `<a class="run-card" href="finding.html?run=${r.id}">
-      <span class="run-id">#${r.id}</span>
-      <div class="run-body">
+    return `<div class="run-card" style="text-decoration:none">
+      <span class="run-id" style="cursor:pointer" onclick="location.href='finding.html?run=${r.id}'">#${r.id}</span>
+      <div class="run-body" style="cursor:pointer" onclick="location.href='finding.html?run=${r.id}'">
         <span class="run-repo">${esc(r.repo_name || 'unknown')}</span>
         <span class="run-meta">
           <span>${date} ${time}</span>
           ${r.pr_number ? `<span class="sep">·</span><span>PR #${r.pr_number}</span>` : ''}
+          <span class="sep">·</span><a href="supply-chain.html?run=${r.id}" onclick="event.stopPropagation()" style="color:var(--fg-4);font-family:var(--mono);font-size:10.5px">⛓ supply chain</a>
+          <span class="sep">·</span><a href="compare.html?b=${r.id}" onclick="event.stopPropagation()" style="color:var(--fg-4);font-family:var(--mono);font-size:10.5px">⇄ compare</a>
         </span>
       </div>
       <div class="sev-bar">
@@ -169,9 +174,9 @@ function renderRuns(runs) {
         ${r.medium_count > 0 ? `<span class="sev-pill m">${r.medium_count} M</span>` : ''}
         ${r.low_count > 0 ? `<span class="sev-pill l">${r.low_count} L</span>` : ''}
       </div>
-      <span class="run-total">${r.total_findings}</span>
+      <span class="run-total" style="cursor:pointer" onclick="location.href='finding.html?run=${r.id}'">${r.total_findings}</span>
       <span class="run-status ${statusCls(r.status)}">${r.status || 'unknown'}</span>
-    </a>`;
+    </div>`;
   }).join('');
 }
 
@@ -184,6 +189,43 @@ function filterRuns() {
   );
   renderRuns(filtered);
 }
+
+// Theme
+const themeBtn=document.getElementById('theme-toggle');
+function applyTheme(){const l=localStorage.getItem('acrqa_light')==='1';document.body.classList.toggle('light',l);if(themeBtn)themeBtn.textContent=l?'☽':'☀';}
+applyTheme();
+if(themeBtn)themeBtn.onclick=()=>{localStorage.setItem('acrqa_light',document.body.classList.contains('light')?'0':'1');applyTheme();};
+
+// Keyboard shortcuts
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openPalette();return;}
+  if(e.key==='/')openPalette();
+  if(e.key==='n')location.href='scan.html';
+});
+
+function openPalette(){document.getElementById('cmd-backdrop').classList.add('open');document.getElementById('cmd-input').value='';renderCmd('');document.getElementById('cmd-input').focus();}
+function closePalette(){document.getElementById('cmd-backdrop').classList.remove('open');}
+const CMD_ITEMS=[{group:'Navigate',items:[
+  {icon:'⌂',label:'Overview',action:()=>location.href='index.html'},
+  {icon:'⊜',label:'Findings',action:()=>location.href='finding.html'},
+  {icon:'∿',label:'Trends',action:()=>location.href='trends.html'},
+  {icon:'▷',label:'New Scan',kbd:'n',action:()=>location.href='scan.html'},
+  {icon:'⇄',label:'Compare Runs',action:()=>location.href='compare.html'},
+  {icon:'⛓',label:'Supply Chain',action:()=>location.href='supply-chain.html'},
+  {icon:'⚙',label:'Settings',action:()=>location.href='settings.html'},
+]}];
+function renderCmd(q){const list=document.getElementById('cmd-list');if(!list)return;let html='';CMD_ITEMS.forEach(g=>{const items=g.items.filter(i=>!q||i.label.toLowerCase().includes(q.toLowerCase()));if(!items.length)return;html+=`<div class="cmd-group-label">${g.group}</div>`;items.forEach(item=>{html+=`<div class="cmd-item" onclick="(${item.action.toString()})();closePalette()"><span class="ci-icon">${item.icon}</span><span class="ci-label">${item.label}</span>${item.kbd?`<span class="ci-kbd">${item.kbd}</span>`:''}</div>`;});});list.innerHTML=html||'<div class="cmd-group-label">No results</div>';}
+function filterCmd(q){renderCmd(q);}
+function cmdKey(e){if(e.key==='Escape')closePalette();}
 </script>
+
+<div id="toast-host"></div>
+<div id="cmd-backdrop" onclick="closePalette()">
+  <div id="cmd-box" onclick="event.stopPropagation()">
+    <div id="cmd-input-wrap"><span class="cmd-icon">⌘</span><input id="cmd-input" placeholder="Go to page, action…" oninput="filterCmd(this.value)" onkeydown="cmdKey(event)"></div>
+    <div class="cmd-list" id="cmd-list"></div>
+  </div>
+</div>
 </body>
 </html>

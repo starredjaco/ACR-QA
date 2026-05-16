@@ -85,16 +85,14 @@
     <div class="nav-section">Workspace</div>
     <a class="nav-item" href="index.html"><span class="ico">⌂</span> Overview</a>
     <a class="nav-item on" href="finding.html"><span class="ico">⊜</span> Findings <span class="cnt" id="nav-findings-cnt">—</span></a>
-    <a class="nav-item" href="trends.html"><span class="ico">∿</span> Trends</a>
     <a class="nav-item" href="runs.html"><span class="ico">≡</span> Runs <span class="cnt" id="nav-runs-cnt">—</span></a>
-    <div class="nav-section">Engine</div>
-    <a class="nav-item" href="/docs" target="_blank"><span class="ico">⚡</span> API Docs</a>
-    <a class="nav-item" href="finding.html?filter=high"><span class="ico">⚙</span> High severity</a>
-    <a class="nav-item" href="/v1/policy" target="_blank"><span class="ico">⛏</span> Policy config</a>
-    <div class="nav-section">Compliance</div>
-    <a class="nav-item" href="runs.html"><span class="ico">⌖</span> Run history</a>
-    <a class="nav-item" href="trends.html"><span class="ico">◉</span> Trend analysis</a>
-    <a class="nav-item" href="index.html"><span class="ico">⌘</span> Overview</a>
+    <a class="nav-item" href="trends.html"><span class="ico">∿</span> Trends</a>
+    <div class="nav-section">Analysis</div>
+    <a class="nav-item" href="scan.html"><span class="ico">▷</span> New Scan</a>
+    <a class="nav-item" href="compare.html"><span class="ico">⇄</span> Compare Runs</a>
+    <div class="nav-section">Security</div>
+    <a class="nav-item" href="supply-chain.html"><span class="ico">⛓</span> Supply Chain</a>
+    <a class="nav-item" href="settings.html"><span class="ico">⚙</span> Settings</a>
     <div class="sb-footer">
       <div class="sb-status">
         <span class="led"></span>
@@ -121,7 +119,9 @@
       <div class="grow"></div>
       <span class="kbd" title="Previous finding">K</span><span style="font-size:11px;color:var(--fg-5)">prev</span>
       <span class="kbd" title="Next finding">J</span><span style="font-size:11px;color:var(--fg-5)">next</span>
+      <button class="btn-icon theme-btn" id="theme-toggle" title="Toggle light/dark">☀</button>
       <button class="btn-icon" onclick="location.reload()">↻</button>
+      <a class="btn-prim" href="scan.html">▷ New Scan</a>
     </header>
 
     <div class="page-pad">
@@ -355,10 +355,14 @@ function selectFinding(f) {
 
       <div class="actions">
         <button class="act prim" onclick="viewRawJson(${f.id})">View JSON</button>
-        <button class="act fix" onclick="copyFindingId(${f.id})">Copy ID · ${f.id}</button>
+        <button class="act fix" onclick="loadAutofix(${f.id})">🔧 Auto-fix patch</button>
+        <button class="act" onclick="copyFindingId(${f.id})">Copy ID · ${f.id}</button>
         <a class="act" href="/v1/runs/${RUN_ID}/findings" target="_blank">Raw API</a>
-        ${f.id ? `<a class="act" href="/v1/runs/${RUN_ID}/findings/${f.id}/autofix" target="_blank">Auto-fix →</a>` : ''}
+        <button class="act" onclick="loadAttestation()">🔐 Attestation</button>
       </div>
+
+      <div id="autofix-area-${f.id}"></div>
+      <div id="attest-area"></div>
 
     </div>`;
 }
@@ -374,11 +378,93 @@ function copyFindingId(id) {
   setTimeout(() => btn.textContent = old, 1200);
 }
 
+async function loadAutofix(findingId) {
+  const areaId = 'autofix-area-' + findingId;
+  const area = document.getElementById(areaId);
+  if (!area) return;
+  area.innerHTML = '<div style="padding:12px;font-family:var(--mono);font-size:11.5px;color:var(--fg-5)">Loading auto-fix patch…</div>';
+  try {
+    const data = await api('/v1/runs/' + RUN_ID + '/findings/' + findingId + '/autofix');
+    const patch = data.patch || data.diff || data.fix_patch || '';
+    if (!patch) { area.innerHTML = '<div style="padding:12px;font-family:var(--mono);font-size:11.5px;color:var(--fg-5)">No auto-fix available for this finding.</div>'; return; }
+    const colored = patch.split('\n').map(l => {
+      if (l.startsWith('+++') || l.startsWith('---') || l.startsWith('@@')) return `<span style="color:var(--fg-4)">${esc(l)}</span>`;
+      if (l.startsWith('+')) return `<span class="fix-code" style="display:block;color:#6ee7b7;background:rgba(52,211,153,.06)">${esc(l)}</span>`;
+      if (l.startsWith('-')) return `<span class="fix-code" style="display:block;color:#f87171;background:rgba(239,68,68,.06)">${esc(l)}</span>`;
+      return `<span style="color:var(--fg-5)">${esc(l)}</span>`;
+    }).join('\n');
+    area.innerHTML = `<div class="d-section" style="margin-top:16px">
+      <div class="d-section-h">Auto-fix patch <span class="badge">unified diff · LLM-generated</span></div>
+      <div class="fix-block">
+        <div class="fix-head"><span class="ok">Patch ready</span><button onclick="navigator.clipboard.writeText(${JSON.stringify(patch)}).then(()=>toast('Patch copied','success'))" style="background:none;border:none;color:var(--fg-4);font-family:var(--mono);font-size:11px;cursor:pointer">Copy patch</button></div>
+        <pre class="fix-code">${colored}</pre>
+      </div>
+    </div>`;
+    toast('Auto-fix loaded','success');
+  } catch(e) { area.innerHTML = `<div style="padding:12px;font-family:var(--mono);font-size:11.5px;color:var(--high)">Auto-fix unavailable: ${esc(e.message)}</div>`; }
+}
+
+async function loadAttestation() {
+  const area = document.getElementById('attest-area');
+  if (!area) return;
+  if (area.innerHTML.trim()) { area.innerHTML = ''; return; }
+  area.innerHTML = '<div style="padding:12px;font-family:var(--mono);font-size:11.5px;color:var(--fg-5)">Loading attestation…</div>';
+  try {
+    const data = await api('/v1/runs/' + RUN_ID + '/attestation');
+    const sig = data.signature || data.ecdsa_signature || data.digest || '?';
+    const algo = data.algorithm || 'ECDSA-P256 + Dilithium3';
+    const ts = data.timestamp || data.signed_at || '?';
+    area.innerHTML = `<div class="d-section" style="margin-top:16px">
+      <div class="d-section-h">Post-quantum attestation <span class="badge">${esc(algo)}</span></div>
+      <div class="ai-block" style="font-family:var(--mono);font-size:11.5px">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><span style="color:var(--low)">🔐</span> <span style="color:var(--fg)">Signed at ${esc(String(ts).slice(0,19))}</span></div>
+        <div style="color:var(--fg-4);word-break:break-all;font-size:11px">${esc(String(sig).slice(0,120))}…</div>
+        <div style="margin-top:8px;color:var(--fg-5);font-size:10.5px">Algorithm: ${esc(algo)} · NIST PQC standard</div>
+      </div>
+    </div>`;
+  } catch(e) { area.innerHTML = `<div style="padding:12px;font-family:var(--mono);font-size:11.5px;color:var(--high)">Attestation unavailable: ${esc(e.message)}</div>`; }
+}
+
+// Theme
+const themeBtn=document.getElementById('theme-toggle');
+function applyTheme(){const l=localStorage.getItem('acrqa_light')==='1';document.body.classList.toggle('light',l);if(themeBtn)themeBtn.textContent=l?'☽':'☀';}
+applyTheme();
+if(themeBtn)themeBtn.onclick=()=>{localStorage.setItem('acrqa_light',document.body.classList.contains('light')?'0':'1');applyTheme();};
+
+function toast(msg,type='info'){const icons={success:'✅',error:'❌',info:'ℹ️'};const t=document.createElement('div');t.className='toast '+type;t.innerHTML=`<span class="toast-icon">${icons[type]}</span><span class="toast-body">${esc(msg)}</span><span class="toast-close" onclick="this.parentElement.remove()">×</span>`;document.getElementById('toast-host').appendChild(t);setTimeout(()=>t.remove(),4000);}
+
+// Command palette
+function openPalette(){document.getElementById('cmd-backdrop').classList.add('open');document.getElementById('cmd-input').value='';renderCmd('');document.getElementById('cmd-input').focus();}
+function closePalette(){document.getElementById('cmd-backdrop').classList.remove('open');}
+const CMD_ITEMS=[{group:'Navigate',items:[
+  {icon:'⌂',label:'Overview',action:()=>location.href='index.html'},
+  {icon:'≡',label:'Runs',action:()=>location.href='runs.html'},
+  {icon:'∿',label:'Trends',action:()=>location.href='trends.html'},
+  {icon:'▷',label:'New Scan',kbd:'n',action:()=>location.href='scan.html'},
+  {icon:'⇄',label:'Compare Runs',action:()=>location.href='compare.html'},
+  {icon:'⛓',label:'Supply Chain',action:()=>location.href='supply-chain.html'},
+  {icon:'⚙',label:'Settings',action:()=>location.href='settings.html'},
+]}];
+function renderCmd(q){const list=document.getElementById('cmd-list');if(!list)return;let html='';CMD_ITEMS.forEach(g=>{const items=g.items.filter(i=>!q||i.label.toLowerCase().includes(q.toLowerCase()));if(!items.length)return;html+=`<div class="cmd-group-label">${g.group}</div>`;items.forEach(item=>{html+=`<div class="cmd-item" onclick="(${item.action.toString()})();closePalette()"><span class="ci-icon">${item.icon}</span><span class="ci-label">${item.label}</span>${item.kbd?`<span class="ci-kbd">${item.kbd}</span>`:''}</div>`;});});list.innerHTML=html||'<div class="cmd-group-label">No results</div>';}
+function filterCmd(q){renderCmd(q);}
+function cmdKey(e){if(e.key==='Escape')closePalette();}
+
 document.addEventListener('keydown', e => {
   if (!allFindings.length || e.target.tagName === 'INPUT') return;
+  if ((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openPalette();return;}
+  if (e.key==='/')openPalette();
   if (e.key === 'j' && activeFindingIdx < allFindings.length - 1) { clickFinding(activeFindingIdx + 1); }
   if (e.key === 'k' && activeFindingIdx > 0) { clickFinding(activeFindingIdx - 1); }
+  if (e.key==='n') location.href='scan.html';
 });
 </script>
+
+<div id="toast-host"></div>
+<div id="cmd-backdrop" onclick="closePalette()">
+  <div id="cmd-box" onclick="event.stopPropagation()">
+    <div id="cmd-input-wrap"><span class="cmd-icon">⌘</span><input id="cmd-input" placeholder="Go to page, action…" oninput="filterCmd(this.value)" onkeydown="cmdKey(event)"></div>
+    <div class="cmd-list" id="cmd-list"></div>
+  </div>
+</div>
 </body>
 </html>

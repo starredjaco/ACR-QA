@@ -148,16 +148,14 @@
     <div class="nav-section">Workspace</div>
     <a class="nav-item on" href="index.html"><span class="ico">⌂</span> Overview</a>
     <a class="nav-item" href="finding.html"><span class="ico">⊜</span> Findings <span class="cnt" id="nav-findings-cnt">—</span></a>
-    <a class="nav-item" href="trends.html"><span class="ico">∿</span> Trends</a>
     <a class="nav-item" href="runs.html"><span class="ico">≡</span> Runs <span class="cnt" id="nav-runs-cnt">—</span></a>
-    <div class="nav-section">Engine</div>
-    <a class="nav-item" href="/docs" target="_blank"><span class="ico">⚡</span> API Docs</a>
-    <a class="nav-item" href="finding.html?filter=high"><span class="ico">⚙</span> Quality gate</a>
-    <a class="nav-item" href="/v1/policy" target="_blank"><span class="ico">⛏</span> Policy config</a>
-    <div class="nav-section">Compliance</div>
-    <a class="nav-item" href="runs.html"><span class="ico">⌖</span> OWASP Top 10</a>
-    <a class="nav-item" href="runs.html"><span class="ico">◉</span> Run history</a>
-    <a class="nav-item" href="trends.html"><span class="ico">⌘</span> Trend analysis</a>
+    <a class="nav-item" href="trends.html"><span class="ico">∿</span> Trends</a>
+    <div class="nav-section">Analysis</div>
+    <a class="nav-item" href="scan.html"><span class="ico">▷</span> New Scan</a>
+    <a class="nav-item" href="compare.html"><span class="ico">⇄</span> Compare Runs</a>
+    <div class="nav-section">Security</div>
+    <a class="nav-item" href="supply-chain.html"><span class="ico">⛓</span> Supply Chain</a>
+    <a class="nav-item" href="settings.html"><span class="ico">⚙</span> Settings</a>
     <div class="sb-footer">
       <div class="sb-status">
         <span class="led"></span>
@@ -184,8 +182,9 @@
         <span class="id-pill" id="topbar-run">—</span>
       </div>
       <div class="grow"></div>
+      <button class="btn-icon theme-btn" id="theme-toggle" title="Toggle light/dark">☀</button>
       <button class="btn-icon" title="Refresh" onclick="location.reload()">↻</button>
-      <a class="btn-prim" href="/v1/runs" target="_blank">API Explorer</a>
+      <a class="btn-prim" href="scan.html">▷ New Scan</a>
     </header>
 
     <div class="page-pad">
@@ -223,6 +222,11 @@
           <a class="qa" href="runs.html">
             <div class="qa-ico g">≡</div>
             <div class="qa-body"><span class="h">Run history</span><span class="s">all scans · per-repo</span></div>
+            <span class="qa-arrow">›</span>
+          </a>
+          <a class="qa" href="scan.html" style="background:linear-gradient(90deg,rgba(167,139,250,.10),rgba(96,165,250,.10));border-color:var(--ai-bdr)">
+            <div class="qa-ico p">▷</div>
+            <div class="qa-body"><span class="h" style="color:var(--purple)">New scan</span><span class="s">trigger · real-time progress</span></div>
             <span class="qa-arrow">›</span>
           </a>
         </div>
@@ -538,6 +542,42 @@ function drawTrend(t) {
   }
 }
 
+// Theme toggle
+const themeBtn=document.getElementById('theme-toggle');
+function applyTheme(){const l=localStorage.getItem('acrqa_light')==='1';document.body.classList.toggle('light',l);if(themeBtn)themeBtn.textContent=l?'☽':'☀';}
+applyTheme();
+if(themeBtn)themeBtn.onclick=()=>{localStorage.setItem('acrqa_light',document.body.classList.contains('light')?'0':'1');applyTheme();};
+
+// Toast helper
+function toast(msg,type='info'){const icons={success:'✅',error:'❌',info:'ℹ️'};const t=document.createElement('div');t.className='toast '+type;t.innerHTML=`<span class="toast-icon">${icons[type]}</span><span class="toast-body">${String(msg).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</span><span class="toast-close" onclick="this.parentElement.remove()">×</span>`;document.getElementById('toast-host').appendChild(t);setTimeout(()=>t.remove(),4000);}
+
+// Keyboard shortcuts
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  if((e.metaKey||e.ctrlKey)&&e.key==='k'){e.preventDefault();openPalette();return;}
+  if(e.key==='/')openPalette();
+  if(e.key==='n')location.href='scan.html';
+  if(e.key==='g'){const nx=new Promise(r=>document.addEventListener('keydown',r,{once:true}));nx.then(e2=>{if(e2.key==='f')location.href='finding.html';if(e2.key==='r')location.href='runs.html';if(e2.key==='t')location.href='trends.html';});}
+});
+
+// Command palette
+const CMD_ITEMS=[{group:'Navigate',items:[
+  {icon:'⊜',label:'Findings',action:()=>location.href='finding.html'},
+  {icon:'≡',label:'Runs',action:()=>location.href='runs.html'},
+  {icon:'∿',label:'Trends',action:()=>location.href='trends.html'},
+  {icon:'▷',label:'New Scan',kbd:'n',action:()=>location.href='scan.html'},
+  {icon:'⇄',label:'Compare Runs',action:()=>location.href='compare.html'},
+  {icon:'⛓',label:'Supply Chain',action:()=>location.href='supply-chain.html'},
+  {icon:'⚙',label:'Settings',action:()=>location.href='settings.html'},
+]},{group:'Actions',items:[
+  {icon:'↻',label:'Reload',action:()=>location.reload()},
+]}];
+function openPalette(){const b=document.getElementById('cmd-backdrop');if(!b)return;b.classList.add('open');const i=document.getElementById('cmd-input');if(i){i.value='';renderCmd('');i.focus();}}
+function closePalette(){const b=document.getElementById('cmd-backdrop');if(b)b.classList.remove('open');}
+function renderCmd(q){const list=document.getElementById('cmd-list');if(!list)return;let html='';CMD_ITEMS.forEach(g=>{const items=g.items.filter(i=>!q||i.label.toLowerCase().includes(q.toLowerCase()));if(!items.length)return;html+=`<div class="cmd-group-label">${g.group}</div>`;items.forEach(item=>{html+=`<div class="cmd-item" onclick="(${item.action.toString()})();closePalette()"><span class="ci-icon">${item.icon}</span><span class="ci-label">${item.label}</span>${item.kbd?`<span class="ci-kbd">${item.kbd}</span>`:''}</div>`;});});list.innerHTML=html||'<div class="cmd-group-label">No results</div>';}
+function filterCmd(q){renderCmd(q);}
+function cmdKey(e){if(e.key==='Escape')closePalette();}
+
 function renderFindings(findings, runId) {
   const container = document.getElementById('findings-section');
   if (!container) return;
@@ -567,5 +607,13 @@ function renderFindings(findings, runId) {
   }).join('');
 }
 </script>
+
+<div id="toast-host"></div>
+<div id="cmd-backdrop" onclick="closePalette()">
+  <div id="cmd-box" onclick="event.stopPropagation()">
+    <div id="cmd-input-wrap"><span class="cmd-icon">⌘</span><input id="cmd-input" placeholder="Go to page, action…" oninput="filterCmd(this.value)" onkeydown="cmdKey(event)"></div>
+    <div class="cmd-list" id="cmd-list"></div>
+  </div>
+</div>
 </body>
 </html>
