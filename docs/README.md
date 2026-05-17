@@ -26,7 +26,7 @@
 
 | Document | Description |
 |----------|-------------|
-| [REST API Reference](API_REFERENCE.md) | All 36 FastAPI endpoints under `/v1/`, CLI reference, auth flows [v4.5.0] |
+| [REST API Reference](API_REFERENCE.md) | All 37 FastAPI endpoints under `/v1/`, CLI reference, auth flows [v4.6.0] |
 | [Cloud Deployment](setup/Cloud-Deployment.md) | PythonAnywhere, Replit, ngrok deployment guides |
 | [Token Setup](setup/TOKEN_SETUP.md) | GitHub, GitLab, and Groq API key configuration |
 | [LLM Providers](setup/LLM_PROVIDERS.md) | Groq (default) + Ollama (offline) + AgentRouter; model comparison, `ACRQA_LLM_PROVIDER` env var |
@@ -99,16 +99,20 @@
 | [ROADMAP (archived)](archive/ROADMAP.md) | Pre-v2 plan. Phase 2 TS rewrite section is explicitly killed by the v2 plan; kept for historical context. |
 | [God Mode Plan v1 (archived)](archive/GOD_MODE_PLAN_V1.md) | Original plan — pre-FastAPI/Celery/Auth. Superseded by v2. |
 
-## 🖥 Static UI Dashboard (v4.5.0)
+## Static UI Dashboard (v4.6.0)
 
-9-page HTML dashboard served at `/ui/` by FastAPI StaticFiles. All pages share dark/light theme,
-⌘K command palette, toast notifications, and JWT auth.
+13-page HTML dashboard served at `/ui/` by FastAPI StaticFiles. All pages share dark/light theme,
+⌘K command palette, toast notifications, JWT auth, and demo mode (`?demo=1`).
 
 | Page | File | Key Feature |
 |------|------|-------------|
-| Login | `login.html` | JWT login |
+| Landing | `landing.html` | Hero, proof strip, Live Demo CTA |
+| Login | `login.html` | JWT login; gradient CTA; forgot-pw link |
+| Sign Up | `signup.html` | Registration + password strength meter |
+| Verify | `verify.html` | 6-digit OTP; inline demo code display |
+| Forgot PW | `forgot.html` | 3-step reset; simulated email code |
 | Overview | `index.html` | Gate, stats, quick-action cards |
-| Findings | `finding.html` | Detail panel; auto-fix patch; attestation |
+| Findings | `finding.html` | Confidence gauge; verdict chips; taint flow; 4 panels |
 | Runs | `runs.html` | Run history; compare + supply-chain deep-links |
 | Trends | `trends.html` | SVG trend charts |
 | New Scan | `scan.html` | Form + live progress log |

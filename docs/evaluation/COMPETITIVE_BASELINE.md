@@ -1,8 +1,8 @@
 # Competitive Baseline — ACR-QA vs Industry Tools
 
-**Version:** ACR-QA v4.5.0
-**Measured:** May 16, 2026
-**Benchmark corpus:** DVPWA, Pygoat, VulPy, DSVW (vulnerable repos) + Flask 68k★, httpx (clean repos)
+**Version:** ACR-QA v4.6.0
+**Measured:** May 17, 2026
+**Benchmark corpus:** 13 repos across 4 languages (DVPWA, Pygoat, VulPy, DSVW, NodeGoat, DVNA, DVWS-Node, Juice Shop, bandit-test-cases, GoVWA, vulnerable-node, django.nV) + Flask 68k★, httpx (clean repos)
 
 ---
 

@@ -112,6 +112,26 @@ async def prometheus_metrics():
     )
 
 
+# ── Demo mode ─────────────────────────────────────────────────────────────────
+
+
+@app.get("/v1/demo/run", tags=["demo"], summary="Return latest DVPWA run ID for demo mode")
+async def demo_run(db: Database = Depends(get_db)):
+    """Returns the run_id of the most recent DVPWA scan (or any scan).
+    Used by ?demo=1 pages to load a fixture without authentication.
+    Read-only — no auth required.
+    """
+    try:
+        runs = db.get_recent_runs(limit=10)
+        dvpwa = next((r for r in runs if "dvpwa" in (r.get("repo_name") or "").lower()), None)
+        target = dvpwa or (runs[0] if runs else None)
+        if not target:
+            return {"run_id": None, "repo_name": "demo", "status": "no_runs"}
+        return {"run_id": target["id"], "repo_name": target["repo_name"], "status": "ok"}
+    except Exception:
+        return {"run_id": None, "repo_name": "demo", "status": "unavailable"}
+
+
 # ── Misc v1 endpoints (not grouped into a router) ────────────────────────────
 
 

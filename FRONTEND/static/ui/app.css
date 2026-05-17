@@ -320,6 +320,40 @@ h1.title {
 .cmd-item .ci-label { flex:1; }
 .cmd-item .ci-kbd { font-family:var(--mono); font-size:10.5px; color:var(--fg-5); }
 
+/* ====== PHASE 4 — GLASSMORPHISM + HOVER LIFTS ====== */
+.glass {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255,255,255,0.04) !important;
+  border-color: rgba(255,255,255,0.10) !important;
+}
+.hover-lift { transition: transform .15s, box-shadow .15s; }
+.hover-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+.badge-pulse { animation: sev-pulse 2.5s infinite; }
+@keyframes sev-pulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(239,68,68,.4)} 50%{opacity:.85;box-shadow:0 0 0 6px rgba(239,68,68,0)} }
+
+/* CSS View Transitions */
+@view-transition { navigation: auto; }
+
+/* ====== DEMO MODE BANNER ====== */
+.demo-banner {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+  background: linear-gradient(90deg, rgba(251,191,36,.12) 0%, rgba(251,191,36,.08) 100%);
+  border-bottom: 1px solid rgba(251,191,36,.3);
+  padding: 8px 20px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 12.5px; color: #fbbf24; font-weight: 500;
+}
+.demo-banner .db-dot { width: 7px; height: 7px; border-radius: 50%; background: #fbbf24; animation: pulse 2s infinite; flex-shrink:0; }
+.demo-banner .db-text { flex: 1; }
+.demo-banner a { color: #fde68a; text-decoration: underline; text-underline-offset: 2px; }
+.demo-banner .db-close { background: none; border: none; color: #fbbf24; cursor: pointer; font-size: 16px; padding: 0 4px; opacity: .7; }
+.demo-banner .db-close:hover { opacity: 1; }
+body.demo-mode { padding-top: 36px; }
+body.demo-mode .sidebar { top: 36px; height: calc(100vh - 36px); }
+/* Hide mutation buttons in demo mode */
+body.demo-mode .demo-hide { display: none !important; }
+
 /* ====== EMPTY STATE ====== */
 .empty-state {
   display:flex; flex-direction:column; align-items:center;

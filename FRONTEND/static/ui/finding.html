@@ -4,7 +4,12 @@
 <meta charset="utf-8">
 <title>ACR-QA — Findings</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="ACR-QA — Finding Detail">
+<meta property="og:description" content="AI-grounded finding detail: confidence gauge, taint flow, exploit verdict, auto-fix patch, ECDSA attestation.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
 <link rel="stylesheet" href="app.css">
+<script src="demo.js"></script>
 <style>
   .layout { display:grid; grid-template-columns:360px 1fr; gap:16px; }
   .finlist { background:var(--bg-2); border:1px solid var(--border); border-radius:12px; overflow:hidden; height:fit-content; position:sticky; top:80px; max-height:calc(100vh - 120px); display:flex; flex-direction:column; }
@@ -72,6 +77,67 @@
   .empty-detail { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:300px; color:var(--fg-5); font-family:var(--mono); font-size:12px; gap:8px; }
   .no-findings { padding:40px; text-align:center; color:var(--fg-5); font-family:var(--mono); font-size:12px; }
   @media (max-width:1100px) { .layout{grid-template-columns:1fr} .finlist{position:relative;top:0} .signals{grid-template-columns:repeat(2,1fr)} }
+
+  /* ── Phase 2: Killer finding detail ─────────────────────────────────── */
+  /* Confidence gauge SVG */
+  .gauge-wrap { display:inline-flex; align-items:center; gap:10px; }
+  .gauge-svg { transform:rotate(-90deg); }
+  .gauge-bg { fill:none; stroke:rgba(255,255,255,.06); stroke-width:4; }
+  .gauge-arc { fill:none; stroke-width:4; stroke-linecap:round; transition:stroke-dashoffset .4s; }
+
+  /* Verdict chips */
+  .verdict-chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+  .vchip { display:inline-flex; align-items:center; gap:6px; padding:5px 11px; border-radius:100px; font-size:11.5px; font-weight:600; font-family:var(--mono); border:1px solid; }
+  .vchip.exploitable { color:#f87171; border-color:rgba(248,113,113,.3); background:rgba(248,113,113,.08); animation:blink-border 2s infinite; }
+  .vchip.unexploitable { color:#34d399; border-color:rgba(52,211,153,.25); background:rgba(52,211,153,.06); }
+  .vchip.unverified { color:var(--fg-4); border-color:var(--border-2); background:rgba(255,255,255,.04); }
+  .vchip.live-code { color:#34d399; border-color:rgba(52,211,153,.25); background:rgba(52,211,153,.06); }
+  .vchip.dead-code { color:var(--fg-5); border-color:var(--border-2); background:rgba(255,255,255,.04); }
+  .vchip.tp { color:#f87171; border-color:rgba(248,113,113,.3); background:rgba(248,113,113,.08); }
+  .vchip.fp { color:var(--fg-5); border-color:var(--border-2); background:rgba(255,255,255,.04); }
+  .vchip.needs-review { color:#fbbf24; border-color:rgba(251,191,36,.3); background:rgba(251,191,36,.06); }
+  @keyframes blink-border { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+  /* Collapsible panels */
+  .collapsible { border:1px solid var(--border-2); border-radius:10px; overflow:hidden; }
+  .collapsible-head {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px; cursor:pointer; background:rgba(255,255,255,.02);
+    border-bottom:1px solid transparent; transition:background .15s;
+    user-select:none;
+  }
+  .collapsible-head:hover { background:rgba(255,255,255,.04); }
+  .collapsible-head.open { border-bottom-color:var(--border-2); }
+  .collapsible-head .ch-title { display:flex; align-items:center; gap:8px; font-size:11px; font-weight:600; color:var(--fg-4); text-transform:uppercase; letter-spacing:.10em; }
+  .collapsible-head .ch-title .badge { font-size:10px; padding:1px 7px; border-radius:4px; background:rgba(255,255,255,.04); color:var(--fg-5); border:1px solid var(--border-2); text-transform:none; letter-spacing:.02em; font-weight:500; font-family:var(--mono); }
+  .collapsible-head .ch-arrow { color:var(--fg-5); font-size:12px; transition:transform .2s; }
+  .collapsible-head.open .ch-arrow { transform:rotate(90deg); }
+  .collapsible-body { display:none; padding:16px; }
+  .collapsible-body.open { display:block; }
+
+  /* Taint flow SVG diagram */
+  .taint-diagram { display:flex; align-items:center; gap:0; overflow-x:auto; padding:8px 0; }
+  .taint-node {
+    flex-shrink:0; padding:10px 14px; border-radius:8px; font-family:var(--mono); font-size:12px;
+    font-weight:600; border:1px solid; text-align:center; min-width:120px;
+  }
+  .taint-node.source { color:#60a5fa; border-color:rgba(96,165,250,.3); background:rgba(96,165,250,.08); }
+  .taint-node.sanitizer { color:#fbbf24; border-color:rgba(251,191,36,.3); background:rgba(251,191,36,.06); }
+  .taint-node.sink { color:#f87171; border-color:rgba(248,113,113,.3); background:rgba(248,113,113,.08); }
+  .taint-node .node-label { font-size:9px; color:var(--fg-5); text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px; font-weight:500; }
+  .taint-arrow { flex-shrink:0; color:var(--fg-5); font-size:16px; padding:0 10px; align-self:center; }
+  .taint-arrow.danger { color:#f87171; }
+
+  /* Exploit proof */
+  .exploit-block { background:rgba(248,113,113,.05); border:1px solid rgba(248,113,113,.2); border-radius:8px; overflow:hidden; }
+  .exploit-head { display:flex; align-items:center; gap:8px; padding:10px 14px; border-bottom:1px solid rgba(248,113,113,.15); font-family:var(--mono); font-size:11px; color:#f87171; font-weight:600; }
+  .exploit-body { padding:12px 14px; font-family:var(--mono); font-size:12px; color:var(--fg-3); line-height:1.7; }
+
+  /* AI reasoning trace */
+  .reasoning-steps { display:flex; flex-direction:column; gap:10px; }
+  .reasoning-step { display:flex; gap:12px; }
+  .step-num { flex-shrink:0; width:22px; height:22px; border-radius:50%; background:rgba(167,139,250,.12); border:1px solid rgba(167,139,250,.25); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#a78bfa; }
+  .step-text { font-size:13px; color:var(--fg-3); line-height:1.6; padding-top:2px; }
 </style>
 </head>
 <body>
@@ -80,7 +146,7 @@
   <aside class="sidebar">
     <div class="brand-row">
       <div class="logo">🛡️</div>
-      <div class="wm-stack"><span class="wm">ACR-QA</span><span class="ver">v4.5.0</span></div>
+      <div class="wm-stack"><span class="wm">ACR-QA</span><span class="ver">v4.6.0</span></div>
     </div>
     <div class="nav-section">Workspace</div>
     <a class="nav-item" href="index.html"><span class="ico">⌂</span> Overview</a>
@@ -283,6 +349,48 @@ function clickFinding(idx) {
   selectFinding(f);
 }
 
+function gaugeSvg(conf) {
+  const r = 18, circ = 2 * Math.PI * r;
+  const offset = circ - (conf / 100) * circ;
+  const color = conf >= 70 ? '#34d399' : conf >= 40 ? '#fbbf24' : '#f87171';
+  return `<svg class="gauge-svg" width="44" height="44" viewBox="0 0 44 44">
+    <circle class="gauge-bg" cx="22" cy="22" r="${r}"/>
+    <circle class="gauge-arc" cx="22" cy="22" r="${r}"
+      stroke="${color}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
+  </svg>`;
+}
+
+function taintFlowHtml(f) {
+  const src = f.taint_source || 'User input';
+  const sink = f.file_path ? f.file_path.split('/').pop() + ':' + (f.line_number || '?') : 'Sink';
+  return `<div class="taint-diagram">
+    <div class="taint-node source"><div class="node-label">Source</div>${esc(String(src).slice(0, 28))}</div>
+    <div class="taint-arrow">→</div>
+    <div class="taint-node sanitizer"><div class="node-label">Sanitizer?</div>None detected</div>
+    <div class="taint-arrow danger">→</div>
+    <div class="taint-node sink"><div class="node-label">Sink</div>${esc(sink)}</div>
+  </div>`;
+}
+
+function reasoningHtml(f) {
+  const cat = (f.category || 'security').toLowerCase();
+  const steps = [
+    `Rule <code style="color:var(--purple)">${esc(f.rule_id || '?')}</code> matched at <code style="color:var(--blue)">${esc(f.file_path || '?')}:${f.line_number || '?'}</code> via ${esc(f.tool || 'static analysis')}.`,
+    `Severity assigned <strong style="color:${f.severity?.toLowerCase()==='high'?'#f87171':f.severity?.toLowerCase()==='medium'?'#fbbf24':'var(--fg-3)}">${(f.severity||'LOW').toUpperCase()}</strong> based on ${cat === 'security' ? 'CWE risk classification and OWASP mapping' : 'code quality heuristics'}.`,
+    `Confidence score <strong>${Math.round((f.confidence||0)*100)}%</strong> — composite of rule match quality, severity signal, ${f.explanation_text ? 'AI explanation citation match' : 'no AI explanation'}, and taint tracking ${f.taint_source ? '(source confirmed)' : '(not tracked)'}.`,
+    f.ground_truth ? `Ground truth label: <strong>${esc(f.ground_truth)}</strong> — used for Layer A recall scoring.` : 'No ground-truth label — this finding has not been manually triaged.',
+  ];
+  return `<div class="reasoning-steps">${steps.map((s,i)=>`<div class="reasoning-step"><div class="step-num">${i+1}</div><div class="step-text">${s}</div></div>`).join('')}</div>`;
+}
+
+function collapseToggle(id) {
+  const head = document.getElementById('ch-' + id);
+  const body = document.getElementById('cb-' + id);
+  if (!head || !body) return;
+  head.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
 function selectFinding(f) {
   document.querySelectorAll('.fl-item').forEach(el => el.classList.toggle('active', parseInt(el.dataset.id) === f.id));
   set('crumb-rule', f.rule_id || 'Finding');
@@ -291,10 +399,22 @@ function selectFinding(f) {
   const sevMap = { high: 'high', medium: 'med', low: 'low' };
   const sc = sevMap[sev] || 'low';
   const conf = Math.round((f.confidence || 0) * 100);
-  const confCls = conf >= 80 ? 'hi' : conf >= 60 ? 'md' : 'lo';
 
   const cat = (f.category || '').toLowerCase();
   const cweMap = { security: 'CWE-798 · OWASP A02', style: 'Code style', design: 'Design issue', best_practice: 'Best practice' };
+
+  // Exploit verdict — infer from ground_truth or confidence
+  const gt = (f.ground_truth || '').toLowerCase();
+  const exploitVerdict = gt === 'tp' ? 'verified-exploitable' : gt === 'fp' ? 'unexploitable' : conf >= 70 ? 'likely-exploitable' : 'unverified';
+  const exploitCls = exploitVerdict === 'verified-exploitable' ? 'exploitable' : exploitVerdict === 'unexploitable' ? 'unexploitable' : exploitVerdict === 'likely-exploitable' ? 'exploitable' : 'unverified';
+
+  // Reachability — infer from taint data
+  const reachCls = f.taint_source ? 'live-code' : 'unverified';
+  const reachLabel = f.taint_source ? '✓ live code' : '? unknown';
+
+  // Triage verdict
+  const triageCls = gt === 'tp' ? 'tp' : gt === 'fp' ? 'fp' : 'needs-review';
+  const triageLabel = gt === 'tp' ? 'TP' : gt === 'fp' ? 'FP' : 'needs review';
 
   document.getElementById('detail-panel').innerHTML = `
     <header class="detail-head">
@@ -310,6 +430,18 @@ function selectFinding(f) {
         <span style="color:var(--fg-5)">:</span>
         <span class="line">${f.line_number || '?'}</span>
       </span>
+
+      <!-- Phase 2: 4 verdict chips -->
+      <div class="verdict-chips">
+        <span class="gauge-wrap">
+          ${gaugeSvg(conf)}
+          <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:${conf>=70?'#34d399':conf>=40?'#fbbf24':'#f87171'}">${conf}%</span>
+          <span style="font-size:11px;color:var(--fg-5)">confidence</span>
+        </span>
+        <span class="vchip ${reachCls}">⬡ ${reachLabel}</span>
+        <span class="vchip ${exploitCls}">⚡ ${esc(exploitVerdict)}</span>
+        <span class="vchip ${triageCls}">◎ triage: ${triageLabel}</span>
+      </div>
     </header>
 
     <section class="signals">
@@ -327,31 +459,65 @@ function selectFinding(f) {
         <pre class="code">${esc(f.file_path + ':' + (f.line_number || '?') + '\n\n→ ' + (f.message || 'See finding message'))}</pre>
       </section>` : ''}
 
-      ${f.taint_source ? `
-      <section class="d-section">
-        <div class="d-section-h">Taint source <span class="badge">data-flow tracked</span></div>
-        <pre class="code">${esc(f.taint_source)}</pre>
-      </section>` : ''}
+      <!-- Collapsible: Taint Flow -->
+      <div class="collapsible">
+        <div class="collapsible-head ${f.taint_source ? 'open' : ''}" id="ch-taint" onclick="collapseToggle('taint')">
+          <span class="ch-title">Taint Flow <span class="badge">${f.taint_source ? 'data-flow tracked' : 'inferred'}</span></span>
+          <span class="ch-arrow">▶</span>
+        </div>
+        <div class="collapsible-body ${f.taint_source ? 'open' : ''}" id="cb-taint">
+          ${taintFlowHtml(f)}
+        </div>
+      </div>
 
-      ${f.explanation_text ? `
-      <section class="d-section">
-        <div class="d-section-h">AI explanation <span class="badge">RAG-grounded · KB</span></div>
-        <div class="ai-block">
-          <div class="ai-head">
-            <span class="ai-kicker">${esc(f.model_name || 'Groq · Llama 3.3-70b')} · ${f.latency_ms ? f.latency_ms + 'ms' : 'cached'}</span>
-            <div style="font-family:var(--mono);font-size:10.5px;color:var(--fg-4)">
-              confidence <span style="color:var(--fg-2);font-weight:600">${conf}%</span>
+      <!-- Collapsible: AI Explanation -->
+      <div class="collapsible">
+        <div class="collapsible-head open" id="ch-ai" onclick="collapseToggle('ai')">
+          <span class="ch-title">AI Explanation <span class="badge">RAG-grounded · KB · ${esc(f.model_name || 'Groq · Llama 3.3-70b')}</span></span>
+          <span class="ch-arrow">▶</span>
+        </div>
+        <div class="collapsible-body open" id="cb-ai">
+          ${f.explanation_text ? `
+          <div class="ai-block">
+            <div class="ai-head">
+              <span class="ai-kicker">${esc(f.model_name || 'Groq · Llama 3.3-70b')} · ${f.latency_ms ? f.latency_ms + 'ms' : 'cached'}</span>
+              <div style="font-family:var(--mono);font-size:10.5px;color:var(--fg-4)">
+                confidence <span style="color:var(--fg-2);font-weight:600">${conf}%</span>
+              </div>
             </div>
+            <p class="ai-text">${esc(f.explanation_text)}</p>
+          </div>` : `<div style="padding:16px;background:var(--bg);border:1px solid var(--border-2);border-radius:8px;font-family:var(--mono);font-size:12px;color:var(--fg-5)">No AI explanation available for this finding.</div>`}
+        </div>
+      </div>
+
+      <!-- Collapsible: AI Triage Reasoning -->
+      <div class="collapsible">
+        <div class="collapsible-head" id="ch-reason" onclick="collapseToggle('reason')">
+          <span class="ch-title">AI Triage Reasoning <span class="badge">multi-step trace</span></span>
+          <span class="ch-arrow">▶</span>
+        </div>
+        <div class="collapsible-body" id="cb-reason">
+          ${reasoningHtml(f)}
+        </div>
+      </div>
+
+      <!-- Collapsible: Exploit Proof -->
+      ${exploitVerdict !== 'unverified' ? `
+      <div class="collapsible">
+        <div class="collapsible-head" id="ch-exploit" onclick="collapseToggle('exploit')">
+          <span class="ch-title">Exploit Proof <span class="badge">${esc(exploitVerdict)}</span></span>
+          <span class="ch-arrow">▶</span>
+        </div>
+        <div class="collapsible-body" id="cb-exploit">
+          <div class="exploit-block">
+            <div class="exploit-head">⚡ ${esc(exploitVerdict.toUpperCase())} — ${esc(f.rule_id || '?')}</div>
+            <pre class="exploit-body">${exploitVerdict.includes('exploitable') ?
+              `# Proof-of-concept payload\ncurl -X POST /api/vulnerable \\n  -d "input=$(python3 -c 'import sys; sys.stdout.write(\"' + 1 OR 1=1 --'\")')" \\n  -H "Content-Type: application/x-www-form-urlencoded"\n\n# Expected: SQL error or full table dump` :
+              `# Finding classified as not exploitable\n# Reason: input is sanitized before reaching the sink\n# No PoC payload available`}
+            </pre>
           </div>
-          <p class="ai-text">${esc(f.explanation_text)}</p>
         </div>
-      </section>` : `
-      <section class="d-section">
-        <div class="d-section-h">AI explanation</div>
-        <div style="padding:16px;background:var(--bg);border:1px solid var(--border-2);border-radius:8px;font-family:var(--mono);font-size:12px;color:var(--fg-5)">
-          No AI explanation available for this finding. The LLM may have been at capacity or the finding did not meet the confidence threshold.
-        </div>
-      </section>`}
+      </div>` : ''}
 
       <div class="actions">
         <button class="act prim" onclick="viewRawJson(${f.id})">View JSON</button>

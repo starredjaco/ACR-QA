@@ -2,6 +2,79 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v4.6.0] — Distribution Release (May 17, 2026)
+
+### Summary
+
+Thesis defense release. Ships ACR-QA as a real distributable product via PyPI and the GitHub Actions Marketplace. Completes the full God Mode Phase 12 plan: evaluation bulletproofing (Tier 1 CVE recall + Tier 2 peer κ), UI Phase 1–4 (auth UX + killer finding detail + demo mode + polish), and W2–W4 engine hardening.
+
+### Added — Distribution
+
+- **PyPI package `acrqa`** — `pip install acrqa` works on Python 3.11+. Entry point `acrqa` CLI. Trusted publishing via OIDC (no static credentials). `pyproject.toml` with `[project]` section, optional `[ai]` extras for sentence-transformers.
+- **GitHub Actions Marketplace** — `uses: ahmed-145/acrqa-action@v1` in any workflow. `action.yml` with 6 inputs (target-dir, fail-on, groq-key, repo-name, limit, output-sarif) and 4 outputs. Docker-based runtime from `ghcr.io/ahmed-145/acrqa-action:v4.6.0`.
+- **`.github/workflows/pypi-publish.yml`** — OIDC trusted publish on `v*` tag push: build → TestPyPI → PyPI.
+- **`MANIFEST.in`** — includes config YAMLs, DATA rules, README in sdist.
+
+### Added — UI Phase 1 (Auth UX)
+
+- **`landing.html`** — Marketing landing: animated radial gradient hero, terminal preview, proof strip (97.1%/9/10/$0), 3-step how-it-works, footer.
+- **`signup.html`** — Registration form with 5-level password strength meter, demo mode callout.
+- **`verify.html`** — 6-digit OTP grid with keyboard/paste navigation, demo code auto-fill.
+- **`forgot.html`** — 3-step reset flow (email → code+new-pw → success), step indicator bar.
+- **`login.html`** — Redesigned: gradient CTA, password reveal toggle, forgot/signup links.
+- **Backend** — `POST /auth/register`, `POST /auth/verify`, `POST /auth/forgot-password`, `POST /auth/reset-password` (demo mode: codes returned in API response, no SMTP needed).
+- **Alembic migration 0011** — `email_verified`, `verification_code`, `reset_code` columns on `users`.
+
+### Added — UI Phase 2 (Killer Finding Detail)
+
+- **`finding.html`** — Circular confidence gauge SVG (red/amber/green), 4 verdict chips (confidence, reachability, exploit verdict, triage TP/FP/needs-review), collapsible panels: Taint Flow SVG diagram, AI Explanation, AI Triage Reasoning (4-step trace), Exploit Proof with PoC template, `blink-border` animation on verified-exploitable findings.
+
+### Added — UI Phase 3 (Demo Mode)
+
+- **`GET /v1/demo/run`** — Public endpoint (no auth), returns latest DVPWA run_id for demo fixture.
+- **`demo.js`** — Shared module: `?demo=1` bypasses auth redirect, injects amber banner, hides `.demo-hide` buttons. Fetches fixture run_id and dispatches `demo-run-ready` event.
+
+### Added — UI Phase 4 (Polish + OG Meta)
+
+- **`app.css`** — `.glass` (glassmorphism backdrop-filter), `.hover-lift`, `@view-transition`, `.badge-pulse`, `.demo-banner` styles.
+- **OG meta** — `og:title`, `og:description`, `og:type`, `twitter:card` on all 7 pages.
+
+### Added — Evaluation
+
+- **`docs/evaluation/PEER_VALIDATION.md`** — Blind inter-rater study on 20-finding sample; Cohen's κ = 0.74 (substantial agreement, Landis & Koch 1977).
+- **`docs/evaluation/CVE_RECALL.md`** — Full Tier 1 results: 10 CVEs, 2/10 (20%) recall. Honest failure mode taxonomy: 4 syntax/pattern gaps, 2 severity gaps, 2 rule gaps.
+- **`EVALUATION.md`** — Added CVE recall section (§3b) + peer κ section (§3c); corpus expanded to 13 repos across 4 languages; endpoint count → 37; test count → 2,344.
+
+### Added — Testing
+
+- **`TESTS/test_auth_register.py`** — 5 unit tests for register/verify endpoints (register success, duplicate, weak password, bad email format, verify returns tokens).
+- **`TESTS/snapshot/`** — `test_snapshot_dsvw.py` + `test_snapshot_dvpwa.py`: tolerance-based regression guards (±5% on total + HIGH counts), `--snapshot-update` flag to regenerate baselines.
+
+### Added — Corpus (Tier 3)
+
+- **`TESTS/evaluation/ground_truth/django-nv.yml`** — django.nV ground truth: SQLi L182-186, IDOR, open redirect, CSRF-exempt.
+- **`TESTS/evaluation/ground_truth/govwa.yml`** — GoVWA ground truth: SQL injection + command injection (Go).
+- **`TESTS/evaluation/ground_truth/vulnerable-node-app.yml`** — vulnerable-node ground truth (JavaScript).
+
+### Changed
+
+- **Version** — Bumped from 3.8.0 → **4.6.0** in `CORE/__init__.py`, `CORE/main.py`, `acrqa-action/action.yml`.
+- **`pyproject.toml`** — Added `[build-system]` + `[project]` sections for PyPI packaging. `[tool.pytest]` + `[tool.ruff]` sections unchanged.
+
+### Evaluation Numbers (v4.6.0 final)
+
+| Metric | Value |
+|--------|------:|
+| Precision (Layer A) | **97.1%** |
+| FP rate (Layer B) | **< 2.5%** |
+| CVE recall (Tier 1) | **20%** (2/10) — documented gaps |
+| Inter-rater κ (Tier 2) | **0.74** (substantial) |
+| Corpus repos | **13** (4 languages) |
+| OWASP Top 10 | **9/10** |
+| Python tests | **2,344** |
+| API endpoints | **37** |
+| Alembic migrations | **11** |
+
 ## [CI Fixes — v4.5.1] (May 16, 2026)
 
 ### Fixed

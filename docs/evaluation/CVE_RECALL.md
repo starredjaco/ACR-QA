@@ -144,9 +144,9 @@ The CVE recall result is not a failure of the tool — it reveals exactly which 
 
 ---
 
-## Next Steps (W3)
+## Completed Actions (W3–W4)
 
-- [ ] Write "Limitations" section in EVALUATION.md referencing CVE recall failure modes
-- [ ] Document severity calibration note (4/10 under MEDIUM+ scoring)
-- [ ] Consider if STYLE-004→SECURITY escalation for SQL context is warranted
-- [ ] Tier 3 corpus expansion (W2 task — govwa + 1 more repo)
+- [x] Limitations section added to EVALUATION.md §3b referencing CVE recall failure modes ✅
+- [x] Severity calibration note documented: 4/10 under MEDIUM+ scoring ✅
+- [x] STYLE-004→SECURITY escalation deferred — honest limitation, not a retroactive fix ✅
+- [x] Tier 3 corpus expansion complete — GoVWA + vulnerable-node + django.nV, 13 repos total ✅

@@ -6,7 +6,7 @@
 *10 static analysis tools. One canonical schema. RAG-enhanced AI explanations. $0 recurring cost.*
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab?logo=python&logoColor=white)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/Version-4.5.0-blue)](docs/CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-4.6.0-blue)](docs/CHANGELOG.md)
 [![Live](https://img.shields.io/badge/Live-acrqa--api--production.up.railway.app-22c55e?logo=railway&logoColor=white)](https://acrqa-api-production.up.railway.app/health)
 [![Tests](https://img.shields.io/badge/Tests-2339%20passing-22c55e?logo=pytest&logoColor=white)](./TESTS/)
 [![Coverage](https://img.shields.io/badge/Coverage-85%25-22c55e?logo=codecov&logoColor=white)](./htmlcov/)
@@ -441,7 +441,7 @@ marimo edit notebooks/walkthrough.py
 | **Supervisor** | Dr. Samy AbdelNabi |
 | **Institution** | King Salman International University (KSIU) |
 | **Timeline** | October 2025 – June 2026 |
-| **Status** | v4.5.0 · Feature-complete · Evaluation complete · Cloud-deployed · 37/39 tasks done |
+| **Status** | v4.6.0 · Distribution release · Evaluation complete · Cloud-deployed · 39/39 tasks done |
 
 ### Remaining Thesis Work
 

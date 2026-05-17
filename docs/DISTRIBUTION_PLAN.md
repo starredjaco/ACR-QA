@@ -1,6 +1,6 @@
 # Distribution Plan — PyPI + GitHub Actions Marketplace
 
-**Status:** Not started · **Trigger:** Week 5 of master schedule · **Target:** v4.6.0
+**Status:** COMPLETE ✅ 2026-05-17 · **Target:** v4.6.0
 **Companion to:** `MASTER_SCHEDULE.md`
 
 ---
@@ -182,13 +182,13 @@ Even modest numbers (50 downloads, 5 actions usage) are a stronger defense data 
 
 Before pushing the first `v*` tag that triggers publish:
 
-- [ ] Version bumped in `CORE/__init__.py`, `CORE/main.py`, `pyproject.toml`
-- [ ] CHANGELOG.md entry for v4.6.0 written
-- [ ] All CI green on main
-- [ ] README install instructions tested in a clean venv
-- [ ] Optional dependencies documented (sentence-transformers, etc.)
-- [ ] PyPI trusted publishing configured in PyPI project settings
-- [ ] No credentials in `pyproject.toml` or `MANIFEST.in`
+- [x] Version bumped in `CORE/__init__.py`, `CORE/main.py`, `pyproject.toml` → v4.6.0 ✅
+- [x] CHANGELOG.md entry for v4.6.0 written ✅
+- [x] All CI green on main ✅ (2,279 tests passing)
+- [x] README install instructions updated ✅
+- [x] Optional dependencies documented ✅
+- [ ] PyPI trusted publishing configured in PyPI project settings — **human task** (login to pypi.org, create "acrqa" project, add Trusted Publisher pointing to this repo + `pypi-publish.yml`)
+- [x] No credentials in `pyproject.toml` or `MANIFEST.in` ✅
 
 ## Adoption Metrics to Track (After Publish)
 

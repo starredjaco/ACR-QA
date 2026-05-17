@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ACR-QA v3.2.5 - Main Analysis Pipeline
+ACR-QA v4.6.0 - Main Analysis Pipeline
 Orchestrates: Detection → Normalization → Config Filtering → Quality Gate → Explanation → Storage
 """
 

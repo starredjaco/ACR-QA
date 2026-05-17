@@ -1,0 +1,84 @@
+# =============================================================================
+# ACR-QA — PyPI Publish via Trusted Publishing (OIDC)
+# =============================================================================
+# Triggers on push of a v* tag (e.g. v4.6.0).
+# Uses PyPA trusted publishing — no API tokens stored in repo secrets.
+#
+# One-time setup:
+#   1. Create project "acrqa" at https://pypi.org/manage/projects/
+#   2. Add a "Trusted Publisher" pointing to this repo/workflow
+#   3. Push: git tag v4.6.0 && git push origin v4.6.0
+# =============================================================================
+
+name: Publish to PyPI
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write   # Required for OIDC trusted publishing
+
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: pip install build==1.2.1
+
+      - name: Build sdist + wheel
+        run: python -m build
+
+      - name: Verify wheel installs
+        run: |
+          pip install dist/*.whl
+          acrqa --version || python -c "import CORE; print(CORE.__version__)"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish-testpypi:
+    name: Publish to TestPyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: publish-testpypi
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
