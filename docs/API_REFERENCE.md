@@ -432,4 +432,4 @@ Per-run Groq token cost telemetry (FinOps). Written after each analysis run comp
 
 ---
 
-*Last updated: May 15, 2026 — ACR-QA v4.0.0 (Phase 12 Week 5)*
+*Last updated: May 16, 2026 — ACR-QA v4.5.1 (Phase 12 complete + UI Phase 2 + CI hardening)*

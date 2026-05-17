@@ -1,6 +1,6 @@
 # ACR-QA — Definitive Project Deep Dive & State Assessment
 
-**Date:** May 15, 2026 · **Version:** v4.0.0 · **Tests:** 2,219 passing (2162 Python + 57 TS) · 0 warnings · **Coverage:** 84.89%
+**Date:** May 16, 2026 · **Version:** v4.5.1 · **Tests:** 2,339 passing (2274 Python + 65 TS) · 0 warnings · **Coverage:** 84.89%
 
 > This document is a brutally honest, code-verified audit of every module in ACR-QA.
 > Every claim is backed by line counts and actual code inspection.
@@ -161,7 +161,7 @@ These are fully implemented but have limitations an examiner might probe.
 | **JS/TS Adapter** | `CORE/adapters/js_adapter.py` | 723 | ✅ Comprehensive | ESLint + Semgrep + npm audit + jscpd, 80+ rule mappings |
 | **Go Adapter** | `CORE/adapters/go_adapter.py` | 369 | 🟡 Needs E2E test | gosec + staticcheck, 56 rule mappings, untested on real Go project |
 | **Database** | `DATABASE/database.py` | 569 | ✅ Solid | Full provenance: runs, findings, explanations, feedback, suppression, trends |
-| **Dashboard** | `FRONTEND/api/main.py` + `dashboard/` | FastAPI + React 18 SPA | ✅ JWT auth + RBAC | 32 endpoints + Vite/shadcn UI, Playwright E2E |
+| **Dashboard** | `FRONTEND/api/main.py` + `dashboard/` + `FRONTEND/static/ui/` | FastAPI + React 18 SPA + 9-page HTML UI | ✅ JWT auth + RBAC | 36 endpoints + Vite/shadcn UI, Playwright E2E |
 
 ---
 
