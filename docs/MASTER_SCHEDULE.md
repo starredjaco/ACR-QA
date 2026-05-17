@@ -1,6 +1,6 @@
 # Master Schedule — Thesis Defense Runway
 
-**Status:** Active · **Defense runway:** 4+ weeks (~May 17 — June 14, 2026)
+**Status:** COMPLETE ✅ 2026-05-17 — v4.6.0 shipped; demo video + push to remote = human tasks remaining · **Defense runway:** ~May 17 — June 14, 2026
 **Target tag:** v4.6.0 (UI Phase 3 + Eval Bulletproofing + Distribution)
 **Single source of truth for sequencing across all 5 plans.**
 
