@@ -87,7 +87,9 @@
 
 | Document | Description |
 |----------|-------------|
-| [**UI Phase 3 Plan**](UI_PHASE_3_PLAN.md) | **Live next step (May 16 2026).** "One killer flow, zero fluff" — marketing landing + killer finding-detail page + public demo mode + smart polish. Target: v4.6.0. |
+| [**UI Phase 3 Plan**](UI_PHASE_3_PLAN.md) | **Live next step (May 16 2026).** "One killer flow, zero fluff" — marketing landing + auth UX (signup/verify/forgot) + killer finding-detail page + public demo mode + smart polish. Target: v4.6.0. |
+| [UI Testing Plan](UI_TESTING_PLAN.md) | Follows UI Phase 3. 5 unit + 5 E2E + 5 a11y tests + 20-item manual smoke checklist. ~3h. |
+| [Eval Expansion Plan](EVAL_EXPANSION_PLAN.md) | Follows testing. Add 4 repos (govwa Go + Django + TS app + FastAPI) with ground truth to close eval gaps. ~8h. |
 | [Phase 12 Plan (archived)](archive/PHASE_12_PLAN.md) | Closed May 15 2026 — 37/39 done; only human tasks (demo video + YouTube) remain. |
 | [**God Mode Plan v2**](GOD_MODE_PLAN.md) | **v4.0.0 plan (May 5 2026 → May 15 2026).** Three competitive moats + blue-ocean wedge. Completed: 120/128 tasks. Superseded by Phase 12 Plan for next push. |
 | [Phase 0 Baseline](evaluation/PHASE_0_BASELINE.md) | Reality check on 6 real repos (May 6 2026); honest current numbers + bugs surfaced + Phase 1 fix log. |
