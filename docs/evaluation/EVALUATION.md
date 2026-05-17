@@ -90,9 +90,9 @@ Corpus expanded to 13 repos in W2–W3 (2026-05-17). Ground truth YAMLs in `TEST
 | DVNA | JavaScript | 2 | 2 | 100% | ✅ Phase 8 |
 | DVWS-Node | JavaScript | 2 | 1 | 100% | ✅ Phase 8 |
 | Juice Shop | TypeScript | 3 | 2 | 100% | ✅ Phase 8 |
-| GoVWA | Go | 2 | 2 | ≥80% | *(Tier 3 — pending clone+scan)* |
-| vulnerable-node | JavaScript | 3 | 2 | ≥80% | *(Tier 3 — pending clone+scan)* |
-| django.nV | Python | 4 | 2 | ≥50% | *(Tier 3 — pending clone+scan)* |
+| GoVWA | Go | 2 | 2 | ≥80% | ✅ Tier 3 — cloned + scanned 2026-05-17 |
+| vulnerable-node | JavaScript | 3 | 2 | ≥80% | ✅ Tier 3 — cloned + scanned 2026-05-17 |
+| django.nV | Python | 4 | 2 | ≥50% | ✅ Tier 3 — cloned + scanned 2026-05-17 |
 
 **Corpus diversity:** 4 languages (Python, JavaScript, Go, TypeScript), 3 vulnerability classes (injection, auth, XSS).
 

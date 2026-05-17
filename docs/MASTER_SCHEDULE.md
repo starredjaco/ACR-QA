@@ -156,5 +156,5 @@ This is the lived-in version of the plan, not the aspirational one.
 - [x] GitHub Actions Marketplace — `acrqa-action/action.yml` + Dockerfile + entrypoint ✅ 2026-05-17
 - [x] v4.6.0 — version bumped in `CORE/__init__.py`, `CORE/main.py`; CHANGELOG.md entry written ✅ 2026-05-17
 - [ ] Demo video uploaded to YouTube (human task — film with OBS, upload)
-- [ ] PRESENTATION_SCRIPT.md verbal pivots updated with new numbers
+- [x] PRESENTATION_SCRIPT.md verbal pivots updated with new numbers ✅ 2026-05-17
 - [x] All MDs audited — v4.6.0 versions propagated; EVALUATION.md sections 3b+3c added ✅ 2026-05-17
