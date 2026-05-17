@@ -1,4 +1,4 @@
-# 🎤 ACR-QA Thesis Defense & Demo Script (v4.5.0)
+# ACR-QA Thesis Defense & Demo Script (v4.6.0)
 
 *7 minutes total: 2 min slides → 5 min live demo. Show, don't tell.*
 
@@ -15,7 +15,7 @@ docker compose up -d        # Start Postgres + Redis + FastAPI + Celery + Grafan
 
 ### Browser Tabs (Open These)
 - **Tab 1:** `http://localhost:8000/ui/` — Static HTML dashboard (login: admin@acrqa.local)
-- **Tab 2:** `https://github.com/ahmed-145/ACR-QA/releases/tag/v4.5.0` — Release page
+- **Tab 2:** `https://github.com/ahmed-145/ACR-QA/releases/tag/v4.6.0` — Release page
 - **Tab 3:** `https://github.com/ahmed-145/ACR-QA/actions` — CI/CD green checkmarks
 - **Tab 4:** `https://acrqa-api-production.up.railway.app/health` — Live production deploy
 
@@ -28,13 +28,13 @@ docker compose up -d        # Start Postgres + Redis + FastAPI + Celery + Grafan
 ## 🗣️ Part 1: Slides (2 Minutes)
 
 ### Slides 1–2: Context
-> "Hello Dr. Samy. Today I want to show you the completed enterprise release: ACR-QA v4.5.0. It's a fully automated, AI-powered Code Review platform that runs 10 analysis tools across Python, JavaScript, and Go — normalises them into a single standard, and uses RAG-enhanced AI to explain every finding."
+> "Hello Dr. Samy. Today I want to show you the completed enterprise release: ACR-QA v4.6.0. It's a fully automated, AI-powered Code Review platform that runs 10 analysis tools across Python, JavaScript, and Go — normalises them into a single standard, and uses RAG-enhanced AI to explain every finding."
 
 ### Slides 3–7: What Makes It Different
 > "There are three things no commercial competitor — not SonarQube, not CodeRabbit — offers. First, I built a **Policy-as-Code** engine where teams define quality rules in a YAML file and the system enforces them in CI. Second, I wrote a **Test Gap Analyzer** from scratch using Python's Abstract Syntax Tree to find untested business logic by complexity. Third, I implemented **semantic entropy scoring** — the AI runs 3 times and the system mathematically detects when it contradicts itself, preventing hallucination."
 
 ### Slide 8: Reliability
-> "Most importantly, I built a comprehensive stress-testing suite. We now have **2,274 rigorous tests** that execute in under 45 seconds, with 86% code coverage and 97.1% precision across 4 deliberately vulnerable benchmark repositories. But rather than talking about it, let me show you."
+> "Most importantly, I built a comprehensive evaluation stack. We now have **2,279 rigorous tests** that execute in under 5 minutes, with 86% code coverage, 97.1% precision across 13 repos in 4 languages, a CVE recall study against NIST-published vulnerabilities, and inter-rater agreement of κ=0.74 on independent peer review. But rather than talking about it, let me show you."
 
 ---
 

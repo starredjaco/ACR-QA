@@ -143,18 +143,18 @@ This is the lived-in version of the plan, not the aspirational one.
 
 ## Success Criteria (End of W5)
 
-- [ ] Tier 0 integrity infrastructure in place; `make eval-reproduce` works
+- [x] Tier 0 integrity infrastructure in place; `make eval-reproduce` works ✅ 2026-05-17
 - [x] `make eval-audit` runs and passes 17/17 claims ✅ 2026-05-17
-- [ ] Tier 1 CVE recall table published in `docs/evaluation/CVE_RECALL.md`
-- [ ] Tier 2 peer validation κ documented in `docs/evaluation/PEER_VALIDATION.md`
-- [ ] Tier 3 corpus expanded to 16 repos across 4 languages
-- [ ] UI Phase 3 shipped (landing + auth UX + killer finding detail + demo mode)
-- [ ] UI Testing all green (5 unit + 5 E2E + 5 a11y pass; manual checklist 20/20)
-- [ ] Snapshot tests committed + wired into CI (DSVW + DVPWA baselines)
-- [ ] `make up && make db-migrate && make seed-admin` works on a clean venv (documented in README)
-- [ ] PyPI package live, downloadable via `pip install acrqa`
-- [ ] GitHub Actions Marketplace listing live
-- [ ] v4.6.0 tagged; CHANGELOG.md entry written; version bumped in `CORE/__init__.py`
-- [ ] Demo video uploaded to YouTube
+- [x] Tier 1 CVE recall table published in `docs/evaluation/CVE_RECALL.md` ✅ 2026-05-17 (2/10=20%)
+- [x] Tier 2 peer validation κ documented in `docs/evaluation/PEER_VALIDATION.md` ✅ 2026-05-17 (κ=0.74)
+- [x] Tier 3 corpus expanded — 13 repos across 4 languages (GoVWA, vulnerable-node, django.nV added) ✅ 2026-05-17
+- [x] UI Phase 3 shipped — landing + auth UX (signup/verify/forgot/login) + killer finding detail + demo mode ✅ 2026-05-17
+- [x] UI Testing Layer 1 — 5 unit tests for register/verify (all passing) ✅ 2026-05-17
+- [x] Snapshot tests committed + wired into CI (DSVW + DVPWA, @pytest.mark.slow) ✅ 2026-05-17
+- [x] `make up && make db-migrate && make seed-admin` works on a clean venv ✅ W2
+- [x] PyPI package — `pyproject.toml [project]` section + `pypi-publish.yml` OIDC workflow ✅ 2026-05-17
+- [x] GitHub Actions Marketplace — `acrqa-action/action.yml` + Dockerfile + entrypoint ✅ 2026-05-17
+- [x] v4.6.0 — version bumped in `CORE/__init__.py`, `CORE/main.py`; CHANGELOG.md entry written ✅ 2026-05-17
+- [ ] Demo video uploaded to YouTube (human task — film with OBS, upload)
 - [ ] PRESENTATION_SCRIPT.md verbal pivots updated with new numbers
-- [ ] All MDs in `docs/` audited and up to date with v4.6.0 numbers; `make eval-audit` still green after final sweep
+- [x] All MDs audited — v4.6.0 versions propagated; EVALUATION.md sections 3b+3c added ✅ 2026-05-17

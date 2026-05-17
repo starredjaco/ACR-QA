@@ -1,6 +1,6 @@
 # UI Testing Plan — Post UI Phase 3
 
-**Status:** Not started · **Trigger:** After UI Phase 3 build complete · **Target:** v4.6.0
+**Status:** Layer 1 COMPLETE ✅ 2026-05-17 · Layers 2–3 deferred post-defense · **Target:** v4.6.0
 **Companion to:** `UI_PHASE_3_PLAN.md`
 
 ---
@@ -132,12 +132,12 @@ test('capture screenshots for demo video', async ({ page }) => {
 
 ## Success Criteria
 
-- [ ] All 5 new unit tests pass
-- [ ] All 5 new E2E tests pass on Chromium + Firefox + WebKit
-- [ ] Zero `serious` or `critical` axe-core violations on new pages
-- [ ] Manual smoke checklist 20/20 ticked
-- [ ] Full Python suite (2,274 + 5 new = 2,279) still green
-- [ ] No regression in existing 65 TS unit tests
+- [x] All 5 new unit tests pass ✅ 2026-05-17 (TESTS/test_auth_register.py)
+- [ ] All 5 new E2E tests pass on Chromium + Firefox + WebKit — deferred post-defense
+- [ ] Zero `serious` or `critical` axe-core violations on new pages — deferred post-defense
+- [ ] Manual smoke checklist 20/20 ticked — run before demo video
+- [x] Full Python suite (2,279 tests) still green ✅ 2026-05-17
+- [ ] No regression in existing 66 TS unit tests — run before demo video
 
 ## Updated Numbers After Completion
 

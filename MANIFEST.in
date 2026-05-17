@@ -1,0 +1,6 @@
+include README.md
+include docs/CHANGELOG.md
+include LICENSE
+recursive-include config *.yml *.yaml
+recursive-include DATA *.yml *.yaml *.json
+recursive-include CORE *.yml *.yaml

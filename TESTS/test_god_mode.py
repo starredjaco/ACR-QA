@@ -1615,7 +1615,7 @@ class TestExploitVerifierGodMode:
     def test_version_is_350(self):
         from CORE import __version__
 
-        assert __version__ == "3.8.0"
+        assert __version__ == "4.6.0"
 
 
 class TestAttestationGodMode:
@@ -1698,7 +1698,7 @@ class TestAttestationGodMode:
     def test_version_is_360(self):
         from CORE import __version__
 
-        assert __version__ == "3.8.0"
+        assert __version__ == "4.6.0"
 
 
 if __name__ == "__main__":

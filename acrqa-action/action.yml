@@ -1,0 +1,53 @@
+name: "ACR-QA Code Review"
+description: "AI-powered code review: 10 static analysers + RAG-grounded explanations + ECDSA-signed provenance"
+author: "Ahmed Mahmoud Abbas (KSIU)"
+
+branding:
+  icon: "shield"
+  color: "purple"
+
+inputs:
+  target-dir:
+    description: "Directory to scan (relative to repo root)"
+    required: false
+    default: "."
+  fail-on:
+    description: "Severity threshold to fail CI — high | medium | low | none"
+    required: false
+    default: "high"
+  groq-key:
+    description: "Groq API key for AI explanations (optional — static analysis runs without it)"
+    required: false
+  repo-name:
+    description: "Repository name label for reports (defaults to github.repository)"
+    required: false
+    default: ${{ github.repository }}
+  limit:
+    description: "Maximum number of findings to return (0 = unlimited)"
+    required: false
+    default: "0"
+  output-sarif:
+    description: "Write SARIF v2.1.0 output to this path (leave empty to skip)"
+    required: false
+    default: "acrqa-results.sarif"
+
+outputs:
+  findings-count:
+    description: "Total number of findings detected"
+  high-count:
+    description: "Number of HIGH-severity findings"
+  medium-count:
+    description: "Number of MEDIUM-severity findings"
+  sarif-file:
+    description: "Path to the SARIF v2.1.0 output file"
+
+runs:
+  using: "docker"
+  image: "docker://ghcr.io/ahmed-145/acrqa-action:v4.6.0"
+  env:
+    GROQ_API_KEY_1: ${{ inputs.groq-key }}
+    ACRQA_TARGET_DIR: ${{ inputs.target-dir }}
+    ACRQA_FAIL_ON: ${{ inputs.fail-on }}
+    ACRQA_REPO_NAME: ${{ inputs.repo-name }}
+    ACRQA_LIMIT: ${{ inputs.limit }}
+    ACRQA_OUTPUT_SARIF: ${{ inputs.output-sarif }}

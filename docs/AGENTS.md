@@ -11,7 +11,7 @@
 
 **ACR-QA** — Automated Code Review & Quality Assurance
 Graduation thesis project for Ahmed at KSIU. Supervisor: Dr. Samy.
-**Version:** v4.5.0 (Phase 12 complete + UI Phase 2 — all automated tasks done; 12.35 demo video + 12.36 YouTube = human tasks)
+**Version:** v4.6.0 (W1–W5 complete — 2,279 tests, 37 endpoints, 13 repos, κ=0.74, CVE recall 2/10, PyPI + GitHub Actions Marketplace shipped; demo video + YouTube = human tasks remaining)
 **Stack:** Python 3.11+ · FastAPI 0.115 (async, port 8000) · Celery 5.4 · PostgreSQL 15 · Redis 5.2 · Semgrep · Bandit · Ruff · Vulture · gosec · staticcheck · ESLint · npm audit · Trivy · TruffleHog · JWT + API keys
 **Repo:** `ahmed-145/ACR-QA` · **Branch:** always push to `main`
 
