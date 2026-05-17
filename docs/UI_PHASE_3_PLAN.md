@@ -32,28 +32,78 @@ Why: per the Phase 12 retrospective rule — *"If you can't say it in the thesis
 
 ## The 4 Phases
 
-### Phase 1 — Marketing Landing (3h)
+### Phase 1 — Marketing Landing + Full Auth UX (5h)
 
-**File:** `FRONTEND/static/ui/landing.html` (new) · served at `/ui/` (replaces current login as the front door)
-**Login moves to:** `/ui/login.html` (still works, just no longer the homepage)
+**Files (new):** `landing.html`, `signup.html`, `verify.html`, `forgot.html`
+**Files (enhance):** `login.html`
+**Backend:** new `POST /v1/auth/register` endpoint (no admin auth required)
+**Mounted at:** `/ui/` serves `landing.html` (replaces current login as front door)
 
-**Layout:**
+#### 1.A Marketing Landing (`landing.html`)
+
 - Hero (full viewport):
   - Animated radial gradient background (purple → blue → emerald)
   - H1: *"Code review that proves it found a real bug."* (or similar — ONE concrete claim)
   - Sub: *"RAG-grounded AI · 10 static analyzers · ECDSA-signed provenance · $0 recurring cost"*
-  - Two CTAs: `[▷ Try Live Demo]` (primary, gradient) + `[GitHub ↗]` (secondary)
-  - Below CTAs: a looping 5-second GIF/video of the killer flow
+  - Three CTAs: `[▷ Try Live Demo]` (gradient) + `[Sign Up Free]` + `[GitHub ↗]`
+  - Below CTAs: looping 5-second GIF/video of the killer flow
 - Proof strip (3 cards, NOT 15):
   - **97.1% precision** — *"836 real bugs detected across 4 OWASP benchmark repos"*
   - **9 / 10 OWASP Top 10** — *"with CWE mappings and Semgrep custom rules"*
   - **$0 recurring cost** — *"runs on Groq free tier · self-hosted via Docker"*
-- "How it works" — 3 columns: Scan → Explain → Sign (one sentence each, no walls of text)
+- "How it works" — 3 columns: Scan → Explain → Sign (one sentence each)
 - "Built at KSIU" footer with GitHub stars, Railway live badge, thesis context
 
-**Open Graph + Twitter card meta:** every page gets `<meta property="og:*">` and `<meta name="twitter:*">` so shared URLs render beautifully on social.
+#### 1.B Sign Up (`signup.html`)
 
-**Defendable claim:** *"Public marketing front door positioning ACR-QA as a product, not a script."*
+- Email input with live validation (regex + duplicate check via API)
+- Password input with **strength meter** (length + char classes + entropy)
+- Confirm password (must match)
+- Optional "I agree to terms" checkbox
+- POSTs to new `/v1/auth/register` → redirect to `verify.html?email=...`
+
+#### 1.C Email Verification (`verify.html`)
+
+**Demo-mode simulation** — no SMTP infrastructure needed:
+- 6-digit code input (auto-tab between fields)
+- After signup, the code is shown inline in an amber "Demo mode" callout:
+  *"In production this would be emailed. For demo, your code is: `483921`"*
+- "Resend code" link (regenerates the simulated code)
+- Verify button → marks user as verified → auto-login → redirect to overview
+
+#### 1.D Login (`login.html` — redesigned)
+
+- Glass-card centered on dark gradient
+- Email + password, password reveal toggle
+- "Remember me" checkbox (extends refresh token to 30d)
+- "Forgot password?" link
+- "Don't have an account? Sign up" link
+- Same JWT flow as today (no breaking changes)
+
+#### 1.E Forgot Password (`forgot.html` — simulated)
+
+- Email input
+- After submit: same "demo mode" callout shows the reset link/code in-UI
+- Two-step: enter code → set new password → auto-login
+
+#### 1.F New backend endpoint
+
+```python
+POST /v1/auth/register
+body: { email, password }
+response 201: { user_id, email, verification_code }  # code shown in UI for demo
+response 409: email already exists
+```
+
+- Validates email format, password ≥ 8 chars
+- Inserts into `users` table with `role='member'`, `email_verified=False`, `verification_code=<6 digits>`
+- Returns the code in response (DEMO MODE — would be emailed in production)
+
+#### Open Graph + Twitter card meta
+
+Every page gets `<meta property="og:*">` and `<meta name="twitter:*">` so shared URLs render beautifully on social.
+
+**Defendable claim:** *"Production-grade auth UX (signup → verify → login → recovery) with honest demo-mode disclosure for email simulation."*
 
 ---
 
@@ -118,12 +168,12 @@ The single most important page in the entire app. When a visitor opens a finding
 
 | Day | Phase | Hours | Output |
 |-----|-------|------:|--------|
-| 1 | MD cleanup + Phase 1 landing | 3–4 | `landing.html`, OG meta, deploy-ready |
-| 1 | Phase 2 finding detail | 3–4 | All 7 engines surfaced in one view |
-| 2 | Phase 3 demo mode | 1–2 | `?demo=1` works end-to-end |
-| 2 | Phase 4 polish + commit + push | 1–2 | Glassmorphism, transitions, social meta |
+| 1 | MD cleanup ✅ + Phase 1 landing + auth UX | 5 | `landing.html`, `signup.html`, `verify.html`, `forgot.html`, redesigned `login.html`, `POST /v1/auth/register` |
+| 1 | Phase 2 killer finding detail | 4 | All 7 engines surfaced in one view |
+| 2 | Phase 3 demo mode | 1 | `?demo=1` works end-to-end |
+| 2 | Phase 4 polish + commit + push | 1 | Glassmorphism, transitions, OG meta on every page |
 
-**Total: ~9 hours.** Less than half my original "show everything" plan.
+**Total: ~11 hours.** Still half my original "show everything" plan; bigger than v1 of this plan because real auth UX (signup → verify → login → reset) is non-negotiable for a marketing-grade product.
 
 ## MD Cleanup (executed before Phase 1)
 
@@ -138,7 +188,10 @@ The single most important page in the entire app. When a visitor opens a finding
 
 ## Success Criteria
 
-- [ ] First-time visitor can see the full demo flow in < 60 seconds without signing up
+- [ ] First-time visitor lands on `/ui/` and sees a marketing page (not login)
+- [ ] Visitor can click "Try Live Demo" and see findings in < 30s without auth
+- [ ] Visitor can sign up → verify (demo code) → land in dashboard in < 60s
+- [ ] Login, signup, verify, forgot-password all work end-to-end
 - [ ] Finding detail page exposes all 7 enrichment engines in one view
 - [ ] Landing page shares cleanly on Twitter/LinkedIn (OG preview works)
 - [ ] Demo video (12.35) can be filmed in one take using the new flow
