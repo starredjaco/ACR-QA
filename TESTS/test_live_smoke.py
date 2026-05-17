@@ -62,7 +62,7 @@ def test_openapi_json_endpoint():
     r = httpx.get(f"{BASE_URL}/openapi.json", timeout=TIMEOUT)
     assert r.status_code == 200
     body = r.json()
-    assert body.get("info", {}).get("title") == "ACR-QA API"
+    assert body.get("info", {}).get("title") == "ACR-QA"
 
 
 def test_metrics_endpoint():

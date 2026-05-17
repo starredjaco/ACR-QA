@@ -105,7 +105,7 @@ See `CORE/adapters/python_adapter.py` for a reference implementation.
 
 ## Running the FastAPI Server
 
-The async API runs on port 8000 alongside the legacy Flask dashboard (port 5000).
+The async API runs on port 8000. The legacy Flask dashboard was removed in v3.6.1 — FastAPI is the only server.
 
 ```bash
 # Dev mode (auto-reload)
