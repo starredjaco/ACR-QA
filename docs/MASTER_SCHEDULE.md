@@ -98,7 +98,6 @@ Spread over 5 weeks = ~13h/week. Still realistic — W4 is the heavy week at ~19
 | Cut | Why |
 |-----|-----|
 | Multi-step scan wizard | Current single-page works |
-| Glassmorphism polish | Cosmetic, low defendable claim |
 | Marimo notebook updates | Already linked, low marginal value |
 | Standalone OWASP heatmap page | Existing endpoint is enough |
 | Knowledge base browser page | Nobody browses 66 rules |
