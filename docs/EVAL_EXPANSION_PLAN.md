@@ -1,198 +1,309 @@
-# Evaluation Corpus Expansion Plan
+# Evaluation Bulletproofing Plan
 
 **Status:** Not started · **Trigger:** After UI Phase 3 + testing complete · **Target:** v4.6.0
 **Companion to:** `UI_PHASE_3_PLAN.md`, `UI_TESTING_PLAN.md`
+**Replaces:** the original 8h "4-repo corpus expansion" plan (kept as Tier 3 below)
 
 ---
 
 ## Mission
 
-Strengthen ACR-QA's thesis-defendable claims by closing **three concrete gaps** in the eval corpus: no Go vulnerable target, no TS-only target, no large monorepo. Add 4 carefully-chosen repos (not 20 random ones) with proper ground truth labels.
+Close the **one** thesis-defense critique that actually has teeth: *"Your benchmarks are toy apps; how do I know this works on real production code?"*
 
-## Why "Quality Over Quantity"
+The verbal defense alone (in `PRESENTATION_SCRIPT.md`) buys time but doesn't fix the underlying weakness: **10 of 12 current eval repos are intentionally vulnerable, and the 2 real ones (Flask, httpx) are author-triaged — graded-your-own-homework risk.**
 
-Each new eval repo needs:
-- Cloning + setup (15 min)
-- Manual finding labeling (1–2h)
-- Ground truth YAML at `TESTS/evaluation/ground_truth/<repo>.yml`
-- Recall test entry in `TESTS/evaluation/test_recall.py`
-- Update to `EVALUATION.md` corpus tables
-- Re-run of full eval
+This plan adds **external ground truth** and **independent validation** so the eval section survives a sharp examiner who pushes past the verbal pivot.
 
-That's ~2h per repo. **4 repos = 8h. 20 repos = 40h of grunt work nobody reads.**
+## The Critique We're Addressing
 
-Phase 12 retrospective rule applies: *"If you can't say it in the thesis QA session, don't build it."* A defendable claim like *"evaluated across 16 repos spanning 4 languages"* is stronger than *"evaluated across 32 repos"* — the supervisor doesn't tally; they ask which ones.
+> *"97.1% precision sounds great, but your benchmark set is four intentionally vulnerable Python toy applications (DVPWA, Pygoat, VulPy, DSVW). These are designed to be found. A real evaluator will ask: what happens on a real production codebase? You acknowledge this in your limitations section, but it's the part a sharp examiner will push on hardest."*
+
+Current corpus reality check:
+
+| Repo | Type | Ground truth source | Critique vulnerability |
+|---|---|---|---|
+| DVPWA, Pygoat, VulPy, DSVW, vulnerable-flask-app | **Toy** | Author-labeled | "Designed to be found" |
+| NodeGoat, DVNA, DVWS-Node, Juice Shop | **Educational** | Author-labeled | "Designed to be found" |
+| bandit-test-cases | **Test fixtures** | Tool-author labeled | "Tests for the test" |
+| Flask, httpx | **Real** | **Author-triaged FP only** | **"Graded your own homework"** |
+
+**10/12 are toy. 2/12 are real but self-labeled. The defense is brittle.**
 
 ---
 
-## Current Corpus (12 repos)
+## The 4 Tiers
 
-| Category | Repo | Language | Role |
-|---|---|---|---|
-| Vulnerable (Python) | DVPWA | Python | Flask SQLi/MD5/hardcoded creds |
-| Vulnerable (Python) | Pygoat | Python | Django full OWASP Top 10 |
-| Vulnerable (Python) | VulPy | Python | Various Python vulns |
-| Vulnerable (Python) | DSVW | Python | Damn Small Vulnerable Web |
-| Vulnerable (Python) | vulnerable-flask-app | Python | Minimal Flask vuln |
-| Vulnerable (Python) | bandit-test-cases | Python | Bandit's own test fixtures |
-| Real-world (Python) | Flask (68k★) | Python | FP rate test, idiomatic Python |
-| Real-world (Python) | httpx | Python | FP rate test, async patterns |
-| Vulnerable (JS) | DVNA | JavaScript | Damn Vulnerable Node App |
-| Vulnerable (JS) | NodeGoat | JavaScript | OWASP NodeGoat |
-| Vulnerable (JS) | JuiceShop | JavaScript | OWASP Juice Shop |
-| Vulnerable (JS) | dvws-node | JavaScript | Damn Vulnerable Web Services |
+### TIER 0 — Integrity Infrastructure (3h, Run Before Anything Else)
 
-## Identified Gaps
+The cheapest insurance in the plan. Without it, every number in subsequent tiers is only as
+trustworthy as whoever typed it in. Tier 0 forces honesty by making cheating mechanically
+impossible: pre-registration prevents cherry-picking, automated audit prevents stale numbers,
+reproducibility prevents "trust me bro" claims.
+
+#### The four ways to fool yourself (without Tier 0)
+
+| Risk | Without Tier 0 | With Tier 0 |
+|---|---|---|
+| Cherry-pick CVEs you know you'll catch | Easy — drop misses silently | Blocked — YAML committed before scan |
+| Move goalposts on "close enough" detections | Tempting on the 14th CVE at 2am | Blocked — strict ±3-line scoring rule in code |
+| Stale numbers in EVALUATION.md | Inevitable as code evolves | Blocked — CI fails if doc disagrees with data |
+| Silent skips of hard CVEs | "I'll come back to that" → never does | Blocked — skipped CVEs documented with reason |
+
+#### Deliverables
+
+1. **`docs/evaluation/INTEGRITY.md`** — the charter:
+   - Pre-registration commitment ("YAML committed before scan")
+   - Strict scoring rule: detected = HIGH severity finding within ±3 lines of vulnerable line
+   - Skipped-CVE log (every CVE we excluded gets a reason)
+   - Adversarial review checklist (questions I'll ask of every claim)
+   - "Things I tried to disprove and couldn't" section
+
+2. **`scripts/audit_eval_numbers.py`** — the enforcer:
+   - Walks `EVALUATION.md` for every percentage / count claim
+   - Re-derives each from source data (CVE YAMLs, scan outputs, ground-truth files)
+   - Fails CI if any number in the doc doesn't match the source
+   - Output: green ✓ per verified claim, red ✗ for drift, with file:line
+
+3. **`make eval-reproduce`** — the one-command full re-run:
+   - Clones all eval repos at pinned commit SHAs
+   - Runs ACR-QA against each
+   - Generates fresh numbers
+   - Diffs against checked-in `EVALUATION.md`
+   - Exits non-zero if numbers drift beyond rounding tolerance
+
+4. **Adversarial review pass #1** — first audit of current numbers:
+   - Run `audit_eval_numbers.py` against current `EVALUATION.md`
+   - Document every claim that fails the audit
+   - Either fix the claim or document why the source is correct
+
+#### Why this is non-negotiable
+
+A supervisor who sees `make eval-reproduce` and `audit_eval_numbers.py` cannot push back on data integrity. Without these, every number is "trust me." With them, every number is *checkable in one command* — which is the difference between an undergraduate project and a research deliverable.
+
+#### Defendable claim
+
+> *"Evaluation integrity enforced by `scripts/audit_eval_numbers.py` which verifies every number in `docs/evaluation/EVALUATION.md` against source data. Full evaluation reproducible via `make eval-reproduce`. All CVEs pre-registered in YAML before scanning to prevent post-hoc cherry-picking. Skipped CVEs logged with reasons in `docs/evaluation/INTEGRITY.md`."*
+
+---
+
+### TIER 1 — CVE Recall Test ⭐ (Highest Impact, 15h)
+
+**The bulletproof move.** Use publicly-disclosed CVEs in major Python projects as ground truth. The CVE database is **external**, **published**, and **NIST-maintained** — you cannot be accused of biased labeling when MITRE did the labeling.
+
+#### Methodology
+
+1. Select **15–20 disclosed CVEs** across major Python projects (Django, Flask, Pillow, requests, PyYAML, urllib3, aiohttp, SQLAlchemy, Jinja2, Werkzeug)
+2. For each CVE:
+   - Find the commit SHA that introduced or contained the vulnerability (parent of the security patch)
+   - Find the CVE entry's `affected_files` and `affected_lines` (often in the patch diff)
+   - Clone the project at the **pre-fix commit**
+   - Run ACR-QA: `python3 CORE/main.py --target-dir ./<project> --rich --no-ai`
+   - **Score:** did ACR-QA flag a HIGH-severity finding on the vulnerable line(s)?
+3. Report: **`X / N CVE recall on disclosed Python vulnerabilities`**
+
+#### Why this is bulletproof
+
+- Ground truth is **external** (NIST, MITRE, GitHub Security Advisories) — not authored by you
+- Code is **real production** (Django + Flask + others are not toys)
+- Result is **unambiguous** (caught the CVE line or didn't)
+- Methodology mirrors **Snyk** and **Semgrep**'s own marketing materials
+- Examiner cannot push back without arguing with the CVE database
+
+#### CVE selection criteria
+
+Pick CVEs that:
+- ✅ Are in **active** Python projects (not abandoned packages)
+- ✅ Have a clear `affected_lines` in the security patch diff
+- ✅ Map to vuln categories ACR-QA targets (SQLi, command injection, path traversal, deserialization, XSS, hardcoded secrets, weak crypto, eval/exec)
+- ❌ Skip CVEs that require runtime context (CSRF, IDOR, business logic) — out of scope for SAST
+
+#### Candidate CVE categories (final list during execution)
+
+| Category | Example projects to mine |
+|---|---|
+| SQL injection (CWE-89) | Django, SQLAlchemy, raw `cursor.execute` patches |
+| Command injection (CWE-78) | `subprocess.run(shell=True)` fixes in CLI tools |
+| Path traversal (CWE-22) | Pillow, Flask static-file handlers, archive extractors |
+| Deserialization (CWE-502) | PyYAML, pickle-based caching libraries |
+| Code injection / eval (CWE-94) | Template engines, config loaders |
+| Hardcoded secrets (CWE-798) | Audited and removed in production patches |
+| Weak crypto (CWE-327, CWE-328) | MD5/SHA1 → SHA256 migrations |
+
+#### Deliverables
+
+- `TESTS/evaluation/cve_recall/` directory with one YAML per CVE:
+  ```yaml
+  cve_id: CVE-2024-XXXXX
+  project: Django
+  vuln_commit_sha: <pre-fix commit>
+  fix_commit_sha: <patch commit>
+  affected_file: django/contrib/admin/views/main.py
+  affected_lines: [142, 143]
+  cwe: CWE-89
+  acrqa_detected: true|false
+  acrqa_finding_id: SECURITY-027
+  notes: "Caught via Semgrep custom rule"
+  ```
+- `scripts/run_cve_recall.py` — automated harness
+- `TESTS/evaluation/test_cve_recall.py` — pytest slow-marked
+- `docs/evaluation/CVE_RECALL.md` — methodology + results table
+
+#### Defendable claim
+
+> *"ACR-QA detected the vulnerable code in X/N disclosed Python CVEs from major projects (Django, Flask, PyYAML, requests, Pillow). Ground truth pulled from MITRE/NIST. Methodology mirrors Snyk and Semgrep's published evaluations."*
+
+This single sentence kills the "toy benchmarks" critique.
+
+---
+
+### TIER 2 — Peer Validation (3h, Inter-Rater Agreement)
+
+Eliminates the "you graded your own homework" follow-up by having **independent reviewers** triage a sample of findings.
+
+#### Methodology
+
+1. Pick a 20-finding random sample from the Flask scan output (HIGH + MEDIUM)
+2. Recruit **2 independent reviewers** — preferably:
+   - Another CS student at KSIU
+   - A peer from Dr. Samy's other supervisees
+   - (Fallback: a developer friend with security background)
+3. Provide each reviewer:
+   - The 20 findings (rule_id, file, line, message, code snippet)
+   - The rule definitions from `config/rules.yml`
+   - Instructions: classify each as TP / FP / unsure
+4. Compare reviewer labels against your labels
+5. Compute **Cohen's kappa (κ)** for inter-rater agreement
+6. Report: *"κ = 0.XX on 20-finding sample"*
+
+#### Why this is research-grade
+
+- κ > 0.80 = "almost perfect agreement" (Landis & Koch 1977)
+- κ > 0.60 = "substantial agreement" — already publishable
+- An examiner cannot say "you triaged your own tool" when 3 independent people agreed
+
+#### Deliverables
+
+- `docs/evaluation/PEER_VALIDATION.md`:
+  - Reviewer 1, 2, 3 (anonymised) labels
+  - Confusion table
+  - κ calculation
+  - Disagreement analysis (which findings split the reviewers, and why)
+
+#### Defendable claim
+
+> *"Inter-rater agreement between three independent reviewers on a 20-finding Flask sample: κ = 0.XX (substantial agreement, Landis & Koch). Disagreements documented and analysed."*
+
+---
+
+### TIER 3 — Real-World Corpus Expansion (8h, Coverage Gap Filler)
+
+Adds 4 well-chosen real-world repos to plug specific gaps in language coverage. This is the original `EVAL_EXPANSION_PLAN.md` — kept because it's still useful, but **subordinate** to Tiers 1 and 2 in importance.
+
+#### Identified gaps in current corpus
 
 | Gap | Why It Matters |
 |---|---|
-| **No Go vulnerable target** | We ship a Go adapter (gosec + staticcheck + Semgrep Go) but evaluate it only on gosec's self-tests. Cannot defend Go precision without a real vuln app. |
-| **No pure TypeScript target** | We test JS adapter on `.js` files. Pure TS-only codebases exercise different code paths (interface stripping, type-only imports, `tsc` integration). |
-| **No large real-world Python** | Flask is 68k★ but only ~10k LOC. We claim "42,000 LOC/s" — needs a real test on a 50k+ LOC codebase. |
+| **No Go vulnerable target** | Ship Go adapter (gosec + staticcheck + Semgrep Go), evaluate only on gosec self-tests |
+| **No pure TypeScript target** | JS adapter tested mostly on `.js` files |
+| **No large real-world Python** | Flask is 68k★ but only ~10k LOC; need 50k+ LOC for scale claim |
+| **Limited real-world Python** | Only Flask + httpx; FP rate validation needs more diversity |
+
+#### The 4 repos
+
+| Repo | Language | LOC | Fills gap |
+|---|---|---:|---|
+| **govwa** (Go Vulnerable Web App) | Go | ~3,000 | Go vulnerable target |
+| **Django** (76k★) | Python | ~250,000 | Real-world Python diversity |
+| **NodeGoat-TS variant** or hand-authored mini TS app | TypeScript | ~2,000 | Pure TS coverage |
+| **FastAPI** (74k★) | Python | ~50,000 | Large-scale async Python |
+
+#### Deliverables (per repo)
+
+- `TESTS/evaluation/ground_truth/<repo>.yml`
+- `TESTS/evaluation/test_recall.py` — one slow-marked test per repo
+- Update to `docs/evaluation/EVALUATION.md` corpus tables
+
+#### Defendable claim
+
+> *"Evaluated across 16 repos spanning Python, JavaScript, TypeScript and Go — 10 ground-truth corpus + 6 real-world (Flask, httpx, Django, FastAPI, govwa, plus the new TS app)."*
 
 ---
-
-## The 4 Repos to Add
-
-### 1. **govwa** — Go Vulnerable Web App
-
-**URL:** https://github.com/0c34/govwa
-**Language:** Go
-**LOC:** ~3,000
-**Why:** The only widely-cited Go vulnerable web app. Covers SQLi, CMDi, XSS, auth bypass, file upload — perfect for testing gosec + Semgrep Go rules.
-
-**Expected findings:** ~25 (SQLi in user lookup, CMDi in ping handler, hardcoded JWT secret, weak crypto)
-**Defendable claim:** *"Go adapter validated on govwa with X% precision and Y% recall."*
-
----
-
-### 2. **Django** — Real-world Python (76k★)
-
-**URL:** https://github.com/django/django
-**Language:** Python
-**LOC:** ~250,000
-**Why:** Different FP profile from Flask. Heavy ORM usage, metaclass magic, lots of `__init__.py` files, Django-specific patterns Bandit/Semgrep don't always understand. Real test of our FP-suppression engines (reachability, learned suppression, triage agent).
-
-**Expected outcome:** < 5% FP rate on HIGH-severity findings. If higher, that's a real bug to fix.
-**Defendable claim:** *"FP rate < 5% on Django (76k★, ~250k LOC) — validated on real production-scale codebase."*
-
----
-
-### 3. **damn-vulnerable-typescript-app** (or **NodeGoat-TS** if available)
-
-**Candidates:**
-- `vulnerablecode/vulnerable-typescript-server` (small, ~2k LOC)
-- `OWASP/NodeGoat` w/ `--lang typescript` flag (already exists in corpus but tested as JS)
-
-**Decision:** Use NodeGoat-TS variant if it exists; otherwise create a minimal `test_targets/dvta/` with 6–8 known vulns we author ourselves (SQLi, prototype pollution, JWT none alg, ReDoS, etc.) — adds ~1h but gives us full ground truth control.
-
-**Defendable claim:** *"JS/TS adapter validated separately on pure TypeScript codebase."*
-
----
-
-### 4. **FastAPI** — Large Modern Async Python (74k★)
-
-**URL:** https://github.com/tiangolo/fastapi
-**Language:** Python
-**LOC:** ~50,000
-**Why:** Scale + async test. Validates our 42,000 LOC/s claim on a real codebase, not synthetic. Heavy `async/await` usage stresses the taint analyzer's call-graph handling.
-
-**Expected outcome:** Scan completes in < 1.5s. FP rate < 3% on HIGH findings.
-**Defendable claim:** *"Scans FastAPI (74k★, ~50k LOC, async-heavy) in < 1.5 seconds with < 3% FP rate."*
-
----
-
-## Ground Truth Format
-
-Each repo gets a YAML at `TESTS/evaluation/ground_truth/<repo>.yml`:
-
-```yaml
-repo: govwa
-url: https://github.com/0c34/govwa
-commit_sha: <pin to specific commit for reproducibility>
-language: go
-
-expected_findings:
-  - rule_id: SECURITY-027
-    file: vulnerabilities/sqli/sqli.go
-    line: 42
-    severity: high
-    notes: "Concatenated user input into SQL query"
-  - rule_id: SECURITY-021
-    file: vulnerabilities/cmdi/cmdi.go
-    line: 28
-    severity: high
-    notes: "User input passed to exec.Command"
-
-out_of_scope:
-  - rule_id: SECURITY-???
-    file: vulnerabilities/idor/idor.go
-    reason: "IDOR requires runtime testing (DAST); static analysis cannot detect"
-
-recall_target: 0.85   # we expect to catch ≥ 85% of expected_findings
-fp_budget: 0.05       # max 5% FP rate on HIGH severity
-```
 
 ## Effort Budget
 
-| Repo | Clone+Setup | Ground Truth Labeling | Tests + Eval YAML | Total |
-|---|---:|---:|---:|---:|
-| govwa | 0.25h | 1.5h | 0.25h | **2h** |
-| Django | 0.25h | 1.5h (sample FPs from output) | 0.25h | **2h** |
-| TS app | 0.5h (may need to author) | 1h | 0.25h | **1.75h** |
-| FastAPI | 0.25h | 1.5h | 0.25h | **2h** |
+| Tier | What | Hours | Defense impact |
+|------|------|------:|:---:|
+| 0 | Integrity infrastructure (audit script + reproduce target + charter) | **3** | 🔥🔥🔥🔥 |
+| 1 | CVE Recall Test (15–20 CVEs) | **15** | 🔥🔥🔥🔥🔥 |
+| 2 | Peer Validation (κ on 20-finding sample) | 3 | 🔥🔥🔥🔥 |
+| 3 | Real-world corpus expansion (4 repos) | 8 | 🔥🔥 |
+| **Total** | | **~29** | |
 
-**Total: ~8 hours.** All work labeled and reproducible.
+## Sequencing (Recommended)
 
----
+**Critical path: Tier 0 first, always.** Without integrity infrastructure, the data from Tiers 1–3 is only as trustworthy as whoever typed it. Tier 0 enables every subsequent tier to be self-verifying.
 
-## Execution Steps
+1. **Tier 0 (Integrity, 3h)** — always do this first; cheapest insurance in the plan
+2. **Tier 1 (CVE Recall, 15h)** — single biggest move; biggest defendable claim
+3. **Tier 2 (Peer Validation, 3h)** — depends on reviewer availability; start recruitment early
+4. **Tier 3 (Corpus expansion, 8h)** — useful but optional if defense is close
 
-1. Clone all 4 repos into `test_targets/eval-repos/` (gitignored)
-2. Run ACR-QA on each with `--no-ai --json > /tmp/<repo>.json`
-3. Manually classify each finding as TP / FP / out-of-scope
-4. Write ground truth YAML for each repo
-5. Add 4 new test functions to `TESTS/evaluation/test_recall.py`
-6. Re-run full eval suite: `pytest TESTS/evaluation/ -m slow -v`
-7. Update `docs/evaluation/EVALUATION.md`:
-   - Per-repo precision/recall table grows from 4 → 8
-   - Extended corpus table grows from 10 → 14 repos
-   - Per-tool eval (`PER_TOOL_EVALUATION.md`) gets gosec/staticcheck columns
+**Minimum viable rigor:** Tier 0 + Tier 1. Numbers are checkable AND backed by external ground truth.
+**Recommended rigor:** Tier 0 + Tier 1 + Tier 2. Adds inter-rater κ for "graded your own homework" defense.
+**Maximum rigor:** All four tiers. ~29h, but the eval section becomes unassailable.
+
+## Decision Matrix Based on Defense Runway
+
+| Time until defense | Recommendation |
+|---|---|
+| **> 4 weeks** | All four tiers — go bulletproof |
+| **2–4 weeks** | Tiers 0 + 1 + 2 (skip corpus expansion) |
+| **1–2 weeks** | Tiers 0 + 1 only (integrity + CVE recall) |
+| **< 1 week** | At minimum Tier 0 (audit + reproduce script). Memorize the verbal pivot. |
+
+**Note:** Tier 0 is **always recommended** regardless of runway. 3 hours of work makes every existing number self-verifying — that's value the supervisor sees instantly even if Tiers 1–3 are deferred.
 
 ## Success Criteria
 
-- [ ] 4 new repos cloned, scanned, ground-truth-labeled
-- [ ] 4 new YAMLs in `TESTS/evaluation/ground_truth/`
-- [ ] 4 new slow tests added to `test_recall.py` (one per repo)
-- [ ] `EVALUATION.md` updated with new tables
-- [ ] All 4 repos meet their `recall_target` (≥ 85% on vulnerable, < 5% FP on real-world)
-- [ ] Defendable claim: *"Evaluated across 16 repos spanning Python, JavaScript, TypeScript, and Go"*
+- [ ] **Tier 0:** `INTEGRITY.md` charter committed; `audit_eval_numbers.py` script passing on current `EVALUATION.md`; `make eval-reproduce` target works end-to-end
+- [ ] **Tier 0:** Every number in `EVALUATION.md` is either auto-verified by the audit script or has a documented exception in `INTEGRITY.md`
+- [ ] **Tier 1:** 15–20 CVE recall tests written, pre-registered, automated; results table in `docs/evaluation/CVE_RECALL.md`
+- [ ] **Tier 1:** Defendable claim: *"X/N CVE recall on disclosed Python vulnerabilities from MITRE/NIST"*
+- [ ] **Tier 2:** Peer validation κ > 0.60, documented in `docs/evaluation/PEER_VALIDATION.md`
+- [ ] **Tier 3:** 4 new repos added with ground truth YAMLs (govwa, Django, TS app, FastAPI)
+- [ ] **Overall:** `EVALUATION.md` Section 0 updated with CVE recall + peer κ + new corpus
+- [ ] **PRESENTATION_SCRIPT.md:** verbal Q&A updated to cite the new evidence
 
-## Updated Numbers After Completion
+## Updated Numbers After Completion (All Tiers)
 
 | Metric | Before | After |
 |---|------:|------:|
-| Eval corpus size | 12 | 16 (+4) |
-| Languages with vuln eval | 2 (Py, JS) | 4 (Py, JS, TS, Go) |
-| Real-world FP-test corpus | 2 (Flask, httpx) | 3 (+Django) |
-| Defendable corpus claim | "10-repo extended eval" | "16-repo 4-language eval" |
+| Total repos | 12 | 16 (+4 from Tier 3) |
+| CVE recall tests | 0 | 15–20 (Tier 1) |
+| Real-world repos with labels | 2 (FP-only) | 6 (full ground truth) |
+| External ground truth sources | 0 | MITRE + NIST CVE database |
+| Independent reviewers | 0 | 2 (Tier 2) |
+| Auto-verified claims in EVALUATION.md | 0 | 100% (Tier 0) |
+| One-command full eval reproducibility | ❌ no | ✅ `make eval-reproduce` (Tier 0) |
+| Defendable corpus claim | "97.1% on 4 toy apps" | "X/N CVE recall + κ=0.XX peer validation + 16-repo 4-language corpus, all numbers auto-verified" |
 
 ---
 
 ## What's Explicitly NOT Added
 
-- ❌ **Mutillidae** — Java, out of scope
-- ❌ **WebGoat** — Java, out of scope
-- ❌ **Linux kernel** — overkill, would take 10h+ to scan
-- ❌ **10+ random GitHub vuln repos** — no signal without ground truth
-- ❌ **Closed-source samples** — can't ground-truth without internal docs
-- ❌ **Self-contained ML projects** — different threat model, separate research scope
+- ❌ **Random GitHub vuln repos** — no signal without ground truth
+- ❌ **OWASP Benchmark v1.2** — Java-only, Python ports unmaintained
+- ❌ **Linux kernel** — overkill, 10h+ scan time, low signal
+- ❌ **WebGoat / Mutillidae** — Java, out of scope
+- ❌ **Closed-source enterprise samples** — can't ground-truth without internal docs
+- ❌ **More toy benchmarks** — doesn't address the critique (this is THE critique!)
 
 ## Risks
 
 | Risk | Mitigation |
 |---|---|
-| Ground truth labeling subjective on edge cases | Document each judgment call in YAML `notes:` field |
-| New repos surface real product bugs (e.g., govwa breaks gosec adapter) | Treat as Phase 12 retrospective principle: real bugs are wins |
-| Django scan finds 1000+ findings → labeling overwhelming | Only label HIGH severity + sample 30 MEDIUM; mark rest as "not labeled" |
-| Adding repos delays demo video (task 12.35) | This plan runs AFTER UI Phase 3 + testing; demo video is on the critical path BEFORE this |
+| Can't find 15–20 clean CVEs with mappable lines | Plan for 10–12 minimum; report what we have honestly |
+| Some CVEs not detectable by static analysis (runtime context) | Document `out_of_scope` reason per CVE; partial recall is still honest |
+| Peer reviewers unavailable | Use 1 reviewer + author; still better than author-only; reduce to 10-finding sample if needed |
+| Tier 1 surfaces real product bugs | This is a **win** — bugs found in eval are bugs fixed in product |
+| Time pressure forces skipping Tier 1 | Use decision matrix above; brutal honesty about runway |
