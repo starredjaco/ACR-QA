@@ -776,6 +776,70 @@ class Database:
             return json.loads(raw)
         return raw
 
+    # ===== FINDING CHAT (v5.0.0 Phase A.1) =====
+
+    def insert_chat_message(
+        self,
+        finding_id: int,
+        role: str,
+        content: str,
+        user_id: int | None = None,
+        preset: str | None = None,
+        model_name: str | None = None,
+        tokens_in: int | None = None,
+        tokens_out: int | None = None,
+        latency_ms: int | None = None,
+    ) -> int | None:
+        """Persist one chat message for a finding. Returns inserted id."""
+        query = """
+            INSERT INTO finding_chat_messages
+                (finding_id, user_id, role, preset, content,
+                 model_name, tokens_in, tokens_out, latency_ms)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id
+        """
+        result = self.execute(
+            query,
+            (
+                finding_id,
+                user_id,
+                role,
+                preset,
+                content,
+                model_name,
+                tokens_in,
+                tokens_out,
+                latency_ms,
+            ),
+            fetch=True,
+        )
+        return result[0]["id"] if result else None
+
+    def get_chat_messages(self, finding_id: int, limit: int = 200) -> list[dict]:
+        """Return messages for a finding ordered oldest → newest."""
+        query = """
+            SELECT id, finding_id, user_id, role, preset, content,
+                   model_name, tokens_in, tokens_out, latency_ms, created_at
+            FROM finding_chat_messages
+            WHERE finding_id = %s
+            ORDER BY created_at ASC, id ASC
+            LIMIT %s
+        """
+        rows = self.execute(query, (finding_id, limit), fetch=True) or []
+        return rows
+
+    def clear_chat_messages(self, finding_id: int) -> int:
+        """Delete all chat messages for a finding. Returns count deleted."""
+        query = "DELETE FROM finding_chat_messages WHERE finding_id = %s"
+        rows = self.execute(query, (finding_id,), fetch=False)
+        return rows if isinstance(rows, int) else 0
+
+    def get_finding_by_id(self, finding_id: int) -> dict | None:
+        """Fetch a single finding row by id (or None)."""
+        query = "SELECT * FROM findings WHERE id = %s"
+        rows = self.execute(query, (finding_id,), fetch=True)
+        return rows[0] if rows else None
+
     def close(self):
         """Close database connection pool"""
         if Database._pool:

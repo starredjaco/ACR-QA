@@ -9,6 +9,7 @@ Revises: 0009
 from __future__ import annotations
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "0010"
@@ -20,15 +21,27 @@ depends_on = None
 def upgrade() -> None:
     op.add_column(
         "analysis_runs",
-        sa.Column("groq_tokens_used", sa.Integer(), nullable=True, comment="Total Groq tokens consumed across all explanations in this run"),
+        sa.Column(
+            "groq_tokens_used",
+            sa.Integer(),
+            nullable=True,
+            comment="Total Groq tokens consumed across all explanations in this run",
+        ),
     )
     op.add_column(
         "analysis_runs",
-        sa.Column("groq_cost_usd", sa.Numeric(precision=10, scale=6), nullable=True, comment="Estimated USD cost at $0.27/1M tokens (llama3-8b-8192 rate)"),
+        sa.Column(
+            "groq_cost_usd",
+            sa.Numeric(precision=10, scale=6),
+            nullable=True,
+            comment="Estimated USD cost at $0.27/1M tokens (llama3-8b-8192 rate)",
+        ),
     )
     op.add_column(
         "analysis_runs",
-        sa.Column("groq_requests", sa.Integer(), nullable=True, comment="Number of Groq API calls made during this run"),
+        sa.Column(
+            "groq_requests", sa.Integer(), nullable=True, comment="Number of Groq API calls made during this run"
+        ),
     )
 
     # Index for cost reporting queries (GROUP BY date, SUM cost)

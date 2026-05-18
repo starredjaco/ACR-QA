@@ -114,6 +114,82 @@ async def get_findings(
     return FindingsListOut(findings=filtered, total=len(filtered))
 
 
+@router.get("/{run_id}/heatmap", summary="Aggregate finding density per file (Risk Heatmap)")
+async def get_run_heatmap(
+    run_id: int,
+    user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """
+    Return one entry per file in the run with:
+        - severity counts (high / medium / low)
+        - top_rules: top 3 (rule_id, count) by frequency
+        - risk_score: 0..100 normalized HIGH-density signal (clamped)
+
+    Used by the dashboard's Risk Heatmap file tree (v5.0.0 Phase A.1).
+    """
+    findings = db.get_findings(run_id=run_id, limit=10000)
+    by_file: dict[str, dict] = {}
+    for f in findings:
+        fp = f.get("file_path") or ""
+        if not fp:
+            continue
+        entry = by_file.setdefault(
+            fp,
+            {
+                "file_path": fp,
+                "high": 0,
+                "medium": 0,
+                "low": 0,
+                "total": 0,
+                "rules": Counter(),
+            },
+        )
+        sev = (f.get("canonical_severity") or "").lower()
+        if sev in ("high", "critical"):
+            entry["high"] += 1
+        elif sev == "medium":
+            entry["medium"] += 1
+        else:
+            entry["low"] += 1
+        entry["total"] += 1
+        rid = f.get("canonical_rule_id") or f.get("rule_id") or "UNKNOWN"
+        entry["rules"][rid] += 1
+
+    if not by_file:
+        return {"run_id": run_id, "files": [], "max_high": 0, "max_total": 0}
+
+    max_high = max(e["high"] for e in by_file.values()) or 1
+    max_total = max(e["total"] for e in by_file.values()) or 1
+
+    out = []
+    for entry in sorted(by_file.values(), key=lambda x: (-x["high"], -x["total"], x["file_path"])):
+        rules: Counter = entry["rules"]
+        top_rules = [{"rule_id": r, "count": c} for r, c in rules.most_common(3)]
+        # Risk score: 0..100. Weighted: 80% HIGH-density, 20% total-density.
+        high_norm = entry["high"] / max_high
+        total_norm = entry["total"] / max_total
+        risk = int(round(min(100.0, 100.0 * (0.8 * high_norm + 0.2 * total_norm))))
+        out.append(
+            {
+                "file_path": entry["file_path"],
+                "high": entry["high"],
+                "medium": entry["medium"],
+                "low": entry["low"],
+                "total": entry["total"],
+                "risk_score": risk,
+                "top_rules": top_rules,
+            }
+        )
+
+    return {
+        "run_id": run_id,
+        "files": out,
+        "max_high": max_high,
+        "max_total": max_total,
+    }
+
+
 @router.get("/{run_id}/stats", summary="Get severity/cost stats for a run")
 async def get_stats(
     run_id: int,
