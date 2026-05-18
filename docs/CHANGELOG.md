@@ -2,6 +2,67 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Unreleased] — v5.0.0 God Mode v3 Phase A.1 (May 18, 2026)
+
+### Summary
+
+UI Killshot week — first wave of v5.0.0 dashboard differentiators landing one feature at a time.
+Phase A.1 ships **AI Chat Sidebar**, **Visual Call Graph**, and **Risk Heatmap of File Tree**.
+Vulnerability Timeline deferred to Phase B Week 1 per plan v3 Drop-First list.
+
+### Added — Backend
+
+- **`POST/GET/DELETE /v1/findings/{fid}/chat`** — per-finding AI chat with SSE streaming of Groq replies.
+  Persisted in new `finding_chat_messages` table (Alembic migration 0012). Four preset prompts: Explain,
+  Show Exploit, Draft PR Comment, Real In My Context?. Graceful degradation when no Groq key.
+- **`GET /v1/findings/chat/presets`** — server-side catalog of preset prompts.
+- **`GET /v1/findings/{fid}/call-graph`** — function-level call graph for the Python file containing a
+  finding. Returns nodes (`is_target`, `is_entry`, `reachable`) and edges, computed via existing
+  `CORE/engines/reachability.py` primitives. Returns `unsupported_language` for non-Python.
+- **`GET /v1/runs/{run_id}/heatmap`** — per-file finding density: severity counts, top 3 rules,
+  weighted 0–100 risk score (80 % HIGH-density + 20 % total-density). Sorted by HIGH first.
+
+### Added — Frontend
+
+- **`dashboard/src/components/findings/ChatSidebar.tsx`** — streaming chat UI, optimistic user
+  rendering, preset buttons, clear-conversation control, error state.
+- **`dashboard/src/components/findings/CallGraph.tsx`** — pure-SVG layered graph (entry → target →
+  callees). Colors: red target / amber entry / green reachable / gray dead. `onNodeClick` callback.
+  Lighter than react-flow with zero new dependencies.
+- **`dashboard/src/components/findings/RiskHeatmap.tsx`** — collapsible folder tree colored by
+  HIGH-density risk, with severity badges and rule-id tooltips. Auto-expands top folders with HIGH.
+- **`FindingModal.tsx`** — wires three new tabs: Chat, Call Graph (replacing the placeholder
+  reasoning trace), plus existing Taint / Reasoning / Autofix / Exploit.
+
+### Added — Tests
+
+- **`TESTS/test_finding_chat.py`** — 20 tests covering presets, history, clear, SSE streaming,
+  graceful no-key degradation, stream-error handling, system prompt builder.
+- **`TESTS/test_call_graph_endpoint.py`** — 5 tests: missing finding, non-Python, missing file,
+  end-to-end Python AST → nodes/edges/target/reachability, syntax-error tolerance.
+- **`TESTS/test_run_heatmap.py`** — 7 tests: empty, grouping, severity counts, top-rules ordering,
+  HIGH-first sort, risk score range, critical = high.
+- **`dashboard/src/test/components/ChatSidebar.test.tsx`** — 9 Vitest tests.
+- **`dashboard/src/test/components/CallGraph.test.tsx`** — 7 Vitest tests.
+- **`dashboard/src/test/components/RiskHeatmap.test.tsx`** — 8 Vitest tests.
+
+### Test counts
+
+- Python: 2,279 → **2,311** (+32 backend tests)
+- TypeScript (dashboard): 66 → **89** (+23 Vitest tests)
+- **Total: 2,400** (was 2,345)
+
+### Plan progress
+
+- God Mode v3 Phase A Week 1 — **4 of 5 features shipped** (Chat, Call Graph, Heatmap; Timeline
+  deferred to B1). See `docs/GOD_MODE_V3_PLAN.md` §13.
+
+### Deferred
+
+- Vulnerability Timeline → Phase B Week 1 (per Drop-First list).
+
+---
+
 ## [v4.6.0] — Distribution Release (May 17, 2026)
 
 ### Summary

@@ -24,7 +24,7 @@ from CORE.utils.metrics import metrics  # noqa: E402
 from DATABASE.database import Database  # noqa: E402
 from FRONTEND.api.deps import get_current_user, get_db  # noqa: E402
 from FRONTEND.api.models import HealthOut  # noqa: E402
-from FRONTEND.api.routers import auth, runs, scans  # noqa: E402
+from FRONTEND.api.routers import auth, findings, runs, scans  # noqa: E402
 
 # OpenTelemetry — degrades silently when OTEL_EXPORTER_OTLP_ENDPOINT is not set
 _otel_endpoint = os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
@@ -80,6 +80,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/v1")
 app.include_router(runs.router, prefix="/v1")
 app.include_router(scans.router, prefix="/v1")
+app.include_router(findings.router, prefix="/v1")
 
 # ── Main UI (static HTML + vanilla JS, API-wired) ─────────────────────────────
 _UI_DIR = Path(__file__).parent.parent / "static" / "ui"
