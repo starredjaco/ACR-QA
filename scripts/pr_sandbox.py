@@ -231,8 +231,10 @@ def _print_summary(summary: dict) -> None:
         s = summary["static"]
         iac = s.get("iac", {})
         df = s.get("dogfood", {})
-        print(f"Static — IaC: {iac.get('total', '?')} findings ({iac.get('high', 0)} HIGH); "
-              f"dogfood gate: {'✅ pass' if df.get('ok') else '❌ fail'}")
+        print(
+            f"Static — IaC: {iac.get('total', '?')} findings ({iac.get('high', 0)} HIGH); "
+            f"dogfood gate: {'✅ pass' if df.get('ok') else '❌ fail'}"
+        )
     if "docker" in summary:
         d = summary["docker"]
         if d.get("skipped"):
