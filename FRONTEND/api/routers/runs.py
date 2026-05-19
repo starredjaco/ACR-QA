@@ -192,6 +192,60 @@ async def get_rule_timeline(
 
 
 @router.get(
+    "/{run_id}/pr-risk",
+    summary="Single 0..100 PR Risk Score (Review-Bottleneck Solver, v5.0.0 A5)",
+)
+async def get_pr_risk(
+    run_id: int,
+    refresh: bool = False,
+    changed_lines: int = 0,
+    user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """
+    Compose: HIGH count + reachability gate + exploit-verified count + taint
+    touches + file-risk avg + size penalty. Returns score, band (green / amber /
+    red), per-component contributions, and a plain-English explainer list.
+
+    `changed_lines` is an optional hint from the caller (GitHub Action passes
+    it from the PR diff). When zero we treat the PR as "size unknown".
+    """
+    cached = None if refresh else db.get_pr_risk_score(run_id)
+    if cached:
+        return {
+            "run_id": run_id,
+            "cached": True,
+            "score": cached["score"],
+            "band": cached["band"],
+            "inputs": {
+                "high_count": cached["high_count"],
+                "reachable_high_count": cached["reachable_high_count"],
+                "exploit_verified_count": cached["exploit_verified_count"],
+                "taint_path_count": cached["taint_path_count"],
+                "changed_lines": cached["changed_lines"],
+            },
+            "contributions": cached.get("contributions_json") or {},
+            "explainer": cached.get("explainer_json") or [],
+        }
+
+    from CORE.engines.pr_risk import inputs_from_findings, predict_pr_risk
+
+    findings = db.get_findings(run_id=run_id, limit=10000)
+    # Use cached file risk scores if available; ignore findings outside the run.
+    file_scores = [int(r.get("score", 0)) for r in db.get_file_risk_scores(run_id)]
+    inputs = inputs_from_findings(findings, file_risk_scores=file_scores, changed_lines=changed_lines)
+    result = predict_pr_risk(inputs)
+    payload = result.to_dict()
+    try:
+        db.upsert_pr_risk_score(run_id, payload, changed_lines=changed_lines)
+    except Exception:
+        pass
+    payload["run_id"] = run_id
+    payload["cached"] = False
+    return payload
+
+
+@router.get(
     "/{run_id}/risk-map",
     summary="Compute (or fetch cached) per-file Heuristic Risk Predictor scores",
 )

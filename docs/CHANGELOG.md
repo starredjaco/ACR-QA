@@ -2,6 +2,84 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Unreleased] — v5.0.0 God Mode v3 Phase A.5 (May 19, 2026)
+
+### Summary
+
+Week A5 — **PR Risk Score + Review-Bottleneck Solver (Points 1–3) + Launch MVP plumbing**.
+Solves the 4-point code-review-bottleneck era problem using free tooling:
+(1) PR size penalty baked into PR Risk Score, (2) second-opinion cross-model verdict
+agreement via Groq + Ollama, (3) PR Preview Sandbox script for static+docker CI
+pre-flight, (4) org-level review analytics — design committed, implementation deferred
+to Phase B1. Also: per-user Groq quota, GDPR account deletion, demo/dsvw public
+endpoint, PRIVACY + TERMS docs for hosted SaaS.
+
+### Added — PR Risk Score (Point 1 + original A5)
+
+- **`CORE/engines/pr_risk.py`** — `predict_pr_risk()` outputs 0–100 score from
+  6 signals: `high_count` (0.20), `reachability_gate` (0.20), `exploit_verified`
+  (0.20), `taint_touches` (0.10), `file_risk_avg` (0.15), `size_penalty` (0.15).
+  Bands: green 0–30, amber 31–60, red 61–100. `_build_explainer()` produces
+  plain-English breakdown. `SIZE_CAP=300` lines enforces the PR-size-kills-review-quality insight.
+- **`GET /v1/runs/{run_id}/pr-risk`** — cached endpoint; `?refresh=true` forces recompute;
+  `?changed_lines=N` injects diff size.
+- **Migration 0016** — `pr_risk_scores` table (unique on `run_id`).
+- **`TESTS/test_pr_risk.py`** — 25 tests, all green.
+
+### Added — Second Opinion Engine (Point 2)
+
+- **`CORE/engines/second_opinion.py`** — `SecondOpinionEngine`: Groq Llama-3.3-70B
+  (primary) + Ollama qwen2.5-coder:1.5b (secondary). `+15` confidence when both
+  agree on TP/FP, `-10` on disagreement, `0` when Ollama unreachable.
+  `_OllamaUnavailableError` raises gracefully; primary verdict still returned.
+  `agreement_rate()` is the Eval Wave 2 publishable number.
+- **`POST /v1/findings/{fid}/second-opinion`** — triggers review, persists result.
+- **Migration 0017** — five `second_opinion_*` columns on `findings` table.
+- **`TESTS/test_second_opinion.py`** — 21 tests, all green.
+
+### Added — PR Preview Sandbox (Point 3)
+
+- **`scripts/pr_sandbox.py`** — three sub-commands: `static` (IaC + dogfood, ~3s),
+  `docker` (build + 3s boot probe), `full` (both + JSON summary). Exit codes mirror
+  dogfood gate. `--json FILE` writes structured output for GitHub Action comment posting.
+  `_diff_changed_lines()` counts insertions + deletions (not file count) for accurate
+  PR size signal.
+- **`TESTS/test_pr_sandbox.py`** — 22 tests, all green.
+
+### Added — Launch MVP Plumbing
+
+- **`GET /v1/demo/dsvw`** — public (no auth) endpoint returning the most recent
+  DSVW/DVPWA scan findings. Landing page demo widget target; Cloudflare edge-cacheable;
+  latency target < 500 ms.
+- **`GET /v1/users/me/quota`** — returns today's Groq token usage, total, remaining,
+  daily limit, and pct_used for the authenticated user.
+- **`DELETE /v1/auth/users/me`** — GDPR cascade deletion: soft-deletes user row
+  (email obfuscated, `is_active=False`), hard-deletes chat messages, API keys,
+  quota row. Run data retained anonymously.
+- **Migration 0018** — `user_quota` table (`user_id` unique, daily_limit default
+  100,000 tokens, rolling `tokens_used_today` + `tokens_used_total`).
+- **`Database.get_user_quota()`, `.increment_user_quota()`, `.reset_daily_quota()`,
+  `.check_quota()`, `.delete_user_data()`** — new DB methods.
+- **`docs/TERMS.md`** — Terms of Service (effective 2026-05-19).
+- **`docs/PRIVACY.md`** — updated with hosted SaaS section: data retention table,
+  user rights (access/deletion/portability), data residency disclosure.
+
+### Design committed (Phase B1 implementation)
+
+- **Review-Bottleneck endpoint (Point 4)** — design in `docs/GOD_MODE_V3_PLAN.md`
+  §"Week A5.5". Metrics: `median_time_to_first_review_hours`, `reviewer_load_gini`,
+  `pct_merged_without_comment`, `top3_reviewer_share`, `stale_pr_count`.
+  Engine: `CORE/engines/review_bottleneck.py`. Endpoint: `GET /v1/runs/{run_id}/review-bottleneck`.
+
+### Stats
+
+- Backend tests: 2,561 → **2,629** (+68: 25 pr_risk + 21 second_opinion + 22 pr_sandbox)
+- Migrations: 15 → **18** (0016 pr_risk_scores, 0017 second_opinion, 0018 user_quota)
+- API endpoints: 47 → **51** (+4: pr-risk, second-opinion, demo/dsvw, users/me/quota)
+- New engines: `pr_risk.py`, `second_opinion.py`
+
+---
+
 ## [Unreleased] — v5.0.0 God Mode v3 Phase A.4 (May 19, 2026)
 
 ### Summary

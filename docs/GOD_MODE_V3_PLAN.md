@@ -202,6 +202,56 @@ By Jun 30, 2026, all of:
 
 ---
 
+### Week A5.5 — Review-Bottleneck Solver (the LinkedIn-post 4 points)
+
+**Why this exists:** an Arabic LinkedIn post on 2026-05-19 framed the new code-review bottleneck era around 4 concrete problems. Ahmed asked: solve all 4 inside Phase A using only free tooling. This sub-plan binds those 4 points to concrete ACR-QA artifacts so nothing slips between weeks.
+
+**Constraint:** free-stack only. No paid APIs for the *secondary* path. Groq stays primary (free tier already in use); Ollama (local) is the secondary opinion.
+
+**The 4 points → ACR-QA artifacts:**
+
+| # | Post point (paraphrased) | ACR-QA artifact | Status (as of 2026-05-19) |
+|---|---|---|---|
+| 1 | *PR size kills review quality — large PRs get rubber-stamped* | `size_penalty` term inside PR Risk Score (`SIZE_CAP=300`, weight 0.15). Soft gate via amber band, hard gate via `--fail-on=high` already in place. | **Built (uncommitted)** — `CORE/engines/pr_risk.py` |
+| 2 | *Same model self-reviewing has correlated failure modes — use a different model* | `SecondOpinionEngine`: Groq Llama-3.3-70B (primary) + Ollama qwen2.5-coder:1.5b (secondary). +15 confidence on agree, −10 on disagree, 0 when Ollama unreachable. | **Built (uncommitted)** — `CORE/engines/second_opinion.py`, endpoint `POST /v1/findings/{fid}/second-opinion` |
+| 3 | *Static review can't tell you if the PR runs — need a sandbox verdict* | `scripts/pr_sandbox.py`: subcommands `static` (IaC + dogfood), `docker` (build + 3-s boot probe), `full` (both + JSON summary). Designed for GitHub Action comment. | **Script written, no tests, uncommitted** |
+| 4 | *Org-level bottleneck is invisible — time-to-review, reviewer load, merged-without-comment* | `GET /v1/runs/{run_id}/review-bottleneck` — pure-git-log analytics: median time-to-first-review, reviewer-load gini, PRs merged without a single comment, top-3 reviewer concentration. Dashboard panel on `/runs/:id`. | **Not started** — design below |
+
+#### Point 4 design (deferred — implement after defense or in B1)
+
+- **Engine:** `CORE/engines/review_bottleneck.py`. Inputs: a git ref-range or PR list. Pure `git log` + (optional) GitHub REST when `GITHUB_TOKEN` is present; offline fallback uses commit metadata only.
+- **Metrics emitted:**
+  - `median_time_to_first_review_hours` (NULL when GitHub data absent)
+  - `reviewer_load_gini` (0 = balanced, 1 = one person doing all reviews)
+  - `pct_merged_without_comment`
+  - `top3_reviewer_share` (% of total reviews concentrated in top 3 reviewers)
+  - `stale_pr_count` (open > 7 days)
+- **Endpoint:** `GET /v1/runs/{run_id}/review-bottleneck?days=30`. JWT-gated like every other run endpoint.
+- **Dashboard:** new `ReviewBottleneckPanel.tsx` on the run detail page — 5 KPI tiles, no chart library (just sparkline SVG inline).
+- **Why deferred to B1, not built in A5:** Point 4 needs either GitHub REST integration or a fixture dataset for tests; A5 is already over scope and A6 is hard-capped for defense. Defense slide #15 references it as a Phase B item, not a shipped feature — honesty preserves credibility.
+
+#### Acceptance for the A5.5 sub-plan
+
+When A5 commits land, the following must be true:
+
+1. PR Risk Score and Second Opinion are committed, tested (≥ 25 + ≥ 21 tests respectively, all green), and surfaced in the API.
+2. `scripts/pr_sandbox.py` is committed with at least 6 unit tests covering: `_diff_changed_lines` parsing, `_docker_available` mocked false path, `cmd_static` happy path, `cmd_static` with HIGH IaC finding, `cmd_full` with `--docker=False`, JSON output writer.
+3. CHANGELOG.md has a `## v5.0.0-beta.5` section listing all 4 points (#1–3 shipped, #4 deferred-to-B1 with linked design above).
+4. `docs/GOD_MODE_V3_PLAN.md` §13 progress log updated.
+5. `memory/god_mode_v3_plan.md` Phase A progress line updated.
+
+#### Honest deferrals from the post
+
+The post hints at deeper ideas we are explicitly **not** chasing in Phase A:
+
+- *AI-assisted reviewer routing* (which reviewer should see this PR?) — needs labeled training data; defer to Phase C.
+- *Semantic PR clustering* (group related PRs for batch review) — vague spec; defer.
+- *Real-time pair-review session* — UI scope blowout; not on the roadmap.
+
+These are listed in §10 Drops with the same rationale as the other v3 drops.
+
+---
+
 ### Week A6 — Jun 22–30: Defense Week (HARD CAP — no new code)
 
 **Goal:** Defend. Nothing else.
@@ -485,18 +535,19 @@ Opening signups means becoming a data controller under GDPR/equivalents. Require
     migration 0014 (`finding_history` cache table), `GET /v1/findings/{fid}/history`,
     `FindingHistory.tsx` React component wired into FindingModal as History tab,
     23 + 4 backend tests + 7 Vitest tests.
-- Backend tests: 2,279 → **2,457** (+178 across A1 + A2 + A3 + A4)
+- Backend tests: 2,279 → **2,629** (+350 across A1–A5; +68 in A5: pr_risk×25, second_opinion×21, pr_sandbox×22)
 - Frontend tests: 66 → **104** (+38 across A1 + A2)
-- Grand total: **2,561**
-- Migrations: 11 → **15** (chat 0012, iac 0013, history 0014, risk 0015)
-- API endpoints: 37 → **47**
+- Grand total: **2,733**
+- Migrations: 11 → **18** (0012 chat, 0013 iac, 0014 history, 0015 risk, 0016 pr_risk_scores, 0017 second_opinion, 0018 user_quota)
+- API endpoints: 37 → **51** (+4 in A5: pr-risk, second-opinion, demo/dsvw, users/me/quota)
 - Ground-truth YAMLs: 13 → **23**; CVE recall battery 10 → **20** pre-registered
-- Engine docs: `docs/engines/iac_scanner.md`, `docs/engines/time_travel.md`,
-  `docs/engines/risk_predictor.md`
+- New engines (A5): `CORE/engines/pr_risk.py`, `CORE/engines/second_opinion.py`
+- New scripts (A5): `scripts/pr_sandbox.py`
+- GDPR deletion: `DELETE /v1/auth/users/me` + `Database.delete_user_data()`
+- Docs: `docs/TERMS.md` (new), `docs/PRIVACY.md` (updated SaaS section)
 - Defense date: **placeholder Jun 25, awaiting Dr. Samy confirmation**
 - v5.0.0 target tag: **Jun 28, 2026** (post-defense)
-- Next: Phase A Week 5 — PR Risk Score + Launch MVP plumbing
-  (hosted SaaS at acrqa.dev + per-user Groq quota + GDPR delete + privacy + terms)
+- **Week A5 COMPLETE.** Next: Week A6 — defense polish only (HARD CAP, no new code)
 
 Update this section after every commit affecting Phase A scope. Don't duplicate the per-week tables — just track top-of-mind state.
 

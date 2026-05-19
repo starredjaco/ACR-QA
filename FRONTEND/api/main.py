@@ -116,6 +116,47 @@ async def prometheus_metrics():
 # ── Demo mode ─────────────────────────────────────────────────────────────────
 
 
+@app.get("/v1/demo/dsvw", tags=["demo"], summary="Return prerun DSVW findings for unauthenticated demo")
+async def demo_dsvw(db: Database = Depends(get_db)):
+    """Read-only public endpoint — returns the most recent DSVW / DVPWA scan findings.
+    Used by the landing page demo widget without requiring authentication.
+    Cached at the Cloudflare edge; response latency target < 500 ms.
+    """
+    try:
+        runs = db.get_recent_runs(limit=20)
+        dsvw_run = next(
+            (
+                r
+                for r in runs
+                if any(kw in (r.get("repo_name") or "").lower() for kw in ("dsvw", "dvpwa", "dvwa", "demo"))
+            ),
+            runs[0] if runs else None,
+        )
+        if not dsvw_run:
+            return {"run_id": None, "findings": [], "status": "no_demo_run"}
+        findings = db.get_findings(run_id=dsvw_run["id"], limit=50) or []
+        summary = db.get_run_summary(dsvw_run["id"]) or {}
+        return {
+            "run_id": dsvw_run["id"],
+            "repo_name": dsvw_run.get("repo_name"),
+            "total_findings": summary.get("findings_count", len(findings)),
+            "high_count": summary.get("high_severity_count", 0),
+            "findings": [
+                {
+                    "rule_id": f.get("canonical_rule_id") or f.get("original_rule_id"),
+                    "severity": f.get("canonical_severity") or f.get("severity"),
+                    "file": f.get("file_path") or f.get("file"),
+                    "line": f.get("line_number") or f.get("line"),
+                    "message": (f.get("message") or "")[:200],
+                }
+                for f in findings[:20]
+            ],
+            "status": "ok",
+        }
+    except Exception:
+        return {"run_id": None, "findings": [], "status": "unavailable"}
+
+
 @app.get("/v1/demo/run", tags=["demo"], summary="Return latest DVPWA run ID for demo mode")
 async def demo_run(db: Database = Depends(get_db)):
     """Returns the run_id of the most recent DVPWA scan (or any scan).
@@ -222,6 +263,24 @@ async def get_trends(
         "confidence_series": confidence_series,
         "total_series": total_series,
         "run_count": len(trend_data),
+    }
+
+
+@app.get("/v1/users/me/quota", tags=["auth"], summary="Current user's Groq token quota usage")
+async def get_my_quota(
+    user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    quota = db.get_user_quota(user["id"])
+    remaining = max(0, quota["daily_limit"] - quota["tokens_used_today"])
+    return {
+        "user_id": user["id"],
+        "tokens_used_today": quota["tokens_used_today"],
+        "tokens_used_total": quota["tokens_used_total"],
+        "daily_limit": quota["daily_limit"],
+        "remaining_today": remaining,
+        "pct_used": round(quota["tokens_used_today"] / max(quota["daily_limit"], 1) * 100, 1),
+        "quota_reset_at": str(quota["quota_reset_at"]) if quota.get("quota_reset_at") else None,
     }
 
 

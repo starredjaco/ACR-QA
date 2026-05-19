@@ -242,3 +242,28 @@ async def revoke_api_key(
         "UPDATE api_keys SET is_active = FALSE WHERE id = %s AND user_id = %s",
         (key_id, user["id"]),
     )
+
+
+@router.delete(
+    "/users/me",
+    status_code=200,
+    summary="GDPR account deletion — cascade-deletes all user data",
+)
+async def delete_my_account(
+    user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """Permanently delete the authenticated user's account and all associated data.
+
+    Soft-deletes the user row (email obfuscated, is_active=False) so existing
+    JWTs immediately stop resolving. All chat messages, API keys, and quota rows
+    are hard-deleted. Run data is retained for aggregate analytics but is
+    disassociated from the user.
+    """
+    counts = db.delete_user_data(user["id"])
+    return {
+        "deleted": True,
+        "user_id": user["id"],
+        "tables_affected": counts,
+        "note": "Your account has been deactivated and personal data removed. Scan results are retained anonymously for 90 days per our retention policy.",
+    }

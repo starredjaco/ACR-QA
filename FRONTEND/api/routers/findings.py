@@ -282,6 +282,43 @@ async def list_presets():
     return [{"key": k, "label": v["label"], "prompt": v["prompt"]} for k, v in PRESET_PROMPTS.items()]
 
 
+# ── Second Opinion (v5.0.0 Phase A.5 — Review-Bottleneck Solver) ──────────────
+
+
+@router.post(
+    "/{fid}/second-opinion",
+    summary="Two-provider verdict (Groq + Ollama). Free; Ollama runs locally.",
+)
+async def post_second_opinion(
+    fid: int,
+    user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """Run the Second Opinion engine on a single finding.
+
+    Returns both providers' verdicts plus agreement flag + confidence delta.
+    If Ollama isn't reachable the response includes `skipped_reason` and the
+    primary verdict alone — we never block the user on local infra.
+    """
+    finding = db.get_finding_by_id(fid)
+    if finding is None:
+        raise HTTPException(status_code=404, detail="finding not found")
+
+    try:
+        from CORE.engines.second_opinion import SecondOpinionEngine
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="second-opinion engine unavailable") from exc
+
+    engine = SecondOpinionEngine()
+    result = engine.review(finding)
+    payload = result.to_dict()
+    try:
+        db.update_finding_second_opinion(fid, payload)
+    except Exception:
+        pass
+    return payload
+
+
 # ── Time-Travel history (v5.0.0 Phase A.2) ────────────────────────────────────
 
 
