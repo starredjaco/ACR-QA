@@ -204,6 +204,61 @@ class Database:
         result = self.execute(query, values, fetch=True)
         return result[0]["id"] if result else None
 
+    def upsert_file_risk_score(self, run_id: int, score_dict: dict) -> int | None:
+        """Insert or update a row in file_risk_scores for (run_id, file_path).
+
+        `score_dict` is the dict produced by `RiskScore.to_dict()` (features +
+        score). v5.0.0 Phase A.3.
+        """
+        f = score_dict.get("features", {})
+        query = """
+            INSERT INTO file_risk_scores
+                (run_id, file_path, score, complexity, churn_90d, age_days,
+                 author_count, test_coverage_gap, high_finding_count, loc)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (run_id, file_path) DO UPDATE SET
+                score = EXCLUDED.score,
+                complexity = EXCLUDED.complexity,
+                churn_90d = EXCLUDED.churn_90d,
+                age_days = EXCLUDED.age_days,
+                author_count = EXCLUDED.author_count,
+                test_coverage_gap = EXCLUDED.test_coverage_gap,
+                high_finding_count = EXCLUDED.high_finding_count,
+                loc = EXCLUDED.loc,
+                computed_at = NOW()
+            RETURNING id
+        """
+        result = self.execute(
+            query,
+            (
+                run_id,
+                score_dict.get("file_path"),
+                int(score_dict.get("score", 0)),
+                float(f.get("complexity", 0.0)),
+                int(f.get("churn_90d", 0)),
+                int(f.get("age_days", 0)),
+                int(f.get("author_count", 0)),
+                int(f.get("test_coverage_gap", 0)),
+                int(f.get("high_finding_count", 0)),
+                int(f.get("loc", 0)),
+            ),
+            fetch=True,
+        )
+        return result[0]["id"] if result else None
+
+    def get_file_risk_scores(self, run_id: int, limit: int = 1000) -> list[dict]:
+        """Return cached risk scores for a run, ordered highest first."""
+        query = """
+            SELECT file_path, score, complexity, churn_90d, age_days,
+                   author_count, test_coverage_gap, high_finding_count, loc,
+                   computed_at
+            FROM file_risk_scores
+            WHERE run_id = %s
+            ORDER BY score DESC, file_path ASC
+            LIMIT %s
+        """
+        return self.execute(query, (run_id, limit), fetch=True) or []
+
     def update_finding_iac(self, finding_id: int, provider: str, resource: str = "") -> None:
         """Persist IaC provider/resource metadata for an IaC finding (v5.0.0 A2)."""
         query = """

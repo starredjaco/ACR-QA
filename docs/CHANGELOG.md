@@ -2,6 +2,76 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Unreleased] — v5.0.0 God Mode v3 Phase A.3 (May 19, 2026)
+
+### Summary
+
+Week A3 — **Heuristic Risk Predictor** (deterministic, NOT ML) + **Eval Wave 1 scaffolding**
+(4 new ground-truth YAMLs for recent Python CVEs + bench harness skeleton).
+
+### Added — Heuristic Risk Predictor
+
+- **`CORE/engines/risk_predictor.py`** — 0..100 per-file score from 6 transparent
+  features (cyclomatic complexity, 90-day churn, age, author count, test-coverage gap,
+  current HIGH density). Hand-calibrated weights summing to 1.0 (runtime-asserted).
+  Auditable: response includes `contributions` breakdown so reviewers can subtract any
+  feature's effect.
+- **`GET /v1/runs/{run_id}/risk-map?refresh=false`** — returns cached or freshly-computed
+  per-file scores with the weights + caps + contributions inline.
+- **`Database.upsert_file_risk_score()` + `get_file_risk_scores()`** — read/write
+  the new cache table.
+- **Alembic migration `0015`** — creates `file_risk_scores` (one row per
+  `(run_id, file_path)`, indexed on `(run_id, score)`).
+- **`docs/engines/risk_predictor.md`** — full feature catalog + weight rationale +
+  scope/non-scope. Honest about why no ML.
+
+### Added — Eval Wave 1 scaffolding
+
+- **4 new ground-truth YAMLs** for recent CVEs, each with metadata-only
+  `pending_verification` blocks (file:line will be pinned during a real scan run):
+  - `cve-2024-23829-aiohttp.yml` — HTTP request smuggling
+  - `cve-2024-22195-jinja2.yml` — xmlattr filter XSS
+  - `cve-2024-1135-gunicorn.yml` — HTTP request smuggling
+  - `cve-2024-33663-python-jose.yml` — JWT algorithm confusion
+- **`scripts/run_benchmarks.py`** — walks every YAML, prints a summary table, can
+  emit JSON or write `docs/evaluation/BENCHMARK_v5.md`. Real clone/scan steps are
+  printed but **not executed** (gated behind explicit operator action — bandwidth +
+  vulnerable-code-on-disk safety).
+- **`docs/evaluation/BENCHMARK_v5.md`** — auto-generated current-state table:
+  17 ground-truth YAMLs · 46 expected findings · 4 pending verification.
+
+### Tests
+
+- Backend +31: `test_risk_predictor.py` covers weight invariants, normalization edges,
+  score range, contribution math, end-to-end `score_files` with a synthetic git repo,
+  endpoint cached/compute/refresh branches.
+
+### Totals
+
+- Python: 2,406 → **2,437** (+31)
+- TypeScript: 104 (unchanged this week — Risk Heatmap already shipped in A1)
+- **Grand total: 2,541**
+- Migrations: 14 → **15**
+- API endpoints: 46 → **47**
+- Ground-truth YAMLs: 13 → **17**
+
+### Plan progress
+
+- God Mode v3 Phase A Week 3 — **complete** (Risk Predictor shipped; Eval Wave 1
+  scaffolded with honest "pending verification" markers, real cloning is operator-gated).
+  See `docs/GOD_MODE_V3_PLAN.md` §13.
+- Next: Phase A Week 4 — Eval Wave 2 (head-to-head Semgrep CE + 5-rater peer study +
+  CVE-recall expansion to 20) + Security Hardening Pass + Paper Draft sections 1–3.
+
+### Deferred (per plan Drop-First)
+
+- Bench harness CI integration → Phase B (operator-run for now)
+- Per-author trust scoring → Phase B
+- Full HCL parsing in risk evaluation → Phase B
+- Graph-aware risk propagation → Phase B
+
+---
+
 ## [Unreleased] — v5.0.0 God Mode v3 Phase A.2 (May 19, 2026)
 
 ### Summary

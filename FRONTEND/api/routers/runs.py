@@ -191,6 +191,58 @@ async def get_rule_timeline(
     return {"runs": runs_sorted, "rules": rules_list}
 
 
+@router.get(
+    "/{run_id}/risk-map",
+    summary="Compute (or fetch cached) per-file Heuristic Risk Predictor scores",
+)
+async def get_run_risk_map(
+    run_id: int,
+    refresh: bool = False,
+    user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """
+    Returns the 0..100 risk score per file for this run.
+
+    Default behaviour:
+        1. Return cached scores from `file_risk_scores` if any exist.
+        2. Otherwise compute on the fly using the run's findings + workspace git.
+        3. Pass `refresh=true` to force a recompute.
+
+    Workspace is the API server's CWD; computation gracefully degrades to
+    zero-feature scores if the workspace is not a git repo or files are missing.
+    """
+    import os as _os
+
+    cached = [] if refresh else db.get_file_risk_scores(run_id)
+    if cached:
+        return {
+            "run_id": run_id,
+            "cached": True,
+            "total_files": len(cached),
+            "files": cached,
+        }
+
+    findings = db.get_findings(run_id=run_id, limit=10000)
+    from CORE.engines.risk_predictor import risk_map_payload, score_files
+
+    scores = score_files(repo_dir=_os.getcwd(), findings=findings)
+    persisted = 0
+    for s in scores:
+        try:
+            db.upsert_file_risk_score(run_id, s.to_dict())
+            persisted += 1
+        except Exception:
+            # DB failures are non-fatal; the response is still useful.
+            continue
+
+    payload = risk_map_payload(scores)
+    payload["run_id"] = run_id
+    payload["cached"] = False
+    payload["persisted"] = persisted
+    return payload
+
+
 @router.get("/{run_id}/heatmap", summary="Aggregate finding density per file (Risk Heatmap)")
 async def get_run_heatmap(
     run_id: int,

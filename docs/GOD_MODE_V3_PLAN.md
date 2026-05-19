@@ -461,6 +461,12 @@ Opening signups means becoming a data controller under GDPR/equivalents. Require
 
 - Phase A Week 1 (UI Killshot): **5/5 shipped ✅ COMPLETE**
 - Phase A Week 2 (New Engines): **2/2 shipped ✅ COMPLETE**
+- Phase A Week 3 (Heuristic Risk + Eval Wave 1): **✅ COMPLETE**
+  - ✅ A3.1–3 Risk Predictor — `CORE/engines/risk_predictor.py`, migration 0015,
+    `GET /v1/runs/{rid}/risk-map`, 31 tests, full doc.
+  - ✅ A3.4 Eval Wave 1 scaffolding — 4 new ground-truth YAMLs (recent CVEs),
+    `scripts/run_benchmarks.py` harness, auto-generated `BENCHMARK_v5.md`.
+    Real cloning/scanning is operator-gated.
   - ✅ A2.1–3 IaC Scanner — `CORE/engines/iac_scanner.py`, 28 canonical rules,
     migration 0013 (`iac_provider` + `iac_resource`), `POST /v1/scans/iac`,
     sample fixtures in `TESTS/samples/iac-issues/`, 52 + 6 = 58 backend tests.
@@ -468,14 +474,18 @@ Opening signups means becoming a data controller under GDPR/equivalents. Require
     migration 0014 (`finding_history` cache table), `GET /v1/findings/{fid}/history`,
     `FindingHistory.tsx` React component wired into FindingModal as History tab,
     23 + 4 backend tests + 7 Vitest tests.
-- Backend tests: 2,279 → **2,405** (+126 across A1 + A2)
+- Backend tests: 2,279 → **2,437** (+158 across A1 + A2 + A3)
 - Frontend tests: 66 → **104** (+38 across A1 + A2)
-- Grand total: **2,509**
-- Engine docs: `docs/engines/iac_scanner.md`, `docs/engines/time_travel.md`
+- Grand total: **2,541**
+- Migrations: 11 → **15** (chat 0012, iac 0013, history 0014, risk 0015)
+- API endpoints: 37 → **47**
+- Ground-truth YAMLs: 13 → **17**
+- Engine docs: `docs/engines/iac_scanner.md`, `docs/engines/time_travel.md`,
+  `docs/engines/risk_predictor.md`
 - Defense date: **placeholder Jun 25, awaiting Dr. Samy confirmation**
 - v5.0.0 target tag: **Jun 28, 2026** (post-defense)
-- Next: Phase A Week 3 — Heuristic Risk Predictor + Eval Wave 1 (+8 repos with
-  ground-truth YAMLs)
+- Next: Phase A Week 4 — Eval Wave 2 (Semgrep CE head-to-head, 5-rater κ,
+  CVE recall → 20) + Security Hardening Pass + Paper Draft sections 1–3
 
 Update this section after every commit affecting Phase A scope. Don't duplicate the per-week tables — just track top-of-mind state.
 
