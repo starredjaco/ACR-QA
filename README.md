@@ -8,7 +8,7 @@
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab?logo=python&logoColor=white)](https://www.python.org/)
 [![Version](https://img.shields.io/badge/Version-5.0.0--beta-blue)](docs/CHANGELOG.md)
 [![Live](https://img.shields.io/badge/Live-acrqa--api--production.up.railway.app-22c55e?logo=railway&logoColor=white)](https://acrqa-api-production.up.railway.app/health)
-[![Tests](https://img.shields.io/badge/Tests-2561%20passing-22c55e?logo=pytest&logoColor=white)](./TESTS/)
+[![Tests](https://img.shields.io/badge/Tests-2629%20passing-22c55e?logo=pytest&logoColor=white)](./TESTS/)
 [![Coverage](https://img.shields.io/badge/Coverage-85%25-22c55e?logo=codecov&logoColor=white)](./htmlcov/)
 [![Precision](https://img.shields.io/badge/Precision-97.1%25-22c55e)](./docs/evaluation/PER_TOOL_EVALUATION.md)
 [![OWASP](https://img.shields.io/badge/OWASP-9%2F10-8b5cf6)](./docs/evaluation/EVALUATION.md)
@@ -39,7 +39,7 @@ ACR-QA is a **provenance-first, AI-augmented code review platform** built as a g
 | **LLM hallucination** — AI assistants give confident but wrong security advice | RAG: the LLM can only explain rules it can cite from a curated 66-rule knowledge base; semantic entropy (3× runs) detects contradictions |
 | **Invisible test gaps** — code coverage % doesn't tell you *which* complex functions have no test | AST-based Test Gap Analyzer ranks untested symbols by cyclomatic complexity |
 
-**Key numbers:** 97.1% precision · 9/10 OWASP Top 10 · **2,561 tests** (2,457 Python + 104 TypeScript) · 47 async API endpoints · 15 Alembic migrations · 327+ rule mappings (incl. 28 IaC) · 20-CVE pre-registered recall battery · $0 recurring cost
+**Key numbers:** 97.1% precision · 9/10 OWASP Top 10 · **2,629 tests** (2,525 Python + 104 TypeScript) · 51 async API endpoints · 18 Alembic migrations · 327+ rule mappings (incl. 28 IaC) · 20-CVE pre-registered recall battery · $0 recurring cost
 
 ---
 
@@ -138,10 +138,16 @@ Week A1 (UI Killshot) and Week A2 (new engines) are shipped on `main`:
 | **Peer-rating κ harness** (hand-implemented Cohen's + Fleiss' κ; no scipy) | `scripts/peer_rating.py` | ✅ A4.2 |
 | **Head-to-head Semgrep CE methodology** (pre-registered scoring rules) | `docs/evaluation/HEAD_TO_HEAD_SEMGREP.md` | ✅ A4.4 |
 | **Thesis paper sections 1–3** (IEEE template + 11-cite bib) | `paper/acrqa_thesis.tex` | ✅ A4.5 |
+| **PR Risk Score** (0–100 per-PR signal: reachability + taint + exploit + size + file-risk) | `CORE/engines/pr_risk.py` · `GET /v1/runs/{id}/pr-risk` | ✅ A5 |
+| **Second Opinion Engine** (Groq Llama-3.3-70B + Ollama local; +15/−10 confidence delta) | `CORE/engines/second_opinion.py` · `POST /v1/findings/{id}/second-opinion` | ✅ A5 |
+| **PR Preview Sandbox** (static/docker/full; designed for GitHub Action PR comment) | `scripts/pr_sandbox.py` | ✅ A5 |
+| **Per-user Groq quota** (100K tokens/day default; `GET /v1/users/me/quota`) | `DATABASE/database.py` · migration 0018 | ✅ A5 |
+| **GDPR account deletion** (`DELETE /v1/auth/users/me` cascade) | `FRONTEND/api/routers/auth.py` | ✅ A5 |
+| **Public demo endpoint** (`GET /v1/demo/dsvw`) | `FRONTEND/api/main.py` | ✅ A5 |
 
 Engine docs: [`docs/engines/iac_scanner.md`](docs/engines/iac_scanner.md) · [`docs/engines/time_travel.md`](docs/engines/time_travel.md) · [`docs/engines/risk_predictor.md`](docs/engines/risk_predictor.md)
 
-Up next (Phase A Week 5): **PR Risk Score** (single 0–100 mergeable signal) + Launch MVP plumbing (hosted SaaS at `acrqa.dev` + per-user Groq quota + GDPR delete endpoint + Terms/Privacy).
+**Phase A complete.** All 5 code weeks shipped on `main`. Week A6 = defense polish only (slides, Q&A prep, rehearsal — no new code).
 
 ---
 
@@ -334,7 +340,7 @@ Prometheus scrapes `/metrics` every 15 s. Grafana dashboard at **http://localhos
 ## Testing
 
 ```bash
-make test-all          # 2,561 tests (full suite)
+make test-all          # 2,629 tests (full suite)
 make test              # acceptance tests only
 make run               # pipeline on sample files
 ```
@@ -468,7 +474,7 @@ marimo edit notebooks/walkthrough.py
 | **Supervisor** | Dr. Samy AbdelNabi |
 | **Institution** | King Salman International University (KSIU) |
 | **Timeline** | October 2025 – June 2026 |
-| **Status** | v4.6.0 · Distribution release · Evaluation complete · Cloud-deployed · 39/39 tasks done |
+| **Status** | v5.0.0-beta · Phase A complete (Weeks A1–A5 on `main`) · Weeks A6 = defense polish |
 
 ### Remaining Thesis Work
 

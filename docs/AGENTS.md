@@ -3,7 +3,7 @@
 # Any AI tool (Claude Code, Copilot, Cursor, Windsurf, etc.) should read this before touching code.
 # For deeper project memory and gotchas, read AGENT_NOTES.md (gitignored, local only).
 
-> **Strategic plan:** `docs/GOD_MODE_PLAN.md` (v2 rewritten 2026-05-05). Phase 0 baseline: `docs/evaluation/PHASE_0_BASELINE.md`. Plan v1 archived at `docs/archive/GOD_MODE_PLAN_V1.md`.
+> **Strategic plan:** `docs/GOD_MODE_V3_PLAN.md` (active; Phase A complete, Phase B/C ahead). Phase 0 baseline: `docs/evaluation/PHASE_0_BASELINE.md`. Legacy plan archived at `docs/archive/GOD_MODE_PLAN_V1.md`.
 
 ---
 
@@ -11,7 +11,7 @@
 
 **ACR-QA** — Automated Code Review & Quality Assurance
 Graduation thesis project for Ahmed at KSIU. Supervisor: Dr. Samy.
-**Version:** v4.6.0 (W1–W5 complete — 2,279 tests, 37 endpoints, 13 repos, κ=0.74, CVE recall 2/10, PyPI + GitHub Actions Marketplace shipped; demo video + YouTube = human tasks remaining)
+**Version:** v5.0.0-beta · Phase A complete (Weeks A1–A5 on `main`) · **2,629 tests · 51 endpoints · 18 migrations** · Week A6 = defense polish only (no new code)
 **Stack:** Python 3.11+ · FastAPI 0.115 (async, port 8000) · Celery 5.4 · PostgreSQL 15 · Redis 5.2 · Semgrep · Bandit · Ruff · Vulture · gosec · staticcheck · ESLint · npm audit · Trivy · TruffleHog · JWT + API keys
 **Repo:** `ahmed-145/ACR-QA` · **Branch:** always push to `main`
 
@@ -32,7 +32,7 @@ Run these three commands in order. All must pass before committing:
 
 # 3. Tests (default — fast PR suite, slow markers excluded)
 .venv/bin/pytest TESTS/ -q --tb=short
-# Expected: 2274 passed, 31 skipped, 15 deselected, 0 failed
+# Expected: ~2629 passed, 0 failed
 # Coverage ≥ 82% (CI gate)
 
 # 3b. Slow suite (only run before pushing thesis-relevant changes; otherwise nightly CI handles it)
