@@ -195,6 +195,18 @@ def detect_iac_files(target_dir: str | Path) -> dict[str, list[Path]]:
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 
+_IGNORE_MARKER = "acrqa:ignore-iac"
+
+
+def _line_is_suppressed(snippet: str) -> bool:
+    """Honor inline suppression: same-line comment containing `acrqa:ignore-iac`.
+
+    Optionally accepts `acrqa:ignore-iac=IAC-TF-002` to scope the suppression to
+    one rule; bare marker suppresses anything on that line.
+    """
+    return _IGNORE_MARKER in (snippet or "")
+
+
 def _emit(
     findings: list[IaCFinding],
     rule_id: str,
@@ -204,6 +216,17 @@ def _emit(
     provider: str,
     resource: str = "",
 ) -> None:
+    if _line_is_suppressed(snippet):
+        # Scoped form: only suppress when the comment lists this rule.
+        marker = f"{_IGNORE_MARKER}="
+        if marker in snippet:
+            scoped = snippet.split(marker, 1)[1].split()[0]
+            if rule_id not in scoped:
+                pass  # different rule → fall through to emit
+            else:
+                return
+        else:
+            return  # bare marker — suppress anything on this line
     findings.append(
         IaCFinding(
             rule_id=rule_id,

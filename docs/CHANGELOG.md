@@ -2,6 +2,99 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Unreleased] — v5.0.0 God Mode v3 Phase A.4 (May 19, 2026)
+
+### Summary
+
+Week A4 — **Security hardening + Eval Wave 2 + Paper draft (sections 1–3)**.
+Dogfooded subprocess audit lands as a regression-guard test, a dogfooding gate
+script (IaC + bandit on ourselves) passes at HIGH=0, the CVE recall battery
+goes from 10 → 20 with pre-registered metadata, a peer-rating harness ships
+with hand-implemented Cohen's + Fleiss' κ math, and the IEEE-style paper has
+its first three sections committed.
+
+### Added — Security Hardening
+
+- **`TESTS/test_subprocess_safety.py`** — AST-based audit of every
+  `subprocess.run/Popen/call` call under `CORE/`, `DATABASE/`, `FRONTEND/`,
+  `scripts/`. Asserts no `shell=True` and no string/f-string argv. Inline
+  exemption: `# acrqa-subprocess: allow-shell`. Caught 3 real `shell=True`
+  usages in `scripts/run_evaluation.py` — fixed to argv-list invocation.
+- **`scripts/dogfood.py`** — fast hardening gate (IaC scanner + bandit HIGH
+  filter on `CORE/`) intended for CI. Excludes intentionally-vulnerable
+  fixtures (`TESTS/samples/`, `TESTS/evaluation/`). Currently green at
+  HIGH=0 on `main`.
+- **IaC inline suppression** — `acrqa:ignore-iac` (bare or scoped,
+  e.g. `acrqa:ignore-iac=IAC-TF-002`) honoured by the scanner.
+  Used in `deploy/terraform/aws/main.tf` to mark public-ALB ingress as
+  intentional.
+
+### Added — Eval Wave 2
+
+- **6 new CVE ground-truth YAMLs** bringing the recall battery to 20 total:
+  - cve-2024-3651-idna (ReDoS)
+  - cve-2024-37891-urllib3 (proxy-auth leak)
+  - cve-2024-22190-gitpython (path search)
+  - cve-2024-3219-pillow (heap overflow in C ext)
+  - cve-2024-26130-cryptography (NULL deref)
+  - cve-2024-29130-pdfminer (SSRF)
+  All carry `expected_findings: []` + `pending_verification` blocks until
+  the operator runs them on cloned vulnerable versions.
+- **`docs/evaluation/HEAD_TO_HEAD_SEMGREP.md`** — pre-registered methodology
+  for the head-to-head benchmark vs Semgrep CE. Scoring rules + corpus +
+  expected outcomes documented *before* running so the comparison can't be
+  tuned post-hoc.
+- **`scripts/peer_rating.py`** — three sub-commands: `sample` (stratified
+  pull + packet + ballot from a findings JSON), `blank` (emit a blank
+  ballot), `score` (pairwise Cohen's κ + Fleiss' κ + Landis-Koch label).
+  Hand-implemented κ math (no scipy dep) so reviewers can audit it.
+- **`TESTS/test_peer_rating.py`** — 17 tests covering κ math, Landis-Koch
+  buckets, stratified sampling, end-to-end score sub-command.
+
+### Added — Paper Draft
+
+- **`paper/acrqa_thesis.tex`** — IEEE conference template; sections 1–3
+  (Abstract + Introduction + Related Work + Methodology) drafted.
+  Sections 4–8 stubbed for Phase A.5.
+- **`paper/references.bib`** — 11 citations: prior work on SAST adoption,
+  RAG, LLM hallucination audits, related commercial tools, empirical-SE
+  methodology.
+- **`paper/README.md`** — build instructions + section status table.
+
+### Tests
+
+- Backend +20: subprocess audit (3), peer-rating math + sampling + sub-commands (17).
+
+### Totals
+
+- Python: 2,437 → **2,457** (+20)
+- TypeScript: 104 (unchanged)
+- **Grand total: 2,561**
+- API endpoints: 47 (unchanged)
+- Migrations: 15 (unchanged)
+- Ground-truth YAMLs: 17 → **23**
+- CVE recall battery: 10 → **20** (pre-registered)
+
+### Plan progress
+
+- God Mode v3 Phase A Week 4 — **complete** for what can be done without external
+  coordination. The 5-rater study (recruit + execute) and the actual Semgrep CE
+  head-to-head run (operator-time) remain as ⏳ human-led tasks tracked in
+  the relevant docs.
+- See `docs/GOD_MODE_V3_PLAN.md` §13.
+- Next: Phase A Week 5 — PR Risk Score + Launch MVP plumbing (hosted SaaS
+  + per-user Groq quota + GDPR delete endpoint + privacy + terms).
+
+### Deferred / human-led (per plan Drop-First)
+
+- 5-rater κ run (harness shipped; raters need recruiting)
+- Semgrep CE head-to-head run (methodology shipped; takes ~30 min operator time)
+- Paper sections 4–8 → Phase A.5 (per plan)
+- Bandit on CORE/ in the dogfooding gate currently a no-op when bandit isn't
+  installed — Phase A.5 will install it via the pre-commit chain.
+
+---
+
 ## [Unreleased] — v5.0.0 God Mode v3 Phase A.3 (May 19, 2026)
 
 ### Summary

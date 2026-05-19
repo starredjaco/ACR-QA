@@ -467,6 +467,17 @@ Opening signups means becoming a data controller under GDPR/equivalents. Require
   - ✅ A3.4 Eval Wave 1 scaffolding — 4 new ground-truth YAMLs (recent CVEs),
     `scripts/run_benchmarks.py` harness, auto-generated `BENCHMARK_v5.md`.
     Real cloning/scanning is operator-gated.
+- Phase A Week 4 (Eval Wave 2 + Security Hardening + Paper draft): **✅ COMPLETE**
+  - ✅ A4.1 Subprocess sandbox audit (`TESTS/test_subprocess_safety.py`)
+    + dogfooding gate (`scripts/dogfood.py`). IaC inline-suppression
+    marker added. ACR-QA self-scan at 0 HIGH.
+  - ✅ A4.2 Peer-rating harness with Cohen's + Fleiss' κ math
+    (`scripts/peer_rating.py` + 17 tests).
+  - ✅ A4.3 CVE recall battery 10 → 20 (6 new YAMLs in `TESTS/evaluation/ground_truth/`).
+  - ✅ A4.4 Head-to-head Semgrep CE methodology
+    (`docs/evaluation/HEAD_TO_HEAD_SEMGREP.md`).
+  - ✅ A4.5 Paper draft sections 1–3 (`paper/acrqa_thesis.tex` + `references.bib`).
+  - ⏳ Human-led: 5-rater recruiting + Semgrep CE actual scan-run + Dr. Samy paper review.
   - ✅ A2.1–3 IaC Scanner — `CORE/engines/iac_scanner.py`, 28 canonical rules,
     migration 0013 (`iac_provider` + `iac_resource`), `POST /v1/scans/iac`,
     sample fixtures in `TESTS/samples/iac-issues/`, 52 + 6 = 58 backend tests.
@@ -474,18 +485,18 @@ Opening signups means becoming a data controller under GDPR/equivalents. Require
     migration 0014 (`finding_history` cache table), `GET /v1/findings/{fid}/history`,
     `FindingHistory.tsx` React component wired into FindingModal as History tab,
     23 + 4 backend tests + 7 Vitest tests.
-- Backend tests: 2,279 → **2,437** (+158 across A1 + A2 + A3)
+- Backend tests: 2,279 → **2,457** (+178 across A1 + A2 + A3 + A4)
 - Frontend tests: 66 → **104** (+38 across A1 + A2)
-- Grand total: **2,541**
+- Grand total: **2,561**
 - Migrations: 11 → **15** (chat 0012, iac 0013, history 0014, risk 0015)
 - API endpoints: 37 → **47**
-- Ground-truth YAMLs: 13 → **17**
+- Ground-truth YAMLs: 13 → **23**; CVE recall battery 10 → **20** pre-registered
 - Engine docs: `docs/engines/iac_scanner.md`, `docs/engines/time_travel.md`,
   `docs/engines/risk_predictor.md`
 - Defense date: **placeholder Jun 25, awaiting Dr. Samy confirmation**
 - v5.0.0 target tag: **Jun 28, 2026** (post-defense)
-- Next: Phase A Week 4 — Eval Wave 2 (Semgrep CE head-to-head, 5-rater κ,
-  CVE recall → 20) + Security Hardening Pass + Paper Draft sections 1–3
+- Next: Phase A Week 5 — PR Risk Score + Launch MVP plumbing
+  (hosted SaaS at acrqa.dev + per-user Groq quota + GDPR delete + privacy + terms)
 
 Update this section after every commit affecting Phase A scope. Don't duplicate the per-week tables — just track top-of-mind state.
 
