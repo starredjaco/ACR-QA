@@ -346,9 +346,15 @@ def run_tool_standalone(tool, target_dir):
     """Run a single tool standalone and count raw findings."""
     cwd = str(Path(__file__).parent.parent)
 
+    # Argv-list invocations only — see TESTS/test_subprocess_safety.py for why.
+    # stderr is captured + discarded; we only care about stdout JSON.
     if tool == "bandit":
-        cmd = f"bandit -r {target_dir} -f json -q 2>/dev/null"
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=cwd)
+        result = subprocess.run(
+            ["bandit", "-r", target_dir, "-f", "json", "-q"],
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+        )
         try:
             data = json.loads(result.stdout)
             return len(data.get("results", []))
@@ -357,8 +363,12 @@ def run_tool_standalone(tool, target_dir):
 
     elif tool == "semgrep":
         rules_path = Path(cwd) / "config" / "rules.yml"
-        cmd = f"semgrep --config {rules_path} {target_dir} --json --quiet 2>/dev/null"
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=cwd)
+        result = subprocess.run(
+            ["semgrep", "--config", str(rules_path), target_dir, "--json", "--quiet"],
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+        )
         try:
             data = json.loads(result.stdout)
             return len(data.get("results", []))
@@ -366,8 +376,12 @@ def run_tool_standalone(tool, target_dir):
             return 0
 
     elif tool == "ruff":
-        cmd = f"ruff check {target_dir} --output-format json 2>/dev/null"
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=cwd)
+        result = subprocess.run(
+            ["ruff", "check", target_dir, "--output-format", "json"],
+            capture_output=True,
+            text=True,
+            cwd=cwd,
+        )
         try:
             data = json.loads(result.stdout)
             return len(data) if isinstance(data, list) else 0
