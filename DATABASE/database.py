@@ -204,6 +204,58 @@ class Database:
         result = self.execute(query, values, fetch=True)
         return result[0]["id"] if result else None
 
+    def upsert_pr_risk_score(self, run_id: int, result_dict: dict, changed_lines: int = 0) -> int | None:
+        """Insert or update a row in pr_risk_scores for run_id (v5.0.0 A5)."""
+        inputs = result_dict.get("inputs", {})
+        file_scores = inputs.get("file_risk_scores") or []
+        file_risk_avg = (sum(file_scores) / len(file_scores)) if file_scores else 0.0
+        query = """
+            INSERT INTO pr_risk_scores
+                (run_id, score, band, high_count, reachable_high_count,
+                 exploit_verified_count, taint_path_count, changed_lines,
+                 file_risk_avg, contributions_json, explainer_json)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT (run_id) DO UPDATE SET
+                score = EXCLUDED.score,
+                band = EXCLUDED.band,
+                high_count = EXCLUDED.high_count,
+                reachable_high_count = EXCLUDED.reachable_high_count,
+                exploit_verified_count = EXCLUDED.exploit_verified_count,
+                taint_path_count = EXCLUDED.taint_path_count,
+                changed_lines = EXCLUDED.changed_lines,
+                file_risk_avg = EXCLUDED.file_risk_avg,
+                contributions_json = EXCLUDED.contributions_json,
+                explainer_json = EXCLUDED.explainer_json,
+                computed_at = NOW()
+            RETURNING id
+        """
+        import json as _json
+
+        result = self.execute(
+            query,
+            (
+                run_id,
+                int(result_dict.get("score", 0)),
+                result_dict.get("band", "green"),
+                int(inputs.get("high_count", 0)),
+                int(inputs.get("reachable_high_count", 0)),
+                int(inputs.get("exploit_verified_count", 0)),
+                int(inputs.get("taint_path_count", 0)),
+                int(inputs.get("changed_lines", changed_lines)),
+                float(file_risk_avg),
+                _json.dumps(result_dict.get("contributions", {})),
+                _json.dumps(result_dict.get("explainer", [])),
+            ),
+            fetch=True,
+        )
+        return result[0]["id"] if result else None
+
+    def get_pr_risk_score(self, run_id: int) -> dict | None:
+        """Return cached PR risk score for a run, or None."""
+        query = "SELECT * FROM pr_risk_scores WHERE run_id = %s"
+        rows = self.execute(query, (run_id,), fetch=True)
+        return rows[0] if rows else None
+
     def upsert_file_risk_score(self, run_id: int, score_dict: dict) -> int | None:
         """Insert or update a row in file_risk_scores for (run_id, file_path).
 
@@ -258,6 +310,29 @@ class Database:
             LIMIT %s
         """
         return self.execute(query, (run_id, limit), fetch=True) or []
+
+    def update_finding_second_opinion(self, finding_id: int, result_dict: dict) -> None:
+        """Persist a SecondOpinionResult.to_dict() onto findings.* columns (v5.0.0 A5)."""
+        query = """
+            UPDATE findings
+            SET second_opinion_primary_verdict = %s,
+                second_opinion_secondary_verdict = %s,
+                second_opinion_agreement = %s,
+                second_opinion_confidence_delta = %s,
+                second_opinion_skipped = %s
+            WHERE id = %s
+        """
+        self.execute(
+            query,
+            (
+                result_dict.get("primary_verdict"),
+                result_dict.get("secondary_verdict"),
+                result_dict.get("agreement"),
+                int(result_dict.get("confidence_delta", 0)),
+                result_dict.get("skipped_reason"),
+                finding_id,
+            ),
+        )
 
     def update_finding_iac(self, finding_id: int, provider: str, resource: str = "") -> None:
         """Persist IaC provider/resource metadata for an IaC finding (v5.0.0 A2)."""
@@ -942,6 +1017,86 @@ class Database:
         query = "SELECT * FROM findings WHERE id = %s"
         rows = self.execute(query, (finding_id,), fetch=True)
         return rows[0] if rows else None
+
+    # ── User quota ────────────────────────────────────────────────────────────
+
+    _DEFAULT_DAILY_LIMIT = 100_000
+
+    def get_user_quota(self, user_id: int) -> dict:
+        """Return quota row for user; creates row with defaults if absent."""
+        rows = self.execute(
+            "SELECT tokens_used_today, tokens_used_total, daily_limit, quota_reset_at, updated_at "
+            "FROM user_quota WHERE user_id = %s",
+            (user_id,),
+            fetch=True,
+        )
+        if rows:
+            return dict(rows[0])
+        # Auto-create on first access
+        self.execute(
+            "INSERT INTO user_quota (user_id, daily_limit) VALUES (%s, %s) ON CONFLICT DO NOTHING",
+            (user_id, self._DEFAULT_DAILY_LIMIT),
+        )
+        return {
+            "tokens_used_today": 0,
+            "tokens_used_total": 0,
+            "daily_limit": self._DEFAULT_DAILY_LIMIT,
+            "quota_reset_at": None,
+            "updated_at": None,
+        }
+
+    def increment_user_quota(self, user_id: int, tokens: int) -> dict:
+        """Add tokens to today's and total spend. Returns updated quota row."""
+        self.execute(
+            """
+            INSERT INTO user_quota (user_id, tokens_used_today, tokens_used_total, daily_limit, updated_at)
+            VALUES (%s, %s, %s, %s, NOW())
+            ON CONFLICT (user_id) DO UPDATE
+                SET tokens_used_today  = user_quota.tokens_used_today + EXCLUDED.tokens_used_today,
+                    tokens_used_total  = user_quota.tokens_used_total + EXCLUDED.tokens_used_total,
+                    updated_at         = NOW()
+            """,
+            (user_id, tokens, tokens, self._DEFAULT_DAILY_LIMIT),
+        )
+        return self.get_user_quota(user_id)
+
+    def reset_daily_quota(self, user_id: int) -> None:
+        """Reset today's counter (called by nightly cron or on quota_reset_at)."""
+        self.execute(
+            "UPDATE user_quota SET tokens_used_today = 0, quota_reset_at = NOW() + INTERVAL '1 day', "
+            "updated_at = NOW() WHERE user_id = %s",
+            (user_id,),
+        )
+
+    def check_quota(self, user_id: int) -> tuple[bool, dict]:
+        """Return (within_limit, quota_dict). Caller raises 429 if False."""
+        quota = self.get_user_quota(user_id)
+        within = quota["tokens_used_today"] < quota["daily_limit"]
+        return within, quota
+
+    # ── GDPR account deletion ─────────────────────────────────────────────────
+
+    def delete_user_data(self, user_id: int) -> dict:
+        """Cascade-delete all user data. Returns counts of deleted rows per table."""
+        counts: dict[str, int] = {}
+        for table, col in [
+            ("finding_chat_messages", "user_id"),
+            ("api_keys", "user_id"),
+            ("user_quota", "user_id"),
+            ("scan_requests", "requested_by"),
+        ]:
+            try:
+                self.execute(f"DELETE FROM {table} WHERE {col} = %s", (user_id,))
+                counts[table] = 1
+            except Exception:
+                counts[table] = 0
+        # Soft-delete the user row so JWTs become invalid immediately
+        self.execute(
+            "UPDATE users SET is_active = FALSE, email = %s WHERE id = %s",
+            (f"deleted_{user_id}@acrqa.deleted", user_id),
+        )
+        counts["users"] = 1
+        return counts
 
     def close(self):
         """Close database connection pool"""

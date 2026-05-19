@@ -65,3 +65,30 @@ the local OSV snapshot. The egress guard (`CORE/utils/egress_guard.py`) raises
 | OSV.dev | api.osv.dev | Package names + versions | osv.dev |
 
 Neither service is used in offline mode.
+
+---
+
+## Hosted SaaS (acrqa.dev) — Additional Disclosures
+
+When using the hosted deployment at **acrqa.dev**, the following additional data is collected:
+
+| Data | Purpose | Retention |
+|------|---------|-----------|
+| Email address | Account authentication | Until account deletion |
+| Scan results (findings, severity, file paths) | Historical dashboard | 90 days unless pinned by user |
+| Groq token usage per user | Quota enforcement | Rolling 30-day window |
+| AI chat messages per finding | Conversation history | Deleted immediately on `DELETE /v1/findings/{id}/chat` |
+
+### Your rights
+
+- **Access:** `GET /v1/users/me/quota` returns your current token usage.
+- **Deletion:** `DELETE /v1/auth/users/me` permanently deletes your account and all personal data within 24 hours. Anonymised aggregate analytics are retained.
+- **Portability:** scan results are available via `GET /v1/runs` in JSON format.
+
+### Data residency
+
+acrqa.dev runs on Railway (US region). Groq API calls are routed to US data centers. No EU-specific region is available at this time.
+
+### Contact
+
+For privacy inquiries: ahmedabbass871@gmail.com
