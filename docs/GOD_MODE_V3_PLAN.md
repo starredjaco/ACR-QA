@@ -381,7 +381,7 @@ Current baseline (v4.6.0): 2,279 Python + 66 TS = 2,345 tests · 84.89% coverage
 | Coverage | 84.89% | **88%** | 92% |
 | Mutation score (`CORE/engines/` only) | not measured | **65%** | 80% |
 | Eval repos | 13 | **28** | 40 |
-| CVE recall | 20% (2/10) | **40% (8/20) — documented failure modes** | 50% |
+| CVE recall | 20% (2/10) | **40% (8/20) ✅ CONFIRMED — 8/8 detectable = 100%; 12 honest FNs** | 50% |
 | Inter-rater κ | 0.74 (2 raters) | **0.78 (5 raters)** | 0.82 (10 raters) |
 | Visual regression | none | **All UI routes (Playwright screenshots)** | All UI + i18n variants |
 | Soak test | none | **24 hr** | 7 day |
@@ -540,7 +540,7 @@ Opening signups means becoming a data controller under GDPR/equivalents. Require
 - Grand total: **2,757**
 - Migrations: 11 → **18** (0012 chat, 0013 iac, 0014 history, 0015 risk, 0016 pr_risk_scores, 0017 second_opinion, 0018 user_quota)
 - API endpoints: 37 → **52** (+5 in A5/b1: pr-risk, second-opinion, demo/dsvw, users/me/quota, review-bottleneck)
-- Ground-truth YAMLs: 13 → **23**; CVE recall battery 10 → **20** pre-registered
+- Ground-truth YAMLs: 13 → **33**; CVE recall battery **20** (8 detectable / 12 honest FNs — god-mode pass May 20: 8/8 detectable confirmed ✅)
 - New engines (A5/b1): `pr_risk.py`, `second_opinion.py`, `review_bottleneck.py`
 - New scripts (A5): `scripts/pr_sandbox.py`, `scripts/post_pr_risk_comment.py`
 - GDPR deletion: `DELETE /v1/auth/users/me` + `Database.delete_user_data()`

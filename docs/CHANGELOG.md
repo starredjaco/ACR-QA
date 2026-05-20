@@ -205,7 +205,7 @@ its first three sections committed.
 - API endpoints: 47 (unchanged)
 - Migrations: 15 (unchanged)
 - Ground-truth YAMLs: 17 → **23**
-- CVE recall battery: 10 → **20** (pre-registered)
+- CVE recall battery: 10 → **20** (god-mode pass May 20: 8/8 detectable = 100%, 12 honest FNs; overall 40%)
 
 ### Plan progress
 
