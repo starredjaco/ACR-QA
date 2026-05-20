@@ -7,6 +7,10 @@ rules:
     pattern-either:
       - pattern: eval($X)
       - pattern: exec($X)
+      - pattern: builtins.eval(...)
+      - pattern: __builtins__.eval(...)
+      - pattern: __builtins__['eval'](...)
+      - pattern: getattr(__builtins__, 'eval')(...)
     message: |
       Dangerous use of eval() or exec(). These functions execute arbitrary
       Python code and should NEVER be used with user input.
