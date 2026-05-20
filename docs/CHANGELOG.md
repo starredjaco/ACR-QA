@@ -130,7 +130,7 @@ Expected recall after re-run with fixes: **~90%+** (all 13 repos within 900s).
 - New engines: `pr_risk.py`, `second_opinion.py`, `review_bottleneck.py`
 - New scripts: `scripts/pr_sandbox.py`, `scripts/post_pr_risk_comment.py`
 - PyPI: `acrqa==5.0.0b1` published 2026-05-20
-- Eval: 13/13 repos scanned, ACR-QA 71.2% recall (pre-fix), Semgrep CE 71.2%
+- Eval (re-run with fixes): **ACR-QA 92.3% recall vs Semgrep CE 71.2%** (+21.1pp) — 12/13 repos 100%, bandit-test-cases timeout only remaining miss
 
 ---
 

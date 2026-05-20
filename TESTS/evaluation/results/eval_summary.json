@@ -1,9 +1,9 @@
 {
-  "generated": "2026-05-20 (recomputed with corrected matching logic)",
+  "generated": "2026-05-20 (re-run with 6 pipeline fixes)",
   "total_repos": 23,
   "scanned": 13,
   "cve_skipped": 10,
-  "acrqa_average_recall": 0.712,
+  "acrqa_average_recall": 0.923,
   "semgrep_average_recall": 0.712,
   "results": [
     {
@@ -13,34 +13,28 @@
       "expected_count": 4,
       "acrqa": {
         "expected": 4,
-        "found": 12,
-        "matched": 1,
-        "recall": 0.25,
-        "match_detail": [
-          {
-            "id": "bandit-exec-injection",
-            "match": "exact_rule",
-            "cid": "SECURITY-001"
-          }
-        ]
+        "found": 0,
+        "matched": 0,
+        "recall": 0.0,
+        "match_detail": []
       },
       "semgrep": {
         "expected": 4,
-        "found": 274,
+        "found": 267,
         "matched": 3,
         "recall": 0.75,
         "match_detail": [
           {
             "id": "bandit-weak-hash-md5",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "bandit-flask-debug",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "bandit-hardcoded-password",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           }
         ]
       }
@@ -143,19 +137,19 @@
         "match_detail": [
           {
             "id": "djangonv-sqli-task-list",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "djangonv-idor-task-detail",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "djangonv-open-redirect",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "djangonv-csrf-exempt",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           }
         ]
       }
@@ -206,23 +200,23 @@
         "match_detail": [
           {
             "id": "dsvw-sqli",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "dsvw-pickle-deserialization",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "dsvw-cmd-injection",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "dsvw-ssrf",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "dsvw-xxe",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           }
         ]
       }
@@ -257,11 +251,11 @@
         "match_detail": [
           {
             "id": "dvna-command-injection",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "dvna-code-injection-eval",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           }
         ]
       }
@@ -294,8 +288,7 @@
           },
           {
             "id": "dvpwa-hardcoded-credentials-yaml",
-            "match": "severity_only",
-            "severity": "high"
+            "match": "severity_only"
           },
           {
             "id": "dvpwa-debug-mode-aiohttp",
@@ -304,8 +297,7 @@
           },
           {
             "id": "dvpwa-no-csrf-protection",
-            "match": "severity_only",
-            "severity": "medium"
+            "match": "severity_only"
           }
         ]
       },
@@ -317,11 +309,11 @@
         "match_detail": [
           {
             "id": "dvpwa-sqli-student",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "dvpwa-weak-hash-md5",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           }
         ]
       }
@@ -333,7 +325,7 @@
       "expected_count": 2,
       "acrqa": {
         "expected": 2,
-        "found": 1965,
+        "found": 285,
         "matched": 2,
         "recall": 1.0,
         "match_detail": [
@@ -344,20 +336,19 @@
           },
           {
             "id": "dvws-nosql-injection-graphql",
-            "match": "severity_only",
-            "severity": "high"
+            "match": "severity_only"
           }
         ]
       },
       "semgrep": {
         "expected": 2,
-        "found": 28,
+        "found": 29,
         "matched": 2,
         "recall": 1.0,
         "match_detail": [
           {
             "id": "dvws-xss-innerhtml",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "dvws-nosql-injection-graphql",
@@ -373,19 +364,17 @@
       "expected_count": 2,
       "acrqa": {
         "expected": 2,
-        "found": 651,
+        "found": 285,
         "matched": 2,
         "recall": 1.0,
         "match_detail": [
           {
             "id": "govwa-sqli-user",
-            "match": "severity_only",
-            "severity": "high"
+            "match": "severity_only"
           },
           {
             "id": "govwa-cmdi-ping",
-            "match": "severity_only",
-            "severity": "high"
+            "match": "severity_only"
           }
         ]
       },
@@ -404,10 +393,25 @@
       "expected_count": 3,
       "acrqa": {
         "expected": 3,
-        "found": 0,
-        "matched": 0,
-        "recall": 0.0,
-        "match_detail": []
+        "found": 301,
+        "matched": 3,
+        "recall": 1.0,
+        "match_detail": [
+          {
+            "id": "juiceshop-eval-captcha",
+            "match": "exact_rule",
+            "cid": "SECURITY-001"
+          },
+          {
+            "id": "juiceshop-eval-userprofile",
+            "match": "exact_rule",
+            "cid": "SECURITY-001"
+          },
+          {
+            "id": "juiceshop-sqli-sequelize",
+            "match": "severity+file"
+          }
+        ]
       },
       "semgrep": {
         "expected": 3,
@@ -417,15 +421,15 @@
         "match_detail": [
           {
             "id": "juiceshop-eval-captcha",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "juiceshop-eval-userprofile",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "juiceshop-sqli-sequelize",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           }
         ]
       }
@@ -437,7 +441,7 @@
       "expected_count": 2,
       "acrqa": {
         "expected": 2,
-        "found": 313,
+        "found": 294,
         "matched": 2,
         "recall": 1.0,
         "match_detail": [
@@ -460,7 +464,7 @@
         "match_detail": [
           {
             "id": "nodegoat-ssjs-injection",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           }
         ]
       }
@@ -472,10 +476,36 @@
       "expected_count": 5,
       "acrqa": {
         "expected": 5,
-        "found": 0,
-        "matched": 0,
-        "recall": 0.0,
-        "match_detail": []
+        "found": 126,
+        "matched": 5,
+        "recall": 1.0,
+        "match_detail": [
+          {
+            "id": "pygoat-sqli-1",
+            "match": "exact_rule",
+            "cid": "SECURITY-027"
+          },
+          {
+            "id": "pygoat-pickle-deserialization",
+            "match": "exact_rule",
+            "cid": "SECURITY-008"
+          },
+          {
+            "id": "pygoat-cmd-injection",
+            "match": "exact_rule",
+            "cid": "SECURITY-021"
+          },
+          {
+            "id": "pygoat-eval",
+            "match": "exact_rule",
+            "cid": "SECURITY-001"
+          },
+          {
+            "id": "pygoat-yaml-load-unsafe",
+            "match": "exact_rule",
+            "cid": "SECURITY-018"
+          }
+        ]
       },
       "semgrep": {
         "expected": 5,
@@ -485,23 +515,23 @@
         "match_detail": [
           {
             "id": "pygoat-sqli-1",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "pygoat-pickle-deserialization",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "pygoat-cmd-injection",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "pygoat-eval",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "pygoat-yaml-load-unsafe",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           }
         ]
       }
@@ -551,23 +581,23 @@
         "match_detail": [
           {
             "id": "vulnflask-weak-hash-md5",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "vulnflask-sql-injection",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "vulnflask-ssti",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "vulnflask-yaml-unsafe",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "vulnflask-hardcoded-secret",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           }
         ]
       }
@@ -579,10 +609,25 @@
       "expected_count": 3,
       "acrqa": {
         "expected": 3,
-        "found": 0,
-        "matched": 0,
-        "recall": 0.0,
-        "match_detail": []
+        "found": 273,
+        "matched": 3,
+        "recall": 1.0,
+        "match_detail": [
+          {
+            "id": "vulnode-sqli-products",
+            "match": "severity+file"
+          },
+          {
+            "id": "vulnode-xss-output",
+            "match": "exact_rule",
+            "cid": "SECURITY-045"
+          },
+          {
+            "id": "vulnode-hardcoded-secret",
+            "match": "exact_rule",
+            "cid": "HARDCODE-001"
+          }
+        ]
       },
       "semgrep": {
         "expected": 3,
@@ -599,7 +644,7 @@
       "expected_count": 3,
       "acrqa": {
         "expected": 3,
-        "found": 8,
+        "found": 73,
         "matched": 3,
         "recall": 1.0,
         "match_detail": [
@@ -610,13 +655,12 @@
           },
           {
             "id": "vulpy-weak-session",
-            "match": "severity_only",
-            "severity": "high"
+            "match": "severity_only"
           },
           {
             "id": "vulpy-hardcoded-secret",
-            "match": "severity_only",
-            "severity": "high"
+            "match": "exact_rule",
+            "cid": "SECURITY-005"
           }
         ]
       },
@@ -628,11 +672,11 @@
         "match_detail": [
           {
             "id": "vulpy-sqli",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           },
           {
             "id": "vulpy-hardcoded-secret",
-            "match": "file+high_severity"
+            "match": "file+high_sev"
           }
         ]
       }

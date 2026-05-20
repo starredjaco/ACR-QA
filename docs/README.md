@@ -1,7 +1,7 @@
 # ACR-QA Documentation Index
 
-> **As of v5.0.0-beta (May 19, 2026):** Phase A Weeks 1–4 of the [God Mode v3 Plan](GOD_MODE_V3_PLAN.md)
-> are shipped on `main`. Tests: **2,561** (2,457 Python + 104 TS). Migrations: **15**. Endpoints: **47**.
+> **As of v5.0.0b1 (May 20, 2026):** Phase A Weeks 1–5 of the [God Mode v3 Plan](GOD_MODE_V3_PLAN.md)
+> are shipped on `main`. Tests: **2,757** (2,653 Python + 104 TS). Migrations: **18**. Endpoints: **52**.
 > Ground-truth YAMLs: **23** (CVE recall battery: 20 pre-registered).
 > Engines documented under [engines/](engines/).
 
@@ -43,7 +43,7 @@
 
 | Document | Description |
 |----------|-------------|
-| [REST API Reference](API_REFERENCE.md) | All 47 FastAPI endpoints under `/v1/`, CLI reference, auth flows [v5.0.0-beta — adds 10 routes: chat (×4), call-graph, history, heatmap, timeline, iac scan, risk-map] |
+| [REST API Reference](API_REFERENCE.md) | All 52 FastAPI endpoints under `/v1/`, CLI reference, auth flows |
 | [Cloud Deployment](setup/Cloud-Deployment.md) | PythonAnywhere, Replit, ngrok deployment guides |
 | [Token Setup](setup/TOKEN_SETUP.md) | GitHub, GitLab, and Groq API key configuration |
 | [LLM Providers](setup/LLM_PROVIDERS.md) | Groq (default) + Ollama (offline) + AgentRouter; model comparison, `ACRQA_LLM_PROVIDER` env var |
@@ -164,4 +164,4 @@ During analysis runs, ACR-QA generates:
 
 ---
 
-**Last Updated:** May 16, 2026
+**Last Updated:** May 20, 2026

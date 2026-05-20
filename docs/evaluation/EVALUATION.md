@@ -74,7 +74,7 @@ specific commit SHAs for reproducibility.
 | VulPy | 293 | 293 | 0 | 100.0% | 100.0% | 100.0% | 100.0% |
 | DSVW | 59 | 59 | 0 | 100.0% | 100.0% | 100.0% | 100.0% |
 
-### Extended Evaluation Corpus (v4.6.0 — 13 repos across 4 languages)
+### Extended Evaluation Corpus (v5.0.0b1 — 13 repos across 4 languages)
 
 Corpus expanded to 13 repos in W2–W3 (2026-05-17). Ground truth YAMLs in `TESTS/evaluation/ground_truth/`.
 
@@ -201,18 +201,18 @@ Independent blind triage of 20 stratified findings (10 HIGH, 6 MED, 4 LOW) by a 
 
 | Metric | Value |
 |--------|:-----:|
-| Test Suite | **2,344 passing** (2,279 Python + 65 TypeScript) — W3 +5 auth register tests |
+| Test Suite | **2,757 passing** (2,653 Python + 104 TypeScript) |
 | Code Coverage | **84.89%** (CORE) · 82.66% (CORE+DATABASE, CI gate 82% ✅) |
 | CI/CD | GitHub Actions (test + lint + coverage + E2E + deploy + cosign sign) |
 | Docker | Multi-stage Dockerfile + docker-compose.yml (8 services incl. Jaeger) |
-| API Endpoints | **37** async FastAPI endpoints under `/v1/` (+4 auth: register/verify/forgot-password/reset-password, +1 demo/run) |
+| API Endpoints | **52** async FastAPI endpoints under `/v1/` |
 | Auth | JWT (15min/7d) + bcrypt-hashed API keys + RBAC (admin/member/viewer) + public self-registration (demo mode) |
 | CUSTOM-* Findings | **0** (regression-guarded by `test_no_custom_rules.py`) |
 | Deduplication | Automated 2-pass cross-tool deduplication |
 | Rule Mappings | 299+ tool-specific → canonical rules |
 | OWASP Coverage | 9/10 categories |
 | Repos Tested | **13** benchmark repositories across 4 languages (Python × 7, JS × 4, Go × 1, TS × 1) |
-| Alembic Migrations | **11** (baseline → users → reachability → embeddings → exploits → attestations → taint → triage → supply-chain → cost-telemetry → user-registration) |
+| Alembic Migrations | **18** |
 | Engines | 14 (normalizer, severity, quality-gate, explainer, autofix, reachability, learned-suppression, taint, triage-agent, exploit-verifier, attestation, supply-chain, trivy-adapter, trufflehog-adapter) |
 | Chaos Resilience | Postgres + Redis failure tests (13 tests) — graceful degradation verified |
 | Load Tested | 500 RPS Locust test — p99 target < 2s |
@@ -265,4 +265,4 @@ Dead-code findings receive a **−20 confidence penalty** rather than outright s
 
 ---
 
-*Updated: May 17, 2026 — ACR-QA v4.6.0 (W1–W5 complete; 2,279 tests; 37 endpoints; 13 repos; κ=0.74; CVE recall 2/10; distributed on PyPI + GitHub Actions Marketplace. Human tasks remaining: demo video + YouTube upload)*
+*Updated: May 20, 2026 — ACR-QA v5.0.0b1 (Phase A complete; 2,757 tests; 52 endpoints; 13 repos; κ=0.74; CVE recall 2/10; head-to-head vs Semgrep CE: ACR-QA 92.3% recall vs 71.2% (+21.1pp) — see docs/evaluation/HEAD_TO_HEAD_SEMGREP.md; distributed on PyPI + GitHub Actions Marketplace)*
