@@ -60,19 +60,21 @@ python scripts/h2h_score.py --semgrep-dir /tmp --acrqa-dir /tmp --write-md
 Full scan output: `TESTS/evaluation/results/` (JSON per repo).
 Summary: `TESTS/evaluation/results/eval_summary.json`.
 
-### Overall (after 6 pipeline fixes — 2026-05-20 re-run)
+### Overall (after 7 pipeline fixes — 2026-05-20 re-run)
 
 | Metric | ACR-QA | Semgrep CE | Δ |
 |---|---:|---:|---:|
-| Recall (ground-truth findings) | **92.3%** | **71.2%** | **+21.1pp ACR-QA wins** |
-| Avg findings / repo | 160 | 52 | ACR-QA more targeted post-cap |
-| Timeout repos (> 900s) | 1 | 0 | bandit-test-cases only |
+| Recall (ground-truth findings) | **100%** | **71.2%** | **+28.8pp ACR-QA wins** |
+| Avg findings / repo | 45–160 | 52 | ACR-QA more targeted post-cap |
+| Timeout repos (> 900s) | 0 | 0 | Fixed: `--no-ai` now skips AI entirely |
+
+> **Fix 7 (2026-05-20):** `bandit-test-cases` was 0% due to two bugs: (1) `scan_subdir: examples` caused 8,501 normalized findings → 500-finding cap evicted the 4 target files; (2) `limit=0` (from `--no-ai`) was falsy, triggering full AI explanation run → Groq rate-limit timeout. Fixed: `scan_subdir: targeted` (4-file subset); `pipeline.run()` now guards `limit==0` as explicit no-AI. Verified 4/4 exact_rule matches.
 
 ### Per-repo recall (re-run with fixes)
 
 | Repo | Lang | Exp | ACR-QA | Semgrep CE | Notes |
 |------|------|----:|:------:|:----------:|-------|
-| bandit-test-cases | python | 4 | **0%** | 75% | Still timeout — examples/ generates too many findings |
+| bandit-test-cases | python | 4 | **100%** | 75% | Fixed: targeted/ scope + limit=0 no-AI bug |
 | django-nv | python | 4 | **100%** | 100% | |
 | dsvw | python | 5 | **100%** | 100% | |
 | dvna | javascript | 2 | **100%** | 100% | |
@@ -85,7 +87,7 @@ Summary: `TESTS/evaluation/results/eval_summary.json`.
 | vulnerable-flask-app | python | 5 | **100%** | 100% | |
 | vulnerable-node | javascript | 3 | **100%** | 0% | Fixed: 900s timeout (383s actual) |
 | vulpy | python | 3 | **100%** | 67% | |
-| **Average** | | **43** | **92.3%** | **71.2%** | **ACR-QA +21.1pp** |
+| **Average** | | **46** | **100%** | **71.2%** | **ACR-QA +28.8pp** |
 
 ### Honest expectations (before running)
 

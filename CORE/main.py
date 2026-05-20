@@ -307,8 +307,11 @@ class AnalysisPipeline:
 
         # Cap explanations using config
         max_explanations = self.config.get("ai", {}).get("max_explanations", 50)
-        effective_limit = min(limit, max_explanations) if limit else max_explanations
-        findings_to_process = findings[:effective_limit] if effective_limit else findings
+        if limit == 0:
+            effective_limit = 0
+        else:
+            effective_limit = min(limit, max_explanations) if limit is not None else max_explanations
+        findings_to_process = findings[:effective_limit] if effective_limit else []
 
         findings_with_snippets = []
         for f in findings_to_process:
@@ -374,11 +377,12 @@ class AnalysisPipeline:
                 self.db.insert_explanation(f["_db_id"], expl)
 
         # Triage Agent: multi-step LLM reasoning on HIGH/CRITICAL findings (Phase 3)
+        # Skip when limit=0 (--no-ai mode) to avoid Groq API calls in eval/CI contexts.
         try:
             from CORE.engines.triage_agent import TriageAgent
 
             agent = TriageAgent()
-            if agent.is_available:
+            if agent.is_available and effective_limit != 0:
                 findings = agent.enrich_findings(findings, target_dir=str(self.target_dir))
                 for f in findings:
                     if "_db_id" in f and f.get("triage_verdict"):

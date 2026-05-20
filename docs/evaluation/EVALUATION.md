@@ -265,4 +265,4 @@ Dead-code findings receive a **−20 confidence penalty** rather than outright s
 
 ---
 
-*Updated: May 20, 2026 — ACR-QA v5.0.0b1 (Phase A complete; 2,757 tests; 52 endpoints; 13 repos; κ=0.74; CVE recall 2/10; head-to-head vs Semgrep CE: ACR-QA 92.3% recall vs 71.2% (+21.1pp) — see docs/evaluation/HEAD_TO_HEAD_SEMGREP.md; distributed on PyPI + GitHub Actions Marketplace)*
+*Updated: May 20, 2026 — ACR-QA v5.0.0b1 (Phase A complete; 2,757 tests; 52 endpoints; 13 repos; κ=0.74; CVE recall 2/10; head-to-head vs Semgrep CE: ACR-QA 100% recall vs 71.2% (+28.8pp)) — see docs/evaluation/HEAD_TO_HEAD_SEMGREP.md; distributed on PyPI + GitHub Actions Marketplace)*

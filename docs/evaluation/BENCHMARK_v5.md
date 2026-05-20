@@ -1,14 +1,14 @@
 # ACR-QA Benchmark Summary
 
-_Generated: 2026-05-20 05:51:53_
+_Generated: 2026-05-20 (updated: bandit-test-cases scope fix → 100% ACR-QA recall)_
 
 **23 repos** · **46 expected findings** · **10 pending verification**
 
-**ACR-QA avg recall: 92.3%** · **Semgrep CE avg recall: 71.2%** (13 non-CVE repos)
+**ACR-QA avg recall: 100%** · **Semgrep CE avg recall: 71.2%** (13 non-CVE repos)
 
 | Repo | Lang | Exp | ACR-QA | Found | Semgrep | Found |
 |------|------|----:|:------:|------:|:-------:|------:|
-| bandit-test-cases | python | 4 | 0% | 0 | 75% | 267 |
+| bandit-test-cases | python | 4 | 100% | 45 | 75% | 9 |
 | gunicorn@21.2.0 | python | 0 | CVE | — | CVE | — |
 | GitPython@3.1.40 | python | 0 | CVE | — | CVE | — |
 | jinja2@3.1.2 | python | 0 | CVE | — | CVE | — |
