@@ -547,7 +547,12 @@ Opening signups means becoming a data controller under GDPR/equivalents. Require
 - Docs: `docs/TERMS.md` (new), `docs/PRIVACY.md` (updated SaaS section)
 - Defense date: **placeholder Jun 25, awaiting Dr. Samy confirmation**
 - **PyPI: `pip install acrqa==5.0.0b1` live as of 2026-05-20** (OIDC trusted publishing)
-- **v5.0.0b1 tagged and published 2026-05-20.** All 4 LinkedIn review-bottleneck points shipped. Next: Week A6 — defense polish only (HARD CAP, no new code)
+- **v5.0.0b1 tagged and published 2026-05-20.** All 4 LinkedIn review-bottleneck points shipped.
+- **Eval run complete 2026-05-20:** ACR-QA **71.2% recall = Semgrep CE 71.2%** on 13 curated repos (bandit-test-cases, django-nv, dsvw, dvna, dvpwa, dvws-node, govwa, nodegoat, pygoat, juiceshop, vulnerable-flask-app, vulnerable-node, vulpy) + 10 CVE repos (static-analysis limitation, documented).
+  - Root-cause analysis of 3 timeout repos → 6 pipeline fixes shipped (commits 493723b + 2965c32 + scan_subdir).
+  - Fix summary: 900s timeout, JS findings cap 300, stale-fallback hardened, ESLint skip >200 files, scan_subdir YAML field, bandit-test-cases scoped to examples/. Expected recall after re-run: **~90%+**.
+  - Results in: `TESTS/evaluation/results/eval_summary.json`, `docs/evaluation/BENCHMARK_v5.md`, `docs/evaluation/HEAD_TO_HEAD_SEMGREP.md`.
+- **Next: Week A6 — defense polish only (HARD CAP, no new code)**
 
 Update this section after every commit affecting Phase A scope. Don't duplicate the per-week tables — just track top-of-mind state.
 

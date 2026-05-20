@@ -213,7 +213,6 @@ def compute_recall(expected: list[dict], findings: list[dict], tool: str = "acrq
 
 def resolve_local_path(entry: dict) -> str | None:
     lp = entry.get("local_path", "")
-    # Try as-is, then relative to ROOT
     candidates = [
         Path(lp),
         ROOT / lp,
@@ -221,6 +220,13 @@ def resolve_local_path(entry: dict) -> str | None:
     ]
     for c in candidates:
         if c.is_dir():
+            # scan_subdir lets a YAML focus the scan on a subdirectory (e.g.
+            # bandit-test-cases scans examples/ only, not the full bandit source tree).
+            subdir = entry.get("scan_subdir", "")
+            if subdir:
+                target = c / subdir
+                if target.is_dir():
+                    return str(target)
             return str(c)
     return None
 
