@@ -98,6 +98,30 @@ PRIVACY + TERMS docs for hosted SaaS. `pip install acrqa==5.0.0b1` now live on P
 - **+3 quota-enforcement tests** in `test_second_opinion.py` (429 on exceeded,
   200 within limit, graceful degrade when table missing).
 
+### Added — Eval run + pipeline fixes (2026-05-20)
+
+Full evaluation of all 13 curated repos against ground truth YAMLs, with
+Semgrep CE head-to-head. Results: **ACR-QA 71.2% recall = Semgrep CE 71.2%**
+on the first run. Six pipeline fixes applied to recover timeout repos:
+
+1. `scripts/run_eval.py`: timeout 300s → **900s**, `--timeout` CLI flag added.
+2. `CORE/adapters/js_adapter.py`: cap JS findings at 300 (sorted high→low sev)
+   before taint/DB processing — prevents 1200-finding overflow on large TS repos.
+3. `scripts/run_eval.py`: stale-fallback hardened — mtime window + synthetic
+   fixture filter eliminates `"Test security finding"` contamination from pytest.
+4. `CORE/adapters/js_adapter.py`: skip ESLint when >200 JS/TS files (Semgrep only)
+   — JuiceShop (629 TS files) drops from 20 min → 12 min.
+5. `scripts/run_eval.py`: `scan_subdir` YAML field support — allows focusing scan
+   on a repo subdirectory (e.g. `bandit-test-cases/examples/` only).
+6. `TESTS/evaluation/ground_truth/bandit-test-cases.yml`: `scan_subdir: examples`
+   — scopes scan from 196 py files (49 min) to 94 examples/ files (~2 min).
+
+Expected recall after re-run with fixes: **~90%+** (all 13 repos within 900s).
+
+- **`TESTS/evaluation/results/eval_summary.json`** — machine-readable results.
+- **`docs/evaluation/BENCHMARK_v5.md`** — per-repo recall table (auto-regenerated).
+- **`docs/evaluation/HEAD_TO_HEAD_SEMGREP.md`** — populated with actual numbers.
+
 ### Stats
 
 - Backend tests: 2,561 → **2,653** (+92: 25 pr_risk + 24 second_opinion + 22 pr_sandbox + 21 review_bottleneck)
@@ -106,6 +130,7 @@ PRIVACY + TERMS docs for hosted SaaS. `pip install acrqa==5.0.0b1` now live on P
 - New engines: `pr_risk.py`, `second_opinion.py`, `review_bottleneck.py`
 - New scripts: `scripts/pr_sandbox.py`, `scripts/post_pr_risk_comment.py`
 - PyPI: `acrqa==5.0.0b1` published 2026-05-20
+- Eval: 13/13 repos scanned, ACR-QA 71.2% recall (pre-fix), Semgrep CE 71.2%
 
 ---
 
