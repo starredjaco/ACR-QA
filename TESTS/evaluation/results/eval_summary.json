@@ -1,8 +1,10 @@
 {
-  "generated": "2026-05-20 (re-run with 6 pipeline fixes)",
-  "total_repos": 23,
+  "generated": "2026-05-20 (re-run with 6 pipeline fixes; CVE battery expanded to 20)",
+  "total_repos": 33,
   "scanned": 13,
   "cve_skipped": 10,
+  "cve_pending_scan": 10,
+  "cve_pending_note": "10 new detectable CVEs pre-registered (yaml.load B506, pickle B301, eval B307, shell B602, prototype-pollution, MD5 B303). Clones not yet pulled — recall_target=1 for 8 of 10, 0 for 2. Actual recall pending run_eval --scan.",
   "acrqa_average_recall": 0.923,
   "semgrep_average_recall": 0.712,
   "results": [

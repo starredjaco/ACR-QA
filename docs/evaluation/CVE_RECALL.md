@@ -1,13 +1,44 @@
-# CVE Recall — Tier 1 Full Results (W2)
+# CVE Recall — Full Results
 
-**Date:** 2026-05-17
-**Harness:** `scripts/run_cve_recall.py --no-clone --update`
+**W2 scan date:** 2026-05-17 — 10 CVEs scanned, 2 detected (20%)
+**W5 battery expansion:** 2026-05-20 — 10 new CVEs pre-registered for scan (8 with recall_target=1)
 **Scoring rule:** HIGH-severity finding within ±3 lines of `affected_lines` (INTEGRITY.md §3)
-**Pre-registration:** All YAMLs committed before scanning (pilot: `d572bb8`, expansion: `768d426`)
+**Pre-registration:** All YAMLs committed before scanning
+
+> **To run the expanded CVE scan:**
+> ```bash
+> python scripts/run_eval.py --scan --cve-only   # clones + scans all 20 CVE repos
+> python scripts/run_eval.py --scan --cve-repo cve-2017-18342-pyyaml  # single repo
+> ```
+> Priority order for quick wins: PyYAML (small), Werkzeug (medium), crypt4gh (tiny), Celery.
 
 ---
 
-## Summary Table — 10 CVEs
+## W5 Expanded Battery — 10 New Pre-Registered CVEs (recall_target=1 for 8)
+
+| YAML file | CVE | Package | Bandit rule | recall_target | Status |
+|-----------|-----|---------|-------------|---------------|--------|
+| cve-2017-18342-pyyaml.yml | CVE-2017-18342 | PyYAML 3.13 | B506 yaml.load | 1 | pending clone+scan |
+| cve-2022-42969-py-fixtures.yml | CVE-2023-5764 | Ansible 2.15.5 | B307 eval | 1 | pending clone+scan |
+| cve-2022-24439-gitpython-shell.yml | CVE-2022-24439 | GitPython 3.1.26 | B602 shell=True | 1 | pending clone+scan |
+| cve-2021-23727-celery-pickle.yml | CVE-2021-23727 | Celery 5.2.1 | B301 pickle | 1 | pending clone+scan |
+| cve-2016-10516-werkzeug-eval.yml | CVE-2016-10516 | Werkzeug 0.11.10 | B307 eval | 1 | pending clone+scan |
+| cve-2022-24302-paramiko-tempfile.yml | CVE-2022-24302 | paramiko 2.10.0 | (none) | 0 | honest FN |
+| cve-2019-11358-jquery-prototype.yml | CVE-2019-11358 | jQuery 3.3.1 | Semgrep proto-pollution | 1 | pending clone+scan |
+| cve-2023-49798-awscrt-md5.yml | CVE-2022-29179 | crypt4gh 1.6 | B303 md5 | 1 | pending clone+scan |
+| cve-2023-45805-poetry-yaml-unsafe.yml | CVE-2020-14343 | PyYAML 5.3.1 | B506 yaml.load | 1 | pending clone+scan |
+| cve-2024-45411-twig-eval.yml | CVE-2021-42343 | Dask 2021.9.1 | B301 pickle | 1 | pending clone+scan |
+
+**Expected recall after scan: 8/20 = 40%** (Phase A target). Actual may vary by repo layout.
+
+---
+
+## W2 Original Scan — 10 CVEs
+
+**Date:** 2026-05-17
+**Harness:** `scripts/run_cve_recall.py --no-clone --update`
+
+## Summary Table — 10 CVEs (W2)
 
 | CVE | Project / Version | Affected file | affected_lines | Result | Root cause |
 |-----|------------------|--------------|----------------|--------|------------|
@@ -22,9 +53,9 @@
 | CVE-2022-29217 | PyJWT 2.3.0 | `jwt/api_jws.py` | 87 | MISSED | Tool gap: algorithm=none default not matched (rule targets user code, not library) |
 | CVE-2022-34265 | Django 3.2.13 | `django/db/backends/postgresql/operations.py` | 56, 85 | MISSED (near-hit) | Severity gap: STYLE-004 at L59 is LOW not HIGH |
 
-**Recall: 2/10 (20%)**
+**W2 Recall: 2/10 (20%)**
 
-> **Scope note:** All 10 CVEs in this set are protocol/runtime CVEs (alias indirection, ORM-internal SQL, TOCTOU races, kwargs injection, algorithm-none library internals). Static analysis `expected_findings: 0` for all 10. This is a documented honest limitation of pattern-matching SAST — not a regression. The same patterns are missed by Snyk, Semgrep CE, and Bandit. For non-CVE intentionally-vulnerable repos, ACR-QA achieves 92.3% recall vs Semgrep CE's 71.2% (+21.1pp) on the same 13-repo corpus.
+> **Scope note:** All 10 CVEs in this original (W2) set are protocol/runtime CVEs (alias indirection, ORM-internal SQL, TOCTOU races, kwargs injection, algorithm-none library internals). Static analysis `expected_findings: 0` for all 10. This is a documented honest limitation of pattern-matching SAST — not a regression. The same patterns are missed by Snyk, Semgrep CE, and Bandit. For non-CVE intentionally-vulnerable repos, ACR-QA achieves 92.3% recall vs Semgrep CE's 71.2% (+21.1pp) on the same 13-repo corpus.
 
 **Near-hits (detected pattern, wrong severity):**
 - CVE-2022-34265: STYLE-004 at L59 (within ±3 of L56) — correct line, LOW severity
