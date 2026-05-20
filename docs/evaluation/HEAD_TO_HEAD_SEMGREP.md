@@ -60,32 +60,32 @@ python scripts/h2h_score.py --semgrep-dir /tmp --acrqa-dir /tmp --write-md
 Full scan output: `TESTS/evaluation/results/` (JSON per repo).
 Summary: `TESTS/evaluation/results/eval_summary.json`.
 
-### Overall
+### Overall (after 6 pipeline fixes — 2026-05-20 re-run)
 
 | Metric | ACR-QA | Semgrep CE | Δ |
 |---|---:|---:|---:|
-| Recall (ground-truth findings) | **71.2%** | **71.2%** | 0 |
-| Avg findings / repo | 251 | 52 | ACR-QA higher raw volume |
-| Timeout repos (> 300s) | 3 | 0 | juiceshop, pygoat, vulnerable-node |
+| Recall (ground-truth findings) | **92.3%** | **71.2%** | **+21.1pp ACR-QA wins** |
+| Avg findings / repo | 160 | 52 | ACR-QA more targeted post-cap |
+| Timeout repos (> 900s) | 1 | 0 | bandit-test-cases only |
 
-### Per-repo recall
+### Per-repo recall (re-run with fixes)
 
 | Repo | Lang | Exp | ACR-QA | Semgrep CE | Notes |
 |------|------|----:|:------:|:----------:|-------|
-| bandit-test-cases | python | 4 | 25% | 75% | ACR-QA timeout; 1 exact rule match |
-| django-nv | python | 4 | 100% | 100% | |
-| dsvw | python | 5 | 100% | 100% | |
-| dvna | javascript | 2 | 100% | 100% | |
-| dvpwa | python | 6 | 100% | 33% | |
-| dvws-node | javascript | 2 | 100% | 100% | |
-| govwa | go | 2 | 100% | 0% | Semgrep missed target files |
-| juiceshop | javascript | 3 | 0% | 100% | ACR-QA timeout |
-| nodegoat | javascript | 2 | 100% | 50% | |
-| pygoat | python | 5 | 0% | 100% | ACR-QA timeout |
-| vulnerable-flask-app | python | 5 | 100% | 100% | |
-| vulnerable-node | javascript | 3 | 0% | 0% | Both timeout / missed files |
-| vulpy | python | 3 | 100% | 67% | |
-| **Average** | | **43** | **71.2%** | **71.2%** | |
+| bandit-test-cases | python | 4 | **0%** | 75% | Still timeout — examples/ generates too many findings |
+| django-nv | python | 4 | **100%** | 100% | |
+| dsvw | python | 5 | **100%** | 100% | |
+| dvna | javascript | 2 | **100%** | 100% | |
+| dvpwa | python | 6 | **100%** | 33% | |
+| dvws-node | javascript | 2 | **100%** | 100% | |
+| govwa | go | 2 | **100%** | 0% | Semgrep missed target files (dbutil.go, cmd.go) |
+| juiceshop | javascript | 3 | **100%** | 100% | Fixed: ESLint skip + 900s timeout (701s actual) |
+| nodegoat | javascript | 2 | **100%** | 50% | |
+| pygoat | python | 5 | **100%** | 100% | Fixed: 900s timeout (420s actual) |
+| vulnerable-flask-app | python | 5 | **100%** | 100% | |
+| vulnerable-node | javascript | 3 | **100%** | 0% | Fixed: 900s timeout (383s actual) |
+| vulpy | python | 3 | **100%** | 67% | |
+| **Average** | | **43** | **92.3%** | **71.2%** | **ACR-QA +21.1pp** |
 
 ### Honest expectations (before running)
 

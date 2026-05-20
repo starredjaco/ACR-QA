@@ -1,4 +1,4 @@
-# ACR-QA v4.6.0 Architecture
+# ACR-QA v5.0.0b1 Architecture
 
 ## System Overview
 
@@ -284,7 +284,7 @@ Returns **exit code 1** when thresholds are exceeded and `mode: block` is set â†
 | SARIF Export | `scripts/export_sarif.py` | SARIF v2.1.0 |
 | CycloneDX SBOM | `GET /v1/runs/{id}/sbom` | CycloneDX 1.4 JSON |
 | Attestation | `GET /v1/runs/{id}/attestation` | ECDSA-P256 + Dilithium3 signature |
-| Dashboard | `FRONTEND/api/main.py` + `FRONTEND/static/ui/` | FastAPI (37 endpoints) + React 18 SPA + 13-page static HTML UI (landing + auth UX + demo mode) |
+| Dashboard | `FRONTEND/api/main.py` + `FRONTEND/static/ui/` | FastAPI (52 endpoints) + React 18 SPA + 13-page static HTML UI (landing + auth UX + demo mode) |
 | Rich CLI | `CORE/main.py --rich` | Terminal tables |
 | Prometheus | `/metrics` endpoint | Prometheus text format |
 | MCP Tools | `acrqa-mcp/` package | scan / explain / fix (Claude Code / Cursor) |

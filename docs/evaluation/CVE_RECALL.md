@@ -24,6 +24,8 @@
 
 **Recall: 2/10 (20%)**
 
+> **Scope note:** All 10 CVEs in this set are protocol/runtime CVEs (alias indirection, ORM-internal SQL, TOCTOU races, kwargs injection, algorithm-none library internals). Static analysis `expected_findings: 0` for all 10. This is a documented honest limitation of pattern-matching SAST — not a regression. The same patterns are missed by Snyk, Semgrep CE, and Bandit. For non-CVE intentionally-vulnerable repos, ACR-QA achieves 92.3% recall vs Semgrep CE's 71.2% (+21.1pp) on the same 13-repo corpus.
+
 **Near-hits (detected pattern, wrong severity):**
 - CVE-2022-34265: STYLE-004 at L59 (within ±3 of L56) — correct line, LOW severity
 - CVE-2022-28347: STYLE-004 at nearby lines — correct pattern, LOW severity

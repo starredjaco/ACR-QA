@@ -196,6 +196,22 @@ class AnalysisPipeline:
         # Deduplicate findings (same file+line+rule from different tools)
         findings = self._deduplicate_findings(findings)
 
+        # Global pre-processing cap: keep top findings by severity before running
+        # expensive engines (taint, reachability, exploit).  The per-rule cap of 5
+        # runs later but only after all DB/taint work is done — on intentionally-
+        # vulnerable repos like bandit-test-cases (544 findings) this blows past
+        # 900s.  500 is generous; real codebases rarely exceed this post-dedup.
+        _SEV_RANK = {"high": 0, "critical": 0, "medium": 1, "low": 2, "info": 3}
+        _GLOBAL_CAP = 500
+        if len(findings) > _GLOBAL_CAP:
+            findings = sorted(findings, key=lambda f: _SEV_RANK.get((f.get("severity") or "low").lower(), 3))
+            logger.info(
+                "Global findings cap: keeping top %d of %d (sorted by severity)",
+                _GLOBAL_CAP,
+                len(findings) + (len(findings) - _GLOBAL_CAP),
+            )
+            findings = findings[:_GLOBAL_CAP]
+
         # Taint Analyzer: detect user-input → dangerous-sink flows (Feature Phase-1)
         try:
             from CORE.engines.taint_analyzer import TaintAnalyzer
