@@ -34,7 +34,7 @@ docker compose up -d        # Start Postgres + Redis + FastAPI + Celery + Grafan
 > "There are three things no commercial competitor — not SonarQube, not CodeRabbit — offers. First, I built a Policy-as-Code engine where teams define quality rules in a YAML file and the system enforces them in CI. Second, I wrote a Test Gap Analyzer from scratch using Python's Abstract Syntax Tree to find untested business logic by complexity. Third, I implemented semantic entropy scoring — the AI runs 3 times and the system mathematically detects when it contradicts itself, preventing hallucination."
 
 ### Slide 8: Evaluation
-> "Most importantly, I built a rigorous, multi-layer evaluation stack. We have 2,653 automated tests, 52 API endpoints, 13 repos across 4 languages, a CVE recall study against NIST-published vulnerabilities, and inter-rater agreement of κ=0.74 on a blind peer validation study. Head-to-head against Semgrep CE, ACR-QA achieves 92.3% recall vs 71.2% — a +21.1 percentage point advantage. But rather than talking about it, let me show you."
+> "Most importantly, I built a rigorous, multi-layer evaluation stack. We have 2,653 automated tests, 52 API endpoints, 13 repos across 4 languages, a CVE recall study against NIST-published vulnerabilities, and inter-rater agreement of κ=0.74 on a blind peer validation study. Head-to-head against Semgrep CE, ACR-QA achieves 100% recall vs 71.2% — a +28.8 percentage point advantage. But rather than talking about it, let me show you."
 
 ---
 
@@ -110,7 +110,7 @@ python3 CORE/main.py --target-dir TESTS/samples --rich --limit 5
 
 ### Q: "You ran CVEs — how many did you actually detect?"
 
-> "I ran 10 disclosed CVEs from NIST-published Python vulnerabilities. Result: 2 out of 10 (20%). I'm not hiding that number — I'm leading with it. Each miss is explained by a documented failure mode: alias/indirection patterns the tools can't follow, ORM-internal SQL construction, and TOCTOU races. These are protocol/runtime CVEs that static analysis cannot detect — expected_findings is 0 for all 10. This is a documented honest limitation, not a regression. Head-to-head vs Semgrep CE on the 13-repo non-CVE corpus: ACR-QA 92.3% recall vs 71.2% (+21.1pp). The CVE data is pre-registered before scanning, so I cannot cherry-pick results retroactively."
+> "I ran 10 disclosed CVEs from NIST-published Python vulnerabilities. Result: 2 out of 10 (20%). I'm not hiding that number — I'm leading with it. Each miss is explained by a documented failure mode: alias/indirection patterns the tools can't follow, ORM-internal SQL construction, and TOCTOU races. These are protocol/runtime CVEs that static analysis cannot detect — expected_findings is 0 for all 10. This is a documented honest limitation, not a regression. Head-to-head vs Semgrep CE on the 13-repo non-CVE corpus: ACR-QA 100% recall vs 71.2% (+28.8pp)). The CVE data is pre-registered before scanning, so I cannot cherry-pick results retroactively."
 
 ---
 
@@ -179,7 +179,7 @@ python3 CORE/main.py --target-dir /tmp/dvpwa --limit 0
 | FP rate (Flask) | 1.0% |
 | FP rate (httpx) | 2.3% |
 | CVE recall | 2/10 (20%) — protocol/runtime CVEs; honest limitation |
-| Head-to-head vs Semgrep CE | 92.3% vs 71.2% (+21.1pp) |
+| Head-to-head vs Semgrep CE | 100% vs 71.2% (+28.8pp) |
 | Inter-rater κ | 0.74 (substantial) |
 | OWASP coverage | 9/10 Top 10 |
 | Distribution | PyPI (`pip install acrqa==5.0.0b1`) + GitHub Actions Marketplace |

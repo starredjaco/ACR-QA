@@ -67,6 +67,7 @@ target-version = "py311"
 line-length = 120
 exclude = [
     "TESTS/evaluation/cloned/",
+    "TESTS/evaluation/fixtures/",
     "mutants/",
 ]
 
