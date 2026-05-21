@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/toast";
 import { Loader2, Play, RefreshCw, TrendingUp } from "lucide-react";
+import { submitIacScan, submitScaScan, submitSecretsScan } from "@/lib/api";
 
 export function ScansPage() {
   const { data, isLoading, refetch } = useRuns(30);
@@ -20,11 +21,16 @@ export function ScansPage() {
   const [targetDir, setTargetDir] = useState("");
   const [repoName, setRepoName] = useState("");
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  const [scanMode, setScanMode] = useState<"full" | "iac" | "sca" | "secrets">("full");
 
   async function handleScan(e: React.FormEvent) {
     e.preventDefault();
     try {
-      const job = await submitMutation.mutateAsync({ dir: targetDir, repo: repoName });
+      let job;
+      if (scanMode === "iac") job = await submitIacScan(targetDir, repoName);
+      else if (scanMode === "sca") job = await submitScaScan(targetDir, repoName);
+      else if (scanMode === "secrets") job = await submitSecretsScan(targetDir, repoName);
+      else job = await submitMutation.mutateAsync({ dir: targetDir, repo: repoName });
       setActiveJobId(job.job_id);
       toast("Scan started!", "success");
     } catch {
@@ -119,23 +125,27 @@ export function ScansPage() {
         <form onSubmit={handleScan} className="space-y-4">
           <div>
             <label className="text-sm font-medium">Target directory</label>
-            <Input
-              value={targetDir}
-              onChange={(e) => setTargetDir(e.target.value)}
-              placeholder="e.g. /path/to/repo"
-              required
-              className="mt-1"
-            />
+            <Input value={targetDir} onChange={(e) => setTargetDir(e.target.value)} placeholder="/path/to/repo" required className="mt-1" />
           </div>
           <div>
             <label className="text-sm font-medium">Repo name</label>
-            <Input
-              value={repoName}
-              onChange={(e) => setRepoName(e.target.value)}
-              placeholder="e.g. my-service"
-              required
-              className="mt-1"
-            />
+            <Input value={repoName} onChange={(e) => setRepoName(e.target.value)} placeholder="my-service" required className="mt-1" />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-2 block">Scan type</label>
+            <div className="grid grid-cols-2 gap-2">
+              {(["full", "iac", "sca", "secrets"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setScanMode(mode)}
+                  className={`rounded-lg border px-3 py-2 text-sm text-left transition-colors ${scanMode === mode ? "border-primary bg-primary/5 font-medium" : "hover:bg-muted"}`}
+                >
+                  <div className="font-medium">{mode === "full" ? "Full Scan" : mode === "iac" ? "IaC Scanner" : mode === "sca" ? "SCA (Dependencies)" : "Secrets Detector"}</div>
+                  <div className="text-xs text-muted-foreground">{mode === "full" ? "SAST + AI + all engines" : mode === "iac" ? "Terraform, K8s, Dockerfile" : mode === "sca" ? "Known CVEs in deps" : "API keys, tokens, passwords"}</div>
+                </button>
+              ))}
+            </div>
           </div>
           {activeJobId && (
             <div className="rounded-lg border p-3">

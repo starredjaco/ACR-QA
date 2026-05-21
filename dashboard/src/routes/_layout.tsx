@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { ModeBadge } from "@/components/mode/ModeBadge";
 import { CommandPalette } from "@/components/ui/command-palette";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-import { Shield, LayoutDashboard, Package, Settings, LogOut, Moon, Sun, Languages } from "lucide-react";
+import { Shield, LayoutDashboard, Package, Settings, LogOut, Moon, Sun, Languages, GitCompare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
@@ -25,6 +25,7 @@ export function Layout() {
   const navItems = [
     { to: "/", icon: <LayoutDashboard className="h-4 w-4" aria-hidden />, label: t("nav.scans") },
     { to: "/supply-chain", icon: <Package className="h-4 w-4" aria-hidden />, label: t("nav.supplyChain") },
+    { to: "/compare", icon: <GitCompare className="h-4 w-4" aria-hidden />, label: "Compare" },
     { to: "/settings", icon: <Settings className="h-4 w-4" aria-hidden />, label: t("nav.settings") },
   ];
 

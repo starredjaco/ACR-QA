@@ -181,3 +181,105 @@ export const submitScan = (targetDir: string, repoName: string) =>
 
 export const getScanStatus = (jobId: string) =>
   get<ScanJob>(`/v1/scans/${jobId}`);
+
+export const submitIacScan = (targetDir: string, repoName: string) =>
+  post<ScanJob>("/v1/scans/iac", { target_dir: targetDir, repo_name: repoName });
+
+export const submitScaScan = (targetDir: string, repoName: string) =>
+  post<ScanJob>("/v1/scans/sca", { target_dir: targetDir, repo_name: repoName });
+
+export const submitSecretsScan = (targetDir: string, repoName: string) =>
+  post<ScanJob>("/v1/scans/secrets", { target_dir: targetDir, repo_name: repoName });
+
+// ── PR Risk ───────────────────────────────────────────────────────────────────
+
+export interface PrRisk {
+  run_id: number;
+  score: number;
+  band: "green" | "yellow" | "red";
+  inputs: Record<string, number>;
+  contributions: Record<string, number>;
+  explainer: string[];
+}
+
+export const getPrRisk = (runId: number) =>
+  get<PrRisk>(`/v1/runs/${runId}/pr-risk`);
+
+// ── Cost-Benefit ──────────────────────────────────────────────────────────────
+
+export interface CostBenefit {
+  analysis_cost_usd: number;
+  hours_saved: number;
+  dev_cost_saved_usd: number;
+  roi_multiplier: string;
+  cost_per_finding: number;
+  total_findings: number;
+}
+
+export const getCostBenefit = (runId: number) =>
+  get<{ success: boolean } & CostBenefit>(`/v1/runs/${runId}/cost-benefit`);
+
+// ── Review Bottleneck ─────────────────────────────────────────────────────────
+
+export interface ReviewBottleneck {
+  median_time_to_first_review_hours: number;
+  reviewer_load_gini: number;
+  pct_merged_without_comment: number;
+  top3_reviewer_share: number;
+  stale_pr_count: number;
+  total_commits_analyzed: number;
+}
+
+export const getReviewBottleneck = (runId: number) =>
+  get<{ success: boolean } & ReviewBottleneck>(`/v1/runs/${runId}/review-bottleneck`);
+
+// ── Second Opinion ────────────────────────────────────────────────────────────
+
+export interface SecondOpinion {
+  finding_id: number;
+  primary_provider: string;
+  primary_verdict: string;
+  primary_reason: string;
+  secondary_provider: string;
+  secondary_verdict: string;
+  secondary_reason: string;
+  agreement: boolean;
+  confidence_delta: number;
+  skipped_reason: string | null;
+  latency_ms: number;
+}
+
+export const postSecondOpinion = (findingId: number) =>
+  post<SecondOpinion>(`/v1/findings/${findingId}/second-opinion`, {});
+
+// ── API Keys ──────────────────────────────────────────────────────────────────
+
+export interface ApiKey {
+  id: number;
+  name: string;
+  prefix: string;
+  created_at: string;
+  last_used_at: string | null;
+}
+
+export const getApiKeys = () =>
+  get<ApiKey[]>("/v1/auth/api-keys");
+
+export const createApiKey = (name: string) =>
+  post<{ key: string; prefix: string; id: number }>("/v1/auth/api-keys", { name });
+
+export const deleteApiKey = async (id: number) => {
+  const res = await fetch(`/v1/auth/api-keys/${id}`, {
+    method: "DELETE",
+    headers: authHeader(),
+  });
+  if (!res.ok) throw new Error(`DELETE api-key ${id}: ${res.status}`);
+};
+
+export const deleteAccount = async () => {
+  const res = await fetch("/v1/auth/users/me", {
+    method: "DELETE",
+    headers: authHeader(),
+  });
+  if (!res.ok) throw new Error(`DELETE account: ${res.status}`);
+};
