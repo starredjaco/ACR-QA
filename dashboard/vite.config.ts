@@ -11,8 +11,8 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/v1": { target: "http://localhost:8000", changeOrigin: true },
-      "/openapi.json": { target: "http://localhost:8000", changeOrigin: true },
+      "/v1": { target: "http://localhost:8002", changeOrigin: true },
+      "/openapi.json": { target: "http://localhost:8002", changeOrigin: true },
     },
   },
   build: {

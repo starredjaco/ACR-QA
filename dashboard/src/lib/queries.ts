@@ -50,3 +50,31 @@ export const useSubmitScan = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["runs"] }),
   });
 };
+
+export const usePrRisk = (runId: number) =>
+  useQuery({ queryKey: ["pr-risk", runId], queryFn: () => api.getPrRisk(runId), enabled: !!runId });
+
+export const useCostBenefit = (runId: number) =>
+  useQuery({ queryKey: ["cost-benefit", runId], queryFn: () => api.getCostBenefit(runId), enabled: !!runId });
+
+export const useReviewBottleneck = (runId: number) =>
+  useQuery({ queryKey: ["review-bottleneck", runId], queryFn: () => api.getReviewBottleneck(runId), enabled: !!runId });
+
+export const useApiKeys = () =>
+  useQuery({ queryKey: ["api-keys"], queryFn: api.getApiKeys });
+
+export const useCreateApiKey = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (name: string) => api.createApiKey(name),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["api-keys"] }),
+  });
+};
+
+export const useDeleteApiKey = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteApiKey(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["api-keys"] }),
+  });
+};

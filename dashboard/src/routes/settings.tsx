@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
-import { Wifi, WifiOff, Server, User, Shield, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { useApiKeys, useCreateApiKey, useDeleteApiKey } from "@/lib/queries";
+import { deleteAccount } from "@/lib/api";
+import { Wifi, WifiOff, Server, User, Shield, CheckCircle, XCircle, Loader2, Key, Plus, Trash2 } from "lucide-react";
 import { toast } from "@/components/ui/toast";
 
 type HealthStatus = "checking" | "ok" | "error";
 
 function useHealthCheck(url: string) {
   const [status, setStatus] = useState<HealthStatus>("checking");
-
   useEffect(() => {
     const check = async () => {
       setStatus("checking");
@@ -25,7 +27,6 @@ function useHealthCheck(url: string) {
     const interval = setInterval(check, 30_000);
     return () => clearInterval(interval);
   }, [url]);
-
   return status;
 }
 
@@ -43,6 +44,14 @@ export function SettingsPage() {
   const apiStatus = useHealthCheck("/v1/health");
   const celeryStatus = useHealthCheck("/v1/celery/health");
 
+  const { data: apiKeys, isLoading: keysLoading } = useApiKeys();
+  const createKey = useCreateApiKey();
+  const deleteKey = useDeleteApiKey();
+
+  const [newKeyName, setNewKeyName] = useState("");
+  const [newKeyValue, setNewKeyValue] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+
   function handleLogout() {
     logout();
     window.location.href = "/login";
@@ -56,6 +65,38 @@ export function SettingsPage() {
       navigator.clipboard.writeText(state.token ?? "").then(() => toast("Token copied", "success"));
     } catch {
       toast("Failed to copy token", "error");
+    }
+  }
+
+  async function handleCreateKey(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newKeyName.trim()) return;
+    try {
+      const result = await createKey.mutateAsync(newKeyName.trim());
+      setNewKeyValue(result.key);
+      setNewKeyName("");
+      toast("API key created", "success");
+    } catch {
+      toast("Failed to create key", "error");
+    }
+  }
+
+  async function handleDeleteKey(id: number) {
+    try {
+      await deleteKey.mutateAsync(id);
+      toast("Key revoked", "success");
+    } catch {
+      toast("Failed to revoke key", "error");
+    }
+  }
+
+  async function handleDeleteAccount() {
+    try {
+      await deleteAccount();
+      logout();
+      window.location.href = "/login";
+    } catch {
+      toast("Failed to delete account", "error");
     }
   }
 
@@ -83,8 +124,8 @@ export function SettingsPage() {
           </div>
           {isOffline && (
             <p className="text-xs text-muted-foreground bg-muted/50 rounded p-2">
-              Offline mode: LLM calls routed to local Ollama endpoint. External OSV and GitHub API
-              calls disabled. Set <code className="font-mono">ACRQA_LLM_PROVIDER=ollama</code> and{" "}
+              Offline mode: LLM calls routed to local Ollama endpoint. Set{" "}
+              <code className="font-mono">ACRQA_LLM_PROVIDER=ollama</code> and{" "}
               <code className="font-mono">ACRQA_MODE=offline</code> in the backend environment.
             </p>
           )}
@@ -152,9 +193,91 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Version */}
+      {/* API Keys */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Key className="h-4 w-4" /> API Keys
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-muted-foreground">Use API keys for CI/CD integrations. Keys are shown once — store them securely.</p>
+
+          {newKeyValue && (
+            <div className="rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3 space-y-2">
+              <p className="text-xs font-medium text-green-800 dark:text-green-300">New key created — copy it now, it won't be shown again:</p>
+              <div className="flex gap-2 items-center">
+                <code className="flex-1 font-mono text-xs bg-white dark:bg-black/20 px-2 py-1 rounded border truncate">{newKeyValue}</code>
+                <Button size="sm" variant="outline" onClick={() => { navigator.clipboard.writeText(newKeyValue); toast("Copied", "success"); }}>Copy</Button>
+              </div>
+              <Button size="sm" variant="ghost" className="text-xs" onClick={() => setNewKeyValue(null)}>Dismiss</Button>
+            </div>
+          )}
+
+          {keysLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground text-sm"><Loader2 className="h-4 w-4 animate-spin" /> Loading…</div>
+          ) : apiKeys && apiKeys.length > 0 ? (
+            <div className="space-y-2">
+              {apiKeys.map((k) => (
+                <div key={k.id} className="flex items-center justify-between rounded border px-3 py-2 text-sm">
+                  <div>
+                    <span className="font-medium">{k.name}</span>
+                    <span className="text-muted-foreground ml-2 font-mono text-xs">{k.prefix}…</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted-foreground hidden sm:inline">
+                      {k.last_used_at ? `Used ${new Date(k.last_used_at).toLocaleDateString()}` : "Never used"}
+                    </span>
+                    <Button variant="ghost" size="icon" aria-label="Revoke key" className="h-7 w-7 text-red-500 hover:text-red-700" onClick={() => handleDeleteKey(k.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No API keys yet.</p>
+          )}
+
+          <form onSubmit={handleCreateKey} className="flex gap-2">
+            <Input
+              value={newKeyName}
+              onChange={(e) => setNewKeyName(e.target.value)}
+              placeholder="Key name (e.g. github-actions)"
+              className="flex-1 text-sm"
+            />
+            <Button type="submit" size="sm" disabled={createKey.isPending || !newKeyName.trim()}>
+              {createKey.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      {/* Danger zone */}
+      <Card className="border-red-200 dark:border-red-900">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base text-red-600">Danger Zone</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">Permanently delete your account and all associated data. This cannot be undone.</p>
+          {!deleteConfirm ? (
+            <Button variant="outline" size="sm" className="border-red-300 text-red-600 hover:bg-red-50" onClick={() => setDeleteConfirm(true)}>
+              Delete my account
+            </Button>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-red-600">Are you sure? This is irreversible.</p>
+              <div className="flex gap-2">
+                <Button variant="destructive" size="sm" onClick={handleDeleteAccount}>Yes, delete everything</Button>
+                <Button variant="outline" size="sm" onClick={() => setDeleteConfirm(false)}>Cancel</Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <div className="text-xs text-muted-foreground text-center pt-2">
-        ACR-QA v3.8.0 — Dashboard PRO · Phase 6
+        ACR-QA v5.0.0b1 · Phase A complete
       </div>
     </div>
   );
