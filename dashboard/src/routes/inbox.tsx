@@ -240,7 +240,7 @@ export function InboxPage() {
       </div>
 
       {/* Content */}
-      <div className="page-pad" style={{ paddingTop: 0 }}>
+      <div style={{ padding: "0 32px 90px" }}>
         {isLoading ? (
           <div style={{ display: "flex", justifyContent: "center", padding: 60 }}>
             <span className="spinner" style={{ width: 24, height: 24 }} />
@@ -263,28 +263,32 @@ export function InboxPage() {
             <div className="inbox-empty-sub">No items in this category.</div>
           </div>
         ) : (
-          <div className="panel" style={{ padding: 0, overflow: "hidden", marginTop: 20 }}>
-            {/* Column headers */}
+          <>
+            {/* Column header — outside overflow:hidden so sticky works */}
             <div style={{
               display: "grid", gridTemplateColumns: "20px 72px 90px 1fr auto auto",
-              padding: "7px 16px", borderBottom: "1px solid var(--border)",
+              padding: "7px 16px",
               background: "var(--bg-3)", position: "sticky", top: "53px", zIndex: 5,
+              border: "1px solid var(--border)", borderBottom: "none",
+              borderRadius: "12px 12px 0 0",
             }}>
               {["", "SEV", "STATUS", "FILE / MESSAGE", "AGE", "OWNER"].map((h) => (
                 <div key={h} style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--fg-5)", padding: "0 8px", textTransform: "uppercase", letterSpacing: "0.08em" }}>{h}</div>
               ))}
             </div>
 
-            {/* Grouped rows */}
-            {activeLens === "all"
-              ? renderGrouped(visibleItems, cursorIdx, selected, (vuln) => {
-                  navigate(`/vuln/${vuln.short_id}`);
-                }, toggleSelect)
-              : renderFlat(visibleItems, cursorIdx, selected, (vuln) => {
-                  navigate(`/vuln/${vuln.short_id}`);
-                }, toggleSelect)
-            }
-          </div>
+            {/* Rows panel — border-radius only on bottom */}
+            <div className="panel" style={{ padding: 0, overflow: "hidden", borderRadius: "0 0 12px 12px", borderTop: "none", marginTop: 0 }}>
+              {activeLens === "all"
+                ? renderGrouped(visibleItems, cursorIdx, selected, (vuln) => {
+                    navigate(`/vuln/${vuln.short_id}`);
+                  }, toggleSelect)
+                : renderFlat(visibleItems, cursorIdx, selected, (vuln) => {
+                    navigate(`/vuln/${vuln.short_id}`);
+                  }, toggleSelect)
+              }
+            </div>
+          </>
         )}
       </div>
 
