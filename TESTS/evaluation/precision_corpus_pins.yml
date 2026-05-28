@@ -1,0 +1,236 @@
+# Precision benchmark corpus — 30 mature, actively-maintained repos
+# Pinned HEAD SHAs captured 2026-05-28 via `git ls-remote <url> HEAD`.
+#
+# Selection rules (fully objective, stated for defense reproducibility):
+#   Python (20): Top-20 by PyPI 30-day downloads (hugovk.dev snapshot 2026-05-28),
+#                excluding test/dev-only tools (pip, wheel) and meta-packages.
+#   JS/TS  (6):  Top 6 by GitHub star count (Search API snapshot 2026-05-28),
+#                filtered to recognizable installable libraries/frameworks.
+#   Go     (4):  Top 4 by GitHub star count (Search API snapshot 2026-05-28),
+#                filtered to recognizable installable libraries/apps.
+#
+# Precision measurement rationale:
+#   These repos ship to millions of users and are under continuous security review.
+#   Any HIGH/MEDIUM finding reported by ACR-QA is a candidate FP until triage
+#   proves otherwise.  TP = confirmed real issue.  FP = noise / false positive.
+#   Precision = TP / (TP + FP).
+#
+# Re-pin when intentionally re-running the benchmark.
+
+precision_repos:
+
+  # ── Python (20) ─────────────────────────────────────────────────────────────
+
+  - name: packaging
+    url: https://github.com/pypa/packaging
+    sha: "68cdb4d400823b401c1a40969964f509636a8094"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 1
+
+  - name: urllib3
+    url: https://github.com/urllib3/urllib3
+    sha: "e63ea111dd2eec414947762af7f7988c2d6652cc"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 2
+
+  - name: requests
+    url: https://github.com/psf/requests
+    sha: "cd90742ed94d901759e26766197d0ce7c7bd9c8e"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 3
+
+  - name: charset-normalizer
+    url: https://github.com/Ousret/charset_normalizer
+    sha: "49cf8d328c991b4af62b21b0472bede962112cd6"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 4
+
+  - name: setuptools
+    url: https://github.com/pypa/setuptools
+    sha: "84ed5913724df5a12dc804e1d5efe12508e706d2"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 5
+
+  - name: cryptography
+    url: https://github.com/pyca/cryptography
+    sha: "b1a84f50e20cc32b6f3733e94348e97b53bdce07"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 6
+
+  - name: python-dateutil
+    url: https://github.com/dateutil/dateutil
+    sha: "48bd1af97e71baf8e96fce5b663d589caac8f147"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 7
+
+  - name: pyyaml
+    url: https://github.com/yaml/pyyaml
+    sha: "d51d8a138f7230834fc6e95635ff09ebd329185f"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 8
+
+  - name: pydantic
+    url: https://github.com/pydantic/pydantic
+    sha: "a20c0ee267150c3bb0f82bf05e0806fa65b1e70c"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 9
+
+  - name: pygments
+    url: https://github.com/pygments/pygments
+    sha: "78fee6a6def8c82b580b47c2e3e59062609515e4"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 10
+
+  - name: click
+    url: https://github.com/pallets/click
+    sha: "c48021040a50c659b74e24ac2b11c9c9c6620a21"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 11
+
+  - name: numpy
+    url: https://github.com/numpy/numpy
+    sha: "a20ef194d474ed8c499502944c2025bd77d3f61b"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 12
+
+  - name: pycparser
+    url: https://github.com/eliben/pycparser
+    sha: "63a4e9c90638699712abf15ba06b14490762be89"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 13
+
+  - name: anyio
+    url: https://github.com/agronholm/anyio
+    sha: "7a61227120daa1a050c18f4994c6261a1a0b0776"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 14
+
+  - name: attrs
+    url: https://github.com/python-attrs/attrs
+    sha: "48ea7a120c841912195146a27223840612b2e861"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 15
+
+  - name: h11
+    url: https://github.com/python-hyper/h11
+    sha: "62c5068c971579d61fa1b55373390e12f25fd856"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 16
+
+  - name: fsspec
+    url: https://github.com/fsspec/filesystem_spec
+    sha: "71b8a6b6b1c3dbb33fa5cb0c206a84b35164d035"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 17
+
+  - name: pytest
+    url: https://github.com/pytest-dev/pytest
+    sha: "4748bb15b9053a791c04783d4d84eba512c7cf79"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 18
+
+  - name: pandas
+    url: https://github.com/pandas-dev/pandas
+    sha: "4b56aa8ced070e11c2f6b20bce620fe12f02f9a9"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 19
+
+  - name: httpx
+    url: https://github.com/encode/httpx
+    sha: "b5addb64f0161ff6bfe94c124ef76f6a1fba5254"
+    language: python
+    rank_source: pypi_30d_downloads
+    rank: 20
+
+  # ── JavaScript / TypeScript (6) ─────────────────────────────────────────────
+
+  - name: axios
+    url: https://github.com/axios/axios
+    sha: "2d2314a1ac29ce6723eb53e130b4a36617fd201c"
+    language: javascript
+    rank_source: github_stars
+    rank: 1
+
+  - name: express
+    url: https://github.com/expressjs/express
+    sha: "dae209ae6559c29cfca2a1f4414c51d89ea643d5"
+    language: javascript
+    rank_source: github_stars
+    rank: 2
+
+  - name: nextjs
+    url: https://github.com/vercel/next.js
+    sha: "0a355571a0152e7eca6eac82b8bc1423af6e84c4"
+    language: javascript
+    rank_source: github_stars
+    rank: 3
+
+  - name: react
+    url: https://github.com/facebook/react
+    sha: "6b5ea125577d0f96eecafa53553b1a80172d1a11"
+    language: javascript
+    rank_source: github_stars
+    rank: 4
+
+  - name: webpack
+    url: https://github.com/webpack/webpack
+    sha: "c076bece94cd9026bd0dd5c0129e4b25fd44f751"
+    language: javascript
+    rank_source: github_stars
+    rank: 5
+
+  - name: n8n
+    url: https://github.com/n8n-io/n8n
+    sha: "7db3eb8b2e99bdae4dbbfbb13fdc6181bba5a794"
+    language: javascript
+    rank_source: github_stars
+    rank: 6
+
+  # ── Go (4) ───────────────────────────────────────────────────────────────────
+
+  - name: gin
+    url: https://github.com/gin-gonic/gin
+    sha: "5f4f9643258dc2a65e684b63f12c8d543c936c67"
+    language: go
+    rank_source: github_stars
+    rank: 1
+
+  - name: caddy
+    url: https://github.com/caddyserver/caddy
+    sha: "86121c860f59fb109602497f603c02571464e3cf"
+    language: go
+    rank_source: github_stars
+    rank: 2
+
+  - name: syncthing
+    url: https://github.com/syncthing/syncthing
+    sha: "d91f8849a277d206f7ae1a4e6b8a9d7d5b4a20e0"
+    language: go
+    rank_source: github_stars
+    rank: 3
+
+  - name: frp
+    url: https://github.com/fatedier/frp
+    sha: "012d9fb0c5230d5df8c844c87d2169a8fa32dc58"
+    language: go
+    rank_source: github_stars
+    rank: 4

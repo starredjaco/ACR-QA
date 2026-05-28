@@ -9,68 +9,68 @@ ground_truth_repos:
   # Layer A — synthetic ground-truth (intentionally vulnerable)
   - name: dvpwa
     url: https://github.com/anxolerd/dvpwa
-    sha: ""  # populate during Tier 3 run: git -C <repo> rev-parse HEAD
+    sha: "a1d8f89fac2e57093189853c6527c2b01fc1d9c1"  # pinned 2026-05-28
     ground_truth: TESTS/evaluation/ground_truth/dvpwa.yml
 
   - name: pygoat
     url: https://github.com/adeyosemanputra/pygoat
-    sha: ""
+    sha: "19d17cc8874861142b330636d068bbde54e86b85"  # pinned 2026-05-28
     ground_truth: TESTS/evaluation/ground_truth/pygoat.yml
 
   - name: vulpy
     url: https://github.com/fportantier/vulpy
-    sha: ""
+    sha: "5249cc8b05a1c37f6b2f757b1cf16a509c327122"  # pinned 2026-05-28
     ground_truth: TESTS/evaluation/ground_truth/vulpy.yml
 
   - name: dsvw
     url: https://github.com/stamparm/DSVW
-    sha: ""
+    sha: "7d40f4b7939c901610ed9b85724552d60e7d63fa"  # pinned 2026-05-28
     ground_truth: TESTS/evaluation/ground_truth/dsvw.yml
 
   - name: vulnerable-flask-app
     url: https://github.com/we45/Vulnerable-Flask-App
-    sha: ""
+    sha: "b6a4f97afd466e83e1f60781494252dec1c37039"  # pinned 2026-05-28
     ground_truth: TESTS/evaluation/ground_truth/vulnerable-flask-app.yml
 
   - name: bandit-test-cases
     url: https://github.com/PyCQA/bandit
-    sha: ""
+    sha: "c4bfccf6fdf80559f2aad937246fb1b0c607a423"  # pinned 2026-05-28
     ground_truth: TESTS/evaluation/ground_truth/bandit-test-cases.yml
 
   - name: nodegoat
     url: https://github.com/OWASP/NodeGoat
-    sha: ""
+    sha: "c5cb68a7084e4ae7dcc60e6a98768720a81841e8"  # pinned 2026-05-28
     ground_truth: TESTS/evaluation/ground_truth/nodegoat.yml
 
   - name: dvna
     url: https://github.com/appsecco/dvna
-    sha: ""
+    sha: "9ba473add536f66ac9007966acb2a775dd31277a"  # pinned 2026-05-28
     ground_truth: TESTS/evaluation/ground_truth/dvna.yml
 
   - name: dvws-node
     url: https://github.com/snoopysecurity/dvws-node
-    sha: ""
+    sha: "a7385b855dce7a4da135f5949df96059b76aaba6"  # pinned 2026-05-28
     ground_truth: TESTS/evaluation/ground_truth/dvws-node.yml
 
   - name: juiceshop
     url: https://github.com/juice-shop/juice-shop
-    sha: ""
+    sha: "6244c59a47ba4436cb00e9ad9c565bb2056582ec"  # pinned 2026-05-28
     ground_truth: TESTS/evaluation/ground_truth/juiceshop.yml
 
   # Tier 3 expansion — added W2 for language breadth
   - name: govwa
     url: https://github.com/0c34/govwa
-    sha: ""  # populate during Tier 3 clone+scan
+    sha: "4058f79f31eeb4a36d8f1e64bba1f0c899646e6f"  # pinned 2026-05-28
     ground_truth: TESTS/evaluation/ground_truth/govwa.yml
 
   - name: vulnerable-node
     url: https://github.com/cr0hn/vulnerable-node
-    sha: ""  # populate during Tier 3 clone+scan
+    sha: "4e2058201e4443026c11de1799d1e2f2e37f9f9b"  # pinned 2026-05-28
     ground_truth: TESTS/evaluation/ground_truth/vulnerable-node-app.yml
 
   - name: django-nv
     url: https://github.com/nVisium/django.nV
-    sha: ""  # populate during Tier 3 clone+scan
+    sha: "a48901f106da4888417339b7b44b8ed56b64c63f"  # pinned 2026-05-28
     ground_truth: TESTS/evaluation/ground_truth/django-nv.yml
 
   # Layer B — real-world FP rate (production codebases)
@@ -78,12 +78,12 @@ ground_truth_repos:
   # SHAs documented here for reproducibility of the FP rate numbers.
   - name: flask
     url: https://github.com/pallets/flask
-    sha: ""  # populate: git -C <flask> rev-parse HEAD at time of FP triage
+    sha: "954f5684e4841aad84a8eec7ace7b81a0d3f6831"  # pinned 2026-05-28
     role: layer_b_fp_rate
     notes: "FP triage: 100 HIGH findings, 1 FP → 1.0% FP rate"
 
   - name: httpx
     url: https://github.com/encode/httpx
-    sha: ""  # populate: git -C <httpx> rev-parse HEAD at time of FP triage
+    sha: "b5addb64f0161ff6bfe94c124ef76f6a1fba5254"  # pinned 2026-05-28
     role: layer_b_fp_rate
     notes: "FP triage: 43 HIGH findings, 1 FP → 2.3% FP rate"

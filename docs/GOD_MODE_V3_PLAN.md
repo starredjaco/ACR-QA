@@ -608,4 +608,111 @@ Update this section after every commit affecting Phase A scope. Don't duplicate 
 
 ---
 
+## 14. Evaluation Hardening Track (added 2026-05-28)
+
+**Context:** Phase A is code-complete. The product works (verified end-to-end 2026-05-28:
+backend 2,553 pass, frontend build + 104 Vitest + 55 Playwright green, live stack healthy).
+What remains in our power before defense is **not features — it's evaluation rigor.** A
+thesis defense is won or lost on the evaluation chapter, and that is currently the thinnest
+part of ACR-QA.
+
+### Why this track exists — three gaps an examiner will attack
+
+1. **Precision is barely measured.** `eval_summary.json` computes `average_recall` only. We
+   report 100% recall but have no precision / F1. Recall alone is a trap — a tool that flags
+   everything scores 100% recall. **This is the #1 attack surface.**
+2. **Reproducibility hole.** `TESTS/evaluation/repo_pins.yml` has `sha: ""` for every repo.
+   Labelled "pinned for reproducibility" but nothing is actually pinned.
+3. **Corpus is mostly toy / intentionally-vulnerable apps** (DSVW, DVWA, pygoat). Committees
+   discount these as "not real code." No large real-world repos in the FP-rate story.
+
+### The honest-evaluation principle (non-negotiable)
+
+The risk is **not too little eval — it's eval that looks too perfect.** 100% recall is already
+a yellow flag. The goal of Track 1 is an **honest** precision number even if it's 88% not 99%.
+*"Here is where my tool fails and why"* is a stronger thesis than *"my tool is perfect."*
+Every track must surface and document real weaknesses (FPs, misses), not hide them.
+
+### Sequencing decision: all three, strictly ordered, NOT parallel
+
+They compound and share infrastructure. Doing all three shallowly in parallel yields three
+half-finished tables a committee picks apart. Build the rails once (Track 1), then 2 and 3
+reuse them. **Do not start a track before the prior track's gate is met.**
+
+#### Track 1 — Real-world precision benchmark (foundation, highest leverage)
+
+| Task | Detail |
+|---|---|
+| 1.1 | Pin all `repo_pins.yml` SHAs (clone → `git rev-parse HEAD` → write). Closes reproducibility hole. |
+| 1.2 | ✅ Corpus chosen + frozen (2026-05-28) — see "Frozen corpus" below. |
+| 1.3 | Batch-scan harness, `--no-ai` for speed (detection is deterministic; AI explanation not needed for metrics). |
+| 1.4 | Triage worksheet → measure HIGH/MED **false-positive rate**; compute **precision / recall / F1** per repo + aggregate. |
+| 1.5 | Triage rigor: auto-assisted first pass (heuristics: test/example dirs, known-safe patterns) → human/rater final sign-off. Document methodology. |
+
+#### Frozen corpus (locked 2026-05-28) — 30 repos across all 3 supported languages
+
+**Selection rules (objective + reproducible — stated so the corpus survives examiner scrutiny):**
+
+- **Python (20):** Top PyPI packages by 30-day downloads — `hugovk/top-pypi-packages`
+  snapshot **2026-05-28** — taken in rank order after excluding (a) auto-generated cloud-SDK
+  clients, (b) pure data/cert/compat-shim packages and anything < ~1k LOC hand-written Python,
+  (c) primarily-Rust/C packages with negligible Python. First 20 that pass.
+- **JS/TS (6) + Go (4):** Top repos by **GitHub stars** (GitHub Search API, `language:X
+  sort:stars`, snapshot **2026-05-28**), excluding non-code repos (tutorials, books, awesome-*
+  lists, style guides, asset bundles) and repos > ~500k LOC (kubernetes, golang/go) to keep
+  scans tractable.
+- **Why two metrics?** (defensible, stated): Python has a clean download registry that maps to
+  importable libraries; JS download-tops are dominated by micro-utilities with no security
+  surface (so stars better capture "real code engineers ship"); Go has **no** central download
+  registry, so stars is the only option. Each metric is the most-citable available *per
+  ecosystem*.
+- **Sanity-check finding:** raw star lists contained star-farmed / renamed-fork anomalies
+  (`affaan-m/ECC`, `openclaw`, `gstack`); the "recognized installable library/framework/app"
+  rule filters them. This is why the human sanity pass exists.
+
+| Lang | Repos (download/star rank order) |
+|---|---|
+| **Python (20)** | packaging · urllib3 · requests · charset-normalizer · setuptools · cryptography · python-dateutil · pyyaml · pydantic · pygments · click · numpy · pycparser · anyio · attrs · h11 · fsspec · pytest · pandas · httpx |
+| **JS/TS (6)** | axios · express · next.js · react · webpack · n8n |
+| **Go (4)** | gin · caddy · syncthing · frp |
+
+These mature, popular repos have **no ground truth** — the assumption is they contain few *real*
+HIGH vulns, so every HIGH/MED finding is a **candidate false positive** to triage. Precision =
+TP/(TP+FP); recall is **not** measured here (measured on the CVE/vuln-app corpus instead). F1
+combines the two across the framework.
+
+**Gate:** one honest precision number across the 30-repo corpus, fully reproducible at pinned SHAs.
+**Deliverable:** `docs/evaluation/PRECISION_BENCHMARK.md` + auto-generated table + `precision` field added to `eval_summary.json`.
+
+#### Track 2 — Recall expansion (reuses Track 1 harness)
+
+| Task | Detail |
+|---|---|
+| 2.1 | +10–15 recent (2024–2025) CVE ground truths, prioritising vuln classes **not** already covered. |
+| 2.2 | Run through the shared harness; document honest misses (FNs) alongside hits. |
+
+**Gate:** 30–35 CVEs with honest recall, misses documented. Stop there — more is diminishing returns.
+
+#### Track 3 — Competitor head-to-head expansion (polish)
+
+| Task | Detail |
+|---|---|
+| 3.1 | Add Bandit + CodeQL alongside existing Semgrep CE on the shared corpus. |
+| 3.2 | Attempt SonarQube CE **only if** Bandit + CodeQL land cleanly (needs server + auth). |
+
+**Gate:** one multi-tool comparison table on the shared corpus. SonarQube optional.
+
+### Effort shape
+
+Track 1 is the real work (a few focused sessions — cloning, scanning, triage). Tracks 2–3 are
+faster because the rails exist. Ahmed has time → all three is realistic; the constraint is
+*order*, not capacity.
+
+### Invocation
+
+- `go god mode eval` → start Track 1 from its first unfinished task.
+- `go god mode eval N` → execute Track N (only if prior gate met).
+
+---
+
 *Plan v3 supersedes v2 (which is complete). Update this doc at the end of each week — do not let it rot.*
