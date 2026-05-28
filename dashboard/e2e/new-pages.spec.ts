@@ -1,14 +1,5 @@
 import { test, expect } from "@playwright/test";
 
-const loginAndGo = async (page: Parameters<Parameters<typeof test>[1]>[0]["page"], path: string) => {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill(process.env.E2E_EMAIL ?? "admin@acrqa.test");
-  await page.getByLabel("Password").fill(process.env.E2E_PASSWORD ?? "changeme");
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/(overview|scans)/);
-  await page.goto(path);
-};
-
 async function mockAuth(page: Parameters<Parameters<typeof test>[1]>[0]["page"]) {
   await page.addInitScript(() => {
     localStorage.setItem(
