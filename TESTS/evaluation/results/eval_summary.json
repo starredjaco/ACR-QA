@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-29 (T4.1 ablation added)",
+  "generated": "2026-05-29 (T4.2 bootstrap CI added)",
   "precision_updated": "2026-05-29",
   "recall_updated": "2026-05-29",
   "total_repos": 38,
@@ -545,5 +545,26 @@
       }
     ],
     "key_finding": "Security-tier precision 24.7%\u201337.9% at 219 findings; each pipeline layer validated as beneficial."
+  },
+  "t4_bootstrap_ci": {
+    "generated": "2026-05-29 17:31 UTC",
+    "n_boot": 10000,
+    "n_repos": 30,
+    "sec_conservative_ci": {
+      "point": 0.2466,
+      "ci_95_lo": 0.1463,
+      "ci_95_hi": 0.3541
+    },
+    "sec_optimistic_ci": {
+      "point": 0.379,
+      "ci_95_lo": 0.2637,
+      "ci_95_hi": 0.5045
+    },
+    "hm_conservative_ci": {
+      "point": 0.0857,
+      "ci_95_lo": 0.0451,
+      "ci_95_hi": 0.1389
+    },
+    "note": "Per-repo bootstrap resampling. Conservative=NEEDS_REVIEW\u2192FP, Optimistic=NEEDS_REVIEW\u2192TP."
   }
 }
