@@ -1,0 +1,69 @@
+{
+  "generated": "2026-05-29",
+  "track3_competitor_comparison": {
+    "bandit_standalone": {
+      "total_findings": 343,
+      "high_med": 255,
+      "auto_tp": 18,
+      "auto_fp": 188,
+      "needs_review": 49,
+      "conservative_precision": 0.0706,
+      "optimistic_precision": 0.2627,
+      "sec_tier_total": 129,
+      "sec_tier_conservative": 0.1395,
+      "sec_tier_optimistic": 0.1628
+    },
+    "semgrep_standalone": {
+      "total_findings": 706,
+      "high_med": 143,
+      "auto_tp": 27,
+      "auto_fp": 78,
+      "needs_review": 38,
+      "conservative_precision": 0.1888,
+      "optimistic_precision": 0.4545,
+      "sec_tier_total": 75,
+      "sec_tier_conservative": 0.36,
+      "sec_tier_optimistic": 0.7067
+    },
+    "acrqa_combined": {
+      "total_findings": 1942,
+      "high_med": 630,
+      "auto_tp": 54,
+      "auto_fp": 453,
+      "needs_review": 123,
+      "conservative_precision": 0.0857,
+      "optimistic_precision": 0.2813,
+      "sec_tier_total": 219,
+      "sec_tier_conservative": 0.2466,
+      "sec_tier_optimistic": 0.379
+    },
+    "platform_value_add": {
+      "tool_hm_breakdown": {
+        "bandit": 255,
+        "semgrep": 143,
+        "radon": 80,
+        "vulture": 23,
+        "ruff": 52,
+        "unknown": 33,
+        "eslint": 44
+      },
+      "tool_total_breakdown": {
+        "bandit": 343,
+        "semgrep": 706,
+        "radon": 80,
+        "ruff": 426,
+        "vulture": 65,
+        "unknown": 49,
+        "eslint": 273
+      },
+      "bandit_hm": 255,
+      "semgrep_hm": 143,
+      "all_tools_canonical_hm": 630,
+      "aggregation_tool_count": 7,
+      "corroborated_count": 7,
+      "taint_reachable": 29,
+      "taint_unreachable": 7,
+      "taint_total_enriched": 36
+    }
+  }
+}

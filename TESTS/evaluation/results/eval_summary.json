@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-29 (Track 2 updated)",
+  "generated": "2026-05-29 (Track 3 updated)",
   "precision_updated": "2026-05-29",
   "recall_updated": "2026-05-29",
   "total_repos": 38,
@@ -16,14 +16,18 @@
     "conservative_precision": 0.0857,
     "optimistic_precision": 0.2813,
     "security_tier_conservative": 0.2466,
-    "security_tier_optimistic": 0.3790,
+    "security_tier_optimistic": 0.379,
     "security_tier_denominator": 219,
-    "note": "Conservative=NEEDS_REVIEW→FP; Optimistic=NEEDS_REVIEW→TP. Security-tier restricts denominator to HIGH-severity security-category rules only (SECURITY-*/SECRET-*/SQLI-*/SHELL-*/CRYPTO-*) — the standard SAST reporting stratum. Path heuristics added 2026-05-29 for L1 (SECURITY-046 SSRF in dev-tooling paths) and L2 (SECURITY-022/026 subprocess in build-automation paths). See docs/evaluation/PRECISION_BENCHMARK.md and docs/GOD_MODE_V3_PLAN.md §14."
+    "note": "Conservative=NEEDS_REVIEW\u2192FP; Optimistic=NEEDS_REVIEW\u2192TP. Security-tier restricts denominator to HIGH-severity security-category rules only (SECURITY-*/SECRET-*/SQLI-*/SHELL-*/CRYPTO-*) \u2014 the standard SAST reporting stratum. Path heuristics added 2026-05-29 for L1 (SECURITY-046 SSRF in dev-tooling paths) and L2 (SECURITY-022/026 subprocess in build-automation paths). See docs/evaluation/PRECISION_BENCHMARK.md and docs/GOD_MODE_V3_PLAN.md \u00a714."
   },
   "average_recall": 1.0,
   "track2_recall": {
     "note": "Track 2 added 5 CVEs across 3 new vuln families (2026-05-29). 3 detectable, 2 honest misses.",
-    "new_families": ["CWE-611 XXE", "CWE-1336 SSTI", "CWE-89 SQLi (honest miss)"],
+    "new_families": [
+      "CWE-611 XXE",
+      "CWE-1336 SSTI",
+      "CWE-89 SQLi (honest miss)"
+    ],
     "results": [
       {
         "cve": "CVE-2024-34359",
@@ -58,7 +62,7 @@
         "family": "SQLi (CWE-89)",
         "detected": false,
         "honest_miss": true,
-        "reason": "Internal escape_dict() omits key escaping — not visible at call site; requires taint analysis"
+        "reason": "Internal escape_dict() omits key escaping \u2014 not visible at call site; requires taint analysis"
       },
       {
         "cve": "CVE-2024-42005",
@@ -66,7 +70,7 @@
         "family": "SQLi (CWE-89)",
         "detected": false,
         "honest_miss": true,
-        "reason": "ORM-internal SQL column alias construction — application call site contains no detectable pattern"
+        "reason": "ORM-internal SQL column alias construction \u2014 application call site contains no detectable pattern"
       }
     ],
     "detectable_detected": 3,
@@ -363,5 +367,72 @@
         ]
       }
     }
-  ]
+  ],
+  "track3_competitor_comparison": {
+    "bandit_standalone": {
+      "total_findings": 343,
+      "high_med": 255,
+      "auto_tp": 18,
+      "auto_fp": 188,
+      "needs_review": 49,
+      "conservative_precision": 0.0706,
+      "optimistic_precision": 0.2627,
+      "sec_tier_total": 129,
+      "sec_tier_conservative": 0.1395,
+      "sec_tier_optimistic": 0.1628
+    },
+    "semgrep_standalone": {
+      "total_findings": 706,
+      "high_med": 143,
+      "auto_tp": 27,
+      "auto_fp": 78,
+      "needs_review": 38,
+      "conservative_precision": 0.1888,
+      "optimistic_precision": 0.4545,
+      "sec_tier_total": 75,
+      "sec_tier_conservative": 0.36,
+      "sec_tier_optimistic": 0.7067
+    },
+    "acrqa_combined": {
+      "total_findings": 1942,
+      "high_med": 630,
+      "auto_tp": 54,
+      "auto_fp": 453,
+      "needs_review": 123,
+      "conservative_precision": 0.0857,
+      "optimistic_precision": 0.2813,
+      "sec_tier_total": 219,
+      "sec_tier_conservative": 0.2466,
+      "sec_tier_optimistic": 0.379
+    },
+    "platform_value_add": {
+      "tool_hm_breakdown": {
+        "bandit": 255,
+        "semgrep": 143,
+        "radon": 80,
+        "vulture": 23,
+        "ruff": 52,
+        "unknown": 33,
+        "eslint": 44
+      },
+      "tool_total_breakdown": {
+        "bandit": 343,
+        "semgrep": 706,
+        "radon": 80,
+        "ruff": 426,
+        "vulture": 65,
+        "unknown": 49,
+        "eslint": 273
+      },
+      "bandit_hm": 255,
+      "semgrep_hm": 143,
+      "all_tools_canonical_hm": 630,
+      "aggregation_tool_count": 7,
+      "corroborated_count": 7,
+      "taint_reachable": 29,
+      "taint_unreachable": 7,
+      "taint_total_enriched": 36
+    },
+    "note": "Track 3 added 2026-05-29. Bandit and Semgrep precision computed from cached ACR-QA scan output filtered by tool_raw.tool_name. ACR-QA baseline from precision_benchmark (eval_summary.json \u00a7precision_benchmark). See docs/evaluation/COMPETITOR_COMPARISON.md."
+  }
 }

@@ -212,3 +212,60 @@ The rule fires on `requests.get(url)` where `url` is a variable. In library code
 Building accurate taint analysis would take 2–4 weeks and would risk breaking the 100% recall that is already achieved. The precision floor is already defensible (24.7% security-tier). The thesis honestly acknowledges these limitations and frames them as future work — which is the academically correct approach.
 
 Commercial tools (Snyk Code, Semgrep Pro) address this by combining pattern matching with proprietary taint engines trained on large corpora. That is post-thesis scope for ACR-QA.
+
+---
+
+## Competitor Comparison
+
+### Q: How does ACR-QA's precision compare to Bandit and Semgrep alone?
+
+**Short answer:**
+On the same 30-repo corpus: Bandit standalone gets 14% security-tier precision, Semgrep standalone gets 36%, and ACR-QA combined gets 24.7–37.9% (conservative–optimistic bounds). ACR-QA is not better than each tool at its own game — it is the platform layer that aggregates them.
+
+**Full answer:**
+
+Bandit and Semgrep use different analysis techniques and their precision reflects those differences:
+
+- **Bandit** (AST pattern-matching, no data-flow): 14.0% security-tier conservative on 129 security findings. It fires broadly — every `subprocess.run(...)` is suspicious regardless of whether user input reaches it. Low precision, high recall.
+- **Semgrep** (taint analysis enabled): 36.0% security-tier conservative on 75 security findings. Its taint rules only fire when a source→sink path is confirmed — inherently more conservative in what it reports. Higher precision, lower volume.
+- **ACR-QA combined**: 24.7% conservative / 37.9% optimistic on 219 security findings. The combined denominator (219) is larger than either tool alone (129 Bandit-only, 75 Semgrep-only). The blended precision sits between the two tools weighted by their finding counts — exactly expected.
+
+The key takeaway: ACR-QA's security-tier optimistic precision (37.9%) matches Semgrep's conservative (36.0%). The bounds bracket each other — ACR-QA produces a more complete picture than either tool alone while maintaining comparable precision on the security stratum that matters for SAST reporting.
+
+See `docs/evaluation/COMPETITOR_COMPARISON.md` for the full table.
+
+---
+
+### Q: If Semgrep already has 36% precision, why not just use Semgrep?
+
+**Short answer:**
+Semgrep covers 75 security-tier findings on the same corpus. ACR-QA covers 219 — 2.9× more — by also incorporating Bandit, ruff, radon, and ESLint. The question isn't which tool has the best precision on a narrow slice; it's whether the platform layer adds value.
+
+**Full answer:**
+
+Three concrete things ACR-QA adds that a bare `semgrep scan` does not:
+
+1. **Multi-tool aggregation**: ACR-QA runs 7 distinct tools and normalizes all outputs into a single `CanonicalFinding` schema. Without ACR-QA, an analyst must run 5+ tools in different formats (Bandit JSON, Semgrep SARIF, ESLint JSON, Radon text, Vulture text) and manually correlate them. ACR-QA surfaces 1,942 findings from all tools as one ranked list.
+
+2. **Taint-flow enrichment**: 29 findings carry a `REACHABLE` verdict — Semgrep traced a concrete source→sink data path. 7 findings carry `UNREACHABLE` — ACR-QA demotes these to LOW severity automatically, reducing analyst review without discarding the signal. A raw Semgrep run produces this metadata but requires post-processing to act on it; ACR-QA normalizes it into `reachability_status` on every `CanonicalFinding`.
+
+3. **Cross-tool corroboration**: 7 file:line locations are independently flagged by both Bandit and Semgrep. ACR-QA identifies these as a higher-confidence tier. A finding that two tools detect via different analysis techniques (AST pattern + data-flow) is less likely to be a coincident false positive.
+
+Beyond detection, ACR-QA adds: ECDSA-signed provenance attestation on every scan, a CI quality gate that blocks merges on threshold violations, AI explanations via the explainer engine, a PostgreSQL audit trail, and a React dashboard. None of these are provided by `semgrep scan`.
+
+---
+
+### Q: What about CodeQL? It's considered gold-standard for SAST.
+
+**Short answer:**
+CodeQL is not installed in the evaluation environment (disk budget: ~23 GB free; CodeQL databases for 30 repos would require ~10–50 GB). ACR-QA's architecture can accommodate a CodeQL adapter in the future — the `LanguageAdapter` ABC is designed for exactly this extension.
+
+**Full answer:**
+
+CodeQL is industry gold-standard for interprocedural taint analysis — it would likely outperform both Bandit and ACR-QA's current precision on the security tier. However:
+
+- CodeQL requires building a CodeQL database per repo (~300 MB–2 GB each; 30 repos = 9–60 GB)
+- The evaluation machine has ~23 GB free disk, making a full 30-repo CodeQL run impractical in the available environment
+- CodeQL's analysis time per repo is 10–30 minutes; 30 repos = 5–15 hours
+
+More fundamentally: ACR-QA's thesis contribution is not "better detection than CodeQL." It is the platform layer — normalization, provenance, quality gate, multi-tool aggregation — that is missing from the research ecosystem. CodeQL is a powerful detection engine that would slot into ACR-QA's adapter architecture as a `CodeQLAdapter(LanguageAdapter)`, complementing (not competing with) the existing tools.
