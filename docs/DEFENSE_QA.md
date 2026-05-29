@@ -311,6 +311,32 @@ T4.4 proposes a gated variant: only demote UNREACHABLE findings that are AUTO_FP
 
 ---
 
+### Q: How statistically reliable are your precision numbers? What are the confidence intervals?
+
+**Short answer:**
+95% bootstrap CIs (10,000 iterations, per-repo resampling): security-tier precision **24.7% [14.6%, 35.4%]** conservative; **37.9% [26.4%, 50.4%]** optimistic.
+
+**Full answer:**
+
+CIs are computed by per-repo bootstrap resampling over 30 precision-corpus repos:
+
+| Metric | Point Estimate | 95% CI |
+|--------|---------------|--------|
+| H/M all-tools (conservative) | 8.6% | [4.5%, 13.9%] |
+| H/M all-tools (optimistic) | 28.1% | [19.6%, 36.6%] |
+| Security-tier (conservative) | 24.7% | [14.6%, 35.4%] |
+| Security-tier (optimistic) | 37.9% | [26.4%, 50.4%] |
+| Sec-tier Python (conservative) | 16.8% | [9.1%, 26.1%] |
+| Sec-tier JS (conservative) | 54.4% | [45.8%, 66.7%] |
+
+The CI width (~21pp for security-tier) reflects corpus-sampling uncertainty, not measurement error. With 30 repos, this is the irreducible variance from having a finite corpus. A 100+ repo corpus would narrow it to ±5pp. This is standard for academic SAST evaluations at this corpus scale.
+
+**Why is JS security-tier precision (54.4%) so much higher than Python (16.8%)?**
+
+The 5 JS precision corpus repos (express, axios, n8n, nextjs, dvws-node variants) have higher-confidence semgrep security rules that fire predominantly on actual vulnerabilities — node.js security patterns for XSS, prototype pollution, and path traversal. Python's 25 repos include more mature utility libraries (packaging, urllib3, attrs) where security rules fire on false positives at higher rates.
+
+---
+
 ### Q: The CBOM tool has 61.5% security-tier precision — why not just use CBOM?
 
 **Short answer:**
