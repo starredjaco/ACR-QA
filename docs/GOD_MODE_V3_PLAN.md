@@ -746,6 +746,30 @@ faster because the rails exist. Ahmed has time → all three is realistic; the c
 
 ---
 
+### Track 2 — Completion Status (2026-05-29)
+
+**✅ GATE MET.** Commits: `974a7fa` (ground truths) → `5c24d05` (results). Recall on detectable subset held at 100%.
+
+| Task | Status | Detail |
+|---|---|---|
+| 2.1 | ✅ | +5 recent (2023–2025) CVE ground truths across 3 vuln classes not previously covered: XXE (CWE-611 ×2), SSTI (CWE-1336), SQLi (CWE-89 ×2) |
+| 2.2 | ✅ | Run through shared harness. **3/3 detectable detected** (SSTI llama-cpp `SECURITY-031`; XXE OWSLib `SECURITY-039`; XXE langchain `SECURITY-044`). **2 honest misses documented** (PyMySQL + Django SQLi — both require interprocedural taint through ORM/escape internals). |
+
+Honest-miss handling added to harness: `recall_target: 0` skips scoring; `detection_confidence: medium` admits MEDIUM-severity findings (XXE fires at MEDIUM via B320). See `eval_summary.json` §track2_recall.
+
+### Track 3 — Completion Status (2026-05-29)
+
+**✅ GATE MET.** Commit: `4d94475`. One multi-tool comparison table + platform value-add metrics.
+
+| Task | Status | Detail |
+|---|---|---|
+| 3.1 | ✅ | Bandit + Semgrep standalone precision computed from cached findings (split by `tool_raw.tool_name`), same triage logic. Bandit security-tier **14.0%**; Semgrep **36.0%**; ACR-QA combined **24.7–37.9%** over 219 findings (2.9× either tool's coverage). |
+| 3.2 | ⏭️ | CodeQL/SonarQube **not run** — CodeQL DBs for 30 repos need ~10–50 GB (only ~23 GB free); rationale documented as honest future work. ACR-QA's `LanguageAdapter` ABC can host a `CodeQLAdapter` post-thesis. |
+
+Platform value-add quantified (the contribution *beyond* wrapping tools): 7-tool aggregation → 1 canonical list; 7 locations corroborated by 2+ tools; 29 taint-`REACHABLE` + 7 `UNREACHABLE` findings carry explicit flow verdicts. Deliverables: `docs/evaluation/COMPETITOR_COMPARISON.md`, `competitor_comparison.json`, 3 new Q&As in `docs/DEFENSE_QA.md`.
+
+---
+
 ### Documented Limitations (partially mitigated — cite in thesis as honest future work)
 
 These weaknesses were surfaced by Track 1 triage. L1 and L2 have been partially fixed with path heuristics. The root cause (no taint analysis) remains and should be cited in the thesis.
@@ -779,6 +803,100 @@ These weaknesses were surfaced by Track 1 triage. L1 and L2 have been partially 
 **What happens:** `python -m CORE --lang javascript` on `react` (which has 100+ packages under `packages/`) fails to produce valid JSON. The ESLint flat-config approach doesn't handle multi-root monorepos where each sub-package has its own `package.json` and config.
 
 **Fix path:** Before scanning, detect `packages/*/package.json` pattern → spawn one ESLint pass per sub-package → merge results. Estimated effort: ~2 hours. Deferred as non-critical (react is an unusual repo structure; normal single-package JS projects work fine).
+
+---
+
+## 15. Evaluation Rigor Track — Track 4 (added 2026-05-29)
+
+**Status:** PROPOSED (not started) · **Builds on:** §14 Tracks 1–3 (all ✅ GATE MET)
+
+### North star
+
+Turn the evaluation from *"here are good numbers"* into *"here is proof that every
+architectural layer earns its place, with quantified uncertainty, on both sides of the
+confusion matrix."* Tracks 1–3 established the numbers. Track 4 makes them **scientifically
+defensible** and ties each result to a paper section / defense slide. No time pressure →
+optimize for **rigor**, not speed. Each track ships and commits independently.
+
+### What was rethought vs. the first cut (honest corrections after checking code/data)
+
+1. **The dedup ablation rung is NOT free.** `_deduplicate_findings` (`CORE/main.py:654`) runs
+   unconditionally; cached findings are already post-dedup. A true "raw → +dedup" measurement
+   needs a `--no-dedup` flag + per-stage counters and one corpus re-scan. Folded into T4.1.
+2. **Added confidence intervals (T4.2).** We report point estimates (8.6%, 24.7%) with no "± what?".
+   Bootstrap CIs over the 30-repo corpus are cheap pure-analysis and raise credibility sharply.
+3. **Added the dual-corpus confusion matrix (T4.3).** We measure precision on *clean* code; the
+   complementary axis (recall/TPR on *known-vulnerable* apps) is half-built on disk already
+   (`acrqa-dvwa/juiceshop/pygoat/...json`). Both axes together >> precision alone.
+
+### Execution order (one at a time — risk climbs down the list; do not start a track until the prior commits)
+
+#### Phase 1 — Safe measurement (no recall risk)
+
+- **T4.1 — Layered ablation study** *(centerpiece)* — measure precision/recall/analyst-volume at
+  each rung: `raw → +dedup → +reachability → +triage`. Build work: add `--no-dedup` flag +
+  stage counters (no behavior change when off), re-scan corpus once. Risk: low. Effort: M.
+  Feeds: paper eval §, "architecture validation" slide.
+- **T4.2 — Bootstrap confidence intervals** — 95% CIs on precision (blended + security-tier) and
+  recall via per-repo resampling (no scipy; match `peer_rating.py` style). Risk: none. Effort: S.
+- **T4.3 — Dual-corpus confusion matrix** — pair clean-corpus precision with known-vulnerable-app
+  recall/TPR (data largely on disk; ground truth partly in `TESTS/evaluation/ground_truth/`).
+  Risk: low (may re-scan a few stale apps). Effort: M.
+
+#### Phase 2 — Bold technical move (recall-gated)
+
+- **T4.4 — Reachability-gated severity demotion + re-measure** — wire `UNREACHABLE` to demote
+  severity (HIGH→MEDIUM / out of denominator), not just dock confidence (current:
+  `reachability.py:316` applies only a −20 confidence penalty). **GATE:** proceed only if T4.1
+  shows the reachability layer is currently flat. **Guard:** re-run `run_cve_recall.py`; any drop
+  below 100% on the detectable subset blocks the change. **Hard stop + show numbers before
+  merging anything recall-affecting.** Risk: MEDIUM (only track that can regress recall). Effort: M–L.
+
+#### Phase 3 — Distinctive proofs
+
+- **T4.5 — Determinism / reproducibility proof** — same pinned commit scanned twice →
+  byte-identical ECDSA-signed attestation (or document + fix any nondeterminism). Risk: low. Effort: S–M.
+- **T4.6 — Threat-model / false-negative honesty analysis** — formal taxonomy of what ACR-QA
+  *provably cannot* detect (CSRF, IDOR, auth bypass, business logic, the 2 SQLi misses) and why.
+  Risk: none. Effort: S.
+
+#### Phase 4 — Lock-in + writeup
+
+- **T4.7 — Regression guard test** — CI test pinning recall floor (100% detectable) + security-tier
+  precision floor, so numbers can't silently regress. Risk: low. Effort: S.
+- **T4.8 — Evaluation chapter writeup + figures** — assemble T4.1–T4.7 into the thesis eval
+  chapter / paper §, with figures (ablation bars, CI error bars, confusion matrix, determinism diff).
+  Risk: none. Effort: M.
+
+#### Phase 5 — Novelty proof (in scope, sequenced last)
+
+- **T4.9 — Hallucination-detection evaluation** — does the semantic-entropy mechanism (3× LLM runs)
+  actually flag hallucinated explanations? Build a small labeled set, measure detection rate.
+  Most novel differentiator → worth doing with the long runway, but **sequenced last** so its
+  difficulty (LLM runs + hallucination ground-truth labeling) can't block the defensible core.
+  Effort: L.
+
+### Cross-cutting principles
+
+- One track per commit; nothing half-merged. · **Recall is sacred** — no change drops detectable
+  recall below 100% without explicit sign-off (T4.4 is the only threat). · Every figure gets a CI
+  once T4.2 lands. · Every result names its destination (paper § / slide / book chapter). · Honest
+  misses stay honest.
+
+### Resolved decisions (2026-05-29)
+
+1. **Centerpiece = ablation (T4.1).** Highest-leverage "every layer earns its place" / "this is
+   research" move. Dual-corpus (T4.3) is a close second and ships in the same Phase 1 regardless.
+2. **T4.9 (hallucination eval) = IN SCOPE, sequenced last** (now Phase 5). It evaluates the most
+   novel differentiator, so worth doing with the long runway — but placed after the defensible
+   core lands so its difficulty (LLM runs + labels) can't block thesis-critical results.
+3. **Writeup (T4.8) = both, thesis-book first.** The book is what the committee reads
+   (defense-critical) → port to the IEEE paper afterward (career/compounding artifact).
+
+### Invocation
+
+- `go god mode rigor` → start T4.1 from its first unfinished task.
+- `go god mode rigor N` → execute T4.N (only if prior gate met).
 
 ---
 
