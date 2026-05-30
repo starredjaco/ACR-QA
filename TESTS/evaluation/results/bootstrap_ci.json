@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-29 17:31 UTC",
+  "generated": "2026-05-30 10:37 UTC",
   "method": "Per-repo bootstrap resampling. Unit of resampling = repo. Each iteration draws N repos with replacement, sums TP/FP/NR, computes precision. 95% CI = 2.5th\u201397.5th percentile of 10,000 samples.",
   "n_boot": 10000,
   "n_repos_total": 30,
@@ -15,23 +15,23 @@
       "boot_stdev": 0.0243,
       "mode": "conservative",
       "total_tp": 54,
-      "total_fp": 453,
-      "total_nr": 123,
+      "total_fp": 493,
+      "total_nr": 83,
       "label": "H/M all-tools, conservative"
     },
     "hm_optimistic": {
-      "point_estimate": 0.281,
-      "ci_95_lo": 0.1958,
-      "ci_95_hi": 0.3658,
-      "ci_95_width": 0.17,
+      "point_estimate": 0.2175,
+      "ci_95_lo": 0.1473,
+      "ci_95_hi": 0.2897,
+      "ci_95_width": 0.1424,
       "n_repos": 30,
       "n_boot": 10000,
-      "boot_mean": 0.2808,
-      "boot_stdev": 0.0434,
+      "boot_mean": 0.2168,
+      "boot_stdev": 0.0368,
       "mode": "optimistic",
       "total_tp": 54,
-      "total_fp": 453,
-      "total_nr": 123,
+      "total_fp": 493,
+      "total_nr": 83,
       "label": "H/M all-tools, optimistic"
     },
     "sec_conservative": {
@@ -45,23 +45,23 @@
       "boot_stdev": 0.0533,
       "mode": "conservative",
       "total_tp": 54,
-      "total_fp": 136,
-      "total_nr": 29,
+      "total_fp": 155,
+      "total_nr": 10,
       "label": "Security-tier, conservative"
     },
     "sec_optimistic": {
-      "point_estimate": 0.379,
-      "ci_95_lo": 0.2637,
-      "ci_95_hi": 0.5045,
-      "ci_95_width": 0.2408,
+      "point_estimate": 0.2922,
+      "ci_95_lo": 0.1932,
+      "ci_95_hi": 0.4031,
+      "ci_95_width": 0.2099,
       "n_repos": 30,
       "n_boot": 10000,
-      "boot_mean": 0.3802,
-      "boot_stdev": 0.0617,
+      "boot_mean": 0.2937,
+      "boot_stdev": 0.0538,
       "mode": "optimistic",
       "total_tp": 54,
-      "total_fp": 136,
-      "total_nr": 29,
+      "total_fp": 155,
+      "total_nr": 10,
       "label": "Security-tier, optimistic"
     },
     "hm_conservative_py": {
@@ -75,8 +75,8 @@
       "boot_stdev": 0.0164,
       "mode": "conservative",
       "total_tp": 29,
-      "total_fp": 385,
-      "total_nr": 81,
+      "total_fp": 423,
+      "total_nr": 43,
       "label": "H/M Python only, conservative"
     },
     "hm_conservative_js": {
@@ -90,8 +90,8 @@
       "boot_stdev": 0.1094,
       "mode": "conservative",
       "total_tp": 25,
-      "total_fp": 68,
-      "total_nr": 42,
+      "total_fp": 70,
+      "total_nr": 40,
       "label": "H/M JavaScript only, conservative"
     },
     "sec_conservative_py": {
@@ -105,8 +105,8 @@
       "boot_stdev": 0.0436,
       "mode": "conservative",
       "total_tp": 29,
-      "total_fp": 120,
-      "total_nr": 24,
+      "total_fp": 137,
+      "total_nr": 7,
       "label": "Sec-tier Python only, conservative"
     },
     "sec_conservative_js": {
@@ -120,8 +120,8 @@
       "boot_stdev": 0.0523,
       "mode": "conservative",
       "total_tp": 25,
-      "total_fp": 16,
-      "total_nr": 5,
+      "total_fp": 18,
+      "total_nr": 3,
       "label": "Sec-tier JS only, conservative"
     }
   }

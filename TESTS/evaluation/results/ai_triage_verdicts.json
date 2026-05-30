@@ -1,0 +1,130 @@
+{
+  "generated": "2026-05-30T01:51:30Z",
+  "method": "Two independent Groq llama-3.3-70b calls; reclassify only on unanimous agreement",
+  "n_candidates": 10,
+  "promoted_to_auto_tp": 0,
+  "promoted_to_auto_fp": 5,
+  "kept_needs_review": 5,
+  "verdicts": [
+    {
+      "rule": "SECURITY-005",
+      "repo": "python-dateutil",
+      "file": "/home/ahmeed/Documents/KSIU/GRAD/SOLO/TESTS/evaluation/cloned/precision_corpus/python-dateutil/src/dateutil/parser/_parser.py",
+      "line": 122,
+      "v_a": "FP",
+      "r_a": "The 'token' variable is assigned a space character, not a secret.",
+      "v_b": "FP",
+      "r_b": "The code snippet provided does not contain a hardcoded secret, but rather an assignment of a space character to the variable 'token', which does not pose a security risk.",
+      "final": "AUTO_FP",
+      "reason": "[AI triage] both calls agree FP. A: The 'token' variable is assigned a space character, not a secret.. B: The code snippet provided does not contain a hardcoded secret, but rather an ass"
+    },
+    {
+      "rule": "SECURITY-005",
+      "repo": "pygments",
+      "file": "/home/ahmeed/Documents/KSIU/GRAD/SOLO/TESTS/evaluation/cloned/precision_corpus/pygments/scripts/check_repeated_token.py",
+      "line": 41,
+      "v_a": "FP",
+      "r_a": "Empty string is not a hardcoded secret.",
+      "v_b": "FP",
+      "r_b": "The tool is over-firing because the variable 'token' is initialized as an empty string, which does not contain any secret information.",
+      "final": "AUTO_FP",
+      "reason": "[AI triage] both calls agree FP. A: Empty string is not a hardcoded secret.. B: The tool is over-firing because the variable 'token' is initialized as an empty "
+    },
+    {
+      "rule": "SECURITY-005",
+      "repo": "pygments",
+      "file": "/home/ahmeed/Documents/KSIU/GRAD/SOLO/TESTS/evaluation/cloned/precision_corpus/pygments/scripts/vim2pygments.py",
+      "line": 799,
+      "v_a": "FP",
+      "r_a": "'Token' is not a secret, it's a syntax highlighting token type.",
+      "v_b": "FP",
+      "r_b": "The tool has incorrectly identified a non-secret string as a hardcoded secret, as 'Normal' does not appear to be a sensitive token.",
+      "final": "AUTO_FP",
+      "reason": "[AI triage] both calls agree FP. A: 'Token' is not a secret, it's a syntax highlighting token type.. B: The tool has incorrectly identified a non-secret string as a hardcoded secret, a"
+    },
+    {
+      "rule": "SECURITY-005",
+      "repo": "h11",
+      "file": "/home/ahmeed/Documents/KSIU/GRAD/SOLO/TESTS/evaluation/cloned/precision_corpus/h11/h11/_abnf.py",
+      "line": 17,
+      "v_a": "FP",
+      "r_a": "Regular expression pattern is not a secret.",
+      "v_b": "FP",
+      "r_b": "The \"token\" variable appears to be a regular expression pattern, not a hardcoded secret, so the tool's warning is incorrect.",
+      "final": "AUTO_FP",
+      "reason": "[AI triage] both calls agree FP. A: Regular expression pattern is not a secret.. B: The \"token\" variable appears to be a regular expression pattern, not a hardcoded"
+    },
+    {
+      "rule": "SECURITY-046",
+      "repo": "fsspec",
+      "file": "/home/ahmeed/Documents/KSIU/GRAD/SOLO/TESTS/evaluation/cloned/precision_corpus/fsspec/fsspec/implementations/gist.py",
+      "line": 90,
+      "v_a": "FP",
+      "r_a": "Untrusted user input is unlikely to control the 'url' variable in a typical open-source library usage scenario.",
+      "v_b": "NEEDS_REVIEW",
+      "r_b": "The code is potentially vulnerable to SSRF if the 'url' is user-controlled, but without more context about how the 'url' is generated or controlled, it's unclear whether this is a real issue or a fals",
+      "final": "NEEDS_REVIEW",
+      "reason": "[AI triage] disagreement (A=FP, B=NEEDS_REVIEW) \u2014 kept NR. A: Untrusted user input is unlikely to control the 'url' variab"
+    },
+    {
+      "rule": "SECURITY-046",
+      "repo": "fsspec",
+      "file": "/home/ahmeed/Documents/KSIU/GRAD/SOLO/TESTS/evaluation/cloned/precision_corpus/fsspec/fsspec/implementations/gist.py",
+      "line": 215,
+      "v_a": "FP",
+      "r_a": "raw_url origin not shown, likely internal or config-controlled.",
+      "v_b": "NEEDS_REVIEW",
+      "r_b": "The code is potentially vulnerable to SSRF if raw_url is user-controlled, but without more context about how raw_url is generated and used in the library, it's unclear whether this is a real exploitab",
+      "final": "NEEDS_REVIEW",
+      "reason": "[AI triage] disagreement (A=FP, B=NEEDS_REVIEW) \u2014 kept NR. A: raw_url origin not shown, likely internal or config-controll"
+    },
+    {
+      "rule": "SECURITY-046",
+      "repo": "fsspec",
+      "file": "/home/ahmeed/Documents/KSIU/GRAD/SOLO/TESTS/evaluation/cloned/precision_corpus/fsspec/fsspec/implementations/github.py",
+      "line": 59,
+      "v_a": "FP",
+      "r_a": "Untrusted user input is unlikely to reach this internal library code.",
+      "v_b": "FP",
+      "r_b": "The library is not a web application and the input is likely controlled by the user of the library, not an external attacker, reducing the risk of SSRF.",
+      "final": "AUTO_FP",
+      "reason": "[AI triage] both calls agree FP. A: Untrusted user input is unlikely to reach this internal library code.. B: The library is not a web application and the input is likely controlled by the u"
+    },
+    {
+      "rule": "SECURITY-046",
+      "repo": "axios",
+      "file": "/home/ahmeed/Documents/KSIU/GRAD/SOLO/TESTS/evaluation/cloned/precision_corpus/axios/sandbox/client.js",
+      "line": 17,
+      "v_a": "FP",
+      "r_a": "Library likely controls input, not user-facing.",
+      "v_b": "NEEDS_REVIEW",
+      "r_b": "The code snippet is not available to determine whether the user-controlled URL is properly validated and sanitized to prevent a Server-Side Request Forgery (SSRF) vulnerability.",
+      "final": "NEEDS_REVIEW",
+      "reason": "[AI triage] disagreement (A=FP, B=NEEDS_REVIEW) \u2014 kept NR. A: Library likely controls input, not user-facing."
+    },
+    {
+      "rule": "SECURITY-046",
+      "repo": "axios",
+      "file": "/home/ahmeed/Documents/KSIU/GRAD/SOLO/TESTS/evaluation/cloned/precision_corpus/axios/sandbox/client.js",
+      "line": 20,
+      "v_a": "FP",
+      "r_a": "Library likely controls input, not user-facing.",
+      "v_b": "NEEDS_REVIEW",
+      "r_b": "The code snippet is not available to determine whether the user-controlled URL is properly validated and sanitized, making it unclear if this is a real SSRF vulnerability or a false positive.",
+      "final": "NEEDS_REVIEW",
+      "reason": "[AI triage] disagreement (A=FP, B=NEEDS_REVIEW) \u2014 kept NR. A: Library likely controls input, not user-facing."
+    },
+    {
+      "rule": "SECURITY-046",
+      "repo": "webpack",
+      "file": "/home/ahmeed/Documents/KSIU/GRAD/SOLO/TESTS/evaluation/cloned/precision_corpus/webpack/lib/schemes/HttpUriPlugin.js",
+      "line": 826,
+      "v_a": "FP",
+      "r_a": "Library likely intended for internal use with trusted input.",
+      "v_b": "NEEDS_REVIEW",
+      "r_b": "The code snippet is not available to determine whether the user-controlled URL is properly validated and sanitized to prevent a Server-Side Request Forgery (SSRF) vulnerability.",
+      "final": "NEEDS_REVIEW",
+      "reason": "[AI triage] disagreement (A=FP, B=NEEDS_REVIEW) \u2014 kept NR. A: Library likely intended for internal use with trusted input."
+    }
+  ]
+}

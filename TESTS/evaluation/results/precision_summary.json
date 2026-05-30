@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-29 05:34 UTC",
+  "generated": "2026-05-30 01:49 UTC",
   "corpus": "precision_corpus_pins.yml",
   "corpus_size": 24,
   "total_high_med_findings": 630,
@@ -7,49 +7,49 @@
     "mode": "conservative",
     "tp": 54,
     "fp": 576,
-    "needs_review": 123,
+    "needs_review": 83,
     "total": 630,
     "precision": 0.08571428571428572
   },
   "optimistic_precision": {
     "mode": "optimistic",
-    "tp": 177,
-    "fp": 453,
-    "needs_review": 123,
+    "tp": 137,
+    "fp": 493,
+    "needs_review": 83,
     "total": 630,
-    "precision": 0.28095238095238095
+    "precision": 0.21746031746031746
   },
   "security_tier_conservative": {
     "mode": "conservative",
     "scope": "high-severity security rules only",
     "tp": 54,
-    "fp": 165,
-    "needs_review": 29,
+    "fp": 160,
+    "needs_review": 5,
     "total": 219,
-    "precision": 0.2465753424657534
+    "precision": 0.246575
   },
   "security_tier_optimistic": {
     "mode": "optimistic",
     "scope": "high-severity security rules only",
-    "tp": 83,
-    "fp": 136,
-    "needs_review": 29,
+    "tp": 59,
+    "fp": 160,
+    "needs_review": 5,
     "total": 219,
-    "precision": 0.3789954337899543
+    "precision": 0.269406
   },
-  "needs_review_count": 123,
+  "needs_review_count": 83,
   "language_breakdown": {
     "python": {
       "high_med": 495,
       "auto_tp": 29,
-      "auto_fp": 385,
-      "needs_review": 81
+      "auto_fp": 423,
+      "needs_review": 43
     },
     "javascript": {
       "high_med": 135,
       "auto_tp": 25,
-      "auto_fp": 68,
-      "needs_review": 42
+      "auto_fp": 70,
+      "needs_review": 40
     }
   },
   "per_repo": [
@@ -95,8 +95,8 @@
       "total_findings": 32,
       "high_med_findings": 32,
       "auto_tp": 7,
-      "auto_fp": 18,
-      "needs_review": 7
+      "auto_fp": 24,
+      "needs_review": 1
     },
     {
       "repo": "cryptography",
@@ -113,8 +113,8 @@
       "total_findings": 104,
       "high_med_findings": 28,
       "auto_tp": 0,
-      "auto_fp": 20,
-      "needs_review": 8
+      "auto_fp": 23,
+      "needs_review": 5
     },
     {
       "repo": "pyyaml",
@@ -131,8 +131,8 @@
       "total_findings": 51,
       "high_med_findings": 51,
       "auto_tp": 3,
-      "auto_fp": 46,
-      "needs_review": 2
+      "auto_fp": 47,
+      "needs_review": 1
     },
     {
       "repo": "pygments",
@@ -140,8 +140,8 @@
       "total_findings": 63,
       "high_med_findings": 37,
       "auto_tp": 2,
-      "auto_fp": 16,
-      "needs_review": 19
+      "auto_fp": 25,
+      "needs_review": 10
     },
     {
       "repo": "click",
@@ -149,8 +149,8 @@
       "total_findings": 53,
       "high_med_findings": 13,
       "auto_tp": 1,
-      "auto_fp": 5,
-      "needs_review": 7
+      "auto_fp": 11,
+      "needs_review": 1
     },
     {
       "repo": "numpy",
@@ -158,8 +158,8 @@
       "total_findings": 24,
       "high_med_findings": 24,
       "auto_tp": 2,
-      "auto_fp": 20,
-      "needs_review": 2
+      "auto_fp": 21,
+      "needs_review": 1
     },
     {
       "repo": "pycparser",
@@ -194,8 +194,8 @@
       "total_findings": 65,
       "high_med_findings": 19,
       "auto_tp": 0,
-      "auto_fp": 13,
-      "needs_review": 6
+      "auto_fp": 17,
+      "needs_review": 2
     },
     {
       "repo": "fsspec",
@@ -203,8 +203,8 @@
       "total_findings": 85,
       "high_med_findings": 50,
       "auto_tp": 0,
-      "auto_fp": 39,
-      "needs_review": 11
+      "auto_fp": 41,
+      "needs_review": 9
     },
     {
       "repo": "pytest",
@@ -212,8 +212,8 @@
       "total_findings": 57,
       "high_med_findings": 33,
       "auto_tp": 4,
-      "auto_fp": 26,
-      "needs_review": 3
+      "auto_fp": 27,
+      "needs_review": 2
     },
     {
       "repo": "pandas",
@@ -221,8 +221,8 @@
       "total_findings": 29,
       "high_med_findings": 29,
       "auto_tp": 2,
-      "auto_fp": 16,
-      "needs_review": 11
+      "auto_fp": 21,
+      "needs_review": 6
     },
     {
       "repo": "httpx",
@@ -239,8 +239,8 @@
       "total_findings": 300,
       "high_med_findings": 14,
       "auto_tp": 7,
-      "auto_fp": 3,
-      "needs_review": 4
+      "auto_fp": 5,
+      "needs_review": 2
     },
     {
       "repo": "express",
@@ -323,5 +323,7 @@
       "auto_fp": 0,
       "needs_review": 0
     }
-  ]
+  ],
+  "security_tier_denominator": 219,
+  "note": " T4 Precision Enhancement (2026-05-30): L1 heuristics (SECURITY-005 regex tokens, SECURITY-046 literal-URL/ALL_CAPS, extended subprocess paths), L2 corroboration, L3 AI triage (2 Groq calls, unanimous consensus). 0 NR\u2192TP, 5 NR\u2192FP."
 }

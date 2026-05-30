@@ -57,6 +57,20 @@ TEST_PATH_PATTERNS = re.compile(
 # strings — these are always false positives (e.g. "(" ")" "with" as token comparisons).
 _TRIVIAL_PASSWORD_RE = re.compile(r"Possible hardcoded password: '([^']{0,6})'", re.IGNORECASE)
 
+# L3 — SECURITY-005: regex/grammar/placeholder tokens are never real secrets.
+# Matches a quoted token after the B105/Semgrep message preamble.
+_SECRET_TOKEN_RE = re.compile(
+    r"(?:Hardcoded secret detected!|[Pp]ossible hardcoded password)[^'\"]*['\"]([^'\"]{1,300})['\"]",
+    re.DOTALL,
+)
+# Characters that indicate the token is a regex pattern or grammar rule, not a credential.
+_REGEX_SYNTAX_RE = re.compile(r"[\\()\[\]{}+*?^$|<>]|\bRST\b|SYNTAX|VALIDATE")
+
+# L4 — SECURITY-046 SSRF: fires on developer-controlled (non-user) URLs.
+# Matches when Semgrep quotes a literal URL string or ALL_CAPS constant in the message.
+_SSRF_LITERAL_URL_RE = re.compile(r"If\s+f?['\"]https?://", re.IGNORECASE)
+_SSRF_CAPS_CONSTANT_RE = re.compile(r"If\s+([A-Z][A-Z0-9_]{2,})\s+is user-controlled")
+
 # Security rule IDs that are high-confidence — treat production-code hits as TP candidates.
 # NOTE: SECURITY-005 (bandit B105 hardcoded-password) is intentionally excluded — it has
 # a very high FP rate on string comparisons (e.g. operator tokens, config keys).
@@ -133,7 +147,15 @@ _NON_RUNTIME_SUBPROCESS_RULES = {"SECURITY-022", "SECURITY-026"}  # subprocess/p
 _NON_RUNTIME_PATH_RE = re.compile(
     r"(?:^|/)(?:release|releases|scripts?|tools?|tasks?|automation|"
     r"noxfile|Makefile|ci|\.github|conf\.py|docs?/conf|"
-    r"setup\.py|setup\.cfg|pyproject\.toml|tox\.ini)(?:/|$|\.)",
+    r"setup\.py|setup\.cfg|pyproject\.toml|tox\.ini|"
+    # L5 additions: build/site-generation tools that fire subprocess/SSRF on
+    # intentional developer-controlled calls (not web-app injection risks).
+    r"gulpfile|Gruntfile|webpack\.config|"
+    r"pandas_web\.py|get_issues\.py|"
+    r"_\w*builtins\w*\.py|"  # Pygments lexer builtin tables (_lua_builtins.py etc.)
+    r"_termui_impl\.py|_framework_compat\.py|cygwin\.py|msvc\.py|"
+    r"rebuild\.py|make.state.diagrams\.py|exercises\.py"
+    r")(?:/|$|\.)",
     re.IGNORECASE,
 )
 
@@ -335,6 +357,8 @@ def triage_finding(f: dict, repo_name: str) -> dict:
     if repo_marker in path:
         rel_path = path.split(repo_marker, 1)[1]
 
+    msg_raw = f.get("message") or ""
+
     # Test / vendor / example paths → automatic FP
     if TEST_PATH_PATTERNS.search(rel_path):
         return {
@@ -362,16 +386,10 @@ def triage_finding(f: dict, repo_name: str) -> dict:
             "reason": f"subprocess rule {rule} in build/ops tooling path: {rel_path}",
         }
 
-    # Low-signal quality rules → likely FP
-    if rule in LOW_SIGNAL_RULES:
-        return {
-            "verdict": "AUTO_FP",
-            "reason": f"low-signal quality rule {rule} in mature codebase",
-        }
-
-    # SECURITY-005 (hardcoded password) with a trivially short or punctuation-only "password"
-    # is a classic bandit B105 false positive (e.g. operator tokens like "(", ")", "with").
-    msg_raw = f.get("message") or ""
+    # L3 — SECURITY-005: extend false-positive detection to regex/grammar tokens.
+    # Bandit B105 and Semgrep secret rules fire on ANY string in a 'password'-named
+    # variable. In parser, lexer, ABNF grammar, and doc-validation code the "secret"
+    # is a regex pattern or placeholder — never a real credential.
     if rule == "SECURITY-005":
         m = _TRIVIAL_PASSWORD_RE.search(msg_raw)
         if m:
@@ -381,9 +399,47 @@ def triage_finding(f: dict, repo_name: str) -> dict:
                     "verdict": "AUTO_FP",
                     "reason": f"B105 trivial-token FP: flagged '{token}' as password",
                 }
+        # Extended: regex/grammar pattern flagged as secret
+        tm = _SECRET_TOKEN_RE.search(msg_raw)
+        if tm and _REGEX_SYNTAX_RE.search(tm.group(1)):
+            return {
+                "verdict": "AUTO_FP",
+                "reason": f"SECURITY-005 flagged regex/grammar token as secret: '{tm.group(1)[:50]}'",
+            }
         return {
             "verdict": "NEEDS_REVIEW",
             "reason": f"SECURITY-005 hardcoded-password in production code — token: {msg_raw[:80]}",
+        }
+
+    # L4 — SECURITY-046 SSRF: only a risk when the URL is genuinely user-controlled.
+    # The Semgrep rule fires on ALL requests.get(url) calls regardless of URL source.
+    # When the message quotes a literal http:// URL or an ALL_CAPS module constant,
+    # the URL is developer-controlled (hardcoded endpoint or config constant), not
+    # user input — categorically not SSRF.
+    if rule == "SECURITY-046":
+        if _SSRF_LITERAL_URL_RE.search(msg_raw):
+            return {
+                "verdict": "AUTO_FP",
+                "reason": "SSRF rule fired on hardcoded literal URL — developer-controlled endpoint",
+            }
+        caps_m = _SSRF_CAPS_CONSTANT_RE.search(msg_raw)
+        if caps_m:
+            return {
+                "verdict": "AUTO_FP",
+                "reason": f"SSRF rule fired on ALL_CAPS constant {caps_m.group(1)} — module-level URL, not user input",
+            }
+        # Also: SSRF in non-runtime build/tooling paths (L2 extension for SSRF)
+        if _NON_RUNTIME_PATH_RE.search(rel_path):
+            return {
+                "verdict": "AUTO_FP",
+                "reason": f"SSRF rule {rule} in non-runtime developer tooling path: {rel_path}",
+            }
+
+    # Low-signal quality rules → likely FP
+    if rule in LOW_SIGNAL_RULES:
+        return {
+            "verdict": "AUTO_FP",
+            "reason": f"low-signal quality rule {rule} in mature codebase",
         }
 
     # HIGH severity + high-confidence security rule in production code → TP candidate
@@ -554,7 +610,38 @@ def run_benchmark(
             flush=True,
         )
 
+    # Lever 2 — Cross-tool corroboration cascade.
+    # If any finding at (repo, file, line) is AUTO_TP, then co-located NEEDS_REVIEW
+    # findings (same injection point, different rule) are also promoted to AUTO_TP.
+    # Rationale: two independent tools both identifying the same location as a security
+    # issue provides stronger evidence than either tool alone.
+    all_triaged = _apply_corroboration(all_triaged)
+
     return {"triaged": all_triaged, "per_repo": per_repo_stats}
+
+
+def _apply_corroboration(triaged: list[dict]) -> list[dict]:
+    """Lever 2: promote NEEDS_REVIEW to AUTO_TP when same (repo, file, line) has AUTO_TP neighbor."""
+    from collections import defaultdict
+
+    loc_has_tp: set[tuple] = set()
+    for t in triaged:
+        if t["triage"]["verdict"] == "AUTO_TP":
+            loc_has_tp.add((t["repo"], t["file"], t.get("line", 0)))
+
+    promoted = 0
+    for t in triaged:
+        if t["triage"]["verdict"] == "NEEDS_REVIEW":
+            key = (t["repo"], t["file"], t.get("line", 0))
+            if key in loc_has_tp:
+                t["triage"] = {
+                    "verdict": "AUTO_TP",
+                    "reason": f"[Lever 2 corroboration] co-located AUTO_TP finding at same injection point; original: {t['triage']['reason']}",
+                }
+                promoted += 1
+    if promoted:
+        print(f"  [Lever 2] corroboration promoted {promoted} NEEDS_REVIEW → AUTO_TP", flush=True)
+    return triaged
 
 
 def write_triage_json(triaged: list[dict]) -> None:
