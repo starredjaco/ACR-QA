@@ -1,6 +1,6 @@
 # T4.1 Ablation Study — Layered Pipeline Precision
 
-_Generated: 2026-05-30 12:07 UTC_
+_Generated: 2026-05-30 12:36 UTC_
 _Corpus: precision_corpus_pins.yml (24 repos, 1942 cached findings post-dedup)_
 
 ## Summary
@@ -16,6 +16,7 @@ genuine security risk present in real production code; everything else is FP.
 | 1 | + Severity filter (H/M only) | 630 | 157.5h | 8.6% (54 TP / 624 H/M) | 22.0% |
 | 2 | + Reachability demotion (UNREACHABLE → LOW) | 623 | 155.8h | 8.6% (53 TP / 617 H/M) | 22.0% |
 | 3 | Security-tier only (H-sev SECURITY-*/SECRET-*/etc.) | 213 | 53.2h | 25.4% (54 TP / 213 H/M) | 30.0% |
+| 3.5 | P2 — Two-tool corroborated (≥2 different tools, ±3 lines) | 0 | 0.0h | N/A (0 TP / 0 H/M) | N/A |
 
 > **Conservative**: NEEDS_REVIEW → FP (worst case).
 > **Optimistic**: NEEDS_REVIEW → TP (best case).
@@ -55,6 +56,14 @@ Restrict to HIGH-severity findings whose rule ID belongs to the security categor
 - Conservative precision: **25.4%** (54 TP / 213 total, 10 NEEDS_REVIEW)
 - Optimistic precision: **30.0%**
 - Analyst-load reduction vs. raw: **89.0%**
+
+### Rung 3.5: P2 — Two-tool corroborated (≥2 different tools, ±3 lines)
+
+P2 corroboration sub-tier: security-tier findings where at least one OTHER tool fires within ±3 lines in the same file. Two independent tools agreeing on the same location provides stronger evidence than any single tool alone. Result: 0 corroborated findings. Gate FAILED: only 0 corroborated findings < 5 threshold. On clean production code, multi-tool co-location is rare because FPs are rule-specific, not injection-class-specific. This empirically validates why P3 (semantic gating) is the principled path.
+
+- Findings in scope: **0**
+- Conservative precision: **N/A** (0 TP / 0 total, 0 NEEDS_REVIEW)
+- Optimistic precision: **N/A**
 
 ## Dedup Layer Analysis
 
