@@ -1,6 +1,6 @@
 # T4.2 Bootstrap Confidence Intervals
 
-_Generated: 2026-05-29 17:31 UTC_
+_Generated: 2026-05-30 10:37 UTC_
 _Method: Per-repo bootstrap resampling. Unit of resampling = repo. Each iteration draws N repos with replacement, sums TP/FP/NR, computes precision. 95% CI = 2.5th–97.5th percentile of 10,000 samples._
 _n_boot = 10,000, n_repos = 30_
 
@@ -9,9 +9,9 @@ _n_boot = 10,000, n_repos = 30_
 | Metric | Point Estimate | 95% CI | CI Width | n repos |
 |--------|---------------|--------|----------|---------|
 | H/M all-tools, conservative | **8.6%** | [4.5%, 13.9%] | 9.4% | 30 |
-| H/M all-tools, optimistic | **28.1%** | [19.6%, 36.6%] | 17.0% | 30 |
+| H/M all-tools, optimistic | **21.8%** | [14.7%, 29.0%] | 14.2% | 30 |
 | Security-tier, conservative | **24.7%** | [14.6%, 35.4%] | 20.8% | 30 |
-| Security-tier, optimistic | **37.9%** | [26.4%, 50.4%] | 24.1% | 30 |
+| Security-tier, optimistic | **29.2%** | [19.3%, 40.3%] | 21.0% | 30 |
 | H/M Python only, conservative | **5.9%** | [2.9%, 9.3%] | 6.3% | 25 |
 | H/M JavaScript only, conservative | **18.5%** | [4.1%, 41.2%] | 37.1% | 5 |
 | Sec-tier Python only, conservative | **16.8%** | [9.1%, 26.1%] | 17.0% | 25 |
@@ -23,7 +23,7 @@ _n_boot = 10,000, n_repos = 30_
 
 ### Primary defence number
 
-Security-tier precision: **24.7% [14.6%, 35.4%]** (conservative) / **37.9% [26.4%, 50.4%]** (optimistic).
+Security-tier precision: **24.7% [14.6%, 35.4%]** (conservative) / **29.2% [19.3%, 40.3%]** (optimistic).
 
 The 95% confidence interval captures uncertainty arising from the particular
 set of repositories in the corpus. If we had sampled a different set of 24
@@ -51,11 +51,11 @@ a corpus of 100+ repos would narrow this to under ±5pp.
 | Metric | Mean | Std Dev | CI Width |
 |--------|------|---------|---------|
 | Security-tier, conservative | 24.8% | ±5.3% | 20.8% |
-| Security-tier, optimistic | 38.0% | ±6.2% | 24.1% |
+| Security-tier, optimistic | 29.4% | ±5.4% | 21.0% |
 | H/M all-tools, conservative | 8.7% | ±2.4% | 9.4% |
 
 ## Summary for Defence
 
 **Q: How reliable are your precision numbers?**
 
-The 95% bootstrap CI for security-tier precision is [14.6%, 35.4%] (conservative) / [26.4%, 50.4%] (optimistic). These CIs are computed by per-repo bootstrap resampling over 30 production repositories with 10,000 iterations. The interval captures corpus-sampling uncertainty — if we re-ran the benchmark on a different set of production libraries, we would expect precision to fall in this range with 95% probability.
+The 95% bootstrap CI for security-tier precision is [14.6%, 35.4%] (conservative) / [19.3%, 40.3%] (optimistic). These CIs are computed by per-repo bootstrap resampling over 30 production repositories with 10,000 iterations. The interval captures corpus-sampling uncertainty — if we re-ran the benchmark on a different set of production libraries, we would expect precision to fall in this range with 95% probability.

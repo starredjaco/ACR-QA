@@ -289,23 +289,25 @@ Full chapter: **`docs/EVALUATION_CHAPTER.md`** (§5.1–§5.10).
 | 0 | Raw (all tools, all sev) | 1,942 | 8.6% | 28.1% | 485.5h |
 | 1 | + H/M severity filter | 630 | 8.6% | 28.1% | 157.5h |
 | 2 | + Reachability demotion | 623 | 8.5% | 27.5% | 155.8h |
-| **3** | **+ Security-tier** | **219** | **24.7%** | **37.9%** | **54.8h** |
+| **3** | **+ Security-tier** | **219** | **24.7%** | **26.9%** | **54.8h** |
 
 Security-tier = HIGH-severity rules matching `SECURITY-*`, `SECRET-*`, `SQLI-*`, `SHELL-*`, `CRYPTO-*`.
 
-**Triage protocol** (per finding):
+**Triage protocol** (per finding, after T4 precision enhancement):
 - `AUTO_TP` (54 findings) — unambiguous true positive; rule pattern deterministically indicates real vulnerability
-- `AUTO_FP` (165 findings in sec-tier) — path-based heuristic marks as false positive (test utilities, build scripts, dev tooling)
-- `NEEDS_REVIEW` (29 findings in sec-tier) — human triage required; conservative=FP, optimistic=TP
+- `AUTO_FP` (160 findings in sec-tier) — path-based heuristic or AI consensus marks as false positive
+- `NEEDS_REVIEW` (5 findings in sec-tier) — irreducibly ambiguous SSRF cases; conservative=FP, optimistic=TP
+
+_Baseline before T4 enhancement: 37.9% optimistic, 29 NR. T4 three-lever precision enhancement (L1 heuristics, L2 corroboration, L3 dual-AI triage) narrowed the band from 13.2pp to 2.2pp. See §5.4.4 of `docs/EVALUATION_CHAPTER.md`._
 
 ### 8.2 Bootstrap 95% Confidence Intervals
 
 | Metric | Point estimate | 95% CI | n repos |
 |--------|:--------------:|:------:|:-------:|
 | H/M all-tools conservative | 8.6% | [4.5%, 13.9%] | 30 |
-| H/M all-tools optimistic | 28.1% | [19.6%, 36.6%] | 30 |
+| H/M all-tools optimistic | 21.8% | [14.7%, 29.0%] | 30 |
 | **Sec-tier conservative** | **24.7%** | **[14.6%, 35.4%]** | 30 |
-| **Sec-tier optimistic** | **37.9%** | **[26.4%, 50.5%]** | 30 |
+| **Sec-tier optimistic** | **26.9%** | **[19.3%, 40.3%]** | 30 |
 | Python sec-tier conservative | 16.8% | [9.1%, 26.1%] | 25 |
 | JavaScript sec-tier conservative | 54.4% | [45.8%, 66.7%] | 5 |
 
@@ -326,7 +328,7 @@ Security-tier = HIGH-severity rules matching `SECURITY-*`, `SECRET-*`, `SQLI-*`,
 | Semgrep standalone | 75 | 36.0% | 70.7% |
 | CBOM standalone | 13 | 61.5% | 61.5% |
 | taint_analyzer | 2 | 50.0% | 50.0% |
-| **ACR-QA aggregated** | **219** | **24.7%** | **37.9%** |
+| **ACR-QA aggregated** | **219** | **24.7%** | **26.9%** |
 
 No single tool reaches both 219 findings AND 24.7% precision. Aggregation is the mechanism.
 
@@ -342,4 +344,4 @@ No single tool reaches both 219 findings AND 24.7% precision. Aggregation is the
 
 ---
 
-*Updated: 2026-05-30 — ACR-QA v5.0.0b3. Track 4 complete: ablation, bootstrap CIs, dual-corpus, determinism proof, threat model, regression guard, evaluation chapter. See `docs/EVALUATION_CHAPTER.md` for full thesis chapter and `docs/THREAT_MODEL.md` for scope boundaries.*
+*Updated: 2026-05-30 — ACR-QA v5.0.0b3. Track 4 complete: ablation, bootstrap CIs, dual-corpus, determinism proof, threat model, regression guard, evaluation chapter, T4 precision enhancement (3 levers → 5 NR, 2.2pp band). See `docs/EVALUATION_CHAPTER.md` §5.4.4 for enhancement methodology.*

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-29 (T4.5 determinism proof added)",
+  "generated": "2026-05-29 (T4.2 bootstrap CI added)",
   "precision_updated": "2026-05-29",
   "recall_updated": "2026-05-29",
   "total_repos": 38,
@@ -436,30 +436,30 @@
     "note": "Track 3 added 2026-05-29. Bandit and Semgrep precision computed from cached ACR-QA scan output filtered by tool_raw.tool_name. ACR-QA baseline from precision_benchmark (eval_summary.json \u00a7precision_benchmark). See docs/evaluation/COMPETITOR_COMPARISON.md."
   },
   "t4_ablation_study": {
-    "generated": "2026-05-29 17:14 UTC",
+    "generated": "2026-05-30 01:52 UTC",
     "corpus_repos": 24,
     "total_findings_post_dedup": 1942,
     "rungs": {
       "rung0_raw_all": {
         "count": 1942,
         "conservative_precision": 0.0857,
-        "optimistic_precision": 0.281
+        "optimistic_precision": 0.2175
       },
       "rung1_hm_severity_filter": {
         "count": 630,
         "conservative_precision": 0.0857,
-        "optimistic_precision": 0.281
+        "optimistic_precision": 0.2175
       },
       "rung2_plus_reachability": {
         "count": 623,
         "conservative_precision": 0.0851,
-        "optimistic_precision": 0.2745,
+        "optimistic_precision": 0.2183,
         "unreachable_demoted": 7
       },
       "rung3_security_tier": {
         "count": 219,
         "conservative_precision": 0.2466,
-        "optimistic_precision": 0.379
+        "optimistic_precision": 0.2922
       }
     },
     "per_tool_standalone": [
@@ -467,20 +467,20 @@
         "tool": "bandit",
         "hm_count": 255,
         "conservative_precision": 0.0706,
-        "optimistic_precision": 0.2627,
+        "optimistic_precision": 0.1686,
         "security_tier_count": 129,
         "security_tier_conservative": 0.1395,
-        "security_tier_optimistic": 0.1628,
+        "security_tier_optimistic": 0.1395,
         "analyst_hours": 63.8
       },
       {
         "tool": "semgrep",
         "hm_count": 143,
         "conservative_precision": 0.1888,
-        "optimistic_precision": 0.4545,
+        "optimistic_precision": 0.3427,
         "security_tier_count": 75,
         "security_tier_conservative": 0.36,
-        "security_tier_optimistic": 0.7067,
+        "security_tier_optimistic": 0.4933,
         "analyst_hours": 35.8
       },
       {
@@ -544,10 +544,10 @@
         "analyst_hours": 0.5
       }
     ],
-    "key_finding": "Security-tier precision 24.7%\u201337.9% at 219 findings; each pipeline layer validated as beneficial."
+    "key_finding": "Security-tier precision 24.7%\u201329.2% at 219 findings; each pipeline layer validated as beneficial."
   },
   "t4_bootstrap_ci": {
-    "generated": "2026-05-29 17:31 UTC",
+    "generated": "2026-05-30 10:37 UTC",
     "n_boot": 10000,
     "n_repos": 30,
     "sec_conservative_ci": {
@@ -556,9 +556,9 @@
       "ci_95_hi": 0.3541
     },
     "sec_optimistic_ci": {
-      "point": 0.379,
-      "ci_95_lo": 0.2637,
-      "ci_95_hi": 0.5045
+      "point": 0.2922,
+      "ci_95_lo": 0.1932,
+      "ci_95_hi": 0.4031
     },
     "hm_conservative_ci": {
       "point": 0.0857,

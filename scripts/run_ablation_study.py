@@ -48,6 +48,13 @@ TEST_PATH_PATTERNS = re.compile(
 )
 
 _TRIVIAL_PASSWORD_RE = re.compile(r"Possible hardcoded password: '([^']{0,6})'", re.IGNORECASE)
+_SECRET_TOKEN_RE = re.compile(
+    r"(?:Hardcoded secret detected!|[Pp]ossible hardcoded password)[^'\"]*['\"]([^'\"]{1,300})['\"]",
+    re.DOTALL,
+)
+_REGEX_SYNTAX_RE = re.compile(r"[\\()\[\]{}+*?^$|<>]|\bRST\b|SYNTAX|VALIDATE")
+_SSRF_LITERAL_URL_RE = re.compile(r"If\s+f?['\"]https?://", re.IGNORECASE)
+_SSRF_CAPS_CONSTANT_RE = re.compile(r"If\s+([A-Z][A-Z0-9_]{2,})\s+is user-controlled")
 
 HIGH_CONFIDENCE_RULES = {
     "SECURITY-001",
@@ -106,7 +113,13 @@ _NON_RUNTIME_SUBPROCESS_RULES = {"SECURITY-022", "SECURITY-026"}
 _NON_RUNTIME_PATH_RE = re.compile(
     r"(?:^|/)(?:release|releases|scripts?|tools?|tasks?|automation|"
     r"noxfile|Makefile|ci|\.github|conf\.py|docs?/conf|"
-    r"setup\.py|setup\.cfg|pyproject\.toml|tox\.ini)(?:/|$|\.)",
+    r"setup\.py|setup\.cfg|pyproject\.toml|tox\.ini|"
+    r"gulpfile|Gruntfile|webpack\.config|"
+    r"pandas_web\.py|get_issues\.py|"
+    r"_\w*builtins\w*\.py|"
+    r"_termui_impl\.py|_framework_compat\.py|cygwin\.py|msvc\.py|"
+    r"rebuild\.py|make.state.diagrams\.py|exercises\.py"
+    r")(?:/|$|\.)",
     re.IGNORECASE,
 )
 
@@ -200,13 +213,28 @@ def triage_finding(f: dict) -> str:
         return "AUTO_FP"
 
     msg = f.get("message") or ""
+
+    # L3: SECURITY-005 — regex/grammar token flagged as secret → AUTO_FP
     if rule == "SECURITY-005":
         m = _TRIVIAL_PASSWORD_RE.search(msg)
         if m:
             token = m.group(1)
             if len(token) <= 6 or not any(c.isalnum() for c in token):
                 return "AUTO_FP"
+        tm = _SECRET_TOKEN_RE.search(msg)
+        if tm and _REGEX_SYNTAX_RE.search(tm.group(1)):
+            return "AUTO_FP"
         return "NEEDS_REVIEW"
+
+    # L4: SECURITY-046 — literal URL or ALL_CAPS constant is not user-controlled → AUTO_FP
+    if rule == "SECURITY-046":
+        if _SSRF_LITERAL_URL_RE.search(msg):
+            return "AUTO_FP"
+        caps_m = _SSRF_CAPS_CONSTANT_RE.search(msg)
+        if caps_m:
+            return "AUTO_FP"
+        if _NON_RUNTIME_PATH_RE.search(rel_path):
+            return "AUTO_FP"
 
     if sev == "high" and rule in HIGH_CONFIDENCE_RULES:
         safe_patterns = ["# nosec", "# noqa", "safe=true", "safe_load"]

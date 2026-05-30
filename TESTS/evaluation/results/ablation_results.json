@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-29 17:14 UTC",
+  "generated": "2026-05-30 01:52 UTC",
   "corpus": "precision_corpus_pins.yml",
   "corpus_repos": 24,
   "pipeline_description": "Analytical ablation over 1942 cached precision-corpus findings (24 production repos, post-dedup). Pre-dedup cross-tool duplicates estimated from CROSS_TOOL_GROUPS overlap analysis.",
@@ -36,16 +36,16 @@
       "conservative": {
         "tp": 54,
         "fp": 576,
-        "needs_review": 123,
+        "needs_review": 83,
         "total": 630,
         "precision": 0.0857
       },
       "optimistic": {
-        "tp": 177,
-        "fp": 453,
-        "needs_review": 123,
+        "tp": 137,
+        "fp": 493,
+        "needs_review": 83,
         "total": 630,
-        "precision": 0.281
+        "precision": 0.2175
       }
     },
     {
@@ -58,16 +58,16 @@
       "conservative": {
         "tp": 54,
         "fp": 576,
-        "needs_review": 123,
+        "needs_review": 83,
         "total": 630,
         "precision": 0.0857
       },
       "optimistic": {
-        "tp": 177,
-        "fp": 453,
-        "needs_review": 123,
+        "tp": 137,
+        "fp": 493,
+        "needs_review": 83,
         "total": 630,
-        "precision": 0.281
+        "precision": 0.2175
       },
       "delta_analyst_hours": 328.0
     },
@@ -81,16 +81,16 @@
       "conservative": {
         "tp": 53,
         "fp": 570,
-        "needs_review": 118,
+        "needs_review": 83,
         "total": 623,
         "precision": 0.0851
       },
       "optimistic": {
-        "tp": 171,
-        "fp": 452,
-        "needs_review": 118,
+        "tp": 136,
+        "fp": 487,
+        "needs_review": 83,
         "total": 623,
-        "precision": 0.2745
+        "precision": 0.2183
       },
       "delta_analyst_hours": 1.6999999999999886,
       "unreachable_cohort": {
@@ -109,16 +109,16 @@
       "conservative": {
         "tp": 54,
         "fp": 165,
-        "needs_review": 29,
+        "needs_review": 10,
         "total": 219,
         "precision": 0.2466
       },
       "optimistic": {
-        "tp": 83,
-        "fp": 136,
-        "needs_review": 29,
+        "tp": 64,
+        "fp": 155,
+        "needs_review": 10,
         "total": 219,
-        "precision": 0.379
+        "precision": 0.2922
       },
       "delta_analyst_hours": 101.00000000000001,
       "reduction_vs_raw": 88.7
@@ -129,20 +129,20 @@
       "tool": "bandit",
       "hm_count": 255,
       "conservative_precision": 0.0706,
-      "optimistic_precision": 0.2627,
+      "optimistic_precision": 0.1686,
       "security_tier_count": 129,
       "security_tier_conservative": 0.1395,
-      "security_tier_optimistic": 0.1628,
+      "security_tier_optimistic": 0.1395,
       "analyst_hours": 63.8
     },
     {
       "tool": "semgrep",
       "hm_count": 143,
       "conservative_precision": 0.1888,
-      "optimistic_precision": 0.4545,
+      "optimistic_precision": 0.3427,
       "security_tier_count": 75,
       "security_tier_conservative": 0.36,
-      "security_tier_optimistic": 0.7067,
+      "security_tier_optimistic": 0.4933,
       "analyst_hours": 35.8
     },
     {

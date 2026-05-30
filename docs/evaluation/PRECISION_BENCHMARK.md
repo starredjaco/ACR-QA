@@ -1,6 +1,6 @@
 # Precision Benchmark — ACR-QA v5.0
 
-*Generated: 2026-05-29 05:34 UTC*
+*Generated: 2026-05-30 01:49 UTC*
 *Corpus: [`precision_corpus_pins.yml`](../../TESTS/evaluation/precision_corpus_pins.yml)*
 
 ---
@@ -9,11 +9,11 @@
 
 | Metric | Conservative | Optimistic |
 |--------|-------------|-----------|
-| **Blended precision** (all H/M) | **8.6%** | **28.1%** |
-| **Security-tier precision** (HIGH security rules) | **24.7%** | **37.9%** |
-| TP (blended) | 54 | 177 |
-| FP (blended) | 576 | 453 |
-| Needs Review | 123 | 123 |
+| **Blended precision** (all H/M) | **8.6%** | **21.7%** |
+| **Security-tier precision** (HIGH security rules) | **24.7%** | **29.2%** |
+| TP (blended) | 54 | 137 |
+| FP (blended) | 576 | 493 |
+| Needs Review | 83 | 83 |
 | Total H/M findings | 630 | 630 |
 | Security-tier denominator | 219 | 219 |
 | Repos scanned | 24 | — |
@@ -67,8 +67,8 @@ The FP rate here represents the tool's noise floor on clean, well-maintained pro
 
 | Language       | H/M   |  TP  |  FP  |  NR | Conservative | Optimistic |
 |----------------|-------|------|------|-----|-------------|-----------|
-| Python         |   495 |   29 |  385 |  81 |     5.9% |     22.2% |
-| Javascript     |   135 |   25 |   68 |  42 |    18.5% |     49.6% |
+| Python         |   495 |   29 |  423 |  43 |     5.9% |     14.5% |
+| Javascript     |   135 |   25 |   70 |  40 |    18.5% |     48.1% |
 
 ---
 
@@ -80,23 +80,23 @@ The FP rate here represents the tool's noise floor on clean, well-maintained pro
 | urllib3                  | python       |     36 |   16 |  0 | 16 |  0 |
 | requests                 | python       |     65 |   23 |  0 | 23 |  0 |
 | charset-normalizer       | python       |     60 |   10 |  0 | 10 |  0 |
-| setuptools               | python       |     32 |   32 |  7 | 18 |  7 |
+| setuptools               | python       |     32 |   32 |  7 | 24 |  1 |
 | cryptography             | python       |      0 |    0 |  0 |  0 |  0 |
-| python-dateutil          | python       |    104 |   28 |  0 | 20 |  8 |
+| python-dateutil          | python       |    104 |   28 |  0 | 23 |  5 |
 | pyyaml                   | python       |     55 |   35 |  0 | 34 |  1 |
-| pydantic                 | python       |     51 |   51 |  3 | 46 |  2 |
-| pygments                 | python       |     63 |   37 |  2 | 16 | 19 |
-| click                    | python       |     53 |   13 |  1 |  5 |  7 |
-| numpy                    | python       |     24 |   24 |  2 | 20 |  2 |
+| pydantic                 | python       |     51 |   51 |  3 | 47 |  1 |
+| pygments                 | python       |     63 |   37 |  2 | 25 | 10 |
+| click                    | python       |     53 |   13 |  1 | 11 |  1 |
+| numpy                    | python       |     24 |   24 |  2 | 21 |  1 |
 | pycparser                | python       |     60 |    9 |  0 |  8 |  1 |
 | anyio                    | python       |     47 |   16 |  4 | 10 |  2 |
 | attrs                    | python       |     69 |   24 |  1 | 23 |  0 |
-| h11                      | python       |     65 |   19 |  0 | 13 |  6 |
-| fsspec                   | python       |     85 |   50 |  0 | 39 | 11 |
-| pytest                   | python       |     57 |   33 |  4 | 26 |  3 |
-| pandas                   | python       |     29 |   29 |  2 | 16 | 11 |
+| h11                      | python       |     65 |   19 |  0 | 17 |  2 |
+| fsspec                   | python       |     85 |   50 |  0 | 41 |  9 |
+| pytest                   | python       |     57 |   33 |  4 | 27 |  2 |
+| pandas                   | python       |     29 |   29 |  2 | 21 |  6 |
 | httpx                    | python       |     81 |   26 |  0 | 25 |  1 |
-| axios                    | javascript   |    300 |   14 |  7 |  3 |  4 |
+| axios                    | javascript   |    300 |   14 |  7 |  5 |  2 |
 | express                  | javascript   |    294 |   65 |  0 | 36 | 29 |
 | nextjs                   | javascript   |     23 |   18 |  6 | 10 |  2 |
 | react                    | javascript   |      0 |    0 |  0 |  0 |  0 |

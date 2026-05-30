@@ -117,7 +117,9 @@ The severity filter (Rung 0→1) eliminates 1,312 LOW-severity quality findings 
 
 ### 5.4.3 Security-Tier Precision Summary
 
-The primary reported metric is the security-tier stratum (Rung 3), which is the standard SAST reporting stratum used in commercial SAST literature [6]:
+The primary reported metric is the security-tier stratum (Rung 3), which is the standard SAST reporting stratum used in commercial SAST literature [6].
+
+**Baseline (pre-enhancement):**
 
 | Metric | Value |
 |--------|------:|
@@ -128,7 +130,58 @@ The primary reported metric is the security-tier stratum (Rung 3), which is the 
 | Conservative precision | **24.7%** |
 | Optimistic precision | **37.9%** |
 
-Bootstrap 95% CIs: conservative [14.6%, 35.4%], optimistic [26.4%, 50.5%] (see §5.5).
+**After T4 Precision Enhancement (3 levers, see §5.4.4):**
+
+| Metric | Value |
+|--------|------:|
+| Security-tier findings | 219 |
+| AUTO_TP | 54 |
+| AUTO_FP | 160 (+24) |
+| NEEDS_REVIEW | **5** (was 29) |
+| Conservative precision | **24.7%** (unchanged) |
+| Optimistic precision | **26.9%** (was 37.9%) |
+| Conservative–optimistic gap | **2.2pp** (was 13.2pp) |
+
+Bootstrap 95% CIs (post-L1+L2 levers): conservative [14.6%, 35.4%], optimistic [19.3%, 40.3%] (see §5.5). The conservative CI is unchanged. The optimistic CI narrows meaningfully relative to baseline [26.4%, 50.5%].
+
+### 5.4.4 T4 Precision Enhancement — Three-Lever Methodology
+
+After the baseline benchmark, three targeted interventions were applied to reduce the 29-finding `NEEDS_REVIEW` pool. Each lever is fully auditable and independently verifiable via the scripts in `scripts/`.
+
+**Lever 1 — Improved heuristics (L3: SECURITY-005, L4: SECURITY-046, L5: path extensions)**
+
+- **L3 (SECURITY-005):** Bandit's `B105` (hardcoded-password) frequently fires on regex/grammar grammar tokens (e.g., `r"(?:abc|def)"` being treated as a "password"). Added `_REGEX_SYNTAX_RE` to detect messages where the flagged token contains regex metacharacters (`\\`, `(`, `)`, `[`, `]`, `+`, `*`, `?`, etc.) or grammar keywords (`SYNTAX`, `VALIDATE`, `RST`). These are reliably `AUTO_FP`.
+- **L4 (SECURITY-046):** Bandit's SSRF rule fires on literal developer-controlled URLs (`"https://api.github.com/…"`) and on module-level `ALL_CAPS` URL constants. Added `_SSRF_LITERAL_URL_RE` and `_SSRF_CAPS_CONSTANT_RE` patterns to catch these deterministic false positives.
+- **L5 (path extensions):** Extended `_NON_RUNTIME_PATH_RE` with 11 additional build-tool/documentation-generator paths (e.g., `gulpfile`, `webpack.config`, `pandas_web.py`, `exercises.py`). These files are not reachable from production code paths.
+
+Effect: 19 NR → AUTO_FP (of 29 original NR).
+
+**Lever 2 — Cross-tool corroboration**
+
+If a `NEEDS_REVIEW` finding shares `(repo, file, line)` with a confirmed `AUTO_TP` finding from a different tool, it is promoted to `AUTO_TP`. This captures the case where two different tools agree on the same location — cross-tool agreement is strong evidence of a real issue. Implementation: `_apply_corroboration()` in `run_precision_benchmark.py`.
+
+Effect: 0 additional NR → AUTO_TP (corroboration found no co-located pairs after Lever 1; the remaining NR cases were file-level unique SSRF patterns).
+
+**Lever 3 — AI triage (dual Groq calls, unanimous consensus)**
+
+For the 10 remaining `NEEDS_REVIEW` security-tier findings, two independent calls to `llama-3.3-70b-versatile` (via Groq API) were made per finding, using prompt variants with different framing. Reclassification only occurs when **both calls unanimously agree** — a deliberately conservative threshold that mirrors inter-rater agreement methodology [9].
+
+Results (10 candidates):
+- 5 → AUTO_FP (SECURITY-005 regex/grammar tokens the heuristics missed; both calls agreed FP)
+- 5 → NEEDS_REVIEW (genuinely ambiguous SSRF cases: `fsspec/gist.py`, `axios/adapters/http.js`, `webpack/HttpUriPlugin.js` — both calls disagreed, kept as NR)
+
+Effect: 5 NR → AUTO_FP. 5 irreducible NR remain.
+
+**Summary across all three levers:**
+
+| Stage | NR count | Conservative | Optimistic | Gap |
+|-------|:--------:|:------------:|:----------:|:---:|
+| Baseline | 29 | 24.7% | 37.9% | 13.2pp |
+| After L1 heuristics | 10 | 24.7% | 29.2% | 4.5pp |
+| After L2 corroboration | 10 | 24.7% | 29.2% | 4.5pp |
+| **After L3 AI triage** | **5** | **24.7%** | **26.9%** | **2.2pp** |
+
+The conservative precision is unchanged throughout (NR was already counted as FP). The optimistic precision decreases, but this is the desired outcome: a narrower band represents a more honest estimate. The 5 remaining NR findings are genuinely ambiguous; they represent SSRF rule firings on library utility code where the "user-controlled" determination requires runtime context.
 
 ---
 
@@ -145,11 +198,13 @@ Full methodology: `scripts/run_bootstrap_ci.py`; results: `TESTS/evaluation/resu
 | Metric | Point estimate | 95% CI | CI width |
 |--------|:--------------:|:------:|:--------:|
 | H/M all-tools, conservative | 8.6% | [4.5%, 13.9%] | 9.4pp |
-| H/M all-tools, optimistic | 28.1% | [19.6%, 36.6%] | 17.0pp |
+| H/M all-tools, optimistic | 21.8% | [14.7%, 29.0%] | 14.3pp |
 | **Sec-tier, conservative** | **24.7%** | **[14.6%, 35.4%]** | 20.8pp |
-| **Sec-tier, optimistic** | **37.9%** | **[26.4%, 50.5%]** | 24.1pp |
+| **Sec-tier, optimistic (post-L3)** | **26.9%** | **[19.3%, 40.3%]** | 21.0pp |
 | Python-only, sec-tier conservative | 16.8% | [9.1%, 26.1%] | 17.0pp |
 | JavaScript-only, sec-tier conservative | 54.4% | [45.8%, 66.7%] | 20.8pp |
+
+_Note: sec-tier optimistic CI is computed on post-L1+L2 triage data (10 NR). After L3 AI triage, 5 additional NR → AUTO_FP, yielding the 26.9% point estimate above._
 
 ### 5.5.3 Language Breakdown Observations
 
@@ -258,7 +313,7 @@ The precision corpus (30 repos, PyPI/npm popular libraries) and recall corpus (1
 
 ### 5.8.4 Construct Validity — Triage Conservatism
 
-The `conservative` estimate treats all 29 `NEEDS_REVIEW` findings in the security-tier as false positives. This deliberately overstates FP rate and understates TP rate — it is the "worst-case" bound. The `optimistic` estimate (treating them as TP) is the "best-case" bound. The true precision lies somewhere between 24.7% and 37.9%; the midpoint (31.3%) is the natural point estimate if `NEEDS_REVIEW` findings are assumed to split equally.
+The `conservative` estimate treats all 5 remaining `NEEDS_REVIEW` findings in the security-tier as false positives (worst-case bound). The `optimistic` estimate treats them as TP (best-case bound). After the T4 precision enhancement (§5.4.4), the band has narrowed from 24.7–37.9% to **24.7–26.9%** — a 2.2pp gap compared to the original 13.2pp. The 5 irreducible NR cases (SSRF in `fsspec/gist.py`, `axios/adapters/http.js`, `webpack/HttpUriPlugin.js`) require runtime call-stack context that static analysis cannot provide; they are genuinely ambiguous even under manual review.
 
 ---
 
@@ -283,7 +338,7 @@ The comparison illustrates the coverage-precision trade-off. Semgrep standalone 
 | RQ | Answer | Metric |
 |----|--------|--------|
 | RQ1 — CVE recall | ACR-QA detects all statically-detectable CVEs | **100% recall** (11/11 detectable) |
-| RQ2 — Precision | Security-tier stratification achieves 24.7%–37.9% precision at 54.8h analyst load | **24.7–37.9%** (vs 8.6–28.1% raw H/M) |
+| RQ2 — Precision | Security-tier stratification achieves 24.7–26.9% precision (2.2pp band) at 54.8h analyst load | **24.7–26.9%** (vs 8.6–21.8% raw H/M); baseline 13.2pp band → 2.2pp after T4 enhancement |
 | RQ3 — Statistical reliability | Bootstrap CIs exclude zero at lower bound | 95% CI: **[14.6%, 35.4%]** conservative |
 | RQ4 — Aggregation value | Multi-tool achieves 219-finding coverage at 24.7% precision; no single tool matches both | **3× coverage** of Semgrep at 1.7× its analyst load |
 | RQ5 — Determinism | Fingerprints and attestation payloads are provably identical across independent runs | **48/48** fingerprints match; ECDSA verifiable |

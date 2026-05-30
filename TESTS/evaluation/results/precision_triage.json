@@ -1126,8 +1126,8 @@
     "line": 6,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: exercises.py"
     }
   },
   {
@@ -1139,8 +1139,8 @@
     "line": 44,
     "message": "Starting a process with a partial executable path (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-026 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-026 in build/ops tooling path: setuptools/_distutils/command/_framework_compat.py"
     }
   },
   {
@@ -1152,8 +1152,8 @@
     "line": 44,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: setuptools/_distutils/command/_framework_compat.py"
     }
   },
   {
@@ -1165,8 +1165,8 @@
     "line": 332,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: setuptools/_distutils/compilers/C/cygwin.py"
     }
   },
   {
@@ -1178,8 +1178,8 @@
     "line": 98,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: setuptools/_distutils/compilers/C/msvc.py"
     }
   },
   {
@@ -1191,8 +1191,8 @@
     "line": 162,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: setuptools/_distutils/compilers/C/msvc.py"
     }
   },
   {
@@ -1321,8 +1321,8 @@
     "line": 122,
     "message": "Hardcoded secret detected! Use environment variables instead.\n",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "SECURITY-005 hardcoded-password in production code \u2014 token: Hardcoded secret detected! Use environment variables instead.\n"
+      "verdict": "AUTO_FP",
+      "reason": "[AI triage] both calls agree FP. A: The 'token' variable is assigned a space character, not a secret.. B: The code snippet provided does not contain a hardcoded secret, but rather an ass"
     }
   },
   {
@@ -1425,8 +1425,8 @@
     "line": 52,
     "message": "Starting a process with a partial executable path (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-026 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-026 in build/ops tooling path: src/dateutil/zoneinfo/rebuild.py"
     }
   },
   {
@@ -1438,8 +1438,8 @@
     "line": 52,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: src/dateutil/zoneinfo/rebuild.py"
     }
   },
   {
@@ -1451,8 +1451,8 @@
     "line": 62,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: src/dateutil/zoneinfo/rebuild.py"
     }
   },
   {
@@ -2140,8 +2140,8 @@
     "line": 283,
     "message": "Potential SSRF (Server-Side Request Forgery). If 'https://raw.githubusercontent.com/pydantic/pydantic-settings/main/docs",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule fired on hardcoded literal URL \u2014 developer-controlled endpoint"
     }
   },
   {
@@ -2803,8 +2803,8 @@
     "line": 225,
     "message": "Potential SSRF (Server-Side Request Forgery). If 'http://www.lua.org/manual/' is user-controlled,\nan attacker may reach ",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule SECURITY-046 in non-runtime developer tooling path: pygments/lexers/_lua_builtins.py"
     }
   },
   {
@@ -2816,8 +2816,8 @@
     "line": 233,
     "message": "Potential SSRF (Server-Side Request Forgery). If f'http://www.lua.org/manual/{version}/' is user-controlled,\nan attacker",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule SECURITY-046 in non-runtime developer tooling path: pygments/lexers/_lua_builtins.py"
     }
   },
   {
@@ -2829,8 +2829,8 @@
     "line": 1297,
     "message": "Potential SSRF (Server-Side Request Forgery). If LEX_URL is user-controlled,\nan attacker may reach internal services, me",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule SECURITY-046 in non-runtime developer tooling path: pygments/lexers/_mysql_builtins.py"
     }
   },
   {
@@ -2842,8 +2842,8 @@
     "line": 1303,
     "message": "Potential SSRF (Server-Side Request Forgery). If ITEM_CREATE_URL is user-controlled,\nan attacker may reach internal serv",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule SECURITY-046 in non-runtime developer tooling path: pygments/lexers/_mysql_builtins.py"
     }
   },
   {
@@ -2855,8 +2855,8 @@
     "line": 642,
     "message": "Potential SSRF (Server-Side Request Forgery). If DATATYPES_URL is user-controlled,\nan attacker may reach internal servic",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule SECURITY-046 in non-runtime developer tooling path: pygments/lexers/_postgres_builtins.py"
     }
   },
   {
@@ -2868,8 +2868,8 @@
     "line": 41,
     "message": "Hardcoded secret detected! Use environment variables instead.\n",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "SECURITY-005 hardcoded-password in production code \u2014 token: Hardcoded secret detected! Use environment variables instead.\n"
+      "verdict": "AUTO_FP",
+      "reason": "[AI triage] both calls agree FP. A: Empty string is not a hardcoded secret.. B: The tool is over-firing because the variable 'token' is initialized as an empty "
     }
   },
   {
@@ -2881,8 +2881,8 @@
     "line": 799,
     "message": "Hardcoded secret detected! Use environment variables instead.\n",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "SECURITY-005 hardcoded-password in production code \u2014 token: Hardcoded secret detected! Use environment variables instead.\n"
+      "verdict": "AUTO_FP",
+      "reason": "[AI triage] both calls agree FP. A: 'Token' is not a secret, it's a syntax highlighting token type.. B: The tool has incorrectly identified a non-secret string as a hardcoded secret, a"
     }
   },
   {
@@ -2933,8 +2933,8 @@
     "line": 17,
     "message": "Possible hardcoded password: '[^\\W\\d]\\w*' (Confidence: MEDIUM)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "SECURITY-005 hardcoded-password in production code \u2014 token: Possible hardcoded password: '[^\\W\\d]\\w*' (Confidence: MEDIUM)"
+      "verdict": "AUTO_FP",
+      "reason": "SECURITY-005 flagged regex/grammar token as secret: '[^\\W\\d]\\w*'"
     }
   },
   {
@@ -2946,8 +2946,8 @@
     "line": 50,
     "message": "Possible hardcoded password: '\n      (?=\n        \\s         # whitespace\n        | ;        # comment\n        | \\#[;|!] ",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "SECURITY-005 hardcoded-password in production code \u2014 token: Possible hardcoded password: '\n      (?=\n        \\s         # whitespace\n       "
+      "verdict": "AUTO_FP",
+      "reason": "SECURITY-005 flagged regex/grammar token as secret: '\n      (?=\n        \\s         # whitespace\n       '"
     }
   },
   {
@@ -3128,8 +3128,8 @@
     "line": 3061,
     "message": "Starting a process with a partial executable path (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-026 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-026 in build/ops tooling path: pygments/lexers/_scilab_builtins.py"
     }
   },
   {
@@ -3141,8 +3141,8 @@
     "line": 3061,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: pygments/lexers/_scilab_builtins.py"
     }
   },
   {
@@ -3362,8 +3362,8 @@
     "line": 512,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: src/click/_termui_impl.py"
     }
   },
   {
@@ -3375,8 +3375,8 @@
     "line": 604,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: src/click/_termui_impl.py"
     }
   },
   {
@@ -3388,8 +3388,8 @@
     "line": 686,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: src/click/_termui_impl.py"
     }
   },
   {
@@ -3401,8 +3401,8 @@
     "line": 776,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: src/click/_termui_impl.py"
     }
   },
   {
@@ -3414,8 +3414,8 @@
     "line": 784,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: src/click/_termui_impl.py"
     }
   },
   {
@@ -3427,8 +3427,8 @@
     "line": 813,
     "message": "Starting a process with a partial executable path (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-026 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-026 in build/ops tooling path: src/click/_termui_impl.py"
     }
   },
   {
@@ -3609,8 +3609,8 @@
     "line": 422,
     "message": "Possible hardcoded password: '<RST-VALIDATE-SYNTAX-CHECK>' (Confidence: MEDIUM)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "SECURITY-005 hardcoded-password in production code \u2014 token: Possible hardcoded password: '<RST-VALIDATE-SYNTAX-CHECK>' (Confidence: MEDIUM)"
+      "verdict": "AUTO_FP",
+      "reason": "SECURITY-005 flagged regex/grammar token as secret: '<RST-VALIDATE-SYNTAX-CHECK>'"
     }
   },
   {
@@ -4402,8 +4402,8 @@
     "line": 17,
     "message": "Hardcoded secret detected! Use environment variables instead.\n",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "SECURITY-005 hardcoded-password in production code \u2014 token: Hardcoded secret detected! Use environment variables instead.\n"
+      "verdict": "AUTO_FP",
+      "reason": "[AI triage] both calls agree FP. A: Regular expression pattern is not a secret.. B: The \"token\" variable appears to be a regular expression pattern, not a hardcoded"
     }
   },
   {
@@ -4454,8 +4454,8 @@
     "line": 184,
     "message": "Starting a process with a partial executable path (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-026 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-026 in build/ops tooling path: docs/source/make-state-diagrams.py"
     }
   },
   {
@@ -4467,8 +4467,8 @@
     "line": 184,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: docs/source/make-state-diagrams.py"
     }
   },
   {
@@ -4480,8 +4480,8 @@
     "line": 189,
     "message": "Starting a process with a partial executable path (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-026 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-026 in build/ops tooling path: docs/source/make-state-diagrams.py"
     }
   },
   {
@@ -4493,8 +4493,8 @@
     "line": 189,
     "message": "subprocess call - check for execution of untrusted input. (Confidence: HIGH)",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-022 / sev medium \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "subprocess rule SECURITY-022 in build/ops tooling path: docs/source/make-state-diagrams.py"
     }
   },
   {
@@ -4675,8 +4675,8 @@
     "line": 59,
     "message": "Potential SSRF (Server-Side Request Forgery). If u.format(org=org, repo=repo) is user-controlled,\nan attacker may reach ",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "[AI triage] both calls agree FP. A: Untrusted user input is unlikely to reach this internal library code.. B: The library is not a web application and the input is likely controlled by the u"
     }
   },
   {
@@ -4688,8 +4688,8 @@
     "line": 97,
     "message": "Potential SSRF (Server-Side Request Forgery). If f\"https://api.github.com/{['users', 'orgs'][is_org]}/{org_or_user}/repo",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule fired on hardcoded literal URL \u2014 developer-controlled endpoint"
     }
   },
   {
@@ -4701,8 +4701,8 @@
     "line": 107,
     "message": "Potential SSRF (Server-Side Request Forgery). If f\"https://api.github.com/repos/{self.org}/{self.repo}/tags\" is user-con",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule fired on hardcoded literal URL \u2014 developer-controlled endpoint"
     }
   },
   {
@@ -5299,8 +5299,8 @@
     "line": 18,
     "message": "Potential SSRF (Server-Side Request Forgery). If url is user-controlled,\nan attacker may reach internal services, metada",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule SECURITY-046 in non-runtime developer tooling path: extra/get_issues.py"
     }
   },
   {
@@ -5728,8 +5728,8 @@
     "line": 178,
     "message": "Potential SSRF (Server-Side Request Forgery). If f\"https://api.github.com/users/{user}\" is user-controlled,\nan attacker ",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule SECURITY-046 in non-runtime developer tooling path: web/pandas_web.py"
     }
   },
   {
@@ -5741,8 +5741,8 @@
     "line": 189,
     "message": "Potential SSRF (Server-Side Request Forgery). If context[\"main\"][\"production_url\"] + \"maintainers.json\" is user-controll",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule SECURITY-046 in non-runtime developer tooling path: web/pandas_web.py"
     }
   },
   {
@@ -5754,8 +5754,8 @@
     "line": 217,
     "message": "Potential SSRF (Server-Side Request Forgery). If f\"https://api.github.com/repos/{github_repo_url}/releases\" is user-cont",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule SECURITY-046 in non-runtime developer tooling path: web/pandas_web.py"
     }
   },
   {
@@ -5767,8 +5767,8 @@
     "line": 224,
     "message": "Potential SSRF (Server-Side Request Forgery). If context[\"main\"][\"production_url\"] + \"releases.json\" is user-controlled,",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule SECURITY-046 in non-runtime developer tooling path: web/pandas_web.py"
     }
   },
   {
@@ -5780,8 +5780,8 @@
     "line": 319,
     "message": "Potential SSRF (Server-Side Request Forgery). If \"https://api.github.com/search/issues?\"\n            f\"q=is:pr is:open l",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule SECURITY-046 in non-runtime developer tooling path: web/pandas_web.py"
     }
   },
   {
@@ -6469,8 +6469,8 @@
     "line": 18,
     "message": "SSRF: user-controlled URL in HTTP request",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule SECURITY-046 in non-runtime developer tooling path: gulpfile.js"
     }
   },
   {
@@ -6482,8 +6482,8 @@
     "line": 29,
     "message": "SSRF: user-controlled URL in HTTP request",
     "triage": {
-      "verdict": "NEEDS_REVIEW",
-      "reason": "rule SECURITY-046 / sev high \u2014 needs manual review"
+      "verdict": "AUTO_FP",
+      "reason": "SSRF rule SECURITY-046 in non-runtime developer tooling path: gulpfile.js"
     }
   },
   {
