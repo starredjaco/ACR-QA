@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-29 (T4.3 dual-corpus added)",
+  "generated": "2026-05-29 (T4.5 determinism proof added)",
   "precision_updated": "2026-05-29",
   "recall_updated": "2026-05-29",
   "total_repos": 38,
@@ -585,5 +585,24 @@
       0.5045
     ],
     "interpretation": "ACR-QA detects 11/11 statically-detectable CVEs (recall = 100%) while maintaining 24.7%\u201337.9% precision on the security-tier (CI: [14.6%, 35.4%] conservative). 2 CVEs are honest misses (not detectable by static pattern analysis)."
+  },
+  "t4_determinism_proof": {
+    "generated": "2026-05-29 20:44 UTC",
+    "overall_deterministic": true,
+    "finding_determinism": {
+      "run1_count": 48,
+      "run2_count": 48,
+      "shared_fingerprints": 48,
+      "only_in_run1": 0,
+      "only_in_run2": 0,
+      "is_deterministic": true
+    },
+    "ecdsa_determinism": {
+      "both_signatures_valid": true,
+      "signatures_byte_identical": false,
+      "algorithm": "ECDSA-P256 (random nonce, OpenSSL backend)",
+      "note": "Random nonce ECDSA \u2014 verifiability guaranteed; byte-identity not claimed"
+    },
+    "attestation_payload_excluding_timestamp_identical": true
   }
 }
