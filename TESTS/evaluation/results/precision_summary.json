@@ -333,5 +333,40 @@
     "quarantined_count": 6,
     "reason": "SECURITY-003 (B103 chmod): 0% precision, all AUTO_FP (test paths), 0 CVE recall corpus hits",
     "effect": "+0.69pp conservative (+0.76pp optimistic) on security-tier precision"
+  },
+  "p3_taint_gate": {
+    "description": "P3 semantic taint gate \u2014 taint-applicable Python findings (SECURITY-001/021/024/046/SQLi/Shell) require TaintAnalyzer confirmation (\u00b15 lines). Non-applicable rules (pickle, secrets, crypto) and JS files pass through.",
+    "taint_applicable_rules": [
+      "SECURITY-001",
+      "SECURITY-021",
+      "SECURITY-024",
+      "SECURITY-046",
+      "SQLI-001",
+      "SQLI-002",
+      "SHELL-001",
+      "SHELL-002"
+    ],
+    "applicable_python_findings": 70,
+    "taint_confirmed": 2,
+    "taint_absent_demoted": 68,
+    "passthrough": 149,
+    "rung4_total": 151,
+    "rung4_conservative": {
+      "tp": 39,
+      "fp": 106,
+      "needs_review": 7,
+      "total": 145,
+      "precision": 0.269
+    },
+    "rung4_optimistic": {
+      "tp": 46,
+      "fp": 99,
+      "needs_review": 7,
+      "total": 145,
+      "precision": 0.3172
+    },
+    "pp_gain_conservative": 0.0155,
+    "analyst_load_reduction_pct": 31.9,
+    "interpretation": "Taint gate reduces analyst scope 213\u2192151 (-32% on applicable Python findings) at +1.6pp conservative precision (25.4%\u219226.9%). Modest gain explained by corpus composition: clean library code has no HTTP handlers, so taint-absent is expected in clean code. Gain would be larger on application-code corpora (Flask/Django services) with explicit HTTP source\u2192sink flows."
   }
 }

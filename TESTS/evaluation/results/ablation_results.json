@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-30 12:36 UTC",
+  "generated": "2026-05-30 16:04 UTC",
   "corpus": "precision_corpus_pins.yml",
   "corpus_repos": 24,
   "pipeline_description": "Analytical ablation over 1942 cached precision-corpus findings (24 production repos, post-dedup). Pre-dedup cross-tool duplicates estimated from CROSS_TOOL_GROUPS overlap analysis.",
@@ -170,6 +170,32 @@
       },
       "gate_passed": false,
       "interpretation": "Clean production code generates RULE-SPECIFIC FPs (Bandit B103 chmod fires only in Bandit; SSRF fires only in Semgrep). Multi-tool co-location requires the SAME injection point to trigger MULTIPLE rule classes simultaneously \u2014 rare on non-vulnerable code. The corroboration signal emerges primarily on the recall corpus (vulnerable apps), not the precision corpus."
+    },
+    {
+      "rung": 4,
+      "label": "P3 \u2014 Semantic taint gate (taint-applicable Python, HTTP-source confirmation)",
+      "description": "P3 semantic gate: for taint-applicable rules (eval, subprocess, SSRF, SQLi) on Python files, require that the ACR-QA taint analyzer confirms a flow from an HTTP source (request.args, request.form, etc.) to the sink within \u00b15 lines. 68 taint-absent findings demoted (excluded from denominator); 151 retained (2 taint-confirmed + 149 pass-through for non-applicable rules). Key finding: precision corpus (clean libraries) has no HTTP handlers, so taint-absent is expected \u2014 the gate reduces analyst load by 32% on applicable findings at +1.6pp precision.",
+      "finding_count": 151,
+      "analyst_hours_hm": 37.8,
+      "conservative": {
+        "tp": 39,
+        "fp": 106,
+        "needs_review": 7,
+        "total": 145,
+        "precision": 0.269
+      },
+      "optimistic": {
+        "tp": 46,
+        "fp": 99,
+        "needs_review": 7,
+        "total": 145,
+        "precision": 0.3172
+      },
+      "taint_confirmed": 2,
+      "taint_absent_demoted": 68,
+      "taint_passthrough": 149,
+      "pp_gain_conservative": 0.0155,
+      "interpretation": "Taint gate reduces security-tier scope from 213 \u2192 151 (-68 taint-absent) at +1.6pp conservative precision. The modest gain (+1.5pp vs projected +15-25pp) is explained by corpus composition: clean library code has no HTTP request handlers, so absence of taint flow is uninformative. The gate would yield larger gains on application-code corpora (Flask/Django services) where HTTP sources are present. The FP ceiling is dominated by SECURITY-008 (pickle, 41 FPs) and SECURITY-005 (hardcoded secrets, 37 FPs) \u2014 both static-pattern rules outside taint scope."
     }
   ],
   "per_tool_standalone": [
