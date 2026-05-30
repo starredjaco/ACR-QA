@@ -1,5 +1,5 @@
 {
-  "generated": "2026-05-30 12:07 UTC",
+  "generated": "2026-05-30 12:36 UTC",
   "corpus": "precision_corpus_pins.yml",
   "corpus_repos": 24,
   "pipeline_description": "Analytical ablation over 1942 cached precision-corpus findings (24 production repos, post-dedup). Pre-dedup cross-tool duplicates estimated from CROSS_TOOL_GROUPS overlap analysis.",
@@ -143,6 +143,33 @@
       },
       "delta_analyst_hours": 102.60000000000001,
       "reduction_vs_raw": 89.0
+    },
+    {
+      "rung": "3.5",
+      "label": "P2 \u2014 Two-tool corroborated (\u22652 different tools, \u00b13 lines)",
+      "description": "P2 corroboration sub-tier: security-tier findings where at least one OTHER tool fires within \u00b13 lines in the same file. Two independent tools agreeing on the same location provides stronger evidence than any single tool alone. Result: 0 corroborated findings. Gate FAILED: only 0 corroborated findings < 5 threshold. On clean production code, multi-tool co-location is rare because FPs are rule-specific, not injection-class-specific. This empirically validates why P3 (semantic gating) is the principled path.",
+      "finding_count": 0,
+      "analyst_hours_hm": 0.0,
+      "conservative": {
+        "tp": 0,
+        "fp": 0,
+        "needs_review": 0,
+        "total": 0,
+        "precision": null
+      },
+      "optimistic": {
+        "tp": 0,
+        "fp": 0,
+        "needs_review": 0,
+        "total": 0,
+        "precision": null
+      },
+      "gate_threshold": {
+        "min_findings": 5,
+        "min_precision": 0.5
+      },
+      "gate_passed": false,
+      "interpretation": "Clean production code generates RULE-SPECIFIC FPs (Bandit B103 chmod fires only in Bandit; SSRF fires only in Semgrep). Multi-tool co-location requires the SAME injection point to trigger MULTIPLE rule classes simultaneously \u2014 rare on non-vulnerable code. The corroboration signal emerges primarily on the recall corpus (vulnerable apps), not the precision corpus."
     }
   ],
   "per_tool_standalone": [
