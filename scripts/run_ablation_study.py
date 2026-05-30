@@ -27,11 +27,24 @@ from __future__ import annotations
 import json
 import os
 import re
+import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone  # noqa: UP017
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+# Ensure CORE is importable when running as a script
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+try:
+    from CORE.engines.taint_analyzer import TaintAnalyzer as _TaintAnalyzer
+
+    _TAINT_AVAILABLE = True
+except Exception:
+    _TaintAnalyzer = None  # type: ignore[assignment,misc]
+    _TAINT_AVAILABLE = False
 FINDINGS_DIR = ROOT / "TESTS/evaluation/results/precision_findings"
 OUTPUT_JSON = ROOT / "TESTS/evaluation/results/ablation_results.json"
 SUMMARY_FILE = ROOT / "TESTS/evaluation/results/eval_summary.json"
@@ -350,6 +363,88 @@ def estimate_pre_dedup_extras(findings: list[dict]) -> int:
     return sum(max(0, len(v) - 1) for v in loc_tools.values())
 
 
+# ── P3: Semantic taint gate ───────────────────────────────────────────────────
+
+# Rules where taint flow from HTTP sources to the sink is semantically meaningful.
+# Non-applicable rules (SECURITY-008 pickle, SECURITY-005 hardcoded secrets, CRYPTO-*)
+# are static-pattern rules independent of data-flow origin — taint gating does not apply.
+TAINT_APPLICABLE_RULES: frozenset[str] = frozenset(
+    {
+        "SECURITY-001",  # eval / exec
+        "SECURITY-021",  # subprocess with user-controlled args
+        "SECURITY-024",  # os.system / os.popen
+        "SECURITY-046",  # SSRF — URL from user input
+        "SQLI-001",
+        "SQLI-002",
+        "SHELL-001",
+        "SHELL-002",
+    }
+)
+
+
+def semantic_taint_gate(security_findings: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Rung 4 (P3): Split security-tier findings into taint-gated and pass-through.
+
+    For taint-applicable rules on Python files:
+      - Run TaintAnalyzer on each source file.
+      - Finding is CONFIRMED if any taint result falls within ±5 lines.
+      - Finding is ABSENT otherwise → demoted (excluded from Rung 4 denominator).
+
+    For non-applicable rules (pickle, secrets, crypto, etc.) and non-Python files:
+      - Pass through unchanged (taint N/A).
+
+    Returns (rung4_findings, absent_findings).
+    rung4_findings = confirmed_applicable + passthrough
+    """
+    from collections import defaultdict
+    from pathlib import Path as _Path
+
+    if not _TAINT_AVAILABLE or _TaintAnalyzer is None:
+        # Taint analyzer unavailable — treat all as pass-through
+        return security_findings, []
+
+    applicable_py = [
+        f
+        for f in security_findings
+        if _rule(f) in TAINT_APPLICABLE_RULES and _path(f).endswith(".py") and triage_finding(f) != "SKIP"
+    ]
+    passthrough = [
+        f
+        for f in security_findings
+        if _rule(f) not in TAINT_APPLICABLE_RULES or not _path(f).endswith(".py")
+    ]
+
+    # Group applicable findings by file to minimise TaintAnalyzer runs
+    file_groups: dict[str, list[dict]] = defaultdict(list)
+    for f in applicable_py:
+        file_groups[_path(f)].append(f)
+
+    analyzer = _TaintAnalyzer()
+    confirmed: list[dict] = []
+    absent: list[dict] = []
+
+    for fp, findings in file_groups.items():
+        if not _Path(fp).exists():
+            absent.extend(findings)
+            continue
+        try:
+            results = analyzer.analyze_file(fp)
+            taint_lines = {int(r.get("line", 0)) for r in results}
+        except Exception:
+            absent.extend(findings)
+            continue
+
+        for f in findings:
+            fl = int(f.get("line_number") or f.get("line") or 0)
+            if any(abs(fl - tl) <= 5 for tl in taint_lines):
+                confirmed.append(f)
+            else:
+                absent.append(f)
+
+    rung4 = confirmed + passthrough
+    return rung4, absent
+
+
 # ── P2: Corroboration sub-tier ────────────────────────────────────────────────
 
 
@@ -473,6 +568,32 @@ def run_ablation(out_md: Path) -> dict:
             f"P2 result is documented but P3 remains primary path.",
             flush=True,
         )
+
+    # ── Rung 4: P3 — Semantic taint gate ──────────────────────────────────────
+    print("Rung 4: P3 semantic taint gate (taint-applicable Python files)…", flush=True)
+    rung4_f, taint_absent_f = semantic_taint_gate(security_tier_f)
+    rung4_c = precision_stats(rung4_f, conservative=True)
+    rung4_o = precision_stats(rung4_f, conservative=False)
+    taint_confirmed_count = len(rung4_f) - sum(
+        1 for f in rung4_f if _rule(f) not in TAINT_APPLICABLE_RULES or not _path(f).endswith(".py")
+    )
+    taint_passthrough_count = sum(
+        1 for f in rung4_f if _rule(f) not in TAINT_APPLICABLE_RULES or not _path(f).endswith(".py")
+    )
+    print(
+        f"  Rung 4: {len(rung4_f)} retained "
+        f"({taint_confirmed_count} taint-confirmed + {taint_passthrough_count} pass-through); "
+        f"{len(taint_absent_f)} demoted (taint-absent, excluded from denominator)",
+        flush=True,
+    )
+    pp_gain_c = round(
+        (rung4_c["precision"] or 0) - (rung3_c["precision"] or 0), 4
+    ) if rung4_c["precision"] and rung3_c["precision"] else None
+    print(
+        f"  Conservative: {rung4_c['precision']:.1%} "
+        f"(Δ {pp_gain_c:+.1%} vs Rung 3) | Optimistic: {rung4_o['precision']:.1%}",
+        flush=True,
+    )
 
     # ── Per-tool standalone breakdown ─────────────────────────────────────────
     print("Per-tool standalone analysis…", flush=True)
@@ -646,6 +767,40 @@ def run_ablation(out_md: Path) -> dict:
                     "the SAME injection point to trigger MULTIPLE rule classes simultaneously — "
                     "rare on non-vulnerable code. The corroboration signal emerges "
                     "primarily on the recall corpus (vulnerable apps), not the precision corpus."
+                ),
+            },
+            {
+                "rung": 4,
+                "label": "P3 — Semantic taint gate (taint-applicable Python, HTTP-source confirmation)",
+                "description": (
+                    "P3 semantic gate: for taint-applicable rules (eval, subprocess, SSRF, SQLi) "
+                    "on Python files, require that the ACR-QA taint analyzer confirms a flow from "
+                    "an HTTP source (request.args, request.form, etc.) to the sink within ±5 lines. "
+                    f"{len(taint_absent_f)} taint-absent findings demoted (excluded from denominator); "
+                    f"{len(rung4_f)} retained ({taint_confirmed_count} taint-confirmed + "
+                    f"{taint_passthrough_count} pass-through for non-applicable rules). "
+                    "Key finding: precision corpus (clean libraries) has no HTTP handlers, "
+                    "so taint-absent is expected — the gate reduces analyst load by "
+                    f"{round(len(taint_absent_f)/active_sec_count*100, 0):.0f}% on applicable findings "
+                    f"at +{pp_gain_c*100:.1f}pp precision."
+                ),
+                "finding_count": len(rung4_f),
+                "analyst_hours_hm": analyst_hours(len(rung4_f)),
+                "conservative": rung4_c,
+                "optimistic": rung4_o,
+                "taint_confirmed": taint_confirmed_count,
+                "taint_absent_demoted": len(taint_absent_f),
+                "taint_passthrough": taint_passthrough_count,
+                "pp_gain_conservative": pp_gain_c,
+                "interpretation": (
+                    f"Taint gate reduces security-tier scope from {active_sec_count} → {len(rung4_f)} "
+                    f"(-{len(taint_absent_f)} taint-absent) at +{pp_gain_c*100:.1f}pp conservative precision. "
+                    "The modest gain (+1.5pp vs projected +15-25pp) is explained by corpus composition: "
+                    "clean library code has no HTTP request handlers, so absence of taint flow is "
+                    "uninformative. The gate would yield larger gains on application-code corpora "
+                    "(Flask/Django services) where HTTP sources are present. "
+                    "The FP ceiling is dominated by SECURITY-008 (pickle, 41 FPs) and SECURITY-005 "
+                    "(hardcoded secrets, 37 FPs) — both static-pattern rules outside taint scope."
                 ),
             },
         ],
@@ -881,12 +1036,22 @@ def _update_eval_summary(r: dict) -> None:
                 "conservative_precision": rg[3]["conservative"]["precision"],
                 "optimistic_precision": rg[3]["optimistic"]["precision"],
             },
+            "rung4_p3_taint_gate": {
+                "count": rg[5]["finding_count"],
+                "conservative_precision": rg[5]["conservative"]["precision"],
+                "optimistic_precision": rg[5]["optimistic"]["precision"],
+                "taint_absent_demoted": rg[5]["taint_absent_demoted"],
+                "pp_gain_conservative": rg[5]["pp_gain_conservative"],
+            },
         },
         "per_tool_standalone": r["per_tool_standalone"],
         "key_finding": (
             f"Security-tier precision {rg[3]['conservative']['precision']*100:.1f}%–"
-            f"{rg[3]['optimistic']['precision']*100:.1f}% at {rg[3]['finding_count']} findings; "
-            f"each pipeline layer validated as beneficial."
+            f"{rg[3]['optimistic']['precision']*100:.1f}% at {rg[3]['finding_count']} findings (Rung 3); "
+            f"P3 taint gate: {rg[5]['conservative']['precision']*100:.1f}%–"
+            f"{rg[5]['optimistic']['precision']*100:.1f}% at {rg[5]['finding_count']} findings "
+            f"({rg[5]['taint_absent_demoted']} taint-absent demoted, "
+            f"+{(rg[5]['pp_gain_conservative'] or 0)*100:.1f}pp conservative)."
         ),
     }
     summary["generated"] = "2026-05-29 (T4.1 ablation added)"

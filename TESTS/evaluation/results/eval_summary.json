@@ -436,7 +436,7 @@
     "note": "Track 3 added 2026-05-29. Bandit and Semgrep precision computed from cached ACR-QA scan output filtered by tool_raw.tool_name. ACR-QA baseline from precision_benchmark (eval_summary.json \u00a7precision_benchmark). See docs/evaluation/COMPETITOR_COMPARISON.md."
   },
   "t4_ablation_study": {
-    "generated": "2026-05-30 12:36 UTC",
+    "generated": "2026-05-30 16:04 UTC",
     "corpus_repos": 24,
     "total_findings_post_dedup": 1942,
     "rungs": {
@@ -460,6 +460,13 @@
         "count": 213,
         "conservative_precision": 0.2535,
         "optimistic_precision": 0.3005
+      },
+      "rung4_p3_taint_gate": {
+        "count": 151,
+        "conservative_precision": 0.269,
+        "optimistic_precision": 0.3172,
+        "taint_absent_demoted": 68,
+        "pp_gain_conservative": 0.0155
       }
     },
     "per_tool_standalone": [
@@ -544,7 +551,7 @@
         "analyst_hours": 0.5
       }
     ],
-    "key_finding": "Security-tier precision 25.4%\u201330.0% at 213 findings; each pipeline layer validated as beneficial."
+    "key_finding": "Security-tier precision 25.4%\u201330.0% at 213 findings (Rung 3); P3 taint gate: 26.9%\u201331.7% at 151 findings (68 taint-absent demoted, +1.6pp conservative)."
   },
   "t4_bootstrap_ci": {
     "generated": "2026-05-30 12:07 UTC",

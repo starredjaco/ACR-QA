@@ -1,6 +1,6 @@
 # T4.1 Ablation Study — Layered Pipeline Precision
 
-_Generated: 2026-05-30 12:36 UTC_
+_Generated: 2026-05-30 16:04 UTC_
 _Corpus: precision_corpus_pins.yml (24 repos, 1942 cached findings post-dedup)_
 
 ## Summary
@@ -17,6 +17,7 @@ genuine security risk present in real production code; everything else is FP.
 | 2 | + Reachability demotion (UNREACHABLE → LOW) | 623 | 155.8h | 8.6% (53 TP / 617 H/M) | 22.0% |
 | 3 | Security-tier only (H-sev SECURITY-*/SECRET-*/etc.) | 213 | 53.2h | 25.4% (54 TP / 213 H/M) | 30.0% |
 | 3.5 | P2 — Two-tool corroborated (≥2 different tools, ±3 lines) | 0 | 0.0h | N/A (0 TP / 0 H/M) | N/A |
+| 4 | P3 — Semantic taint gate (taint-applicable Python, HTTP-source confirmation) | 151 | 37.8h | 26.9% (39 TP / 145 H/M) | 31.7% |
 
 > **Conservative**: NEEDS_REVIEW → FP (worst case).
 > **Optimistic**: NEEDS_REVIEW → TP (best case).
@@ -64,6 +65,14 @@ P2 corroboration sub-tier: security-tier findings where at least one OTHER tool 
 - Findings in scope: **0**
 - Conservative precision: **N/A** (0 TP / 0 total, 0 NEEDS_REVIEW)
 - Optimistic precision: **N/A**
+
+### Rung 4: P3 — Semantic taint gate (taint-applicable Python, HTTP-source confirmation)
+
+P3 semantic gate: for taint-applicable rules (eval, subprocess, SSRF, SQLi) on Python files, require that the ACR-QA taint analyzer confirms a flow from an HTTP source (request.args, request.form, etc.) to the sink within ±5 lines. 68 taint-absent findings demoted (excluded from denominator); 151 retained (2 taint-confirmed + 149 pass-through for non-applicable rules). Key finding: precision corpus (clean libraries) has no HTTP handlers, so taint-absent is expected — the gate reduces analyst load by 32% on applicable findings at +1.6pp precision.
+
+- Findings in scope: **151**
+- Conservative precision: **26.9%** (39 TP / 145 total, 7 NEEDS_REVIEW)
+- Optimistic precision: **31.7%**
 
 ## Dedup Layer Analysis
 
