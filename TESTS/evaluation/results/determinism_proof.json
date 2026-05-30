@@ -1,0 +1,31 @@
+{
+  "generated": "2026-05-29 20:44 UTC",
+  "target_dir": "TESTS/samples/comprehensive-issues",
+  "overall_deterministic": true,
+  "finding_determinism": {
+    "run1_count": 48,
+    "run2_count": 48,
+    "shared_fingerprints": 48,
+    "only_in_run1": [],
+    "only_in_run2": [],
+    "attribute_diffs_on_shared": [],
+    "is_deterministic": true
+  },
+  "ecdsa_determinism": {
+    "sig1_hex": "3046022100874fe6929548e1f3934cf0\u2026",
+    "sig2_hex": "304502207cff12cdce1a1f4582ea0c59\u2026",
+    "signatures_byte_identical": false,
+    "both_signatures_valid": true,
+    "algorithm": "ECDSA-P256 (random nonce, OpenSSL backend)",
+    "key_id_stable": true,
+    "note": "Standard ECDSA uses a random nonce per signature, so two calls to sign(key, msg) produce different bytes. Both signatures are valid. The attestation guarantee is VERIFIABILITY, not byte-identity: any past attestation can always be re-verified with the same public key. The key_id (SHA-256 of the DER public key) remains constant, enabling cross-run linkage."
+  },
+  "attestation_payload_determinism": {
+    "timestamp_run1": "2026-05-29T10:00:00Z",
+    "timestamp_run2": "2026-05-29T10:01:00Z",
+    "timestamps_differ": true,
+    "payload_excluding_timestamp_identical": true,
+    "full_payload_identical": false,
+    "note": "scan_timestamp records wall-clock time and intentionally differs between runs. All other predicate fields (repo_name, commit_sha, findings counts, acrqa_version) are deterministic functions of the scan input."
+  }
+}
