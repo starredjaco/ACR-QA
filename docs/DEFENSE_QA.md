@@ -353,3 +353,51 @@ CBOM only covers cryptography misuse. It has 31 H/M findings on the precision co
 | **ACR-QA (all tools)** | **630** | **219** | **24.7–37.9%** |
 
 CBOM's 61.5% precision reflects its narrower, higher-confidence rule set (CWE-327/338 weak crypto). ACR-QA includes CBOM as one of its 7 tools — so CBOM's precision is preserved within the pipeline, while Semgrep and Bandit add coverage across injection, deserialization, and path-traversal classes that CBOM does not detect.
+
+---
+
+### Q: Can you summarise the whole evaluation in one sentence?
+
+**Short answer:**
+ACR-QA achieves 100% recall on statically-detectable CVEs and 24.7–37.9% security-tier precision (95% CI: [14.6%, 50.5%]) across 30 production repositories, with provably-deterministic findings and ECDSA-signed provenance — surpassing any single-tool baseline in coverage-precision balance.
+
+---
+
+### Q: Where can the committee read the full evaluation?
+
+The evaluation chapter is self-contained in `docs/EVALUATION_CHAPTER.md` (§5.1–§5.10). Each section is backed by:
+
+| Section | Source file |
+|---------|------------|
+| §5.3 CVE recall | `TESTS/evaluation/results/eval_summary.json` |
+| §5.4 Ablation / precision | `TESTS/evaluation/results/ablation_results.json` |
+| §5.5 Bootstrap CIs | `TESTS/evaluation/results/bootstrap_ci.json` |
+| §5.6 Per-tool breakdown | `TESTS/evaluation/results/ablation_results.json` |
+| §5.7 Determinism proof | `TESTS/evaluation/results/determinism_proof.json` |
+| §5.8 Threat model / limitations | `docs/THREAT_MODEL.md` |
+| Floor assertions (regression guard) | `TESTS/test_eval_regression_guard.py` |
+
+---
+
+### Q: How do you know your evaluation numbers won't change if you re-run the scripts tomorrow?
+
+**Short answer:**
+The regression guard (`TESTS/test_eval_regression_guard.py`) enforces 19 floor assertions. Any code change that degrades the published thresholds will fail CI immediately, forcing an explicit decision.
+
+**Full answer:**
+
+The regression guard checks:
+- Security-tier conservative precision ≥ 20%
+- Security-tier optimistic precision ≥ 30%
+- H/M finding count ≥ 500
+- Security-tier finding count ≥ 150
+- Track 1 + Track 2 recall = 100%
+- Bootstrap CI lower bound (conservative) ≥ 10%
+- Bootstrap CI lower bound (optimistic) ≥ 20%
+- Bootstrap ran over ≥ 25 repos
+- Ablation rung 3 ≥ 150 security-tier findings
+- Determinism proof is_deterministic = True
+- Both ECDSA signatures valid
+- Dual-corpus recall_detectable = 100%
+
+These thresholds are set conservatively below current results to tolerate minor corpus drift while still catching genuine regressions. The guard runs on every push via GitHub Actions.
