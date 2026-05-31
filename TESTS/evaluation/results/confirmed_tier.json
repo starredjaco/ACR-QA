@@ -1,0 +1,161 @@
+{
+  "study": "P4 \u2014 Confirmed Tier (high-confidence stratum)",
+  "generated_at": "2026-05-31T14:44:24.299530+00:00",
+  "stratum_definition": {
+    "severity": "high",
+    "rule_set_size": 23,
+    "rule_set": [
+      "CRYPTO-001",
+      "CRYPTO-002",
+      "SECRET-001",
+      "SECRET-002",
+      "SECRET-003",
+      "SECURITY-001",
+      "SECURITY-002",
+      "SECURITY-003",
+      "SECURITY-004",
+      "SECURITY-006",
+      "SECURITY-007",
+      "SECURITY-008",
+      "SECURITY-009",
+      "SECURITY-010",
+      "SECURITY-018",
+      "SECURITY-021",
+      "SECURITY-024",
+      "SHELL-001",
+      "SHELL-002",
+      "SQLI-001",
+      "SQLI-002",
+      "XML-001",
+      "YAML-001"
+    ],
+    "production_code_required": true,
+    "bandit_confidence_required": "HIGH"
+  },
+  "precision_corpus": {
+    "total_findings": 55,
+    "auto_tp": 53,
+    "auto_fp": 0,
+    "needs_review": 2,
+    "conservative_precision": 0.9636,
+    "optimistic_precision": 1.0,
+    "conservative_ci_95": [
+      0.9091,
+      1.0
+    ],
+    "optimistic_ci_95": [
+      1.0,
+      1.0
+    ],
+    "per_rule_breakdown": {
+      "CRYPTO-001": {
+        "tp": 8,
+        "fp": 0,
+        "nr": 0
+      },
+      "SECURITY-001": {
+        "tp": 26,
+        "fp": 0,
+        "nr": 0
+      },
+      "SECURITY-008": {
+        "tp": 12,
+        "fp": 0,
+        "nr": 0
+      },
+      "SECURITY-018": {
+        "tp": 0,
+        "fp": 0,
+        "nr": 2
+      },
+      "SECURITY-021": {
+        "tp": 5,
+        "fp": 0,
+        "nr": 0
+      },
+      "SECURITY-024": {
+        "tp": 2,
+        "fp": 0,
+        "nr": 0
+      }
+    },
+    "per_tool_breakdown": {
+      "bandit": {
+        "tp": 17,
+        "fp": 0,
+        "nr": 2
+      },
+      "other": {
+        "tp": 9,
+        "fp": 0,
+        "nr": 0
+      },
+      "semgrep": {
+        "tp": 27,
+        "fp": 0,
+        "nr": 0
+      }
+    }
+  },
+  "recall_corpus": {
+    "total_detectable_cves": 8,
+    "cve_in_confirmed_tier": 8,
+    "recall": 1.0,
+    "per_cve": [
+      {
+        "cve_file": "acrqa-cve-2016-10516-werkzeug-eval.yml.json",
+        "expected_rule": "SECURITY-001",
+        "description": "Werkzeug eval",
+        "in_confirmed_tier": true
+      },
+      {
+        "cve_file": "acrqa-cve-2017-18342-pyyaml.yml.json",
+        "expected_rule": "SECURITY-018",
+        "description": "PyYAML unsafe load",
+        "in_confirmed_tier": true
+      },
+      {
+        "cve_file": "acrqa-cve-2021-23727-celery-pickle.yml.json",
+        "expected_rule": "SECURITY-008",
+        "description": "Celery pickle",
+        "in_confirmed_tier": true
+      },
+      {
+        "cve_file": "acrqa-cve-2022-24439-gitpython-shell.yml.json",
+        "expected_rule": "SECURITY-021",
+        "description": "GitPython shell",
+        "in_confirmed_tier": true
+      },
+      {
+        "cve_file": "acrqa-cve-2023-45805-poetry-yaml-unsafe.yml.json",
+        "expected_rule": "SECURITY-018",
+        "description": "Poetry yaml.load",
+        "in_confirmed_tier": true
+      },
+      {
+        "cve_file": "acrqa-cve-2024-1135-gunicorn.yml.json",
+        "expected_rule": "SECURITY-021",
+        "description": "Gunicorn shell",
+        "in_confirmed_tier": true
+      },
+      {
+        "cve_file": "acrqa-cve-2024-3219-pillow.yml.json",
+        "expected_rule": "SECURITY-001",
+        "description": "Pillow eval",
+        "in_confirmed_tier": true
+      },
+      {
+        "cve_file": "acrqa-cve-2024-45411-twig-eval.yml.json",
+        "expected_rule": "SECURITY-008",
+        "description": "Twig pickle",
+        "in_confirmed_tier": true
+      }
+    ]
+  },
+  "industry_comparison": {
+    "snyk_high_confidence": "~85% conservative (published)",
+    "sonarqube_reliability_a": "~80%+ (vendor docs)",
+    "checkmarx_confirmed": "100% by construction (post-human review)",
+    "acrqa_confirmed_tier": "96.4% conservative"
+  }
+}
