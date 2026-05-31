@@ -1,0 +1,1499 @@
+{
+  "study": "X4 \u2014 Time-Travel Predictive Risk Backtest",
+  "generated_at": "2026-05-31T03:03:24.928554+00:00",
+  "dataset": "Django CVE history 2019\u20132023",
+  "checkpoints_count": 10,
+  "cves_total": 30,
+  "top_n": 20,
+  "aggregate": {
+    "checkpoints_evaluated": 10,
+    "avg_precision_at_n": 0.025,
+    "avg_recall_at_cve": 0.125,
+    "avg_baseline_precision": 0.0137,
+    "lift": 1.83,
+    "checkpoints_p005": 0,
+    "checkpoints_p010": 0,
+    "pooled_a": 5,
+    "pooled_b": 47,
+    "pooled_c": 195,
+    "pooled_d": 3547,
+    "pooled_odds_ratio": 1.9351,
+    "pooled_p_value": 0.136638,
+    "pooled_significant_005": false,
+    "pooled_significant_010": false
+  },
+  "checkpoints": [
+    {
+      "tag": "2.2",
+      "release_date": "2019-04-01",
+      "total_files_scored": 382,
+      "bandit_findings": 293,
+      "high_findings": 13,
+      "cve_count_in_window": 8,
+      "cve_ids_in_window": [
+        "CVE-2019-12308",
+        "CVE-2019-14232",
+        "CVE-2019-14233",
+        "CVE-2019-14234",
+        "CVE-2019-14235",
+        "CVE-2019-19844",
+        "CVE-2020-7471",
+        "CVE-2020-9402"
+      ],
+      "cve_files_in_scope": [
+        "django/contrib/admin/options.py",
+        "django/contrib/auth/forms.py",
+        "django/db/models/sql/query.py",
+        "django/utils/encoding.py",
+        "django/utils/html.py",
+        "django/utils/text.py"
+      ],
+      "top_n": 20,
+      "predicted_top_n": [
+        "django/contrib/admin/helpers.py",
+        "django/contrib/admin/options.py",
+        "django/contrib/admin/sites.py",
+        "django/contrib/admin/templatetags/admin_list.py",
+        "django/contrib/admin/templatetags/admin_modify.py",
+        "django/contrib/admin/views/main.py",
+        "django/contrib/auth/__init__.py",
+        "django/contrib/auth/backends.py",
+        "django/contrib/auth/management/commands/createsuperuser.py",
+        "django/contrib/auth/password_validation.py",
+        "django/core/cache/backends/filebased.py",
+        "django/core/serializers/__init__.py",
+        "django/db/migrations/migration.py",
+        "django/db/migrations/operations/special.py",
+        "django/db/models/fields/files.py",
+        "django/db/models/fields/related_descriptors.py",
+        "django/db/models/manager.py",
+        "django/http/multipartparser.py",
+        "django/template/loader_tags.py",
+        "django/utils/six.py"
+      ],
+      "overlap_files": [
+        "django/contrib/admin/options.py"
+      ],
+      "overlap_count": 1,
+      "stats": {
+        "a": 1,
+        "b": 5,
+        "c": 19,
+        "d": 357,
+        "overlap": 1,
+        "cve_files_in_scope": 6,
+        "total_files": 382,
+        "precision_at_n": 0.05,
+        "recall_at_cve": 0.1667,
+        "baseline_precision": 0.0157,
+        "odds_ratio": 3.7579,
+        "p_value": 0.277364,
+        "significant_005": false,
+        "significant_010": false
+      },
+      "top_scores": [
+        {
+          "file": "django/core/cache/backends/filebased.py",
+          "score": 50
+        },
+        {
+          "file": "django/utils/six.py",
+          "score": 49
+        },
+        {
+          "file": "django/db/migrations/operations/special.py",
+          "score": 48
+        },
+        {
+          "file": "django/template/loader_tags.py",
+          "score": 48
+        },
+        {
+          "file": "django/contrib/admin/options.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/auth/__init__.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/serializers/__init__.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/migrations/migration.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/models/fields/files.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/models/fields/related_descriptors.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/models/manager.py",
+          "score": 47
+        },
+        {
+          "file": "django/http/multipartparser.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/admin/helpers.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/sites.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_list.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_modify.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/views/main.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/backends.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/management/commands/createsuperuser.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/password_validation.py",
+          "score": 46
+        }
+      ]
+    },
+    {
+      "tag": "3.0",
+      "release_date": "2019-12-02",
+      "total_files_scored": 373,
+      "bandit_findings": 293,
+      "high_findings": 16,
+      "cve_count_in_window": 5,
+      "cve_ids_in_window": [
+        "CVE-2019-19844",
+        "CVE-2020-7471",
+        "CVE-2020-9402",
+        "CVE-2020-13254",
+        "CVE-2020-13596"
+      ],
+      "cve_files_in_scope": [
+        "django/contrib/admin/options.py",
+        "django/contrib/auth/forms.py",
+        "django/core/cache/backends/memcached.py"
+      ],
+      "top_n": 20,
+      "predicted_top_n": [
+        "django/contrib/admin/helpers.py",
+        "django/contrib/admin/sites.py",
+        "django/contrib/admin/templatetags/admin_list.py",
+        "django/contrib/admin/templatetags/admin_modify.py",
+        "django/contrib/auth/__init__.py",
+        "django/contrib/auth/password_validation.py",
+        "django/core/cache/backends/db.py",
+        "django/core/cache/backends/filebased.py",
+        "django/core/cache/backends/memcached.py",
+        "django/core/handlers/wsgi.py",
+        "django/core/serializers/__init__.py",
+        "django/core/serializers/xml_serializer.py",
+        "django/db/migrations/migration.py",
+        "django/db/migrations/operations/special.py",
+        "django/db/migrations/serializer.py",
+        "django/db/models/manager.py",
+        "django/db/models/sql/subqueries.py",
+        "django/template/defaulttags.py",
+        "django/template/loader_tags.py",
+        "django/utils/formats.py"
+      ],
+      "overlap_files": [
+        "django/core/cache/backends/memcached.py"
+      ],
+      "overlap_count": 1,
+      "stats": {
+        "a": 1,
+        "b": 2,
+        "c": 19,
+        "d": 351,
+        "overlap": 1,
+        "cve_files_in_scope": 3,
+        "total_files": 373,
+        "precision_at_n": 0.05,
+        "recall_at_cve": 0.3333,
+        "baseline_precision": 0.008,
+        "odds_ratio": 9.2368,
+        "p_value": 0.152775,
+        "significant_005": false,
+        "significant_010": false
+      },
+      "top_scores": [
+        {
+          "file": "django/db/migrations/operations/special.py",
+          "score": 49
+        },
+        {
+          "file": "django/template/loader_tags.py",
+          "score": 49
+        },
+        {
+          "file": "django/core/cache/backends/filebased.py",
+          "score": 48
+        },
+        {
+          "file": "django/core/serializers/__init__.py",
+          "score": 48
+        },
+        {
+          "file": "django/db/migrations/migration.py",
+          "score": 48
+        },
+        {
+          "file": "django/db/models/manager.py",
+          "score": 48
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_modify.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/serializers/xml_serializer.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/migrations/serializer.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/models/sql/subqueries.py",
+          "score": 47
+        },
+        {
+          "file": "django/template/defaulttags.py",
+          "score": 47
+        },
+        {
+          "file": "django/utils/formats.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/admin/helpers.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/sites.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_list.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/__init__.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/password_validation.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/cache/backends/db.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/cache/backends/memcached.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/handlers/wsgi.py",
+          "score": 46
+        }
+      ]
+    },
+    {
+      "tag": "3.1",
+      "release_date": "2020-08-04",
+      "total_files_scored": 375,
+      "bandit_findings": 290,
+      "high_findings": 15,
+      "cve_count_in_window": 6,
+      "cve_ids_in_window": [
+        "CVE-2021-3281",
+        "CVE-2021-28658",
+        "CVE-2021-31542",
+        "CVE-2021-33203",
+        "CVE-2021-33571",
+        "CVE-2021-35042"
+      ],
+      "cve_files_in_scope": [
+        "django/core/files/storage.py",
+        "django/core/files/uploadhandler.py",
+        "django/core/validators.py",
+        "django/db/models/sql/compiler.py",
+        "django/http/multipartparser.py",
+        "django/utils/archive.py"
+      ],
+      "top_n": 20,
+      "predicted_top_n": [
+        "django/contrib/admin/helpers.py",
+        "django/contrib/admin/options.py",
+        "django/contrib/admin/sites.py",
+        "django/contrib/admin/templatetags/admin_list.py",
+        "django/contrib/admin/templatetags/admin_modify.py",
+        "django/contrib/admin/views/main.py",
+        "django/contrib/auth/backends.py",
+        "django/contrib/auth/management/commands/createsuperuser.py",
+        "django/contrib/auth/password_validation.py",
+        "django/core/cache/backends/db.py",
+        "django/core/cache/backends/filebased.py",
+        "django/core/mail/backends/smtp.py",
+        "django/core/serializers/python.py",
+        "django/core/serializers/xml_serializer.py",
+        "django/db/migrations/migration.py",
+        "django/db/migrations/operations/special.py",
+        "django/db/models/sql/compiler.py",
+        "django/db/models/sql/where.py",
+        "django/db/transaction.py",
+        "django/template/loaders/cached.py"
+      ],
+      "overlap_files": [
+        "django/db/models/sql/compiler.py"
+      ],
+      "overlap_count": 1,
+      "stats": {
+        "a": 1,
+        "b": 5,
+        "c": 19,
+        "d": 350,
+        "overlap": 1,
+        "cve_files_in_scope": 6,
+        "total_files": 375,
+        "precision_at_n": 0.05,
+        "recall_at_cve": 0.1667,
+        "baseline_precision": 0.016,
+        "odds_ratio": 3.6842,
+        "p_value": 0.281885,
+        "significant_005": false,
+        "significant_010": false
+      },
+      "top_scores": [
+        {
+          "file": "django/db/migrations/operations/special.py",
+          "score": 50
+        },
+        {
+          "file": "django/db/migrations/migration.py",
+          "score": 49
+        },
+        {
+          "file": "django/core/cache/backends/filebased.py",
+          "score": 48
+        },
+        {
+          "file": "django/core/mail/backends/smtp.py",
+          "score": 48
+        },
+        {
+          "file": "django/core/serializers/xml_serializer.py",
+          "score": 48
+        },
+        {
+          "file": "django/db/transaction.py",
+          "score": 48
+        },
+        {
+          "file": "django/contrib/auth/backends.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/auth/management/commands/createsuperuser.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/serializers/python.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/models/sql/compiler.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/models/sql/where.py",
+          "score": 47
+        },
+        {
+          "file": "django/template/loaders/cached.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/admin/helpers.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/options.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/sites.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_list.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_modify.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/views/main.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/password_validation.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/cache/backends/db.py",
+          "score": 46
+        }
+      ]
+    },
+    {
+      "tag": "3.2",
+      "release_date": "2021-04-06",
+      "total_files_scored": 380,
+      "bandit_findings": 277,
+      "high_findings": 15,
+      "cve_count_in_window": 7,
+      "cve_ids_in_window": [
+        "CVE-2021-28658",
+        "CVE-2021-31542",
+        "CVE-2021-33203",
+        "CVE-2021-33571",
+        "CVE-2021-35042",
+        "CVE-2022-22818",
+        "CVE-2022-23833"
+      ],
+      "cve_files_in_scope": [
+        "django/core/files/storage.py",
+        "django/core/files/uploadhandler.py",
+        "django/core/validators.py",
+        "django/db/models/sql/compiler.py",
+        "django/http/multipartparser.py",
+        "django/template/defaulttags.py",
+        "django/utils/http.py"
+      ],
+      "top_n": 20,
+      "predicted_top_n": [
+        "django/contrib/admin/helpers.py",
+        "django/contrib/admin/options.py",
+        "django/contrib/admin/sites.py",
+        "django/contrib/admin/templatetags/admin_list.py",
+        "django/contrib/admin/templatetags/admin_modify.py",
+        "django/contrib/admin/views/main.py",
+        "django/contrib/auth/__init__.py",
+        "django/contrib/auth/backends.py",
+        "django/contrib/auth/management/commands/createsuperuser.py",
+        "django/contrib/auth/password_validation.py",
+        "django/core/cache/backends/db.py",
+        "django/core/cache/backends/filebased.py",
+        "django/core/cache/backends/memcached.py",
+        "django/core/handlers/wsgi.py",
+        "django/core/mail/backends/smtp.py",
+        "django/core/mail/message.py",
+        "django/core/management/__init__.py",
+        "django/core/management/commands/compilemessages.py",
+        "django/core/management/commands/squashmigrations.py",
+        "django/db/migrations/operations/special.py"
+      ],
+      "overlap_files": [],
+      "overlap_count": 0,
+      "stats": {
+        "a": 0,
+        "b": 7,
+        "c": 20,
+        "d": 353,
+        "overlap": 0,
+        "cve_files_in_scope": 7,
+        "total_files": 380,
+        "precision_at_n": 0.0,
+        "recall_at_cve": 0.0,
+        "baseline_precision": 0.0184,
+        "odds_ratio": 0.0,
+        "p_value": 1.0,
+        "significant_005": false,
+        "significant_010": false
+      },
+      "top_scores": [
+        {
+          "file": "django/db/migrations/operations/special.py",
+          "score": 50
+        },
+        {
+          "file": "django/core/mail/backends/smtp.py",
+          "score": 49
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_modify.py",
+          "score": 48
+        },
+        {
+          "file": "django/contrib/auth/backends.py",
+          "score": 48
+        },
+        {
+          "file": "django/core/cache/backends/filebased.py",
+          "score": 48
+        },
+        {
+          "file": "django/core/handlers/wsgi.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/management/commands/squashmigrations.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/admin/helpers.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/options.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/sites.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_list.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/views/main.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/__init__.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/management/commands/createsuperuser.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/password_validation.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/cache/backends/db.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/cache/backends/memcached.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/mail/message.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/management/__init__.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/management/commands/compilemessages.py",
+          "score": 46
+        }
+      ]
+    },
+    {
+      "tag": "4.0",
+      "release_date": "2021-12-07",
+      "total_files_scored": 382,
+      "bandit_findings": 233,
+      "high_findings": 14,
+      "cve_count_in_window": 7,
+      "cve_ids_in_window": [
+        "CVE-2022-22818",
+        "CVE-2022-23833",
+        "CVE-2022-28346",
+        "CVE-2022-28347",
+        "CVE-2022-34265",
+        "CVE-2022-36359",
+        "CVE-2022-41323"
+      ],
+      "cve_files_in_scope": [
+        "django/db/models/functions/datetime.py",
+        "django/db/models/sql/compiler.py",
+        "django/template/defaulttags.py",
+        "django/utils/http.py",
+        "django/utils/translation/__init__.py",
+        "django/views/static.py"
+      ],
+      "top_n": 20,
+      "predicted_top_n": [
+        "django/contrib/admin/helpers.py",
+        "django/contrib/admin/options.py",
+        "django/contrib/admin/sites.py",
+        "django/contrib/admin/templatetags/admin_list.py",
+        "django/contrib/admin/templatetags/admin_modify.py",
+        "django/contrib/auth/management/commands/createsuperuser.py",
+        "django/core/cache/backends/filebased.py",
+        "django/core/mail/backends/smtp.py",
+        "django/core/management/commands/dumpdata.py",
+        "django/core/management/commands/inspectdb.py",
+        "django/core/management/commands/makemigrations.py",
+        "django/core/management/commands/squashmigrations.py",
+        "django/core/paginator.py",
+        "django/core/serializers/__init__.py",
+        "django/core/serializers/python.py",
+        "django/core/serializers/xml_serializer.py",
+        "django/db/migrations/operations/special.py",
+        "django/db/models/manager.py",
+        "django/db/transaction.py",
+        "django/template/loaders/cached.py"
+      ],
+      "overlap_files": [],
+      "overlap_count": 0,
+      "stats": {
+        "a": 0,
+        "b": 6,
+        "c": 20,
+        "d": 356,
+        "overlap": 0,
+        "cve_files_in_scope": 6,
+        "total_files": 382,
+        "precision_at_n": 0.0,
+        "recall_at_cve": 0.0,
+        "baseline_precision": 0.0157,
+        "odds_ratio": 0.0,
+        "p_value": 1.0,
+        "significant_005": false,
+        "significant_010": false
+      },
+      "top_scores": [
+        {
+          "file": "django/core/mail/backends/smtp.py",
+          "score": 50
+        },
+        {
+          "file": "django/db/migrations/operations/special.py",
+          "score": 50
+        },
+        {
+          "file": "django/core/management/commands/squashmigrations.py",
+          "score": 48
+        },
+        {
+          "file": "django/core/serializers/python.py",
+          "score": 48
+        },
+        {
+          "file": "django/contrib/auth/management/commands/createsuperuser.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/cache/backends/filebased.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/management/commands/dumpdata.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/management/commands/inspectdb.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/management/commands/makemigrations.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/paginator.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/serializers/__init__.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/serializers/xml_serializer.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/models/manager.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/transaction.py",
+          "score": 47
+        },
+        {
+          "file": "django/template/loaders/cached.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/admin/helpers.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/options.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/sites.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_list.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_modify.py",
+          "score": 46
+        }
+      ]
+    },
+    {
+      "tag": "4.1",
+      "release_date": "2022-08-03",
+      "total_files_scored": 384,
+      "bandit_findings": 231,
+      "high_findings": 5,
+      "cve_count_in_window": 6,
+      "cve_ids_in_window": [
+        "CVE-2022-36359",
+        "CVE-2022-41323",
+        "CVE-2023-23969",
+        "CVE-2023-24580",
+        "CVE-2023-31047",
+        "CVE-2023-36053"
+      ],
+      "cve_files_in_scope": [
+        "django/core/validators.py",
+        "django/http/multipartparser.py",
+        "django/utils/regex_helper.py",
+        "django/utils/translation/__init__.py",
+        "django/views/static.py"
+      ],
+      "top_n": 20,
+      "predicted_top_n": [
+        "django/contrib/admin/helpers.py",
+        "django/contrib/admin/options.py",
+        "django/contrib/admin/sites.py",
+        "django/contrib/admin/templatetags/admin_list.py",
+        "django/contrib/admin/templatetags/admin_modify.py",
+        "django/contrib/admin/views/main.py",
+        "django/contrib/auth/__init__.py",
+        "django/contrib/auth/backends.py",
+        "django/contrib/auth/management/commands/createsuperuser.py",
+        "django/contrib/auth/password_validation.py",
+        "django/core/cache/backends/db.py",
+        "django/core/cache/backends/memcached.py",
+        "django/core/handlers/wsgi.py",
+        "django/core/mail/backends/smtp.py",
+        "django/core/mail/message.py",
+        "django/core/management/__init__.py",
+        "django/core/management/commands/compilemessages.py",
+        "django/core/management/commands/dumpdata.py",
+        "django/core/management/commands/loaddata.py",
+        "django/core/management/commands/makemessages.py"
+      ],
+      "overlap_files": [],
+      "overlap_count": 0,
+      "stats": {
+        "a": 0,
+        "b": 5,
+        "c": 20,
+        "d": 359,
+        "overlap": 0,
+        "cve_files_in_scope": 5,
+        "total_files": 384,
+        "precision_at_n": 0.0,
+        "recall_at_cve": 0.0,
+        "baseline_precision": 0.013,
+        "odds_ratio": 0.0,
+        "p_value": 1.0,
+        "significant_005": false,
+        "significant_010": false
+      },
+      "top_scores": [
+        {
+          "file": "django/contrib/admin/helpers.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/options.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/sites.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_list.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_modify.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/views/main.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/__init__.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/backends.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/management/commands/createsuperuser.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/password_validation.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/cache/backends/db.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/cache/backends/memcached.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/handlers/wsgi.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/mail/backends/smtp.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/mail/message.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/management/__init__.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/management/commands/compilemessages.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/management/commands/dumpdata.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/management/commands/loaddata.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/management/commands/makemessages.py",
+          "score": 46
+        }
+      ]
+    },
+    {
+      "tag": "4.2",
+      "release_date": "2023-04-03",
+      "total_files_scored": 390,
+      "bandit_findings": 231,
+      "high_findings": 5,
+      "cve_count_in_window": 4,
+      "cve_ids_in_window": [
+        "CVE-2023-31047",
+        "CVE-2023-36053",
+        "CVE-2023-41164",
+        "CVE-2023-43665"
+      ],
+      "cve_files_in_scope": [
+        "django/contrib/admin/templatetags/admin_list.py",
+        "django/core/validators.py",
+        "django/utils/encoding.py",
+        "django/utils/regex_helper.py"
+      ],
+      "top_n": 20,
+      "predicted_top_n": [
+        "django/contrib/admin/helpers.py",
+        "django/contrib/admin/options.py",
+        "django/contrib/admin/sites.py",
+        "django/contrib/admin/templatetags/admin_list.py",
+        "django/contrib/admin/templatetags/admin_modify.py",
+        "django/contrib/admin/views/main.py",
+        "django/contrib/auth/__init__.py",
+        "django/contrib/auth/backends.py",
+        "django/contrib/auth/management/commands/createsuperuser.py",
+        "django/contrib/auth/password_validation.py",
+        "django/core/cache/backends/db.py",
+        "django/core/cache/backends/memcached.py",
+        "django/core/handlers/wsgi.py",
+        "django/core/management/commands/compilemessages.py",
+        "django/core/serializers/__init__.py",
+        "django/db/migrations/operations/special.py",
+        "django/db/models/sql/compiler.py",
+        "django/db/models/sql/subqueries.py",
+        "django/template/loader_tags.py",
+        "django/template/loaders/cached.py"
+      ],
+      "overlap_files": [
+        "django/contrib/admin/templatetags/admin_list.py"
+      ],
+      "overlap_count": 1,
+      "stats": {
+        "a": 1,
+        "b": 3,
+        "c": 19,
+        "d": 367,
+        "overlap": 1,
+        "cve_files_in_scope": 4,
+        "total_files": 390,
+        "precision_at_n": 0.05,
+        "recall_at_cve": 0.25,
+        "baseline_precision": 0.0103,
+        "odds_ratio": 6.4386,
+        "p_value": 0.190559,
+        "significant_005": false,
+        "significant_010": false
+      },
+      "top_scores": [
+        {
+          "file": "django/db/models/sql/compiler.py",
+          "score": 48
+        },
+        {
+          "file": "django/contrib/admin/sites.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_list.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/admin/views/main.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/cache/backends/memcached.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/management/commands/compilemessages.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/serializers/__init__.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/migrations/operations/special.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/models/sql/subqueries.py",
+          "score": 47
+        },
+        {
+          "file": "django/template/loader_tags.py",
+          "score": 47
+        },
+        {
+          "file": "django/template/loaders/cached.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/admin/helpers.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/options.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_modify.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/__init__.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/backends.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/management/commands/createsuperuser.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/auth/password_validation.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/cache/backends/db.py",
+          "score": 46
+        },
+        {
+          "file": "django/core/handlers/wsgi.py",
+          "score": 46
+        }
+      ]
+    },
+    {
+      "tag": "3.0.4",
+      "release_date": "2020-03-04",
+      "total_files_scored": 373,
+      "bandit_findings": 293,
+      "high_findings": 16,
+      "cve_count_in_window": 4,
+      "cve_ids_in_window": [
+        "CVE-2020-9402",
+        "CVE-2020-13254",
+        "CVE-2020-13596",
+        "CVE-2021-3281"
+      ],
+      "cve_files_in_scope": [
+        "django/contrib/admin/options.py",
+        "django/core/cache/backends/memcached.py",
+        "django/utils/archive.py"
+      ],
+      "top_n": 20,
+      "predicted_top_n": [
+        "django/contrib/admin/sites.py",
+        "django/contrib/admin/templatetags/admin_list.py",
+        "django/contrib/admin/templatetags/admin_modify.py",
+        "django/contrib/auth/__init__.py",
+        "django/core/cache/backends/db.py",
+        "django/core/cache/backends/filebased.py",
+        "django/core/cache/backends/memcached.py",
+        "django/core/mail/backends/smtp.py",
+        "django/core/management/commands/compilemessages.py",
+        "django/core/management/commands/makemessages.py",
+        "django/core/management/commands/makemigrations.py",
+        "django/core/management/commands/squashmigrations.py",
+        "django/core/serializers/__init__.py",
+        "django/core/serializers/python.py",
+        "django/db/migrations/migration.py",
+        "django/db/migrations/operations/special.py",
+        "django/db/models/manager.py",
+        "django/db/models/sql/subqueries.py",
+        "django/template/loader_tags.py",
+        "django/utils/formats.py"
+      ],
+      "overlap_files": [
+        "django/core/cache/backends/memcached.py"
+      ],
+      "overlap_count": 1,
+      "stats": {
+        "a": 1,
+        "b": 2,
+        "c": 19,
+        "d": 351,
+        "overlap": 1,
+        "cve_files_in_scope": 3,
+        "total_files": 373,
+        "precision_at_n": 0.05,
+        "recall_at_cve": 0.3333,
+        "baseline_precision": 0.008,
+        "odds_ratio": 9.2368,
+        "p_value": 0.152775,
+        "significant_005": false,
+        "significant_010": false
+      },
+      "top_scores": [
+        {
+          "file": "django/db/migrations/operations/special.py",
+          "score": 50
+        },
+        {
+          "file": "django/core/cache/backends/filebased.py",
+          "score": 49
+        },
+        {
+          "file": "django/core/serializers/__init__.py",
+          "score": 49
+        },
+        {
+          "file": "django/db/models/manager.py",
+          "score": 49
+        },
+        {
+          "file": "django/template/loader_tags.py",
+          "score": 49
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_modify.py",
+          "score": 48
+        },
+        {
+          "file": "django/db/migrations/migration.py",
+          "score": 48
+        },
+        {
+          "file": "django/db/models/sql/subqueries.py",
+          "score": 48
+        },
+        {
+          "file": "django/utils/formats.py",
+          "score": 48
+        },
+        {
+          "file": "django/contrib/admin/sites.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_list.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/auth/__init__.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/cache/backends/db.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/cache/backends/memcached.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/mail/backends/smtp.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/management/commands/compilemessages.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/management/commands/makemessages.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/management/commands/makemigrations.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/management/commands/squashmigrations.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/serializers/python.py",
+          "score": 47
+        }
+      ]
+    },
+    {
+      "tag": "3.1.5",
+      "release_date": "2021-01-05",
+      "total_files_scored": 375,
+      "bandit_findings": 292,
+      "high_findings": 15,
+      "cve_count_in_window": 6,
+      "cve_ids_in_window": [
+        "CVE-2021-3281",
+        "CVE-2021-28658",
+        "CVE-2021-31542",
+        "CVE-2021-33203",
+        "CVE-2021-33571",
+        "CVE-2021-35042"
+      ],
+      "cve_files_in_scope": [
+        "django/core/files/storage.py",
+        "django/core/files/uploadhandler.py",
+        "django/core/validators.py",
+        "django/db/models/sql/compiler.py",
+        "django/http/multipartparser.py",
+        "django/utils/archive.py"
+      ],
+      "top_n": 20,
+      "predicted_top_n": [
+        "django/contrib/admin/helpers.py",
+        "django/contrib/admin/templatetags/admin_list.py",
+        "django/contrib/admin/templatetags/admin_modify.py",
+        "django/contrib/admin/views/main.py",
+        "django/contrib/auth/backends.py",
+        "django/contrib/auth/management/commands/createsuperuser.py",
+        "django/core/cache/backends/filebased.py",
+        "django/core/handlers/wsgi.py",
+        "django/core/mail/backends/smtp.py",
+        "django/core/management/__init__.py",
+        "django/core/paginator.py",
+        "django/core/serializers/python.py",
+        "django/core/serializers/xml_serializer.py",
+        "django/db/migrations/migration.py",
+        "django/db/migrations/operations/special.py",
+        "django/db/migrations/serializer.py",
+        "django/db/models/functions/datetime.py",
+        "django/db/models/query_utils.py",
+        "django/db/transaction.py",
+        "django/template/loaders/cached.py"
+      ],
+      "overlap_files": [],
+      "overlap_count": 0,
+      "stats": {
+        "a": 0,
+        "b": 6,
+        "c": 20,
+        "d": 349,
+        "overlap": 0,
+        "cve_files_in_scope": 6,
+        "total_files": 375,
+        "precision_at_n": 0.0,
+        "recall_at_cve": 0.0,
+        "baseline_precision": 0.016,
+        "odds_ratio": 0.0,
+        "p_value": 1.0,
+        "significant_005": false,
+        "significant_010": false
+      },
+      "top_scores": [
+        {
+          "file": "django/db/migrations/operations/special.py",
+          "score": 50
+        },
+        {
+          "file": "django/core/serializers/xml_serializer.py",
+          "score": 49
+        },
+        {
+          "file": "django/db/migrations/migration.py",
+          "score": 49
+        },
+        {
+          "file": "django/core/mail/backends/smtp.py",
+          "score": 48
+        },
+        {
+          "file": "django/core/serializers/python.py",
+          "score": 48
+        },
+        {
+          "file": "django/db/transaction.py",
+          "score": 48
+        },
+        {
+          "file": "django/contrib/admin/helpers.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_modify.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/auth/backends.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/auth/management/commands/createsuperuser.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/cache/backends/filebased.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/handlers/wsgi.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/management/__init__.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/paginator.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/migrations/serializer.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/models/functions/datetime.py",
+          "score": 47
+        },
+        {
+          "file": "django/db/models/query_utils.py",
+          "score": 47
+        },
+        {
+          "file": "django/template/loaders/cached.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_list.py",
+          "score": 46
+        },
+        {
+          "file": "django/contrib/admin/views/main.py",
+          "score": 46
+        }
+      ]
+    },
+    {
+      "tag": "3.2.10",
+      "release_date": "2021-12-01",
+      "total_files_scored": 380,
+      "bandit_findings": 277,
+      "high_findings": 15,
+      "cve_count_in_window": 7,
+      "cve_ids_in_window": [
+        "CVE-2022-22818",
+        "CVE-2022-23833",
+        "CVE-2022-28346",
+        "CVE-2022-28347",
+        "CVE-2022-34265",
+        "CVE-2022-36359",
+        "CVE-2022-41323"
+      ],
+      "cve_files_in_scope": [
+        "django/db/models/functions/datetime.py",
+        "django/db/models/sql/compiler.py",
+        "django/template/defaulttags.py",
+        "django/utils/http.py",
+        "django/utils/translation/__init__.py",
+        "django/views/static.py"
+      ],
+      "top_n": 20,
+      "predicted_top_n": [
+        "django/contrib/admin/templatetags/admin_list.py",
+        "django/contrib/admin/templatetags/admin_modify.py",
+        "django/contrib/auth/__init__.py",
+        "django/contrib/auth/backends.py",
+        "django/contrib/auth/management/commands/createsuperuser.py",
+        "django/contrib/auth/password_validation.py",
+        "django/core/cache/backends/db.py",
+        "django/core/cache/backends/filebased.py",
+        "django/core/cache/backends/memcached.py",
+        "django/core/handlers/wsgi.py",
+        "django/core/mail/backends/smtp.py",
+        "django/core/mail/message.py",
+        "django/core/management/__init__.py",
+        "django/core/management/commands/compilemessages.py",
+        "django/core/management/commands/inspectdb.py",
+        "django/core/management/commands/showmigrations.py",
+        "django/core/management/commands/squashmigrations.py",
+        "django/core/serializers/python.py",
+        "django/db/migrations/operations/special.py",
+        "django/utils/translation/trans_real.py"
+      ],
+      "overlap_files": [],
+      "overlap_count": 0,
+      "stats": {
+        "a": 0,
+        "b": 6,
+        "c": 20,
+        "d": 354,
+        "overlap": 0,
+        "cve_files_in_scope": 6,
+        "total_files": 380,
+        "precision_at_n": 0.0,
+        "recall_at_cve": 0.0,
+        "baseline_precision": 0.0158,
+        "odds_ratio": 0.0,
+        "p_value": 1.0,
+        "significant_005": false,
+        "significant_010": false
+      },
+      "top_scores": [
+        {
+          "file": "django/core/mail/backends/smtp.py",
+          "score": 50
+        },
+        {
+          "file": "django/db/migrations/operations/special.py",
+          "score": 50
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_modify.py",
+          "score": 49
+        },
+        {
+          "file": "django/contrib/auth/backends.py",
+          "score": 49
+        },
+        {
+          "file": "django/core/cache/backends/filebased.py",
+          "score": 49
+        },
+        {
+          "file": "django/core/handlers/wsgi.py",
+          "score": 48
+        },
+        {
+          "file": "django/core/management/commands/showmigrations.py",
+          "score": 48
+        },
+        {
+          "file": "django/core/management/commands/squashmigrations.py",
+          "score": 48
+        },
+        {
+          "file": "django/core/serializers/python.py",
+          "score": 48
+        },
+        {
+          "file": "django/utils/translation/trans_real.py",
+          "score": 48
+        },
+        {
+          "file": "django/contrib/admin/templatetags/admin_list.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/auth/__init__.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/auth/management/commands/createsuperuser.py",
+          "score": 47
+        },
+        {
+          "file": "django/contrib/auth/password_validation.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/cache/backends/db.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/cache/backends/memcached.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/mail/message.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/management/__init__.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/management/commands/compilemessages.py",
+          "score": 47
+        },
+        {
+          "file": "django/core/management/commands/inspectdb.py",
+          "score": 47
+        }
+      ]
+    }
+  ]
+}
