@@ -89,7 +89,7 @@ These four questions map directly onto the four novel contributions described in
 This project makes ten novel contributions to software security and AI-assisted development tooling:
 
 \begin{enumerate}
-  \item \textbf{Unified multi-tool orchestration:} To the best of the author's knowledge, \ACRQA{} is the first open-source platform to combine nineteen SAST engines with RAG-backed LLM enrichment, AST call-graph reachability, intra-procedural taint analysis, and cross-language correlation in a single self-hosted service at zero recurring cost, achieving 100\% recall on a 13-repository benchmark corpus (+28.8 pp vs.\ Semgrep CE).
+  \item \textbf{Unified multi-tool orchestration:} To the best of the author's knowledge, \ACRQA{} is the first open-source platform to combine nineteen SAST engines with RAG-backed LLM enrichment, AST call-graph reachability, intra-procedural taint analysis, and cross-language correlation in a single self-hosted service at zero recurring cost, achieving 100\% CVE recall (8/8 detectable) while reaching F\textsubscript{1}~98.2\% in its Confirmed Tier --- the only evaluated tool in the head-to-head benchmark with both 100\% recall and near-perfect high-confidence precision.
 
   \item \textbf{Label-free confidence scoring:} The five-signal weighted scorer enables finding prioritisation without any labelled vulnerability dataset --- applicable from the first scan and validated at 94.2\% false-positive suppression accuracy.
 
