@@ -109,11 +109,75 @@ jobs:
             --limit 100 | tee /tmp/analysis_output.txt
           grep "Run ID:" /tmp/analysis_output.txt | awk '{print $NF}' > /tmp/acr_run_id.txt
 
-      - name: Upload SARIF findings to Security Tab
+      - name: Export Confirmed-Only SARIF (96.4% precision gate)
+        # Only export Confirmed Tier findings to GHAS — zero noise for the Security tab
+        if: steps.changed-files.outputs.any_changed == 'true'
+        continue-on-error: true
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: acrqa_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+        run: |
+          RUN_ID=$(cat /tmp/acr_run_id.txt 2>/dev/null || echo "")
+          if [ -n "$RUN_ID" ]; then
+            python3 scripts/export_sarif.py \
+              --run-id "$RUN_ID" \
+              --output DATA/outputs/findings.sarif \
+              --confirmed-only
+          fi
+
+      - name: Upload Confirmed-Only SARIF to GitHub Security Tab
         if: steps.changed-files.outputs.any_changed == 'true' && hashFiles('DATA/outputs/findings.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: DATA/outputs/findings.sarif
+          category: acrqa-confirmed-tier
+
+      - name: ACR-QA Confirmed Tier Merge Gate
+        # Fails the check if any Confirmed Tier findings exist in the PR diff.
+        # These are exploit-verified, 96.4%-precise findings — safe to auto-block on.
+        if: steps.changed-files.outputs.any_changed == 'true'
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: acrqa_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          RUN_ID_ENV: ${{ steps.analysis.outputs.run_id }}
+        run: |
+          RUN_ID=$(cat /tmp/acr_run_id.txt 2>/dev/null || echo "")
+          if [ -z "$RUN_ID" ]; then
+            echo "::notice title=ACR-QA::No run ID found — skipping merge gate"
+            exit 0
+          fi
+          # Count Confirmed Tier findings in this run
+          CONFIRMED=$(python3 - <<'PYEOF'
+          import sys, os
+          sys.path.insert(0, ".")
+          from DATABASE.database import Database
+          from CORE.engines.confirmed_tier import ConfirmedTierEngine
+          db = Database()
+          run_id = int(os.environ.get("RUN_ID_ENV", 0))
+          if not run_id:
+              print(0)
+              sys.exit(0)
+          findings = db.get_findings(run_id=run_id, limit=10000)
+          engine = ConfirmedTierEngine()
+          count = sum(
+              1 for f in findings
+              if engine.classify({**f, "file": f.get("file_path", "")}).in_confirmed_tier
+          )
+          print(count)
+          PYEOF
+          )
+          echo "::notice title=ACR-QA Confirmed Tier::$CONFIRMED confirmed finding(s) (96.4% precision gate)"
+          if [ "$CONFIRMED" -gt 0 ]; then
+            echo "::error title=ACR-QA Merge Gate::$CONFIRMED Confirmed Tier finding(s) must be fixed before merge. These findings have been exploit-verified or passed the 96.4%-precision gate."
+            exit 1
+          fi
+          echo "✅ Confirmed Tier gate passed — 0 high-confidence findings. Safe to merge."
 
       - name: Post PR Comments
         if: steps.changed-files.outputs.any_changed == 'true'

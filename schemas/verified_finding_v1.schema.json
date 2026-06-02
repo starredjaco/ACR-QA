@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ahmed-145/ACR-QA/schemas/verified_finding_v1.schema.json",
+  "title": "Verified Finding",
+  "description": "ACR-QA Verified Finding v1 — an open schema for exploit-verified, cryptographically-attested security findings. Designed for interoperability with SARIF, SLSA, and Sigstore toolchains.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "finding_id",
+    "canonical_rule_id",
+    "severity",
+    "file",
+    "line",
+    "message",
+    "confirmed_tier",
+    "attestation"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "verified-finding/v1",
+      "description": "Schema version sentinel. Always 'verified-finding/v1' for this version."
+    },
+    "finding_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Stable UUID for this finding instance."
+    },
+    "fingerprint": {
+      "type": "string",
+      "description": "SHA-256 fingerprint of (rule_id + file + line + snippet). Used for deduplication across scans."
+    },
+    "canonical_rule_id": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9]+-[0-9]{3}$",
+      "description": "ACR-QA canonical rule identifier, e.g. SECURITY-001.",
+      "examples": ["SECURITY-001", "SQLI-001", "SECRET-001"]
+    },
+    "original_rule_id": {
+      "type": "string",
+      "description": "Tool-native rule ID before normalization, e.g. B307, python.lang.security.audit.eval."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["high", "medium", "low"],
+      "description": "Canonical severity after normalization."
+    },
+    "category": {
+      "type": "string",
+      "description": "Finding category, e.g. security, quality, complexity."
+    },
+    "file": {
+      "type": "string",
+      "description": "Path to the affected file, relative to the repository root."
+    },
+    "line": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "1-indexed line number of the finding."
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable description of the finding."
+    },
+    "evidence": {
+      "type": "object",
+      "description": "Code snippet and surrounding context.",
+      "properties": {
+        "snippet": { "type": "string" },
+        "context_before": { "type": "string" },
+        "context_after": { "type": "string" }
+      }
+    },
+    "confirmed_tier": {
+      "type": "object",
+      "required": ["in_confirmed_tier", "checked_at"],
+      "description": "Confirmed Tier classification result.",
+      "properties": {
+        "in_confirmed_tier": {
+          "type": "boolean",
+          "description": "True if this finding passed all 4 Confirmed Tier criteria (96.4% precision gate)."
+        },
+        "reachability_signal": {
+          "type": "string",
+          "enum": ["none", "taint", "call_graph", "exploit"],
+          "description": "Strongest reachability signal present. 'exploit' means DAST-verified."
+        },
+        "criteria_met": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of criteria satisfied."
+        },
+        "checked_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO-8601 timestamp of classification."
+        }
+      }
+    },
+    "exploit_verification": {
+      "type": "object",
+      "description": "Optional DAST exploit-verification result. Present when exploit_tier != 'unverified'.",
+      "properties": {
+        "tier": {
+          "type": "string",
+          "enum": ["verified-exploitable", "verified-unexploitable", "unverified"],
+          "description": "Three-tier verdict from Docker-sandbox DAST verification."
+        },
+        "category": {
+          "type": "string",
+          "description": "Exploit category, e.g. sql-injection, command-injection, ssti."
+        },
+        "payload": {
+          "type": "string",
+          "description": "Payload that triggered exploitation, e.g. ' OR 1=1 --"
+        },
+        "response_evidence": {
+          "type": "string",
+          "description": "Snippet of HTTP response confirming exploitation."
+        },
+        "duration_seconds": {
+          "type": "number",
+          "description": "Time taken for verification run."
+        },
+        "verified_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "attestation": {
+      "type": "object",
+      "required": ["algorithm", "signature", "signed_at"],
+      "description": "Cryptographic attestation of this finding verdict.",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "enum": ["ecdsa-p256-sha256", "dilithium3"],
+          "description": "Signing algorithm used."
+        },
+        "signature": {
+          "type": "string",
+          "description": "Base64-encoded signature over the canonical finding payload."
+        },
+        "public_key_fingerprint": {
+          "type": "string",
+          "description": "SHA-256 fingerprint of the signing public key."
+        },
+        "rekor_log_index": {
+          "type": "integer",
+          "description": "Sigstore Rekor transparency log entry index."
+        },
+        "rekor_entry_uuid": {
+          "type": "string",
+          "description": "Sigstore Rekor entry UUID for tamper-evident audit."
+        },
+        "slsa_level": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3,
+          "description": "SLSA provenance level of the scan that produced this finding."
+        },
+        "signed_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "tool_provenance": {
+      "type": "object",
+      "description": "Provenance of the tool that detected this finding.",
+      "properties": {
+        "tool_name": { "type": "string" },
+        "tool_version": { "type": "string" },
+        "scanner_name": { "type": "string", "const": "acrqa" },
+        "scanner_version": { "type": "string" },
+        "scan_run_id": { "type": "string" }
+      }
+    },
+    "cwe_ids": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^CWE-[0-9]+$" },
+      "description": "Relevant CWE identifiers."
+    },
+    "owasp_categories": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^A[0-9]{2}:[0-9]{4}$" },
+      "description": "OWASP Top 10 (2021) categories, e.g. A03:2021."
+    }
+  },
+  "additionalProperties": false
+}

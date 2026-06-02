@@ -1293,7 +1293,35 @@ def main():
         ),
     )
 
+    parser.add_argument(
+        "--llm-key",
+        default=None,
+        dest="llm_key",
+        metavar="KEY",
+        help=(
+            "Bring-your-own LLM API key (Team tier). Overrides GROQ_API_KEY_* env vars. "
+            "Equivalent to setting LLM_API_KEY=<key> in your environment."
+        ),
+    )
+
+    parser.add_argument(
+        "--ai-code-diff",
+        action="store_true",
+        dest="ai_code_diff",
+        help=(
+            "AI-code differential mode: surface only findings introduced in code that matches "
+            "AI-assistant commit patterns (Copilot/Cursor/Claude Code). "
+            "Requires git history. Ideal for repos with heavy AI-assisted development."
+        ),
+    )
+
     args = parser.parse_args()
+
+    # BYO-key: inject into environment so the explainer's KeyPool picks it up
+    if args.llm_key:
+        import os as _os
+
+        _os.environ["LLM_API_KEY"] = args.llm_key
     setup_logging(args.verbose, args.quiet, json_output=args.json_output)
 
     # Determine files to analyze
@@ -1415,6 +1443,26 @@ def main():
             logger.error("\n❌ Exiting with code 1 (quality gate failed)")
             sys.exit(1)
         return
+
+    # --ai-code-diff: restrict files to those touched by AI assistants
+    if getattr(args, "ai_code_diff", False):
+        try:
+            from CORE.engines.ai_code_diff import AiCodeDiffFilter
+
+            ai_filter = AiCodeDiffFilter(repo_dir=args.target_dir)
+            ai_files = ai_filter.get_ai_touched_files()
+            summary = ai_filter.summary()
+            if ai_files:
+                logger.info(f"🤖 AI-code diff mode: {summary['ai_touched_count']} AI-touched file(s) detected")
+                for af in sorted(ai_files)[:10]:
+                    logger.info(f"   • {af}")
+                if len(ai_files) > 10:
+                    logger.info(f"   … and {len(ai_files) - 10} more")
+                files = sorted(ai_files) if files is None else [f for f in files if f in ai_files]
+            else:
+                logger.warning("🤖 AI-code diff mode: no AI-touched files detected — running full analysis")
+        except Exception as _acd_err:
+            logger.warning(f"AI-code diff detection skipped: {_acd_err}")
 
     # --no-ai: override limit to 0 to skip AI explanation step entirely
     effective_limit = 0 if not args.ai else args.limit

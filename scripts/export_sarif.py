@@ -22,7 +22,7 @@ from DATABASE.database import Database
 logger = logging.getLogger(__name__)
 
 
-def generate_sarif(run_id=None, output_file=None):
+def generate_sarif(run_id=None, output_file=None, confirmed_only: bool = False):
     """
     Export analysis findings as a SARIF v2.1.0 JSON file.
 
@@ -92,6 +92,16 @@ def generate_sarif(run_id=None, output_file=None):
         "performance": ["performance"],
     }
 
+    # --confirmed-only: export only Confirmed Tier findings (96.4% precision gate)
+    # Ideal for GHAS / GitHub Security tab — zero noise upload
+    if confirmed_only:
+        from CORE.engines.confirmed_tier import ConfirmedTierEngine as _CTEngine
+
+        _ct = _CTEngine()
+        before = len(findings)
+        findings = [f for f in findings if _ct.classify({**f, "file": f.get("file_path", "")}).in_confirmed_tier]
+        logger.info(f"   Confirmed-only filter: {before} → {len(findings)} findings")
+
     for f in findings:
         rule_id = f.get("rule_id", f.get("canonical_rule_id", "UNKNOWN"))
         category = f.get("category", "unknown")
@@ -114,6 +124,13 @@ def generate_sarif(run_id=None, output_file=None):
         file_path = f.get("file_path", "unknown")
         line = f.get("line_number", 1)
         col = f.get("column_number", 1)
+
+        # Confirmed Tier classification
+        from CORE.engines.confirmed_tier import ConfirmedTierEngine
+
+        ct_finding = dict(f)
+        ct_finding["file"] = f.get("file_path", "")
+        ct_result = ConfirmedTierEngine().classify(ct_finding)
 
         result = {
             "ruleId": rule_id,
@@ -140,7 +157,14 @@ def generate_sarif(run_id=None, output_file=None):
             "properties": {
                 "tool": f.get("tool", "unknown"),
                 "category": category,
+                "confidence_score": f.get("confidence_score"),
+                # Confirmed Tier — the trust-layer signal for GHAS / merge gate consumers
+                "acrqa/confirmed_tier": ct_result.in_confirmed_tier,
+                "acrqa/confirmed_tier_signal": ct_result.reachability_signal,
+                "acrqa/precision_context": "96.4% conservative precision gate" if ct_result.in_confirmed_tier else None,
             },
+            # GHAS severity mapping: Confirmed Tier findings get highest precision tag
+            **({"partialFingerprints": {"acrqa/confirmed": "true"}} if ct_result.in_confirmed_tier else {}),
         }
 
         results.append(result)
@@ -166,9 +190,14 @@ def main():
     parser = argparse.ArgumentParser(description="ACR-QA SARIF Export")
     parser.add_argument("--run-id", type=int, help="Analysis run ID (default: latest)")
     parser.add_argument("--output", "-o", help="Output SARIF file path")
+    parser.add_argument(
+        "--confirmed-only",
+        action="store_true",
+        help="Export only Confirmed Tier findings (96.4%% precision gate). Recommended for GHAS uploads.",
+    )
     args = parser.parse_args()
 
-    generate_sarif(run_id=args.run_id, output_file=args.output)
+    generate_sarif(run_id=args.run_id, output_file=args.output, confirmed_only=args.confirmed_only)
 
 
 if __name__ == "__main__":

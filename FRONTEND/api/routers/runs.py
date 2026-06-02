@@ -52,12 +52,23 @@ async def get_findings(
     search: str = "",
     group_by: str | None = None,
     min_confidence: float | None = None,
+    confirmed: bool | None = Query(
+        None, description="If true, return only Confirmed Tier findings (96.4% precision gate)"
+    ),
+    exploit_tier: str | None = Query(
+        None, description="Filter by exploit tier: verified-exploitable | verified-unexploitable | unverified"
+    ),
     user: dict = Depends(get_current_user),
     db: Database = Depends(get_db),
 ):
     findings = db.get_findings_with_explanations(run_id)
-    filtered = []
 
+    # Apply Confirmed Tier classification to findings from DB
+    from CORE.engines.confirmed_tier import ConfirmedTierEngine
+
+    ct_engine = ConfirmedTierEngine()
+
+    filtered = []
     for f in findings:
         if severity and f.get("canonical_severity") != severity:
             continue
@@ -71,6 +82,22 @@ async def get_findings(
         confidence = db_conf if db_conf is not None else calculate_confidence(f)
         if min_confidence is not None and confidence < min_confidence:
             continue
+
+        # Classify confirmed tier on-the-fly (finding comes from DB, may not have it stored)
+        ct_finding = dict(f)
+        ct_finding["file"] = f.get("file_path", "")  # normalise field name
+        ct_result = ct_engine.classify(ct_finding)
+        in_confirmed = ct_result.in_confirmed_tier
+
+        if confirmed is True and not in_confirmed:
+            continue
+        if confirmed is False and in_confirmed:
+            continue
+
+        f_exploit_tier = f.get("raw_output", {}).get("exploit_tier") if isinstance(f.get("raw_output"), dict) else None
+        if exploit_tier and f_exploit_tier != exploit_tier:
+            continue
+
         filtered.append(
             {
                 "id": f["id"],
@@ -86,6 +113,9 @@ async def get_findings(
                 "tool": f.get("tool"),
                 "confidence": confidence,
                 "ground_truth": f.get("ground_truth"),
+                "confirmed_tier": in_confirmed,
+                "confirmed_tier_signal": ct_result.reachability_signal,
+                "exploit_tier": f_exploit_tier,
                 "taint_source": f.get("taint_source"),
                 "taint_path": f.get("taint_path"),
                 "taint_confidence": f.get("taint_confidence"),
@@ -112,6 +142,51 @@ async def get_findings(
         return {"success": True, "grouped": True, "groups": list(grouped.values()), "total": len(filtered)}
 
     return FindingsListOut(findings=filtered, total=len(filtered))
+
+
+@router.get("/{run_id}/confirmed-summary", summary="Confirmed Tier summary for a run")
+async def get_confirmed_summary(
+    run_id: int,
+    user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """
+    Returns the Confirmed Tier breakdown for a run:
+    total findings → security-tier → confirmed count, precision context,
+    and per-signal counts (exploit / taint / call_graph / none).
+
+    This is the number to show in the PR merge-gate status check.
+    """
+    from CORE.engines.confirmed_tier import ConfirmedTierEngine
+
+    findings = db.get_findings_with_explanations(run_id)
+    engine = ConfirmedTierEngine()
+    total = len(findings)
+    confirmed = []
+    signals: Counter = Counter()
+
+    for f in findings:
+        ct = dict(f)
+        ct["file"] = f.get("file_path", "")
+        result = engine.classify(ct)
+        if result.in_confirmed_tier:
+            confirmed.append(f)
+            signals[result.reachability_signal] += 1
+
+    n_confirmed = len(confirmed)
+    return {
+        "run_id": run_id,
+        "total_findings": total,
+        "confirmed_tier_count": n_confirmed,
+        "confirmed_tier_pct": round(n_confirmed / total * 100, 1) if total else 0,
+        "signals": dict(signals),
+        "auto_block_safe": n_confirmed == 0,
+        "precision_context": {
+            "confirmed_tier_precision": "96.4%",
+            "false_positive_tolerance": "<4%",
+            "gate_criteria": "HIGH sev + 22-rule set + prod code + Bandit HIGH confidence",
+        },
+    }
 
 
 @router.get(
@@ -394,6 +469,81 @@ async def get_stats(
         "explanations_count": summary.get("explanations_count", 0),
         "avg_latency_ms": float(summary.get("avg_explanation_latency", 0) or 0),
         "total_cost_usd": float(summary.get("total_cost", 0) or 0),
+    }
+
+
+@router.get("/kpi/confirmed-fix-rate", summary="% Confirmed fixed KPI — the company metric")
+async def confirmed_fix_rate_kpi(
+    limit: int = Query(10, ge=1, le=50),
+    user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """
+    The single most important metric for the trust-layer business:
+    what % of Confirmed Tier findings are marked as fixed (TP → fixed via feedback)?
+
+    Target: >70% fix rate means the product creates real action, not noise.
+    Formula: (findings where ground_truth='TP' AND feedback is_false_positive=False) /
+             (all Confirmed Tier findings with feedback)
+
+    Returns overall rate + per-repo breakdown across last N runs.
+    """
+    from CORE.engines.confirmed_tier import ConfirmedTierEngine
+
+    engine = ConfirmedTierEngine()
+    runs = db.get_recent_runs(limit=limit)
+
+    per_repo: dict[str, dict] = {}
+    total_confirmed_with_feedback = 0
+    total_fixed = 0
+
+    for run in runs:
+        run_id = run["id"]
+        repo = run.get("repo_name", "unknown")
+        findings = db.get_findings_with_explanations(run_id)
+
+        for f in findings:
+            ct = dict(f)
+            ct["file"] = f.get("file_path", "")
+            if not engine.classify(ct).in_confirmed_tier:
+                continue
+
+            gt = f.get("ground_truth")
+            if gt is None:
+                continue  # no feedback yet
+
+            entry = per_repo.setdefault(repo, {"confirmed": 0, "fixed": 0})
+            entry["confirmed"] += 1
+            total_confirmed_with_feedback += 1
+            if gt == "TP":
+                entry["fixed"] += 1
+                total_fixed += 1
+
+    overall_rate = (
+        round(total_fixed / total_confirmed_with_feedback * 100, 1) if total_confirmed_with_feedback else None
+    )
+    target_met = overall_rate is not None and overall_rate >= 70.0
+
+    return {
+        "overall_fix_rate_pct": overall_rate,
+        "target_pct": 70.0,
+        "target_met": target_met,
+        "total_confirmed_with_feedback": total_confirmed_with_feedback,
+        "total_fixed": total_fixed,
+        "status": "green" if target_met else ("yellow" if overall_rate and overall_rate >= 50 else "red"),
+        "interpretation": (
+            "Exceeds 70% target — trust layer is creating real action."
+            if target_met
+            else "Below 70% target — investigate FP rate or missing feedback."
+        ),
+        "per_repo": {
+            repo: {
+                "confirmed": v["confirmed"],
+                "fixed": v["fixed"],
+                "fix_rate_pct": round(v["fixed"] / v["confirmed"] * 100, 1) if v["confirmed"] else 0,
+            }
+            for repo, v in per_repo.items()
+        },
     }
 
 
