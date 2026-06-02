@@ -8,7 +8,12 @@
 > *"Auto-block merges you can trust — every finding is exploit-verified and cryptographically attested."*
 > Phase 0 of v6 is now executing — see items 16–20 below.
 >
-> **Created:** 2026-05-31 · **v6 Phase 0 added:** 2026-06-02
+> **v7 Compete-to-Win Direction:** [`GOD_MODE_V7_COMPETE_PLAN.md`](GOD_MODE_V7_COMPETE_PLAN.md) — the competitive layer.
+> Triggered by the P-1 benchmark reality (64.3% file-level, contestable). Response: run the field's
+> standard corpora (OWASP Benchmark, SastBench/MCC), widen the exploit-verification moat, and ship
+> **Verified Remediation** (re-exploit after fix — nobody else does it). Start with V7-0 (credibility) this week.
+>
+> **Created:** 2026-05-31 · **v6 Phase 0 added:** 2026-06-02 · **v7 added:** 2026-06-02
 > **Horizon:** ~25 weeks (defense day is one waypoint, not the finish line)
 > **Total cost:** $0 ongoing. Possibly $0 setup.
 
