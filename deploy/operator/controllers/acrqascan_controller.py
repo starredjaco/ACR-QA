@@ -41,8 +41,12 @@ logger = logging.getLogger("acrqa-operator")
 
 try:
     k8s_config.load_incluster_config()
-except k8s_config.config_exception.ConfigException:
-    k8s_config.load_kube_config()
+except Exception:
+    # Not in a cluster — fall back to kubeconfig (dev/test mode)
+    try:
+        k8s_config.load_kube_config()
+    except Exception:
+        pass  # No kubeconfig either — CustomObjectsApi calls will fail at runtime
 
 custom_api = k8s_client.CustomObjectsApi()
 

@@ -36,7 +36,7 @@
 
 *Show the GitHub Actions tab running*
 
-> "Watch what happens. ACR-QA runs 10 tools simultaneously:
+> "Watch what happens. ACR-QA runs 19 engines simultaneously:
 > Bandit, Semgrep, Ruff, Vulture, jscpd, Radon, and a custom Secrets Detector.
 > It takes about 45 seconds for a full scan."
 

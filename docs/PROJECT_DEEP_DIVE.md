@@ -1,6 +1,6 @@
 # ACR-QA — Definitive Project Deep Dive & State Assessment
 
-**Date:** May 19, 2026 · **Version:** v5.0.0-beta (Phase A Weeks 1–4 shipped) · **Tests:** 2,561 passing (2,457 Python + 104 TS) · 0 warnings · **Coverage:** 84.89%+
+**Date:** May 19, 2026 · **Version:** v5.0.0rc1 (Phase A Weeks 1–4 shipped) · **Tests:** 2,561 passing (2,457 Python + 104 TS) · 0 warnings · **Coverage:** 84.89%+
 
 > This document is a brutally honest, code-verified audit of every module in ACR-QA.
 > Every claim is backed by line counts and actual code inspection.

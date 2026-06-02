@@ -202,7 +202,7 @@ Shell injection. If a filename contains a semicolon or backtick and you use `she
 
 ### Q31. "How did you get it on PyPI?"
 
-GitHub Actions workflow (`pypi-publish.yml`) triggered on version tag (`v*.*.* `). Uses PyPI OIDC Trusted Publisher — no API key stored in secrets. The workflow builds a wheel via `python -m build`, uploads via `twine`. Package is at `pip install acrqa==5.0.0b1`.
+GitHub Actions workflow (`pypi-publish.yml`) triggered on version tag (`v*.*.* `). Uses PyPI OIDC Trusted Publisher — no API key stored in secrets. The workflow builds a wheel via `python -m build`, uploads via `twine`. Package is at `pip install acrqa==5.0.0rc1`.
 
 ---
 
@@ -262,7 +262,7 @@ Continuous Integration / Continuous Deployment. Every git push triggers GitHub A
 
 ### Q40. "What's the next step after defense?"
 
-Three things: (1) Tag v5.0.0 final (removing the beta label) after defense. (2) Film the 5-minute demo video and publish to YouTube. (3) Begin Phase B — public launch at acrqa.dev, VSCode plugin, GitHub App, targeting 100+ users. The PyPI package and GitHub Actions integration are already live — users can start today with `pip install acrqa==5.0.0b1`.
+Three things: (1) Tag v5.0.0 final (removing the beta label) after defense. (2) Film the 5-minute demo video and publish to YouTube. (3) Begin Phase B — public launch at acrqa.dev, VSCode plugin, GitHub App, targeting 100+ users. The PyPI package and GitHub Actions integration are already live — users can start today with `pip install acrqa==5.0.0rc1`.
 
 ---
 
@@ -270,7 +270,7 @@ Three things: (1) Tag v5.0.0 final (removing the beta label) after defense. (2) 
 
 | Metric | Value |
 |--------|------:|
-| Version | v5.0.0b1 |
+| Version | v5.0.0rc1 |
 | Python tests | 2,653 |
 | TypeScript tests | 104 |
 | Total tests | **2,757** |
@@ -286,4 +286,4 @@ Three things: (1) Tag v5.0.0 final (removing the beta label) after defense. (2) 
 | Inter-rater κ | **0.74** (substantial) |
 | OWASP coverage | 9/10 |
 | Novel engines | 10 contributions |
-| Distribution | `pip install acrqa==5.0.0b1` + GitHub Actions Marketplace |
+| Distribution | `pip install acrqa==5.0.0rc1` + GitHub Actions Marketplace |

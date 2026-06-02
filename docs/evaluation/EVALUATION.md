@@ -74,7 +74,7 @@ specific commit SHAs for reproducibility.
 | VulPy | 293 | 293 | 0 | 100.0% | 100.0% | 100.0% | 100.0% |
 | DSVW | 59 | 59 | 0 | 100.0% | 100.0% | 100.0% | 100.0% |
 
-### Extended Evaluation Corpus (v5.0.0b1 — 13 repos across 4 languages)
+### Extended Evaluation Corpus (v5.0.0rc1 — 13 repos across 4 languages)
 
 Corpus expanded to 13 repos in W2–W3 (2026-05-17). Ground truth YAMLs in `TESTS/evaluation/ground_truth/`.
 
@@ -278,7 +278,7 @@ Dead-code findings receive a **−20 confidence penalty** rather than outright s
 
 ---
 
-## 8. Track 4 — Evaluation Rigor (v5.0.0b3, added 2026-05-29/30)
+## 8. Track 4 — Evaluation Rigor (v5.0.0rc1, added 2026-05-29/30)
 
 Full chapter: **`docs/EVALUATION_CHAPTER.md`** (§5.1–§5.17).
 
@@ -370,4 +370,4 @@ Key finding: n-gram trigram self-consistency measures explanation specificity, n
 
 ---
 
-*Updated: 2026-05-31 — ACR-QA v5.0.0b3. All tracks complete (T4.1–T4.9 + P1–P4 + X1–X5). Key new results: P3 taint gate (26.9% / 31.7%), P4 Confirmed Tier (96.4% / 100%, F1=98.2%), X4 time-travel backtest (OR=1.935, p=0.137), X5 head-to-head (ACR-QA only tool with 100% CVE recall, F1=48.1% optimistic). See `docs/EVALUATION_CHAPTER.md` §5.12–§5.17 for full thesis chapter.*
+*Updated: 2026-05-31 — ACR-QA v5.0.0rc1. All tracks complete (T4.1–T4.9 + P1–P4 + X1–X5). Key new results: P3 taint gate (26.9% / 31.7%), P4 Confirmed Tier (96.4% / 100%, F1=98.2%), X4 time-travel backtest (OR=1.935, p=0.137), X5 head-to-head (ACR-QA only tool with 100% CVE recall, F1=48.1% optimistic). See `docs/EVALUATION_CHAPTER.md` §5.12–§5.17 for full thesis chapter.*

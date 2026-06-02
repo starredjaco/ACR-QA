@@ -1,13 +1,13 @@
 # ACR-QA REST API Reference
 
 **Base URL:** `http://localhost:8001` (Docker) · `http://localhost:8000` (direct uvicorn)
-**Version:** v5.0.0b1
+**Version:** v5.0.0rc1
 **Format:** All responses are `application/json`
 **Auth:** All `/v1/` endpoints require `Authorization: Bearer <token>` or `X-API-Key: <key>`
 **Public endpoints (no auth):** `POST /v1/auth/register`, `POST /v1/auth/login`, `POST /v1/auth/verify`, `POST /v1/auth/forgot-password`, `POST /v1/auth/reset-password`, `GET /v1/demo/run`
 
 > Flask is fully removed (v3.6.1). The only server is FastAPI. Swagger UI is at `/docs`.
-> This document covers the 52 async endpoints under `/v1/` in `FRONTEND/api/routers/`.
+> This document covers the 84 async endpoints under `/v1/` in `FRONTEND/api/routers/`.
 
 **Get a token:**
 ```bash
@@ -433,4 +433,4 @@ Per-run Groq token cost telemetry (FinOps). Written after each analysis run comp
 
 ---
 
-*Last updated: May 20, 2026 — ACR-QA v5.0.0b1 (Phase A complete; 52 endpoints; PyPI + GitHub Actions Marketplace shipped)*
+*Last updated: May 20, 2026 — ACR-QA v5.0.0rc1 (Phase A complete; 84 endpoints; PyPI + GitHub Actions Marketplace shipped)*
