@@ -1,6 +1,6 @@
 # ACR-QA Testing & Calibration Report
 
-**Latest Run:** May 19, 2026 · **Version:** v5.0.0-beta (Phase A Weeks 1–4 shipped)
+**Latest Run:** May 19, 2026 · **Version:** v5.0.0rc1 (Phase A Weeks 1–4 shipped)
 **Unit Tests:** 2,457 Python + 104 TypeScript = **2,561 total** · Coverage 84.89%+ · 0 warnings
 
 ### v5.0.0 Phase A test deltas (May 18–19, 2026)
@@ -19,7 +19,6 @@
 - `scripts/dogfood.py` — IaC + bandit gate on ourselves (HIGH=0 currently green)
 - `scripts/peer_rating.py` — Cohen's + Fleiss' κ harness
 - `scripts/run_benchmarks.py` — corpus harness skeleton
-- `paper/acrqa_thesis.tex` + `references.bib` — IEEE paper, sections 1–3
 - `docs/evaluation/HEAD_TO_HEAD_BENCHMARK.md` — pre-registered methodology
 
 

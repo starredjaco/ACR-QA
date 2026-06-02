@@ -36,7 +36,7 @@ One-liner to try it:
     python3 CORE/main.py --target-dir /scan --rich
 
 What's in the box:
-  - 52-endpoint FastAPI service + React 18 dashboard
+  - 84-endpoint FastAPI service + React 18 dashboard
   - Differential SAST (new-only findings vs last scan)
   - Counterfactual explanations ("what minimal change removes this?")
   - Groq + Gemini multi-LLM jury
@@ -86,7 +86,7 @@ This reduces 1,942 raw findings to 55 — but the precision jumps from 8.6% to 9
 preserving all 8 detectable CVEs from the recall battery.
 
 **What I shipped:**
-- 52 FastAPI endpoints, React 18 dashboard (WCAG 2.1 AA, Arabic RTL)
+- 84 FastAPI endpoints, React 18 dashboard (WCAG 2.1 AA, Arabic RTL)
 - Multi-LLM jury (Groq + Gemini free tiers)
 - Differential SAST ("show me only new findings vs last scan")
 - Counterfactual AI explanations ("what minimal change removes this vulnerability?")

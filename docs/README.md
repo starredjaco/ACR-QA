@@ -18,7 +18,6 @@
 | [Head-to-Head Benchmark (X5)](evaluation/HEAD_TO_HEAD_BENCHMARK.md) | 3-way: ACR-QA vs Bandit vs Semgrep — same corpus, same triage. |
 | [Confirmed Tier (P4)](evaluation/CONFIRMED_TIER.md) | 4-criterion stratum: 96.4% conservative / 100% optimistic / F1=98.2%. |
 | [Benchmark v5](evaluation/BENCHMARK_v5.md) | Auto-generated: 23 ground-truth YAMLs · 46 expected findings · A.3/A.4 |
-| [Thesis paper LaTeX](../paper/acrqa_thesis.tex) | IEEE template; sections 1–3 drafted; bib has 11 citations · A.4 |
 
 ## 📐 Architecture
 
@@ -46,7 +45,7 @@
 
 | Document | Description |
 |----------|-------------|
-| [REST API Reference](API_REFERENCE.md) | All 52 FastAPI endpoints under `/v1/`, CLI reference, auth flows |
+| [REST API Reference](API_REFERENCE.md) | All 84 FastAPI endpoints under `/v1/`, CLI reference, auth flows |
 | [Cloud Deployment](setup/Cloud-Deployment.md) | PythonAnywhere, Replit, ngrok deployment guides |
 | [Token Setup](setup/TOKEN_SETUP.md) | GitHub, GitLab, and Groq API key configuration |
 | [LLM Providers](setup/LLM_PROVIDERS.md) | Groq (default) + Ollama (offline) + AgentRouter; model comparison, `ACRQA_LLM_PROVIDER` env var |
