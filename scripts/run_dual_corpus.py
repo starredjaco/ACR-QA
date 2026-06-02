@@ -28,7 +28,6 @@ Usage:
 from __future__ import annotations
 
 import json
-import sys
 from datetime import datetime, timezone  # noqa: UP017
 from pathlib import Path
 
@@ -239,7 +238,7 @@ def run_dual_corpus() -> dict:
     print(f"  → {OUTPUT_MD.relative_to(ROOT)}", flush=True)
 
     _update_eval_summary(results)
-    print(f"  → eval_summary.json updated", flush=True)
+    print("  → eval_summary.json updated", flush=True)
 
     return results
 
@@ -302,12 +301,12 @@ def _write_markdown(r: dict) -> None:
         f"- Detectable: {rc['track2']['detectable']}",
         f"- Detected (TP): **{rc['track2']['tp']}** — families: " + ", ".join(rc["track2"]["families"]),
         f"- Genuine FN: **{rc['track2']['fn']}**",
-        f"- Honest misses (not detectable by static analysis): " + ", ".join(rc["track2"]["missed_families"]),
+        "- Honest misses (not detectable by static analysis): " + ", ".join(rc["track2"]["missed_families"]),
         "",
         "### Combined Recall",
         "",
-        f"| Metric | Value |",
-        f"|--------|-------|",
+        "| Metric | Value |",
+        "|--------|-------|",
         f"| Detectable CVEs | {rec['tp_cves'] + rec['fn_cves_detectable']} |",
         f"| Detected (TP) | **{rec['tp_cves']}** |",
         f"| Missed (FN) | **{rec['fn_cves_detectable']}** |",
@@ -317,7 +316,7 @@ def _write_markdown(r: dict) -> None:
         "",
         "## Precision Corpus — False Positive Analysis",
         "",
-        f"| Metric | Conservative | Optimistic |",
+        "| Metric | Conservative | Optimistic |",
         "|--------|-------------|-----------|",
         f"| H/M all-tools precision | "
         f"{_pct(pr['hm_conservative']['precision'])} "

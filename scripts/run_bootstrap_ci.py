@@ -33,8 +33,7 @@ OUTPUT_MD = ROOT / "docs/evaluation/BOOTSTRAP_CI.md"
 EVAL_SUMMARY = ROOT / "TESTS/evaluation/results/eval_summary.json"
 
 sys.path.insert(0, str(ROOT / "scripts"))
-import run_ablation_study as ab  # reuse triage constants
-
+import run_ablation_study as ab  # reuse triage constants  # noqa: E402
 
 # ── Data loading ──────────────────────────────────────────────────────────────
 
@@ -96,7 +95,7 @@ def load_per_repo_data() -> list[dict]:
 
 
 def _precision(tp: int, fp: int, nr: int, conservative: bool) -> float | None:
-    denom = tp + fp + (nr if conservative else 0) + (0 if conservative else 0)
+    tp + fp + (nr if conservative else 0) + (0 if conservative else 0)
     # conservative: NR → FP (total = tp + fp + nr); optimistic: NR → TP (total = tp + fp + nr still)
     total = tp + fp + nr
     if total == 0:
@@ -223,7 +222,7 @@ def run_bootstrap(n_boot: int = 10_000) -> dict:
 
     # Update eval_summary
     _update_eval_summary(results)
-    print(f"  → eval_summary.json updated", flush=True)
+    print("  → eval_summary.json updated", flush=True)
 
     return results
 

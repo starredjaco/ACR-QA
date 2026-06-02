@@ -13,7 +13,7 @@ Prints a summary at the end.
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timezone as _tz
+from datetime import UTC, datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -64,7 +64,7 @@ def run() -> None:
                 message=row.get("message") or "",
             )
 
-            seen_at = row.get("created_at") or datetime.now(_tz.utc)
+            seen_at = row.get("created_at") or datetime.now(UTC)
             defaults = {
                 "canonical_rule_id": row.get("canonical_rule_id") or "UNKNOWN",
                 "file_path": row.get("file_path") or "",

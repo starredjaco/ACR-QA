@@ -15,7 +15,7 @@
 [![F1](https://img.shields.io/badge/F1%20Score-98.2%25-22c55e)](./docs/evaluation/CONFIRMED_TIER.md)
 [![OWASP](https://img.shields.io/badge/OWASP-9%2F10-8b5cf6)](./docs/evaluation/EVALUATION.md)
 [![Languages](https://img.shields.io/badge/Languages-Python%20%7C%20JS%20%7C%20Go-00ADD8)](./CORE/adapters/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-52%20endpoints-009688?logo=fastapi&logoColor=white)](./FRONTEND/api/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-84%20endpoints-009688?logo=fastapi&logoColor=white)](./FRONTEND/api/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI Tests](https://github.com/ahmed-145/ACR-QA/actions/workflows/tests.yml/badge.svg)](https://github.com/ahmed-145/ACR-QA/actions/workflows/tests.yml)
 [![WCAG 2.1 AA](https://img.shields.io/badge/WCAG-2.1%20AA-1a6496?logo=w3c&logoColor=white)](./dashboard/e2e/accessibility.spec.ts)
@@ -43,7 +43,7 @@ ACR-QA is a **provenance-first, AI-augmented code review platform** built as a g
 | **LLM hallucination** — AI assistants give confident but wrong security advice | RAG: the LLM can only explain rules it can cite from a curated 66-rule knowledge base; semantic entropy (3× runs) detects contradictions |
 | **Invisible test gaps** — code coverage % doesn't tell you *which* complex functions have no test | AST-based Test Gap Analyzer ranks untested symbols by cyclomatic complexity |
 
-**Key numbers (v5.0.0rc1):** **P4 Confirmed Tier: 96.4% conservative / 100% optimistic precision** on 30-repo adversarial corpus (95% CI [90.9%, 100%]) · **F1 = 98.2%** vs Bandit 21.8% / Semgrep 45.7% · **100% CVE recall (8/8)** · 9/10 OWASP Top 10 · **2,757 tests** (2,653 Python + 104 TypeScript) · 52 async API endpoints · 19 analysis engines · 327+ rule mappings · $0 recurring cost
+**Key numbers (v5.0.0rc1):** **P4 Confirmed Tier: 96.4% conservative / 100% optimistic precision** on 30-repo adversarial corpus (95% CI [90.9%, 100%]) · **F1 = 98.2%** vs Bandit 21.8% / Semgrep 45.7% · **100% CVE recall (8/8)** · 9/10 OWASP Top 10 · **2,757 tests** (2,653 Python + 104 TypeScript) · 84 async API endpoints · 19 analysis engines · 327+ rule mappings · $0 recurring cost
 
 ---
 
@@ -57,8 +57,8 @@ C4Container
 
     Container_Boundary(sys, "ACR-QA") {
         Container(cli, "CLI / GitHub Action", "Python", "Entry point. Detects language, routes to adapter.")
-        Container(core, "Analysis Engine", "Python 3.11", "10 tools → normalise → score → dedup → AI explain → quality gate")
-        Container(api, "Async REST API", "FastAPI :8000", "36 /v1/ endpoints · JWT + API key auth · Swagger at /docs")
+        Container(core, "Analysis Engine", "Python 3.11", "19 engines → normalise → score → dedup → AI explain → quality gate")
+        Container(api, "Async REST API", "FastAPI :8000", "84 /v1/ endpoints · JWT + API key auth · Swagger at /docs")
         Container(worker, "Background Worker", "Celery + Redis", "Async scan execution — POST /v1/scans returns 202 + job_id")
         ContainerDb(pg, "PostgreSQL 15", "", "Provenance: runs · findings · LLM calls · feedback · users · api_keys")
         ContainerDb(redis, "Redis 5.2", "", "Rate limiting · explanation cache · Celery broker + result backend")
@@ -168,7 +168,7 @@ Full changelog: [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
 
 | Feature | CodeRabbit | SonarQube | **ACR-QA** |
 |---------|:----------:|:---------:|:----------:|
-| Multi-tool normalisation | ✅ | ✅ | ✅ 10 tools |
+| Multi-tool normalisation | ✅ | ✅ | ✅ 19 engines |
 | AI explanations | ✅ | ✅ | ✅ RAG + entropy |
 | **Hallucination detection** | ❌ | ❌ | ✅ semantic entropy (3×) |
 | **Test gap analysis** | ❌ | ❌ | ✅ AST-based |
@@ -190,7 +190,7 @@ Full changelog: [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
 
 ### Detection Pipeline
 
-10 tools run in parallel, all output normalised into one `CanonicalFinding` schema:
+19 engines run in parallel, all output normalised into one `CanonicalFinding` schema:
 
 | Tool | Language | What It Catches |
 |------|----------|----------------|
@@ -315,7 +315,7 @@ gosec · staticcheck · Semgrep Go rules · 45+ rule mappings
 ```yaml
 # .github/workflows/acr-qa.yml (already in repo)
 # Triggers on every PR:
-# 1. Runs all 10 tools on changed files (--diff-only)
+# 1. Runs all 19 engines on changed files (--diff-only)
 # 2. Normalises, scores, generates AI explanations
 # 3. Posts severity-sorted PR comment with code suggestions
 # 4. Uploads findings.sarif to GitHub Security Tab
@@ -487,14 +487,18 @@ marimo edit notebooks/walkthrough.py
 | **Supervisor** | Dr. Samy AbdelNabi |
 | **Institution** | King Salman International University (KSIU) |
 | **Timeline** | October 2025 – June 2026 |
-| **Status** | v5.0.0b1 published on PyPI · Phase A complete (Weeks A1–A5 + A5.5 on `main`) · Week A6 = defense polish |
+| **Status** | v5.0.0rc1 · P4 Confirmed Tier 96.4% / F1=98.2% · SLSA L3 · 15-item roadmap in progress |
 
 ### Remaining Thesis Work
 
-- [x] Cloud deployment — live at [acrqa-api-production.up.railway.app](https://acrqa-api-production.up.railway.app/health) (Railway + PostgreSQL + Redis)
+- [x] Docker image on GHCR — `ghcr.io/ahmed-145/acrqa:latest` (free, Cosign-signed, SLSA L3)
+- [x] GitHub Codespaces — `.devcontainer/devcontainer.json` ready
+- [x] Cloudflare Pages demo — `cloudflare-pages/index.html` (deploy via Cloudflare dashboard)
 - [x] User study protocol — [`docs/evaluation/USER_STUDY_PROTOCOL.md`](docs/evaluation/USER_STUDY_PROTOCOL.md)
-- [ ] 5-minute demo video ([script](docs/DEMO_VIDEO_SCRIPT.md)) **← human task**
-- [ ] YouTube upload (follows demo video) **← human task**
+- [x] 5-rater κ study — materials in [`docs/kappa_study/`](docs/kappa_study/)
+- [ ] Demo video recording ([script](docs/DEMO_VIDEO_SCRIPT.md)) **← Ahmed records**
+- [ ] YouTube upload (follows recording) **← Ahmed uploads**
+- [ ] HN/LinkedIn post ([drafts ready](docs/LAUNCH_POSTS.md)) **← post after defense**
 
 ---
 

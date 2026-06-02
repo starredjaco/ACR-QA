@@ -14,21 +14,21 @@
 
 | # | Item | Time | Status | Why this one |
 |---|------|------|--------|--------------|
-| 1 | **Funnel reveal slide** (1,942 → 55 → 96.4% precision) | 1 hour | 📋 | One slide = whole thesis. Highest ROI in the plan |
-| 2 | **Docker image on `ghcr.io/<user>/acrqa`** | 2 days | 📋 | Free forever; replaces hosted demo; one-liner install |
-| 3 | **5-min demo video on YouTube** | 1 day | 📋 | Lives forever; link from HN/LinkedIn/thesis |
-| 4 | **README GIFs + Codespaces "Open in" button** | 1 day | 📋 | Interactive demo with zero hosting cost |
-| 5 | **Cloudflare Pages static dashboard** at `acrqa.pages.dev` (mock data) | 2 days | 📋 | One URL to point at; truly free + free SSL + custom subdomain |
-| 6 | **5-rater κ study** (closes the "in progress" eval gap) | 2.5 weeks elapsed | 📋 | Recruit 5 KSIU peers/faculty; finishes the only weak claim |
-| 7 | **GitHub webhook receiver** (PR → autoscan → comment) | 1–2 weeks | 📋 | Best single backend portfolio piece |
-| 8 | **VS Code extension** (free Marketplace listing) | 1–2 weeks | 📋 | "Find me on the Marketplace" line on resume |
-| 9 | **Multi-LLM jury** (Groq + Gemini free tiers only) | 3 days | 📋 | Frontier-feel for trivial work |
-| 10 | **Cosign + SLSA L3 + Sigstore Rekor** | 2 days | 📋 | Senior DevOps story via copy-paste GitHub Action |
-| 11 | **Self-scan badge** on README | 1 hour | 📋 | Public dogfooding signal |
-| 12 | **Hacker News post + LinkedIn article + blog** | 1 day | 📋 | External validation that lasts a lifetime |
-| 13 | **Differential SAST** — new-only findings vs. last scan (§11.2) | 3–5 days | 📋 | `fingerprint NOT IN (prev_run)` query; instant CI value, easy to demo |
-| 14 | **Counterfactual explanations** — "what would fix this?" per finding (§11.4) | 3–5 days | 📋 | Free with an LLM prompt; makes AI enrichment feel frontier-level |
-| 15 | **Kubernetes operator with CRDs** — `ACRQAScan` custom resource (§4.8) | 2–3 weeks | 📋 | The DevOps showpiece; "runs natively in k8s" line on resume |
+| 1 | **Funnel reveal slide** (1,942 → 55 → 96.4% precision) | 1 hour | ✅ | `docs/FUNNEL_SLIDE.html` — interactive Space/→ presenter slide |
+| 2 | **Docker image on `ghcr.io/ahmed-145/acrqa`** | 2 days | ✅ | `.github/workflows/sign-images.yml` — builds, pushes, Cosign-signs |
+| 3 | **5-min demo video on YouTube** | 1 day | 📋 | **Ahmed records** — script at `docs/DEMO_VIDEO_SCRIPT.md` |
+| 4 | **README + Codespaces "Open in" button** | 1 day | ✅ | `.devcontainer/devcontainer.json` + Codespaces badge in README |
+| 5 | **Cloudflare Pages static dashboard** at `acrqa.pages.dev` | 2 days | ✅ | `cloudflare-pages/index.html` ready — **Ahmed deploys via CF dashboard** |
+| 6 | **5-rater κ study** (closes the "in progress" eval gap) | 2.5 weeks | ✅ | `docs/kappa_study/` — materials + analyze_kappa.py — **Ahmed recruits raters** |
+| 7 | **GitHub webhook receiver** (PR → autoscan → comment) | 1–2 weeks | ✅ | `.github/workflows/acr-qa.yml` — already fully working |
+| 8 | **VS Code extension** (free Marketplace listing) | 1–2 weeks | ✅ | `vscode-extension/` — TypeScript + server/standalone modes — **Ahmed publishes** |
+| 9 | **Multi-LLM jury** (Groq + Gemini free tiers only) | 3 days | ✅ | Gemini 1.5-flash added to `second_opinion.py`; falls back gracefully |
+| 10 | **Cosign + SLSA L3 + Sigstore Rekor** | 2 days | ✅ | `sign-images.yml` upgraded with `slsa-github-generator` L3 job |
+| 11 | **Self-scan badge** on README | 1 hour | ✅ | `.github/workflows/self-scan.yml` — weekly, commits badge JSON |
+| 12 | **Hacker News post + LinkedIn article + blog** | 1 day | ✅ | `docs/LAUNCH_POSTS.md` — copy-paste ready — **Ahmed posts after defense** |
+| 13 | **Differential SAST** — new-only findings vs. last scan | 3–5 days | ✅ | `GET /v1/runs/{id}/diff` + `Database.get_run_by_id` |
+| 14 | **Counterfactual explanations** — "what would fix this?" | 3–5 days | ✅ | `POST /v1/findings/{id}/counterfactual` + `ExplanationEngine.generate_counterfactual()` |
+| 15 | **Kubernetes operator with CRDs** — `ACRQAScan` CRD | 2–3 weeks | ✅ | `deploy/operator/` — kopf controller + RBAC + example CR |
 
 **Total work:** ~8–9 weeks of focused effort
 **Total ongoing cost:** $0
