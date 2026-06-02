@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ACR-QA — AI-Powered Code Security</title>
+  <meta name="description" content="ACR-QA: 96.4% Confirmed Tier precision, 100% CVE recall, F1=98.2%. Self-hosted, open-source, $0.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='22' font-size='20'>🛡️</text></svg>">
+  <style>
+    :root {
+      --green: #22c55e;
+      --blue: #3b82f6;
+      --purple: #8b5cf6;
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .logo { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; }
+    .logo span { color: var(--green); }
+    .badge {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+    .nav-links { margin-left: auto; display: flex; gap: 1.5rem; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; }
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 5rem 2rem 3rem;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -1px;
+      margin-bottom: 1rem;
+    }
+    .hero h1 em { font-style: normal; color: var(--green); }
+    .hero p {
+      color: var(--muted);
+      font-size: 1.1rem;
+      line-height: 1.7;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+    .cta-row { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: var(--green); color: #000; }
+    .btn-secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+
+    /* ── Proof strip ── */
+    .proof {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+    }
+    .proof-item { text-align: center; }
+    .proof-item .num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--green);
+      display: block;
+    }
+    .proof-item .lbl { font-size: 0.8rem; color: var(--muted); }
+
+    /* ── Funnel ── */
+    .funnel-section {
+      max-width: 700px;
+      margin: 4rem auto;
+      padding: 0 2rem;
+    }
+    .funnel-section h2 { font-size: 1.6rem; margin-bottom: 0.5rem; }
+    .funnel-section p { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; }
+    .funnel { display: flex; flex-direction: column; gap: 0.5rem; }
+    .funnel-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1.25rem;
+      transition: border-color 0.2s;
+    }
+    .funnel-row:hover { border-color: var(--green); }
+    .funnel-bar-wrap { flex: 1; background: var(--border); border-radius: 4px; height: 8px; overflow: hidden; }
+    .funnel-bar { height: 100%; background: var(--green); border-radius: 4px; }
+    .funnel-label { min-width: 130px; font-size: 0.85rem; color: var(--muted); }
+    .funnel-count { min-width: 60px; text-align: right; font-weight: 700; }
+    .funnel-prec { min-width: 80px; text-align: right; font-size: 0.85rem; color: var(--muted); }
+    .funnel-row.highlight { border-color: var(--green); background: rgba(34,197,94,0.08); }
+    .funnel-row.highlight .funnel-count { color: var(--green); font-size: 1.1rem; }
+    .funnel-row.highlight .funnel-prec { color: var(--green); font-weight: 700; }
+
+    /* ── Comparison ── */
+    .compare-section {
+      max-width: 800px;
+      margin: 4rem auto;
+      padding: 0 2rem;
+    }
+    .compare-section h2 { font-size: 1.6rem; margin-bottom: 0.5rem; }
+    .compare-section p { color: var(--muted); margin-bottom: 2rem; font-size: 0.95rem; }
+    .compare-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .compare-table th, .compare-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    .compare-table th { color: var(--muted); font-weight: 600; }
+    .compare-table tr.winner td { color: var(--green); font-weight: 700; }
+    .compare-table .bar-cell { width: 160px; }
+    .inline-bar { background: var(--border); border-radius: 4px; height: 8px; overflow: hidden; display: inline-block; width: 100%; }
+    .inline-bar-fill { height: 100%; border-radius: 4px; }
+
+    /* ── How it works ── */
+    .how-section {
+      max-width: 900px;
+      margin: 4rem auto;
+      padding: 0 2rem;
+    }
+    .how-section h2 { font-size: 1.6rem; margin-bottom: 2rem; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
+    .step {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .step-num { font-size: 2rem; margin-bottom: 0.75rem; }
+    .step h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
+    .step p { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── Install ── */
+    .install-section {
+      max-width: 700px;
+      margin: 4rem auto;
+      padding: 0 2rem;
+    }
+    .install-section h2 { font-size: 1.6rem; margin-bottom: 1.5rem; }
+    .code-block {
+      background: #000;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      margin-bottom: 1rem;
+    }
+    .code-block .comment { color: #6b7280; }
+    .code-block .cmd { color: var(--green); }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    footer a { color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">ACR<span>-QA</span></div>
+  <span class="badge">v5.0.0rc1</span>
+  <nav class="nav-links">
+    <a href="https://github.com/ahmed-145/ACR-QA">GitHub</a>
+    <a href="https://github.com/ahmed-145/ACR-QA/blob/main/docs/evaluation/CONFIRMED_TIER.md">Evaluation</a>
+    <a href="https://github.com/ahmed-145/ACR-QA/blob/main/docs/CHANGELOG.md">Changelog</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>Static analysis that<br><em>actually works.</em></h1>
+  <p>
+    ACR-QA orchestrates 19 analysis engines, normalises everything into one schema,
+    and uses RAG-grounded AI to explain every finding. The P4 Confirmed Tier reaches
+    <strong>96.4% precision</strong> with <strong>100% CVE recall</strong> on a 30-repo
+    adversarial corpus of production code.
+  </p>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="https://github.com/ahmed-145/ACR-QA">
+      ⭐ Star on GitHub
+    </a>
+    <a class="btn btn-secondary" href="https://github.com/ahmed-145/ACR-QA#quick-start">
+      Quick Start →
+    </a>
+  </div>
+</section>
+
+<div class="proof">
+  <div class="proof-item"><span class="num">96.4%</span><span class="lbl">P4 Precision</span></div>
+  <div class="proof-item"><span class="num">100%</span><span class="lbl">CVE Recall (8/8)</span></div>
+  <div class="proof-item"><span class="num">98.2%</span><span class="lbl">F1 Score</span></div>
+  <div class="proof-item"><span class="num">2,757</span><span class="lbl">Tests Passing</span></div>
+  <div class="proof-item"><span class="num">19</span><span class="lbl">Analysis Engines</span></div>
+  <div class="proof-item"><span class="num">$0</span><span class="lbl">Recurring Cost</span></div>
+</div>
+
+<section class="funnel-section">
+  <h2>The Precision Funnel</h2>
+  <p>
+    Raw SAST output is 8.6% precise. ACR-QA's 4-criterion Confirmed Tier filter
+    reaches 96.4% — above the 80% threshold for autonomous PR-blocking — while
+    keeping 100% CVE recall at every rung.
+  </p>
+  <div class="funnel">
+    <div class="funnel-row">
+      <div class="funnel-label">Rung 0 — Raw</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:100%"></div></div>
+      <div class="funnel-count">1,942</div>
+      <div class="funnel-prec">8.6%</div>
+    </div>
+    <div class="funnel-row">
+      <div class="funnel-label">+ HIGH/MED filter</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:32%"></div></div>
+      <div class="funnel-count">630</div>
+      <div class="funnel-prec">8.6%</div>
+    </div>
+    <div class="funnel-row">
+      <div class="funnel-label">+ Security-tier rules</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:11%"></div></div>
+      <div class="funnel-count">219</div>
+      <div class="funnel-prec">24.7%</div>
+    </div>
+    <div class="funnel-row">
+      <div class="funnel-label">+ Taint gate (P3)</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:7.8%"></div></div>
+      <div class="funnel-count">151</div>
+      <div class="funnel-prec">26.9%</div>
+    </div>
+    <div class="funnel-row highlight">
+      <div class="funnel-label">P4 Confirmed Tier ✓</div>
+      <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:2.8%"></div></div>
+      <div class="funnel-count">55</div>
+      <div class="funnel-prec">96.4%</div>
+    </div>
+  </div>
+</section>
+
+<section class="compare-section">
+  <h2>Head-to-Head vs Bandit + Semgrep</h2>
+  <p>Same 30-repo corpus. Same 8-CVE recall battery. Same triage protocol.</p>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Tool</th>
+        <th>CVE Recall</th>
+        <th class="bar-cell">Precision</th>
+        <th>F1</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Bandit (standalone)</td>
+        <td>1/8 (12.5%)</td>
+        <td class="bar-cell">
+          <div class="inline-bar"><div class="inline-bar-fill" style="width:14%;background:#ef4444"></div></div>
+          14.0%
+        </td>
+        <td>21.8%</td>
+      </tr>
+      <tr>
+        <td>Semgrep CE (standalone)</td>
+        <td>5/8 (62.5%)</td>
+        <td class="bar-cell">
+          <div class="inline-bar"><div class="inline-bar-fill" style="width:36%;background:#f97316"></div></div>
+          36.0%
+        </td>
+        <td>45.7%</td>
+      </tr>
+      <tr class="winner">
+        <td>🥇 ACR-QA P4 Confirmed</td>
+        <td>8/8 (100%)</td>
+        <td class="bar-cell">
+          <div class="inline-bar"><div class="inline-bar-fill" style="width:96.4%;background:#22c55e"></div></div>
+          96.4%
+        </td>
+        <td>98.2%</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section class="how-section">
+  <h2>How It Works</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">🔍</div>
+      <h3>19 Engines</h3>
+      <p>Bandit, Semgrep, Ruff, Vulture, Radon, gosec, staticcheck, ESLint, Trivy, jscpd + IaC scanner run in parallel.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">🗂️</div>
+      <h3>One Schema</h3>
+      <p>All outputs normalised into <code>CanonicalFinding</code>. Cross-tool deduplication by deterministic fingerprint.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">🤖</div>
+      <h3>RAG-Grounded AI</h3>
+      <p>Groq LLaMA-3.3-70B explains each finding, grounded in a 66-rule knowledge base. Semantic entropy (3× runs) detects hallucinations.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">🎯</div>
+      <h3>P4 Confirmed Tier</h3>
+      <p>4-criterion gate: HIGH severity + 22-rule ConfirmedRuleSet + production code + Bandit HIGH confidence → 96.4% precision.</p>
+    </div>
+  </div>
+</section>
+
+<section class="install-section">
+  <h2>Get Started in 30 Seconds</h2>
+  <div class="code-block">
+    <span class="comment"># Pull and run (no config needed for a quick test)</span><br>
+    <span class="cmd">docker run --rm \<br>
+    &nbsp;&nbsp;-v $(pwd):/scan \<br>
+    &nbsp;&nbsp;-e GROQ_API_KEY_1=your_key \<br>
+    &nbsp;&nbsp;ghcr.io/ahmed-145/acrqa:latest \<br>
+    &nbsp;&nbsp;python3 CORE/main.py --target-dir /scan --rich</span>
+  </div>
+  <div class="code-block">
+    <span class="comment"># Full stack with dashboard</span><br>
+    <span class="cmd">git clone https://github.com/ahmed-145/ACR-QA.git<br>
+    cd ACR-QA && cp .env.example .env<br>
+    docker compose up -d</span><br>
+    <span class="comment"># → open http://localhost:8000/docs</span>
+  </div>
+</section>
+
+<footer>
+  <p>
+    ACR-QA — Graduation thesis project at KSIU · MIT License ·
+    <a href="https://github.com/ahmed-145/ACR-QA">GitHub</a> ·
+    <a href="https://github.com/ahmed-145/ACR-QA/blob/main/docs/evaluation/CONFIRMED_TIER.md">Evaluation</a>
+  </p>
+  <p style="margin-top:0.5rem;font-size:0.75rem;">
+    Demo page hosted on <a href="https://pages.cloudflare.com">Cloudflare Pages</a> — $0 forever
+  </p>
+</footer>
+
+</body>
+</html>

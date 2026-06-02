@@ -1,0 +1,4 @@
+# Cloudflare Pages redirect rules
+/docs    https://github.com/ahmed-145/ACR-QA/tree/main/docs    301
+/github  https://github.com/ahmed-145/ACR-QA                   301
+/demo    /index.html                                             200

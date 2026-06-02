@@ -121,7 +121,8 @@ class TestSecondOpinionAgreement:
 
 class TestProviderFailures:
     def test_ollama_unavailable_does_not_break(self, finding):
-        engine = SecondOpinionEngine()
+        # Use explicit secondary="ollama" so test is provider-agnostic from defaults
+        engine = SecondOpinionEngine(secondary="ollama")
         call_count = [0]
 
         def fake_call(self, provider, prompt):
@@ -135,6 +136,25 @@ class TestProviderFailures:
         assert r.primary_verdict == "TP"
         assert r.skipped_reason is not None
         assert "ollama" in r.skipped_reason.lower()
+        assert r.confidence_delta == 0
+
+    def test_gemini_unavailable_falls_back_gracefully(self, finding):
+        """Gemini missing key → skipped_reason set, confidence_delta=0, no crash."""
+        engine = SecondOpinionEngine(secondary="gemini")
+
+        def fake_call(self, provider, prompt):
+            if provider == "groq":
+                return ("TP", "real groq verdict")
+            from CORE.engines.second_opinion import _GeminiUnavailableError, _OllamaUnavailableError
+
+            if provider == "gemini":
+                raise _GeminiUnavailableError("GEMINI_API_KEY not set")
+            raise _OllamaUnavailableError("ollama not running either")
+
+        with patch.object(SecondOpinionEngine, "_call_provider", fake_call):
+            r = engine.review(finding)
+        assert r.primary_verdict == "TP"
+        assert r.skipped_reason is not None
         assert r.confidence_delta == 0
 
     def test_primary_failure_returns_safe_default(self, finding):

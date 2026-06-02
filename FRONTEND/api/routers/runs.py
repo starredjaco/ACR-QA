@@ -632,6 +632,70 @@ async def get_review_bottleneck(
     }
 
 
+@router.get("/{run_id}/diff", summary="Differential SAST — new findings only vs baseline run")
+async def get_diff(
+    run_id: int,
+    baseline_run_id: int | None = Query(
+        None,
+        description="Run to compare against. Omit to auto-use the previous run for the same repo.",
+    ),
+    severity: str | None = None,
+    user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """Return only findings in *run_id* whose fingerprint is NOT present in *baseline_run_id*.
+
+    This is the core of Differential SAST: show developers only what changed since
+    the last scan rather than the full noisy list.  Fingerprints are deterministic
+    (repo-path + rule-id + line hash) so the same logical finding across runs has the
+    same fingerprint even if line numbers shift slightly.
+    """
+    run = db.get_run_by_id(run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail=f"Run {run_id} not found")
+
+    # Auto-resolve baseline: previous run for same repo
+    if baseline_run_id is None:
+        recent = db.get_recent_runs(limit=50)
+        same_repo = [r for r in recent if r.get("repo_name") == run.get("repo_name") and r["id"] < run_id]
+        if not same_repo:
+            raise HTTPException(
+                status_code=400,
+                detail="No baseline run found for this repo. Pass baseline_run_id explicitly.",
+            )
+        baseline_run_id = max(r["id"] for r in same_repo)
+
+    baseline_run = db.get_run_by_id(baseline_run_id)
+    if not baseline_run:
+        raise HTTPException(status_code=404, detail=f"Baseline run {baseline_run_id} not found")
+
+    current_findings = db.get_findings_with_explanations(run_id)
+    baseline_findings = db.get_findings_with_explanations(baseline_run_id)
+
+    baseline_fingerprints: set[str] = {f["fingerprint"] for f in baseline_findings if f.get("fingerprint")}
+
+    new_findings = [f for f in current_findings if f.get("fingerprint") not in baseline_fingerprints]
+    fixed_count = sum(
+        1 for f in baseline_findings if f.get("fingerprint") not in {x.get("fingerprint") for x in current_findings}
+    )
+
+    if severity:
+        new_findings = [f for f in new_findings if f.get("severity", "").lower() == severity.lower()]
+
+    return {
+        "success": True,
+        "run_id": run_id,
+        "baseline_run_id": baseline_run_id,
+        "summary": {
+            "new_findings": len(new_findings),
+            "fixed_since_baseline": fixed_count,
+            "total_current": len(current_findings),
+            "total_baseline": len(baseline_findings),
+        },
+        "new_findings": new_findings,
+    }
+
+
 @router.get("/{run_id}/supply-chain", summary="Supply-chain risk report for a run")
 async def get_supply_chain(
     run_id: int,

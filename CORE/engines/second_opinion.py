@@ -127,6 +127,41 @@ class _OllamaUnavailableError(RuntimeError):
     pass
 
 
+class _GeminiUnavailableError(RuntimeError):
+    pass
+
+
+def _call_gemini(prompt: str, timeout: float = 10.0) -> str:
+    """One-shot Gemini API call (free tier: gemini-1.5-flash).
+
+    Requires GEMINI_API_KEY env var (Google AI Studio — free, no card).
+    Falls back to _GeminiUnavailableError so the engine degrades gracefully.
+    """
+    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_AI_API_KEY")
+    if not api_key:
+        raise _GeminiUnavailableError("GEMINI_API_KEY not set")
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/" f"gemini-1.5-flash:generateContent?key={api_key}"
+    body = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "temperature": 0.1,
+            "maxOutputTokens": 80,
+        },
+    }
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            resp = client.post(url, json=body)
+    except httpx.HTTPError as exc:
+        raise _GeminiUnavailableError(f"http error: {exc}") from exc
+    if resp.status_code != 200:
+        raise _GeminiUnavailableError(f"status {resp.status_code}: {resp.text[:200]}")
+    try:
+        data = resp.json()
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+    except (KeyError, IndexError, ValueError) as exc:
+        raise _GeminiUnavailableError(f"malformed response: {exc}") from exc
+
+
 def _call_ollama(prompt: str, model: str | None = None, timeout: float = 6.0) -> str:
     """One-shot Ollama call. Raises _OllamaUnavailableError on connection failure."""
     base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
@@ -178,12 +213,20 @@ def _call_groq(prompt: str, key_pool=None) -> str:
 
 
 class SecondOpinionEngine:
-    """Two-provider classifier; defaults to Groq (primary) + Ollama (secondary)."""
+    """Two-provider classifier.
+
+    Default: Groq (primary) + Gemini (secondary).
+    Falls back to Ollama if Gemini key is absent, then skips secondary entirely.
+
+    Provider priority for secondary:
+        1. gemini   — free tier (Google AI Studio, no card)
+        2. ollama   -- local, free, requires Ollama running
+    """
 
     def __init__(
         self,
         primary: str = "groq",
-        secondary: str = "ollama",
+        secondary: str = "gemini",
         key_pool=None,
     ):
         self.primary = primary
@@ -194,6 +237,8 @@ class SecondOpinionEngine:
         """Return (verdict, reason)."""
         if provider == "groq":
             content = _call_groq(prompt, key_pool=self._key_pool)
+        elif provider == "gemini":
+            content = _call_gemini(prompt)
         elif provider == "ollama":
             content = _call_ollama(prompt)
         else:
@@ -227,9 +272,17 @@ class SecondOpinionEngine:
         try:
             secondary_verdict, secondary_reason = self._call_provider(self.secondary, prompt)
             skipped_reason: str | None = None
-        except _OllamaUnavailableError as exc:
+        except (_OllamaUnavailableError, _GeminiUnavailableError) as exc:
+            # Gemini key absent or Ollama not running — degrade gracefully
             secondary_verdict, secondary_reason = "NEEDS_REVIEW", ""
-            skipped_reason = f"ollama_unavailable: {exc}"
+            skipped_reason = f"{self.secondary}_unavailable: {exc}"
+            # If Gemini failed, try Ollama as last resort
+            if self.secondary == "gemini":
+                try:
+                    secondary_verdict, secondary_reason = self._call_provider("ollama", prompt)
+                    skipped_reason = None
+                except _OllamaUnavailableError:
+                    pass  # Both cloud + local unavailable — skip secondary
         except Exception as exc:
             logger.warning("secondary provider %s failed: %s", self.secondary, exc)
             secondary_verdict, secondary_reason = "NEEDS_REVIEW", ""

@@ -337,6 +337,70 @@ async def post_second_opinion(
     return payload
 
 
+# ── Counterfactual explanation (v5.0.0rc1) ────────────────────────────────────
+
+
+@router.post(
+    "/{fid}/counterfactual",
+    summary="Ask: what minimal code change would remove this vulnerability?",
+)
+async def post_counterfactual(
+    fid: int,
+    user: dict = Depends(get_current_user),
+    db: Database = Depends(get_db),
+):
+    """Generate a counterfactual explanation for a finding.
+
+    A counterfactual answers: *"If I change X, this vulnerability goes away."*
+    It is complementary to the standard AI explanation (which describes the
+    vulnerability) — the counterfactual tells the developer *exactly* what
+    they need to change and why that change is sufficient.
+
+    The response includes:
+    - ``counterfactual``: the minimal fix description in plain English
+    - ``patched_snippet``: a diff-style code suggestion (if evidence available)
+    - ``confidence``: how certain the model is that the fix is correct
+    - ``reasoning``: why the proposed change removes the vulnerability
+    """
+    finding = db.get_finding_by_id(fid)
+    if finding is None:
+        raise HTTPException(status_code=404, detail="finding not found")
+
+    # Quota guard
+    try:
+        within_limit, quota = db.check_quota(user["id"])
+        if not within_limit:
+            raise HTTPException(
+                status_code=429,
+                detail={
+                    "error": "daily_quota_exceeded",
+                    "tokens_used_today": quota["tokens_used_today"],
+                    "daily_limit": quota["daily_limit"],
+                },
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        pass
+
+    try:
+        from CORE.engines.explainer import ExplanationEngine as Explainer
+
+        explainer = Explainer()
+        result = explainer.generate_counterfactual(finding)
+        # Cache it back on the finding record
+        try:
+            db.update_finding_counterfactual(fid, result)
+        except Exception:
+            pass
+        return {"success": True, "finding_id": fid, **result}
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Counterfactual generation failed: {exc}",
+        ) from exc
+
+
 # ── Time-Travel history (v5.0.0 Phase A.2) ────────────────────────────────────
 
 

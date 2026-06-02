@@ -1,0 +1,164 @@
+{
+  "name": "acrqa",
+  "displayName": "ACR-QA — AI-Powered Code Review",
+  "description": "Run ACR-QA security scans, view findings, and get AI-generated fix suggestions directly in VS Code.",
+  "version": "0.1.0",
+  "publisher": "ahmed-145",
+  "license": "MIT",
+  "icon": "images/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ahmed-145/ACR-QA"
+  },
+  "homepage": "https://github.com/ahmed-145/ACR-QA",
+  "bugs": {
+    "url": "https://github.com/ahmed-145/ACR-QA/issues"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "keywords": [
+    "security",
+    "sast",
+    "code review",
+    "ai",
+    "vulnerability",
+    "bandit",
+    "semgrep"
+  ],
+  "activationEvents": [
+    "onCommand:acrqa.scanWorkspace",
+    "onCommand:acrqa.scanFile",
+    "workspaceContains:**/*.py",
+    "workspaceContains:**/*.js",
+    "workspaceContains:**/*.ts",
+    "workspaceContains:**/*.go"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "acrqa.scanWorkspace",
+        "title": "ACR-QA: Scan Workspace",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "acrqa.scanFile",
+        "title": "ACR-QA: Scan Current File",
+        "icon": "$(search)"
+      },
+      {
+        "command": "acrqa.showFindings",
+        "title": "ACR-QA: Show Findings Panel"
+      },
+      {
+        "command": "acrqa.clearDiagnostics",
+        "title": "ACR-QA: Clear Diagnostics"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "acrqa.scanFile",
+          "when": "resourceLangId =~ /python|javascript|typescript|go/",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "acrqa.scanFile",
+          "when": "resourceLangId =~ /python|javascript|typescript|go/"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "ACR-QA",
+      "properties": {
+        "acrqa.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "URL of your ACR-QA FastAPI server (local or remote)"
+        },
+        "acrqa.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "ACR-QA API key (leave blank to use JWT auth)"
+        },
+        "acrqa.groqApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Groq API key for standalone (serverless) mode — no ACR-QA server needed"
+        },
+        "acrqa.mode": {
+          "type": "string",
+          "enum": ["server", "standalone"],
+          "default": "server",
+          "description": "server: uses your ACR-QA instance. standalone: runs CLI locally."
+        },
+        "acrqa.severity": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+          "default": ["critical", "high", "medium"],
+          "description": "Minimum severity levels to show as diagnostics"
+        },
+        "acrqa.autoScanOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically scan the current file on save"
+        },
+        "acrqa.confirmedTierOnly": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show only P4 Confirmed Tier findings (96.4% precision, 0 noise)"
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "acrqa-panel",
+          "title": "ACR-QA",
+          "icon": "$(shield)"
+        }
+      ]
+    },
+    "views": {
+      "acrqa-panel": [
+        {
+          "id": "acrqa.findings",
+          "name": "Findings",
+          "icon": "$(bug)"
+        },
+        {
+          "id": "acrqa.runs",
+          "name": "Recent Runs",
+          "icon": "$(history)"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.24.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  }
+}
