@@ -659,6 +659,85 @@ Clarity: X"""
         cost_per_million = 0.59
         return (tokens / 1_000_000) * cost_per_million
 
+    def generate_counterfactual(self, finding: dict) -> dict:
+        """Generate a counterfactual explanation: what minimal change makes this NOT a vulnerability?
+
+        The counterfactual is separate from the standard AI explanation.  The standard
+        explanation describes *what* the vulnerability is; the counterfactual describes
+        the *minimal code change* that would eliminate it.  This is the developer-facing
+        "just tell me what to fix" answer.
+
+        Returns a dict with keys:
+            counterfactual   — plain-English description of the minimal fix
+            patched_snippet  — diff-style suggestion (may be empty if no snippet available)
+            confidence       — "high" | "medium" | "low"
+            reasoning        — why the fix is sufficient
+            status           — "success" | "error"
+        """
+        rule_id = finding.get("canonical_rule_id", finding.get("rule_id", "UNKNOWN"))
+        message = finding.get("message", "")
+        snippet = ""
+        evidence = finding.get("evidence", {})
+        if isinstance(evidence, dict):
+            snippet = evidence.get("snippet", "")
+
+        rule_def = self.rules_catalog.get(rule_id, {})
+        rule_context = ""
+        if rule_def:
+            rule_context = (
+                f"Rule: {rule_def.get('name', rule_id)}\n"
+                f"Rationale: {rule_def.get('rationale', '')}\n"
+                f"Standard remediation: {rule_def.get('remediation', '')}\n"
+            )
+
+        prompt = f"""You are a security engineer explaining how to fix a specific code vulnerability.
+
+{rule_context}
+Finding: {rule_id} — {message}
+{f"Vulnerable code snippet:{chr(10)}```{chr(10)}{snippet}{chr(10)}```" if snippet else ""}
+
+Answer EXACTLY in this JSON format (no markdown, no extra text):
+{{
+  "counterfactual": "<one or two sentences: what is the MINIMAL change that removes the vulnerability>",
+  "patched_snippet": "<the fixed version of the snippet above, or empty string if no snippet>",
+  "confidence": "<high|medium|low depending on how certain you are the fix is complete>",
+  "reasoning": "<one sentence: why this change is sufficient to eliminate the vulnerability>"
+}}"""
+
+        try:
+            import json as _json
+
+            client = self.key_pool.next_client()
+            completion = client.chat.completions.create(
+                messages=[{"role": "user", "content": prompt}],
+                model=self.model,
+                max_tokens=400,
+                temperature=0.1,
+            )
+            raw = completion.choices[0].message.content.strip()
+            # Strip markdown fences if present
+            if raw.startswith("```"):
+                raw = raw.split("```")[1].lstrip("json").strip()
+            parsed = _json.loads(raw)
+            return {
+                "counterfactual": parsed.get("counterfactual", ""),
+                "patched_snippet": parsed.get("patched_snippet", ""),
+                "confidence": parsed.get("confidence", "medium"),
+                "reasoning": parsed.get("reasoning", ""),
+                "status": "success",
+            }
+        except Exception as exc:
+            # Fallback: use rule catalog remediation
+            fallback = rule_def.get("remediation", "") if rule_def else ""
+            return {
+                "counterfactual": fallback or f"Fix the {rule_id} issue in this code.",
+                "patched_snippet": "",
+                "confidence": "low",
+                "reasoning": "Generated from rule catalog (LLM unavailable).",
+                "status": "error",
+                "error": str(exc),
+            }
+
     def get_fallback_explanation(self, finding):
         """
         Template-based fallback when LLM fails

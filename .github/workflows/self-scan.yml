@@ -1,0 +1,144 @@
+name: ACR-QA Self-Scan
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"   # Every Monday 03:00 UTC
+  push:
+    branches: [main]
+    paths:
+      - "CORE/**"
+      - "FRONTEND/**"
+      - "DATABASE/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write   # to commit badge JSON
+  security-events: write
+
+jobs:
+  self-scan:
+    name: Scan ACR-QA's own codebase
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: acrqa_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run migrations
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: acrqa_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+        run: alembic upgrade head
+
+      - name: Run ACR-QA on itself (CORE/ only — no AI to avoid rate limits)
+        id: scan
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: acrqa_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+        run: |
+          python3 CORE/main.py \
+            --target-dir CORE/ \
+            --repo-name "ACR-QA/self" \
+            --no-ai \
+            --json > /tmp/self_scan.json 2>&1 || true
+
+          # Parse counts
+          CRITICAL=$(python3 -c "
+          import json, sys
+          try:
+              data = json.load(open('/tmp/self_scan.json'))
+              findings = data.get('findings', [])
+              print(sum(1 for f in findings if f.get('severity','').upper() == 'CRITICAL'))
+          except Exception:
+              print(0)
+          ")
+          HIGH=$(python3 -c "
+          import json, sys
+          try:
+              data = json.load(open('/tmp/self_scan.json'))
+              findings = data.get('findings', [])
+              print(sum(1 for f in findings if f.get('severity','').upper() == 'HIGH'))
+          except Exception:
+              print(0)
+          ")
+          TOTAL=$(python3 -c "
+          import json, sys
+          try:
+              data = json.load(open('/tmp/self_scan.json'))
+              print(len(data.get('findings', [])))
+          except Exception:
+              print(0)
+          ")
+
+          echo "critical=$CRITICAL" >> "$GITHUB_OUTPUT"
+          echo "high=$HIGH"         >> "$GITHUB_OUTPUT"
+          echo "total=$TOTAL"       >> "$GITHUB_OUTPUT"
+
+          # Determine badge colour
+          if [ "$CRITICAL" -gt 0 ]; then
+            COLOR="red"
+          elif [ "$HIGH" -gt 0 ]; then
+            COLOR="orange"
+          else
+            COLOR="22c55e"
+          fi
+          echo "color=$COLOR" >> "$GITHUB_OUTPUT"
+
+      - name: Upload SARIF (if generated)
+        if: hashFiles('DATA/outputs/findings.sarif') != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: DATA/outputs/findings.sarif
+
+      - name: Write badge JSON
+        run: |
+          mkdir -p docs
+          cat > docs/self-scan-badge.json <<EOF
+          {
+            "schemaVersion": 1,
+            "label": "self-scan",
+            "message": "${{ steps.scan.outputs.critical }} critical / ${{ steps.scan.outputs.high }} high",
+            "color": "${{ steps.scan.outputs.color }}",
+            "namedLogo": "dependabot"
+          }
+          EOF
+
+      - name: Commit badge JSON
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "ci: update self-scan badge [skip ci]"
+          file_pattern: docs/self-scan-badge.json
+          commit_user_name: github-actions[bot]
+          commit_user_email: github-actions[bot]@users.noreply.github.com

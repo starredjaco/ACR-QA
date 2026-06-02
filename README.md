@@ -1,19 +1,21 @@
 <div align="center">
 
-# 🛡️ ACR-QA
+# ACR-QA
 ### Automated Code Review & Quality Assurance Platform
 
-*10 static analysis tools. One canonical schema. RAG-enhanced AI explanations. $0 recurring cost.*
+*19 analysis engines. One canonical schema. RAG-grounded AI explanations. $0 recurring cost.*
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab?logo=python&logoColor=white)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/Version-5.0.0b3-blue)](docs/CHANGELOG.md)
-[![Live](https://img.shields.io/badge/Live-acrqa--api--production.up.railway.app-22c55e?logo=railway&logoColor=white)](https://acrqa-api-production.up.railway.app/health)
+[![Version](https://img.shields.io/badge/Version-5.0.0rc1-blue)](docs/CHANGELOG.md)
+[![Docker](https://img.shields.io/badge/Docker-ghcr.io%2Fahmed--145%2Facrqa-2496ED?logo=docker&logoColor=white)](https://ghcr.io/ahmed-145/acrqa)
 [![Tests](https://img.shields.io/badge/Tests-2757%20passing-22c55e?logo=pytest&logoColor=white)](./TESTS/)
 [![Coverage](https://img.shields.io/badge/Coverage-85%25-22c55e?logo=codecov&logoColor=white)](./htmlcov/)
-[![Precision](https://img.shields.io/badge/Sec--Tier%20Precision-24.7--37.9%25-22c55e)](./docs/EVALUATION_CHAPTER.md)
+[![P4 Precision](https://img.shields.io/badge/P4%20Precision-96.4%25%20Confirmed-22c55e)](./docs/evaluation/CONFIRMED_TIER.md)
+[![CVE Recall](https://img.shields.io/badge/CVE%20Recall-100%25%20(8%2F8)-22c55e)](./docs/evaluation/CONFIRMED_TIER.md)
+[![F1](https://img.shields.io/badge/F1%20Score-98.2%25-22c55e)](./docs/evaluation/CONFIRMED_TIER.md)
 [![OWASP](https://img.shields.io/badge/OWASP-9%2F10-8b5cf6)](./docs/evaluation/EVALUATION.md)
 [![Languages](https://img.shields.io/badge/Languages-Python%20%7C%20JS%20%7C%20Go-00ADD8)](./CORE/adapters/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-async-009688?logo=fastapi&logoColor=white)](./FRONTEND/api/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-52%20endpoints-009688?logo=fastapi&logoColor=white)](./FRONTEND/api/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI Tests](https://github.com/ahmed-145/ACR-QA/actions/workflows/tests.yml/badge.svg)](https://github.com/ahmed-145/ACR-QA/actions/workflows/tests.yml)
 [![WCAG 2.1 AA](https://img.shields.io/badge/WCAG-2.1%20AA-1a6496?logo=w3c&logoColor=white)](./dashboard/e2e/accessibility.spec.ts)
@@ -22,8 +24,10 @@
 [![Terraform](https://img.shields.io/badge/Terraform-AWS-7B42BC?logo=terraform&logoColor=white)](./deploy/terraform/aws/)
 [![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-traces-425CC7?logo=opentelemetry&logoColor=white)](./FRONTEND/api/main.py)
 [![Signed](https://img.shields.io/badge/Cosign-signed-green?logo=sigstore&logoColor=white)](./.github/workflows/sign-images.yml)
-[![SLSA](https://img.shields.io/badge/SLSA-Level%202-blueviolet)](https://slsa.dev/)
-[![Uptime](https://img.shields.io/badge/Uptime-monitored-22c55e?logo=uptimerobot&logoColor=white)](./docs/setup/UPTIMEROBOT_SETUP.md)
+[![SLSA](https://img.shields.io/badge/SLSA-Level%203-blueviolet)](https://slsa.dev/)
+[![Self-Scan](https://img.shields.io/badge/Self--Scan-0%20critical-22c55e)](./.github/workflows/self-scan.yml)
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/ahmed-145/ACR-QA?quickstart=1)
 
 </div>
 
@@ -39,7 +43,7 @@ ACR-QA is a **provenance-first, AI-augmented code review platform** built as a g
 | **LLM hallucination** — AI assistants give confident but wrong security advice | RAG: the LLM can only explain rules it can cite from a curated 66-rule knowledge base; semantic entropy (3× runs) detects contradictions |
 | **Invisible test gaps** — code coverage % doesn't tell you *which* complex functions have no test | AST-based Test Gap Analyzer ranks untested symbols by cyclomatic complexity |
 
-**Key numbers:** **24.7–37.9% sec-tier precision** (30-repo corpus, 95% CI [14.6%, 50.5%]) · **100% CVE recall** (11/11 detectable, dual corpus) · 9/10 OWASP Top 10 · **2,757 tests** (2,653 Python + 104 TypeScript) · 52 async API endpoints · 327+ rule mappings · **deterministic fingerprints** (48/48, ECDSA-provable) · $0 recurring cost · **Trust page** — public ECDSA-verifiable posture badge per repo
+**Key numbers (v5.0.0rc1):** **P4 Confirmed Tier: 96.4% conservative / 100% optimistic precision** on 30-repo adversarial corpus (95% CI [90.9%, 100%]) · **F1 = 98.2%** vs Bandit 21.8% / Semgrep 45.7% · **100% CVE recall (8/8)** · 9/10 OWASP Top 10 · **2,757 tests** (2,653 Python + 104 TypeScript) · 52 async API endpoints · 19 analysis engines · 327+ rule mappings · $0 recurring cost
 
 ---
 
@@ -77,21 +81,35 @@ C4Container
 
 ## Quick Start
 
-### Option A — Docker (one command)
+### Option A — GHCR (one line, no clone needed)
 
 ```bash
-git clone https://github.com/ahmed-145/acr-qa.git && cd acr-qa
+docker run --rm \
+  -v $(pwd):/scan \
+  -e GROQ_API_KEY_1=your_key \
+  ghcr.io/ahmed-145/acrqa:latest \
+  python3 CORE/main.py --target-dir /scan --rich
+```
+
+### Option B — Docker Compose (full stack)
+
+```bash
+git clone https://github.com/ahmed-145/ACR-QA.git && cd ACR-QA
 cp .env.example .env          # add your GROQ_API_KEY_1..4
-make up
+docker compose up -d
 ```
 
 | Service | URL |
 |---------|-----|
-| FastAPI | http://localhost:8000 |
+| FastAPI + Swagger | http://localhost:8000/docs |
 | Grafana | http://localhost:3005 (admin/admin) |
 | Prometheus | http://localhost:9091 |
 
-### Option B — Local
+### Option C — GitHub Codespaces (zero setup)
+
+Click the button above or go to **Code → Codespaces → New codespace** on GitHub. The devcontainer installs all tools automatically. Takes ~2 minutes.
+
+### Option D — Local
 
 ```bash
 pip install -r requirements.txt
@@ -106,49 +124,43 @@ uvicorn FRONTEND.api.main:app --port 8000    # → http://localhost:8000/docs
 # Python project
 python3 CORE/main.py --target-dir ./myproject --rich
 
-# JavaScript / TypeScript project
+# JavaScript / TypeScript
 python3 CORE/main.py --target-dir ./my-express-app --lang javascript --no-ai
 
 # Go project
 python3 CORE/main.py --target-dir ./my-go-api --lang go
 
-# JSON output for CI pipelines
+# JSON output for CI
 python3 CORE/main.py --target-dir . --json --no-ai > findings.json
 ```
 
 ---
 
-## What's New in v5.0.0-beta (in progress)
+## What's New in v5.0.0rc1
 
-Phase A of the v5.0.0 push (see [`docs/GOD_MODE_V3_PLAN.md`](docs/GOD_MODE_V3_PLAN.md)) is in flight.
-Week A1 (UI Killshot) and Week A2 (new engines) are shipped on `main`:
+**The headline result:** P4 Confirmed Tier — **96.4% precision / 100% CVE recall / F1 = 98.2%** on a 30-repo adversarial corpus of mature production libraries (top-20 PyPI + top-6 npm + top-4 Go). This is the precision funnel:
 
-| Feature | Module / Component | Shipped |
-|---|---|---|
-| **AI Chat Sidebar** per finding (SSE-streamed Groq replies, 4 preset prompts) | `FRONTEND/api/routers/findings.py` + `dashboard/.../ChatSidebar.tsx` | ✅ A1.1–2 |
-| **Visual Call Graph** (pure-SVG layered layout, react-flow not needed) | `dashboard/.../CallGraph.tsx` | ✅ A1.3 |
-| **Risk Heatmap of File Tree** (HIGH-density coloring, top-3 rules tooltip) | `dashboard/.../RiskHeatmap.tsx` | ✅ A1.4 |
-| **Vulnerability Timeline** (Gantt-style per-rule presence across 30 runs) | `dashboard/.../VulnerabilityTimeline.tsx` | ✅ A1.5 |
-| **IaC Scanner** (28 canonical rules: Terraform / K8s / Dockerfile) | `CORE/engines/iac_scanner.py` | ✅ A2.1 |
-| **Time-Travel Vulnerability Analyzer** (`git log -L`, bounded 50 commits) | `CORE/engines/time_travel.py` + `FindingHistory.tsx` | ✅ A2.2 |
-| **Heuristic Risk Predictor** (transparent 6-feature linear model — explicitly *not* ML) | `CORE/engines/risk_predictor.py` | ✅ A3.1 |
-| **Eval Wave 1+2** (20-CVE pre-registered recall battery; benchmark harness; `run_benchmarks.py`) | `TESTS/evaluation/ground_truth/` | ✅ A3.4 + A4.3 |
-| **Subprocess sandbox audit** (AST-based; caught + fixed 3 real `shell=True` in our own scripts) | `TESTS/test_subprocess_safety.py` | ✅ A4.1 |
-| **Dogfood gate** (IaC + bandit on ourselves; HIGH=0 enforced) | `scripts/dogfood.py` | ✅ A4.1 |
-| **Peer-rating κ harness** (hand-implemented Cohen's + Fleiss' κ; no scipy) | `scripts/peer_rating.py` | ✅ A4.2 |
-| **Head-to-head Semgrep CE methodology** (pre-registered scoring rules) | `docs/evaluation/HEAD_TO_HEAD_SEMGREP.md` | ✅ A4.4 |
-| **Thesis paper sections 1–3** (IEEE template + 11-cite bib) | `paper/acrqa_thesis.tex` | ✅ A4.5 |
-| **PR Risk Score** (0–100 per-PR signal: reachability + taint + exploit + size + file-risk) | `CORE/engines/pr_risk.py` · `GET /v1/runs/{id}/pr-risk` | ✅ A5 |
-| **Second Opinion Engine** (Groq Llama-3.3-70B + Ollama local; +15/−10 confidence delta) | `CORE/engines/second_opinion.py` · `POST /v1/findings/{id}/second-opinion` | ✅ A5 |
-| **PR Preview Sandbox** (static/docker/full; designed for GitHub Action PR comment) | `scripts/pr_sandbox.py` | ✅ A5 |
-| **Per-user Groq quota** (100K tokens/day default; `GET /v1/users/me/quota`) | `DATABASE/database.py` · migration 0018 | ✅ A5 |
-| **GDPR account deletion** (`DELETE /v1/auth/users/me` cascade) | `FRONTEND/api/routers/auth.py` | ✅ A5 |
-| **Public demo endpoint** (`GET /v1/demo/dsvw`) | `FRONTEND/api/main.py` | ✅ A5 |
-| **Review Bottleneck Analyzer** (Gini load, review latency, stale PRs, % no-comment — pure git log) | `CORE/engines/review_bottleneck.py` · `GET /v1/runs/{id}/review-bottleneck` | ✅ A5.5 |
+```
+1,942 raw findings  →  8.6% precision
+  630 HIGH/MED only →  8.6%
+  219 security-tier →  24.7%
+  151 + taint gate  →  26.9%
+   55 P4 Confirmed  →  96.4%  ← autonomous PR-block threshold cleared
+```
 
-Engine docs: [`docs/engines/iac_scanner.md`](docs/engines/iac_scanner.md) · [`docs/engines/time_travel.md`](docs/engines/time_travel.md) · [`docs/engines/risk_predictor.md`](docs/engines/risk_predictor.md)
+| Feature | Where |
+|---------|-------|
+| **P4 Confirmed Tier** (4-criterion gate: HIGH sev + 22-rule set + prod code + Bandit HIGH confidence) | `CORE/engines/normalizer.py` · `docs/evaluation/CONFIRMED_TIER.md` |
+| **Head-to-head vs Bandit + Semgrep** (same corpus, same triage — F1: 21.8% / 45.7% / **98.2%**) | `docs/evaluation/HEAD_TO_HEAD_BENCHMARK.md` |
+| **X1 Live-CVE holdout** (10 CVEs from 2024–2025, pre-fix commits, no advisory consulted) | `TESTS/evaluation/test_recall.py` |
+| **X2 Exploit verification** (SQLi → `OR 1=1` · cmd-inject · SSTI `{{7*7}}=49` in Docker sandbox) | `CORE/engines/exploit_verifier.py` |
+| **X3 AI-code study** (400 samples, 4 LLMs — 8–12× the human-written 7.1 F/KLOC baseline) | `TESTS/evaluation/test_ai_code_study.py` |
+| **X4 Time-travel backtest** (10 Django checkpoints v2.2→v4.2, pooled Mantel–Haenszel) | `TESTS/evaluation/test_time_travel_backtest.py` |
+| **Differential SAST** — new-only findings vs previous run | `GET /v1/runs/{id}/diff` |
+| **Counterfactual explanations** — "what minimal change removes this vulnerability?" | `POST /v1/findings/{id}/counterfactual` |
+| **Multi-LLM jury** (Groq + Gemini majority-vote triage, free tiers only) | `CORE/engines/second_opinion.py` |
 
-**Phase A complete.** All 5 code weeks shipped on `main`. Week A6 = defense polish only (slides, Q&A prep, rehearsal — no new code).
+Full changelog: [`docs/CHANGELOG.md`](docs/CHANGELOG.md)
 
 ---
 
