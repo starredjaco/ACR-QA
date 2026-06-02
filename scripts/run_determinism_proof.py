@@ -27,7 +27,6 @@ import json
 import os
 import subprocess
 import sys
-import tempfile
 from datetime import datetime, timezone  # noqa: UP017
 from pathlib import Path
 
@@ -83,7 +82,7 @@ def run_scan(target_dir: Path, env_override: dict | None = None) -> list[dict]:
             return parsed
         return parsed.get("findings", [])
     except json.JSONDecodeError:
-        print(f"  [WARN] could not parse scan output as JSON", flush=True)
+        print("  [WARN] could not parse scan output as JSON", flush=True)
         return []
 
 
@@ -350,7 +349,7 @@ def run_proof(target_dir: Path) -> dict:
     print(f"  → {OUTPUT_MD.relative_to(ROOT)}", flush=True)
 
     _update_eval_summary(results)
-    print(f"  → eval_summary.json updated", flush=True)
+    print("  → eval_summary.json updated", flush=True)
 
     return results
 
@@ -372,7 +371,7 @@ def _write_markdown(r: dict) -> None:
         "",
         "## Summary",
         "",
-        f"| Test | Result |",
+        "| Test | Result |",
         "|------|--------|",
         f"| Finding fingerprint identity (run1 vs run2) | **{_check(fd['is_deterministic'])}** |",
         f"| Both ECDSA-P256 signatures valid (verifiability) | **{_check(ed['both_signatures_valid'])}** |",
@@ -382,9 +381,9 @@ def _write_markdown(r: dict) -> None:
         "",
         "## Finding Determinism",
         "",
-        f"The same directory was scanned twice. Both runs produced the same set of findings.",
+        "The same directory was scanned twice. Both runs produced the same set of findings.",
         "",
-        f"| Metric | Value |",
+        "| Metric | Value |",
         "|--------|-------|",
         f"| Run 1 findings | {fd['run1_count']} |",
         f"| Run 2 findings | {fd['run2_count']} |",
@@ -414,7 +413,7 @@ def _write_markdown(r: dict) -> None:
         "",
         ed["note"],
         "",
-        f"| Metric | Value |",
+        "| Metric | Value |",
         "|--------|-------|",
         f"| Algorithm | {ed['algorithm']} |",
         f"| Signature 1 (first 32 hex chars) | `{ed['sig1_hex']}` |",
@@ -427,7 +426,7 @@ def _write_markdown(r: dict) -> None:
         "",
         pd_["note"],
         "",
-        f"| Metric | Value |",
+        "| Metric | Value |",
         "|--------|-------|",
         f"| Timestamp run 1 | `{pd_['timestamp_run1']}` |",
         f"| Timestamp run 2 | `{pd_['timestamp_run2']}` |",

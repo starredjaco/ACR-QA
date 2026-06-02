@@ -26,11 +26,9 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 import yaml
 
@@ -302,9 +300,8 @@ def run_scan(repo: dict, repo_path: Path, timeout: int = 600) -> list[dict]:
                 findings = parsed.get("findings", [])
         except json.JSONDecodeError:
             # stdout wasn't JSON — fall back to per-pid findings file written by the scan
-            import os as _os
 
-            pid_file = ROOT / f"DATA/outputs/findings_pid{result.returncode}.json"
+            ROOT / f"DATA/outputs/findings_pid{result.returncode}.json"
             # Try to find the most recently written pid file
             data_dir = ROOT / "DATA/outputs"
             if data_dir.exists():
@@ -642,7 +639,6 @@ def run_benchmark(
 
 def _apply_corroboration(triaged: list[dict]) -> list[dict]:
     """Lever 2: promote NEEDS_REVIEW to AUTO_TP when same (repo, file, line) has AUTO_TP neighbor."""
-    from collections import defaultdict
 
     loc_has_tp: set[tuple] = set()
     for t in triaged:

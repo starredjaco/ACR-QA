@@ -159,6 +159,10 @@ class Database:
         """Get run metadata (alias for get_analysis_run)"""
         return self.get_analysis_run(run_id)
 
+    def get_run_by_id(self, run_id: int) -> dict | None:
+        """Return a single run row by primary key, or None if not found."""
+        return self.get_analysis_run(run_id)
+
     def get_recent_runs(self, limit=10):
         """Get recent analysis runs (alias for list_analysis_runs)"""
         return self.list_analysis_runs(limit)
@@ -370,6 +374,23 @@ class Database:
                 finding_id,
             ),
         )
+
+    def update_finding_counterfactual(self, finding_id: int, result: dict) -> None:
+        """Persist a counterfactual explanation onto the finding row.
+
+        Stores the result of ExplanationEngine.generate_counterfactual() in
+        the ai_explanation JSON column under the 'counterfactual' key so it
+        is returned alongside the standard explanation.
+        """
+        query = """
+            UPDATE findings
+            SET ai_explanation = COALESCE(ai_explanation, '{}'::jsonb)
+                              || jsonb_build_object('counterfactual', %s::jsonb)
+            WHERE id = %s
+        """
+        import json as _json
+
+        self.execute(query, (_json.dumps(result), finding_id))
 
     def update_finding_iac(self, finding_id: int, provider: str, resource: str = "") -> None:
         """Persist IaC provider/resource metadata for an IaC finding (v5.0.0 A2)."""

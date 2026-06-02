@@ -1,5 +1,5 @@
 # =============================================================================
-# ACR-QA Multi-Stage Dockerfile  v3.8.0
+# ACR-QA Multi-Stage Dockerfile  v5.0.0rc1
 # Stage 1 (node-builder)  — build React dashboard with Vite
 # Stage 2 (py-builder)    — install Python deps into a venv
 # Stage 3 (go-tools)      — pre-built gosec + staticcheck binaries (no Go compile)
@@ -65,7 +65,7 @@ FROM python:3.11-slim AS runtime
 
 LABEL org.opencontainers.image.title="ACR-QA" \
       org.opencontainers.image.description="Automated Code Review & Quality Assurance" \
-      org.opencontainers.image.version="3.8.0" \
+      org.opencontainers.image.version="5.0.0rc1" \
       org.opencontainers.image.source="https://github.com/ahmed-145/ACR-QA"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
