@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "label": "self-scan",
+  "message": "0 critical / 0 high",
+  "color": "22c55e",
+  "namedLogo": "dependabot"
+}
