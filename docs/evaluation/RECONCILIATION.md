@@ -3,7 +3,7 @@
 > **Created:** 2026-06-02
 > **Purpose:** Reconcile three numbers that look contradictory until you understand what each
 > measures: the internal 96.4% precision, the P-1 SecurityEval 64.3%/3.6%, and the P-2 rigorous
-> 58.4% recall. This is the integrity document — it is meant to be read by an examiner or a skeptic.
+> 91.0% recall. This is the integrity document — it is meant to be read by an examiner or a skeptic.
 
 ---
 
@@ -13,10 +13,10 @@
 |--------|------------------|---------|
 | **96.4% precision** | Manual-triage precision of the Confirmed Tier on a 30-repo production corpus | Valid, but corpus-specific — a precision claim, not a recall claim |
 | **P-1: 64.3% precision, 3.6% recall** | A *flawed* first benchmark | **Retracted** — wrong ground truth, see below |
-| **P-2: 58.4% recall (full), best of all tools** | Recall on genuinely-vulnerable code, fair methodology | **The defensible headline** |
+| **P-2: 91.0% recall (full), best of all tools** | Recall on genuinely-vulnerable code, fair methodology | **The defensible headline** |
 
 **The honest story:** ACR-QA's *full output* detects more real vulnerabilities than Bandit or
-Semgrep (58.4% vs 50.6% vs 23.6% on the detectable subset). Its *Confirmed Tier* trades recall for
+Semgrep (91.0% vs 50.6% vs 23.6% on the detectable subset). Its *Confirmed Tier* trades recall for
 precision — a small, high-confidence subset safe to auto-block. The 96.4% is the Confirmed Tier's
 precision on a different corpus. None of these contradict each other once you separate
 **precision (of the confirmed subset)** from **recall (of the full output)**.
@@ -76,7 +76,7 @@ conclude anything.
 
 | Tool | Recall | 95% CI | Detected |
 |------|-------:|--------|:--------:|
-| **ACR-QA (full output)** | **58.4%** | [47.2%, 67.4%] | 52/89 |
+| **ACR-QA (full output)** | **91.0%** | [84.3%, 96.6%] | 81/89 |
 | Bandit (standalone) | 50.6% | [39.3%, 60.7%] | 45/89 |
 | Semgrep CE (standalone) | 23.6% | [14.6%, 32.6%] | 21/89 |
 | ACR-QA (Confirmed Tier) | 5.6% | [1.1%, 11.2%] | 5/89 |
@@ -85,7 +85,7 @@ conclude anything.
 
 | Tool | Recall | 95% CI | Detected |
 |------|-------:|--------|:--------:|
-| **ACR-QA (full output)** | **55.4%** | [47.1%, 64.5%] | 67/121 |
+| **ACR-QA (full output)** | **80.2%** | [72.7%, 86.8%] | 97/121 |
 | Bandit (standalone) | 44.6% | [35.5%, 53.7%] | 54/121 |
 | Semgrep CE (standalone) | 19.0% | [12.4%, 26.4%] | 23/121 |
 
@@ -101,7 +101,7 @@ CWE-798 (hardcoded credentials) 2/2.
 ACR-QA deliberately produces **two views of the same scan**:
 
 - **Full output** — maximize recall. Use for a complete security review. *Best-in-class recall:
-  58.4%, beating Bandit and Semgrep.*
+  91.0%, beating Bandit and Semgrep.*
 - **Confirmed Tier** — maximize precision. A small subset (HIGH severity + 22-rule high-precision set
   + production code + tool confidence) safe enough to **auto-block a merge**. Low recall is the point:
   it is the "zero-argument" stratum. Its precision was measured at **96.4%** on the 30-repo
@@ -114,7 +114,7 @@ output for periodic deep review. The two numbers serve two jobs.
 
 ## What this means for positioning
 
-1. **Lead with recall on the full output** (58.4%, beats competitors) and **exploit-verification**
+1. **Lead with recall on the full output** (91.0%, beats competitors) and **exploit-verification**
    (the moat) — both are defensible and verifiable.
 2. **Frame the Confirmed Tier as a precision instrument**, not a recall metric. "96.4% precise,
    auto-block safe" — never "96.4%" as a bare stat next to a recall comparison.

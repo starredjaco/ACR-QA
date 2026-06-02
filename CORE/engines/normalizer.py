@@ -190,6 +190,22 @@ RULE_MAPPING = {
     "acrqa-redos-user-pattern": "SECURITY-051",  # CWE-730
     "acrqa-reflective-xss": "SECURITY-045",  # CWE-079
     "acrqa-jwt-signature-bypass": "SECURITY-047",  # CWE-347
+    # ── v7 gap-closing rules (2026-06-03) ──
+    "acrqa-http-response-splitting": "SECURITY-068",  # CWE-113
+    "acrqa-traceback-exposure": "SECURITY-069",  # CWE-209
+    "acrqa-empty-db-password": "SECURITY-070",  # CWE-521
+    "acrqa-empty-db-uri-password": "SECURITY-070",  # CWE-521
+    "acrqa-hardcoded-salt": "SECURITY-071",  # CWE-760
+    "acrqa-loop-no-increment": "SECURITY-072",  # CWE-835
+    "acrqa-nosql-injection-dynamo": "SECURITY-073",  # CWE-943
+    "acrqa-openssl-no-verify": "SECURITY-013",  # CWE-295 (reuse existing)
+    "acrqa-ftp-cleartext": "SECURITY-074",  # CWE-319
+    "acrqa-hardcoded-apikey-assignment": "SECURITY-005",  # CWE-321
+    "acrqa-ssl-wrap-socket": "SECURITY-014",  # CWE-327
+    "acrqa-sha256-password-no-hmac": "SECURITY-009",  # CWE-327
+    "acrqa-os-system-fstring": "SECURITY-021",  # CWE-116/CWE-078
+    "acrqa-path-traversal-osremove": "SECURITY-049",  # CWE-022
+    "acrqa-dynamic-exec": "SECURITY-001",  # CWE-094
     # ── Bugs found in god-mode live test (2026-03-31) ──
     "bare-except": "EXCEPT-001",  # Semgrep custom rule — bare except clause
     "too-many-parameters": "SOLID-001",  # Semgrep custom rule — too many function params

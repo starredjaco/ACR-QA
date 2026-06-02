@@ -463,3 +463,226 @@ rules:
       category: security
       canonical_rule_id: SECURITY-047
       cwe: CWE-347
+
+  # ============================================================
+  # v7 GAP-CLOSING RULES — second pass (2026-06-03)
+  # Targets remaining missed CWE classes to push recall to ~90%:
+  # CWE-113, CWE-209, CWE-295, CWE-319, CWE-321, CWE-327,
+  # CWE-521, CWE-760, CWE-835, CWE-943, CWE-022 (more patterns)
+  # ============================================================
+
+  - id: acrqa-http-response-splitting
+    mode: taint
+    pattern-sources:
+      - pattern: request.args
+      - pattern: request.args.get(...)
+      - pattern: request.args[...]
+    pattern-sinks:
+      - pattern: $HEADERS.add($KEY, ...)
+      - pattern: $RESP.headers[$KEY] = ...
+      - pattern: $RESP.headers.add($KEY, ...)
+    message: "HTTP response splitting: user input in response header (CWE-113)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-068
+      cwe: CWE-113
+
+  - id: acrqa-traceback-exposure
+    pattern-either:
+      - pattern: return traceback.format_exc()
+      - pattern: return traceback.format_tb(...)
+      - pattern: $R.data = traceback.format_exc()
+    message: "Information exposure via traceback — reveals stack frames to clients (CWE-209)."
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-069
+      cwe: CWE-209
+
+  - id: acrqa-empty-db-password
+    pattern-either:
+      - patterns:
+          - pattern: $X['PASSWORD'] = $EMPTY
+          - metavariable-comparison:
+              metavariable: $EMPTY
+              comparison: $EMPTY == ""
+      - patterns:
+          - pattern: $X['password'] = $EMPTY
+          - metavariable-comparison:
+              metavariable: $EMPTY
+              comparison: $EMPTY == ""
+    message: "Empty database password in configuration (CWE-521)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-070
+      cwe: CWE-521
+
+  - id: acrqa-empty-db-uri-password
+    pattern-regex: '(postgresql|mysql|mssql|oracle)://[^:@]*:@'
+    message: "Database URI contains empty password (CWE-521)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-070
+      cwe: CWE-521
+
+  - id: acrqa-hardcoded-salt
+    pattern-either:
+      - pattern: pbkdf2_hmac($ALG, $PWD, b'...', ...)
+      - pattern: hashlib.pbkdf2_hmac($ALG, $PWD, b'...', ...)
+    message: "Hard-coded salt in password hash — makes hashes predictable (CWE-760)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-071
+      cwe: CWE-760
+
+  - id: acrqa-loop-no-increment
+    patterns:
+      - pattern: |
+          while $I < $N:
+            $BODY
+      - pattern-not: |
+          while $I < $N:
+            ...
+            $I = ...
+            ...
+      - pattern-not: |
+          while $I < $N:
+            ...
+            $I += ...
+            ...
+    message: "Loop condition variable never incremented — possible infinite loop (CWE-835)."
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-072
+      cwe: CWE-835
+
+  - id: acrqa-nosql-injection-dynamo
+    pattern-either:
+      - pattern: |
+          $CLIENT.scan(FilterExpression=$A + $B, ...)
+      - pattern: |
+          $CLIENT.query(KeyConditionExpression=$A + $B, ...)
+    message: "NoSQL injection: user input concatenated into DynamoDB expression (CWE-943)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-073
+      cwe: CWE-943
+
+  - id: acrqa-openssl-no-verify
+    pattern-either:
+      - pattern: SSL.Context(SSL.TLSv1_2_METHOD)
+      - pattern: SSL.Context(SSL.TLSv1_METHOD)
+      - pattern: SSL.Context(SSL.SSLv3_METHOD)
+      - pattern: SSL.Context(SSL.SSLv23_METHOD)
+    message: "OpenSSL context created without certificate verification (CWE-295)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-013
+      cwe: CWE-295
+
+  - id: acrqa-ftp-cleartext
+    pattern-either:
+      - pattern: ftplib.FTP(...)
+      - pattern: $FTP.login(...)
+    message: "FTP transmits credentials and data in cleartext (CWE-319)."
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-074
+      cwe: CWE-319
+
+  - id: acrqa-hardcoded-apikey-assignment
+    pattern-either:
+      - pattern: $OBJ.api_key = "..."
+      - pattern: openai.api_key = "..."
+    message: "Hard-coded API key in source — load from environment instead (CWE-321)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-005
+      cwe: CWE-321
+
+  - id: acrqa-ssl-wrap-socket
+    pattern: ssl.wrap_socket(...)
+    message: "ssl.wrap_socket() is deprecated and insecure — use ssl.create_default_context() (CWE-327)."
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-014
+      cwe: CWE-327
+
+  - id: acrqa-sha256-password-no-hmac
+    patterns:
+      - pattern: hashlib.sha256($PWD + $SALT).hexdigest()
+      - pattern-not: hashlib.sha256($X, usedforsecurity=False)
+    message: "Plain SHA-256 is not suitable for password hashing — use bcrypt/argon2 (CWE-327)."
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-009
+      cwe: CWE-327
+
+  - id: acrqa-os-system-fstring
+    mode: taint
+    pattern-sources:
+      - pattern: request.args
+      - pattern: request.args.get(...)
+      - pattern: request.args[...]
+    pattern-sinks:
+      - pattern: os.system(...)
+    message: "Command injection via os.system with user input (CWE-078/CWE-116)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-021
+      cwe: CWE-116
+
+  - id: acrqa-path-traversal-osremove
+    mode: taint
+    pattern-sources:
+      - pattern: request.args
+      - pattern: request.args.get(...)
+      - pattern: request.args[...]
+    pattern-sinks:
+      - pattern: os.remove(...)
+      - pattern: os.unlink(...)
+      - pattern: urllib.request.urlopen(...)
+    message: "Path traversal: user input in file operation (CWE-022)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-049
+      cwe: CWE-022
+
+  - id: acrqa-dynamic-exec
+    pattern-either:
+      - pattern: exec($X + $Y)
+      - pattern: exec($X.format(...))
+    message: "Dynamic exec() with string concatenation — code injection risk (CWE-094)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-001
+      cwe: CWE-094

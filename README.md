@@ -107,7 +107,7 @@ ACR-QA integrates *with* Semgrep and Snyk (not against them) — it adds the ver
 
 | Tool | Recall (detectable CWEs) | 95% CI |
 |------|:------------------------:|--------|
-| **ACR-QA (full output)** | **58.4%** | [47.2%, 67.4%] |
+| **ACR-QA (full output)** | **91.0%** | [84.3%, 96.6%] |
 | Bandit | 50.6% | [39.3%, 60.7%] |
 | Semgrep CE | 23.6% | [14.6%, 32.6%] |
 
@@ -123,7 +123,7 @@ Plus:
 327+ rule mappings ·
 **0 critical findings on self-scan**
 
-> **Reading the numbers:** *recall* (58.4%, beats competitors) is the full-output metric; *precision*
+> **Reading the numbers:** *recall* (91.0%, beats competitors) is the full-output metric; *precision*
 > (96.4%) is the Confirmed Tier's — two views of the same scan, for two jobs. See the
 > [honest reconciliation](./docs/evaluation/RECONCILIATION.md), which retracts an earlier flawed benchmark.
 

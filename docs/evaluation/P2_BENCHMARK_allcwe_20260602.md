@@ -1,6 +1,6 @@
 # ACR-QA P-2 Rigorous Benchmark — Recall on Genuinely-Vulnerable Code
 
-**Generated:** 2026-06-02 17:48 UTC
+**Generated:** 2026-06-02 22:24 UTC
 **ACR-QA version:** v5.0.0b1
 **Corpus:** SecurityEval `Testcases_Insecure_Code/` — curated, genuinely-vulnerable samples
 **CWE scope:** all CWE classes (121 files)
@@ -19,7 +19,7 @@ insecure corpus where every file is genuinely vulnerable, runs ACR-QA's *full* d
 
 | Tool | Recall | 95% CI | Detected / Total |
 |------|-------:|--------|:----------------:|
-| **ACR-QA (full output)** | **71.1%** | [62.8%, 79.3%] | 86/121 |
+| **ACR-QA (full output)** | **80.2%** | [72.7%, 86.8%] | 97/121 |
 | **ACR-QA (Confirmed Tier)** | **5.0%** | [1.7%, 9.1%] | 6/121 |
 | Bandit (standalone) | 44.6% | [35.5%, 53.7%] | 54/121 |
 | Semgrep CE (standalone) | 19.0% | [12.4%, 26.4%] | 23/121 |
@@ -31,7 +31,7 @@ insecure corpus where every file is genuinely vulnerable, runs ACR-QA's *full* d
 | CWE | Detected | Total |
 |-----|:--------:|:-----:|
 | CWE-020 | 6 | 6 |
-| CWE-022 | 3 | 4 |
+| CWE-022 | 4 | 4 |
 | CWE-078 | 2 | 2 |
 | CWE-079 | 3 | 3 |
 | CWE-080 | 1 | 1 |
@@ -40,13 +40,13 @@ insecure corpus where every file is genuinely vulnerable, runs ACR-QA's *full* d
 | CWE-094 | 2 | 3 |
 | CWE-095 | 1 | 1 |
 | CWE-099 | 0 | 1 |
-| CWE-113 | 0 | 2 |
+| CWE-113 | 2 | 2 |
 | CWE-116 | 1 | 2 |
 | CWE-117 | 3 | 3 |
 | CWE-1204 | 1 | 1 |
 | CWE-193 | 0 | 1 |
 | CWE-200 | 1 | 1 |
-| CWE-209 | 0 | 1 |
+| CWE-209 | 1 | 1 |
 | CWE-215 | 1 | 1 |
 | CWE-250 | 1 | 1 |
 | CWE-252 | 0 | 1 |
@@ -54,12 +54,12 @@ insecure corpus where every file is genuinely vulnerable, runs ACR-QA's *full* d
 | CWE-269 | 1 | 1 |
 | CWE-283 | 0 | 1 |
 | CWE-285 | 0 | 1 |
-| CWE-295 | 1 | 3 |
+| CWE-295 | 2 | 3 |
 | CWE-306 | 0 | 1 |
 | CWE-319 | 1 | 2 |
-| CWE-321 | 1 | 2 |
+| CWE-321 | 2 | 2 |
 | CWE-326 | 2 | 2 |
-| CWE-327 | 3 | 4 |
+| CWE-327 | 4 | 4 |
 | CWE-329 | 1 | 1 |
 | CWE-330 | 1 | 1 |
 | CWE-331 | 1 | 1 |
@@ -78,7 +78,7 @@ insecure corpus where every file is genuinely vulnerable, runs ACR-QA's *full* d
 | CWE-462 | 0 | 1 |
 | CWE-477 | 1 | 1 |
 | CWE-502 | 4 | 4 |
-| CWE-521 | 0 | 2 |
+| CWE-521 | 1 | 2 |
 | CWE-522 | 2 | 2 |
 | CWE-595 | 0 | 1 |
 | CWE-601 | 5 | 5 |
@@ -90,15 +90,15 @@ insecure corpus where every file is genuinely vulnerable, runs ACR-QA's *full* d
 | CWE-730 | 2 | 3 |
 | CWE-732 | 1 | 1 |
 | CWE-759 | 1 | 1 |
-| CWE-760 | 0 | 1 |
+| CWE-760 | 1 | 1 |
 | CWE-776 | 1 | 1 |
 | CWE-798 | 2 | 2 |
 | CWE-827 | 1 | 1 |
-| CWE-835 | 0 | 1 |
+| CWE-835 | 1 | 1 |
 | CWE-841 | 0 | 1 |
 | CWE-918 | 2 | 2 |
 | CWE-941 | 0 | 1 |
-| CWE-943 | 0 | 1 |
+| CWE-943 | 1 | 1 |
 
 ## Reproduce
 

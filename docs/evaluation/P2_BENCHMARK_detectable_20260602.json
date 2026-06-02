@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-06-02T17:48:05.755219+00:00",
+  "generated_at": "2026-06-02T22:24:04.529468+00:00",
   "version": "5.0.0b1",
   "scope": "detectable",
   "results": {
     "ACR-QA (full output)": {
       "total": 89,
-      "tp": 70,
-      "fn": 19,
-      "recall": 78.7,
-      "recall_ci": "[69.7%, 86.5%]",
+      "tp": 81,
+      "fn": 8,
+      "recall": 91.0,
+      "recall_ci": "[84.3%, 96.6%]",
       "per_cwe": {
         "CWE-020": {
           "total": 6,
@@ -16,7 +16,7 @@
         },
         "CWE-022": {
           "total": 4,
-          "hit": 3
+          "hit": 4
         },
         "CWE-078": {
           "total": 2,
@@ -48,7 +48,7 @@
         },
         "CWE-113": {
           "total": 2,
-          "hit": 0
+          "hit": 2
         },
         "CWE-116": {
           "total": 2,
@@ -64,7 +64,7 @@
         },
         "CWE-209": {
           "total": 1,
-          "hit": 0
+          "hit": 1
         },
         "CWE-259": {
           "total": 2,
@@ -72,7 +72,7 @@
         },
         "CWE-295": {
           "total": 3,
-          "hit": 1
+          "hit": 2
         },
         "CWE-319": {
           "total": 2,
@@ -80,7 +80,7 @@
         },
         "CWE-321": {
           "total": 2,
-          "hit": 1
+          "hit": 2
         },
         "CWE-326": {
           "total": 2,
@@ -88,7 +88,7 @@
         },
         "CWE-327": {
           "total": 4,
-          "hit": 3
+          "hit": 4
         },
         "CWE-329": {
           "total": 1,
@@ -120,7 +120,7 @@
         },
         "CWE-521": {
           "total": 2,
-          "hit": 0
+          "hit": 1
         },
         "CWE-595": {
           "total": 1,
@@ -152,7 +152,7 @@
         },
         "CWE-760": {
           "total": 1,
-          "hit": 0
+          "hit": 1
         },
         "CWE-776": {
           "total": 1,
@@ -164,7 +164,7 @@
         },
         "CWE-835": {
           "total": 1,
-          "hit": 0
+          "hit": 1
         },
         "CWE-918": {
           "total": 2,
@@ -176,7 +176,7 @@
         },
         "CWE-943": {
           "total": 1,
-          "hit": 0
+          "hit": 1
         }
       }
     },
