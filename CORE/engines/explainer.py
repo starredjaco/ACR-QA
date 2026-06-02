@@ -32,9 +32,22 @@ class KeyPool:
     load across multiple accounts and avoid per-account rate limits.
     """
 
-    def __init__(self):
+    def __init__(self, byo_api_key: str | None = None):
+        """
+        byo_api_key: Bring-your-own LLM key override. When set, it takes priority
+        over all environment variables. Enables Team-tier BYO-key for enterprise
+        customers who want their own Groq / compatible API key so their code never
+        touches ACR-QA's shared keys.
+        """
         self._keys: list[str] = []
         self._provider = os.getenv("ACRQA_LLM_PROVIDER", "groq")
+        # BYO-key: env var LLM_API_KEY overrides everything, constructor arg overrides both
+        _byo_env = os.getenv("LLM_API_KEY") or os.getenv("ACRQA_BYO_KEY")
+        self._byo_key: str | None = byo_api_key or _byo_env
+
+        # Declare typed attributes before branching to satisfy mypy
+        self._model_override: str | None = None
+        self._clients: list = []
 
         if self._provider == "ollama":
             from CORE.engines.ollama_provider import OllamaClient, ollama_model
@@ -58,23 +71,28 @@ class KeyPool:
             self.base_url = "https://agentrouter.org/v1/chat/completions"
             self._model_override = None
         else:  # groq (default)
-            i = 1
-            while True:
-                key = os.getenv(f"GROQ_API_KEY_{i}")
-                if key:
-                    self._keys.append(key)
-                    i += 1
-                else:
-                    break
-            if not self._keys:
-                single = os.getenv("GROQ_API_KEY")
-                if single:
-                    self._keys.append(single)
+            # BYO-key takes priority over all env-var keys
+            if self._byo_key:
+                self._keys = [self._byo_key]
+            else:
+                i = 1
+                while True:
+                    key = os.getenv(f"GROQ_API_KEY_{i}")
+                    if key:
+                        self._keys.append(key)
+                        i += 1
+                    else:
+                        break
+                if not self._keys:
+                    single = os.getenv("GROQ_API_KEY")
+                    if single:
+                        self._keys.append(single)
             if not self._keys:
                 logger.warning(
                     "No GROQ_API_KEY found in environment. "
                     "Explanation engine will be unavailable. "
-                    "Set GROQ_API_KEY_1, GROQ_API_KEY_2, ... or a single GROQ_API_KEY."
+                    "Set GROQ_API_KEY_1, GROQ_API_KEY_2, ... or a single GROQ_API_KEY. "
+                    "Team-tier users: set LLM_API_KEY=<your_key> to use your own key."
                 )
             self._clients = [Groq(api_key=k) for k in self._keys]
             self.base_url = "https://api.groq.com/openai/v1/chat/completions"

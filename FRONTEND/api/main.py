@@ -41,6 +41,7 @@ from FRONTEND.api.routers import (
     runs,
     scans,
     trust,
+    verification,
     vulnerabilities,
     workbench,
 )  # noqa: E402
@@ -102,6 +103,7 @@ app.include_router(scans.router, prefix="/v1")
 app.include_router(findings.router, prefix="/v1")
 app.include_router(vulnerabilities.router, prefix="/v1")
 app.include_router(inbox.router, prefix="/v1")
+app.include_router(verification.router, prefix="/v1")
 app.include_router(relationships.router)
 app.include_router(fleet.router)
 app.include_router(workbench.router)

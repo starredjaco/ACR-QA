@@ -55,7 +55,29 @@ These items execute the one-sentence bet from `GOD_MODE_V6_BUSINESS_PLAN.md`. Al
 
 **Phase 0 exit metric:** a stranger watches the demo and says *"I'd turn that on as a required check."*
 
-**Next (Phase 1):** independent benchmark on OWASP/Juliet/SecurityEval + 5 design partners recruited.
+---
+
+## v6 Phase 1+2+3 — Proof, Monetize, Moat (2026-06-02)
+
+| # | Item | Phase | Status | What it does |
+|---|------|-------|--------|--------------|
+| 22 | **Verification stats API** (`GET /v1/verification/stats`, `GET /v1/verification/log`) | 1 | ✅ | Exposes the data-loop health — labeled ground truth accumulating from real scans |
+| 23 | **Confirmed Tier API filter** (`?confirmed=true` on `/v1/runs/{id}/findings`) | 1 | ✅ | Buyers can filter to only the 96.4%-precise findings in any API call |
+| 24 | **`GET /v1/runs/{id}/confirmed-summary`** | 1 | ✅ | Per-run confirmed count, signal breakdown, auto-block-safe flag |
+| 25 | **BYO-LLM-key** (`--llm-key` CLI + `LLM_API_KEY` env var) | 2 | ✅ | Enterprise customers use their own Groq key — kills data-objection and cost-objection |
+| 26 | **`GET /v1/runs/kpi/confirmed-fix-rate`** | 2 | ✅ | The company metric: % of Confirmed findings marked fixed (target >70%) |
+| 27 | **AI-code differential mode** (`--ai-code-diff` CLI flag) | 1 | ✅ | `AiCodeDiffFilter`: git-log + file-header heuristics detect Copilot/Cursor/Claude-touched files; only surfaces findings in those files |
+| 28 | **SARIF confirmed_tier field** + `--confirmed-only` export flag | 2 | ✅ | GHAS upload contains `acrqa/confirmed_tier` property; `--confirmed-only` uploads only the 96.4%-precise stratum |
+| 29 | **GitHub Action — Confirmed Tier merge gate** | 2 | ✅ | New required check: counts confirmed findings, fails merge if >0, posts exact count as annotation |
+| 30 | **Compliance evidence pack** (`scripts/generate_evidence_pack.py`) | 3 | ✅ | HTML+JSON evidence bundle for SOC2/ISO27001/EU CRA auditors; includes attestation signatures + Rekor log indexes |
+| 31 | **P-1 benchmark script** (`scripts/run_benchmark_p1.py`) | 1 | ✅ | Runs ACR-QA vs Bandit vs Semgrep on SecurityEval dataset; Wilson CI; pre-registered methodology |
+| 32 | **P-1 methodology pre-registration** (`docs/evaluation/P1_BENCHMARK_METHODOLOGY.md`) | 1 | ✅ | Methodology committed before any run — makes results falsifiable, not marketing |
+| 33 | **P-2 leaderboard page** (`cloudflare-pages/benchmark.html`) | 2 | ✅ | Public benchmark page with live results, methodology links, reproduce-in-2-commands |
+| 34 | **Verified Finding open spec** (`schemas/verified_finding_v1.schema.json`) | 3 | ✅ | JSON Schema for the open standard — claim + exploit evidence + signature. Moat #4. |
+
+**Phase 1 exit metric:** public benchmark page + ≥3 case studies (design partners — Ahmed recruits).
+**Phase 2 exit metric:** first revenue + fix rate >70% (instrument KPI endpoint).
+**Phase 3 exit metric:** one enterprise contract + one external party cites the Verified Finding spec.
 
 ---
 
