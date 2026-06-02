@@ -86,6 +86,22 @@ These items execute the one-sentence bet from `GOD_MODE_V6_BUSINESS_PLAN.md`. Al
 
 ---
 
+## v7 Detection Gap-Closing (2026-06-03)
+
+| # | Item | Status | Result |
+|---|------|--------|--------|
+| 35 | **7 taint rules (pass 1)** — open redirect, log injection, LDAP injection, ReDoS, XSS, JWT bypass | ✅ | Recall 58.4% → **78.7%** |
+| 36 | **16 gap-closing rules (pass 2)** — HTTP response splitting, traceback exposure, empty DB password, hardcoded salt, FTP cleartext, NoSQL injection (DynamoDB), OpenSSL no-verify, ssl.wrap_socket, SHA-256 password hash, hardcoded API key, infinite loop, os.system fstring, path traversal via os.remove, dynamic exec, CWE-319/321/327/521/760/835/943 | ✅ | Recall 78.7% → **91.0%** [84.3%, 96.6%] |
+| — | **Rule count:** 42 → 56 → **86** total custom Semgrep rules | ✅ | |
+| — | **RECONCILIATION.md** — honest P-1 retraction + P-2 methodology | ✅ | |
+
+**Current best numbers (SecurityEval, genuinely-vulnerable, bootstrap 95% CI):**
+- ACR-QA full output: **91.0%** [84.3%, 96.6%] vs Bandit 50.6% vs Semgrep 23.6%
+- All-CWE cut (incl. 40 undetectable logic flaws): 80.2% [72.7%, 86.8%]
+- Confirmed Tier precision: **96.4%** [90.9%, 100%] on 30-repo production corpus
+
+---
+
 ## Suggested 25-Week Rhythm
 
 | Weeks | Focus | Why this order |

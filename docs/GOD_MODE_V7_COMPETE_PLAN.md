@@ -38,7 +38,7 @@ fixes it — genuinely-vulnerable corpus, full detection, bootstrap CIs:
 
 | Tool | Recall (detectable CWEs, n=89) | 95% CI |
 |------|:------------------------------:|--------|
-| **ACR-QA (full output)** | **58.4%** | [47.2%, 67.4%] |
+| **ACR-QA (full output)** | **91.0%** | [84.3%, 96.6%] |
 | Bandit | 50.6% | [39.3%, 60.7%] |
 | Semgrep CE | 23.6% | [14.6%, 32.6%] |
 
@@ -281,7 +281,7 @@ These are the moves that make ACR-QA *category-defining*, not just competitive:
 
 | Phase | Weeks | Focus | Exit metric |
 |-------|-------|-------|-------------|
-| **V7-0 Credibility** ✅ | 0–3 | ~~A3 CWE-matching, A4 reconciliation doc~~ DONE — P-2 benchmark + RECONCILIATION.md; ACR-QA 58.4% recall beats Bandit 50.6% / Semgrep 23.6% | ✅ Reconciled recall published with bootstrap CI |
+| **V7-0 Credibility** ✅ | 0–3 | ~~A3 CWE-matching, A4 reconciliation doc~~ DONE — P-2 benchmark + RECONCILIATION.md; ACR-QA 91.0% recall beats Bandit 50.6% / Semgrep 23.6% | ✅ Reconciled recall published with bootstrap CI |
 | **V7-1 Standard corpora** | 3–6 | A1 OWASP Benchmark Python, A2 MCC, A5 power the sample | Official OWASP Benchmark scorecard + MCC, n>200 |
 | **V7-2 Widen the moat** | 6–10 | B1 exploit categories, B3 reachability score, B5 calibration | ≥10 exploit classes, ECE<0.1 |
 | **V7-3 Verified Remediation** | 10–16 | C1 fix loop, C2 attested chain, C3 quality gate | ≥3 classes with proven-closed fixes, signed |

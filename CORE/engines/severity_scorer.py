@@ -212,6 +212,13 @@ class SeverityScorer:
         "SECURITY-048": "high",  # Open redirect via user-controlled URL (CWE-601)
         "SECURITY-066": "medium",  # Log injection: user input in log statements (CWE-117)
         "SECURITY-067": "high",  # LDAP injection: user input in LDAP query (CWE-90)
+        "SECURITY-068": "high",  # HTTP response splitting (CWE-113)
+        "SECURITY-069": "medium",  # Traceback exposure to client (CWE-209)
+        "SECURITY-070": "high",  # Empty/weak DB password in config (CWE-521)
+        "SECURITY-071": "high",  # Hard-coded salt in PBKDF2 (CWE-760)
+        "SECURITY-072": "medium",  # Infinite loop — no counter increment (CWE-835)
+        "SECURITY-073": "high",  # NoSQL injection via DynamoDB expr concat (CWE-943)
+        "SECURITY-074": "medium",  # FTP cleartext transmission (CWE-319)
         # ── Taint analysis & new JS rules ──
         "SECURITY-061": "high",  # Taint: req.* → SQL query (SQLi via taint tracking)
         "SECURITY-062": "high",  # Taint: req.* → exec/spawn (command injection)
