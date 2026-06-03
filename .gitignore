@@ -127,3 +127,5 @@ FRONTEND/static/dashboard/
 dashboard/node_modules/
 dashboard/dist/
 TESTS/evaluation/securityeval/
+docs/evaluation/OWASP_BENCHMARK_allcwe_20260603.json
+docs/evaluation/OWASP_BENCHMARK_allcwe_20260603.md
