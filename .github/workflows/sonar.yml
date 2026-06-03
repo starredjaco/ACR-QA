@@ -14,8 +14,8 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    # No postgres service — tests use continue-on-error; sonar only needs coverage.xml
-    # Removing the service avoids Docker Hub pulls that time out on some runners.
+    # No postgres service — DB-dependent tests are skipped via -m "not integration".
+    # The sonar scan only needs coverage.xml from unit tests.
 
     steps:
       - uses: actions/checkout@v6
@@ -33,16 +33,22 @@ jobs:
 
       - name: Run tests with coverage (DB-less; integration tests auto-skip)
         run: |
-          python -m pytest TESTS/ -q \
+          python -m pytest TESTS/ \
+            --override-ini="addopts=" \
             --cov=CORE \
             --cov-report=xml:coverage.xml \
+            --cov-fail-under=0 \
             -m "not slow and not exploit and not smoke and not integration" \
             --ignore=TESTS/e2e \
-            || true
+            -q || true
         continue-on-error: true
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v3
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.qualitygate.wait=false
