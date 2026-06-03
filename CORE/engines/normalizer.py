@@ -206,6 +206,14 @@ RULE_MAPPING = {
     "acrqa-os-system-fstring": "SECURITY-021",  # CWE-116/CWE-078
     "acrqa-path-traversal-osremove": "SECURITY-049",  # CWE-022
     "acrqa-dynamic-exec": "SECURITY-001",  # CWE-094
+    # ── Step 4b framework-structural rules (2026-06-03) ──
+    "acrqa-django-debug-true": "SECURITY-082",  # CWE-16 / security_misconfiguration
+    "acrqa-flask-debug-true": "SECURITY-083",  # CWE-16 / security_misconfiguration
+    "acrqa-django-csrf-exempt": "SECURITY-084",  # CWE-352 / CSRF
+    "acrqa-flask-markup-xss": "SECURITY-085",  # CWE-79 / XSS
+    "acrqa-django-format-html-injection": "SECURITY-086",  # CWE-79 / XSS
+    "acrqa-cookie-no-httponly": "SECURITY-087",  # CWE-1004
+    "acrqa-cookie-no-secure": "SECURITY-088",  # CWE-614
     # ── Bugs found in god-mode live test (2026-03-31) ──
     "bare-except": "EXCEPT-001",  # Semgrep custom rule — bare except clause
     "too-many-parameters": "SOLID-001",  # Semgrep custom rule — too many function params
