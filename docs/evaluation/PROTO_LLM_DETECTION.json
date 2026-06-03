@@ -1,0 +1,30 @@
+{
+  "rows": [
+    {
+      "repo": "realvuln-vampi",
+      "tp_entries": 15,
+      "fp_traps": 4,
+      "llm_candidates": 26,
+      "matched": 5,
+      "llm_recall": 0.333,
+      "recall_file_line": 0.6,
+      "recall_file_only": 1.0,
+      "false_alarms": 20,
+      "llm_fpr_proxy": 0.8
+    },
+    {
+      "repo": "realvuln-dsvpwa",
+      "tp_entries": 32,
+      "fp_traps": 6,
+      "llm_candidates": 21,
+      "matched": 3,
+      "llm_recall": 0.094,
+      "recall_file_line": 0.406,
+      "recall_file_only": 0.625,
+      "false_alarms": 15,
+      "llm_fpr_proxy": 0.833
+    }
+  ],
+  "agg_recall": 0.1702127659574468,
+  "agg_fpr": 0.813953488372093
+}
