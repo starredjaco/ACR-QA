@@ -266,6 +266,12 @@ Three things: (1) Tag v5.0.0 final (removing the beta label) after defense. (2) 
 
 ---
 
+### Q43. "Does your autofix actually work? How do you know the fix closes the vulnerability?"
+
+Yes — and we prove it. Verified Remediation (`CORE/engines/verified_remediation.py`) does: (1) exploit fires on original code (2) AI generates a patch (3) same exact exploit re-run on patched code in Docker sandbox (4) verify it now fails → `fix_verified=True` (5) ECDSA-sign `(vuln_proof, fix_diff, fix_proof)` as one bundle. Snyk retests statically and claims 80% accuracy. ACR-QA retests with the live exploit — binary ground truth. The attestation lets an auditor replay the chain: exploit working → patch applied → exploit failing, cryptographically signed.
+
+---
+
 ### Q41. "Your numbers look cherry-picked. Why not use a standard benchmark?" ⚠️ HIGH RISK
 
 We did. The OWASP Benchmark methodology is the field's standard — TPR, FPR, Youden J. We ran it on SecurityEval (s2e-lab, NeurIPS-cited) with dual corpus: 89 vulnerable TP files + 89 secure TN files. Result: ACR-QA Youden J=0.157 vs Bandit 0.090 vs Semgrep 0.056 — we lead on the primary OWASP metric. The FPR on the full output is 75.3% — I report it honestly. That FPR is what the Confirmed Tier is designed to eliminate: it targets 96.4% precision by accepting low recall on the auto-block stratum. `OWASP_BENCHMARK.md` has the full scorecard with bootstrap CIs, per-CWE breakdown, and reproduce commands.

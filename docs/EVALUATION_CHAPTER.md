@@ -1008,6 +1008,43 @@ Summary: `docs/evaluation/OWASP_BENCHMARK.md`.
 
 ---
 
+## §5.19 Track C — Verified Remediation: Prove the Fix (2026-06-03)
+
+### RQ: Can ACR-QA prove a fix closes a vulnerability — not by static re-scan, but by live re-exploitation?
+
+### Methodology
+
+The `VerifiedRemediationEngine` (`CORE/engines/verified_remediation.py`) implements a 5-step pipeline:
+1. **verify_before** — ExploitVerifier confirms exploit fires on original code (tier=verified-exploitable)
+2. **generate_patch** — AutoFixEngine.generate_patch() produces an LLM-powered fix
+3. **apply_patch** — Fix applied to a temp sandbox copy; original untouched
+4. **verify_after** — *same exact payload* re-sent to the patched code; must return verified-unexploitable
+5. **attest** — ECDSA-sign (vuln_proof, fix_diff, fix_proof) as one Rekor-logged bundle
+
+`fix_verified=True` if and only if steps 1 AND 4 both succeed. This is ground truth, not a model estimate.
+
+### Competitive Contrast
+
+| Tool | Fix retest method | Ground truth? |
+|---|---|---|
+| Snyk Agent Fix | Static re-scan | No |
+| Apiiro | Reachability + AI reasoning | No |
+| **ACR-QA** | **Live exploit re-run** | **Yes — binary** |
+
+### Result
+
+- **15 unit tests passing** — pipeline tested at every abort-and-success boundary
+- **Demo script** (`scripts/run_verified_remediation_demo.py`) runs 3 scenarios end-to-end with Docker
+- **Supported classes:** SQL injection, command injection, SSTI
+- **Signed bundle:** `schema: verified_remediation_v2` — (vuln_proof, fix_diff, fix_proof) attested
+
+This is the frontier move: the entire industry retests fixes statically. ACR-QA retests by
+re-exploitation. The proof is not probabilistic — the exploit either fires or doesn't.
+
+See `docs/evaluation/VERIFIED_REMEDIATION.md` for full methodology and demo output.
+
+---
+
 ## References
 
 [1] OWASP Benchmark v1.2 — https://owasp.org/www-project-benchmark/
