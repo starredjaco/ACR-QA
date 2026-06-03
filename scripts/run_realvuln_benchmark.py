@@ -57,7 +57,7 @@ BANDIT_CWE: dict[str, str] = {
     "B304": "CWE-327",
     "B305": "CWE-327",
     "B306": "CWE-377",
-    "B307": "CWE-78",
+    "B307": "CWE-94",
     "B308": "CWE-79",
     "B311": "CWE-330",
     "B312": "CWE-319",
@@ -140,6 +140,13 @@ CANONICAL_CWE: dict[str, str] = {
     "SECURITY-062": "CWE-78",
     "SECURITY-066": "CWE-117",
     "SECURITY-067": "CWE-90",
+    "SECURITY-082": "CWE-16",
+    "SECURITY-083": "CWE-16",
+    "SECURITY-084": "CWE-352",
+    "SECURITY-085": "CWE-79",
+    "SECURITY-086": "CWE-79",
+    "SECURITY-087": "CWE-1004",
+    "SECURITY-088": "CWE-614",
     "SECURITY-601": "CWE-601",
 }
 

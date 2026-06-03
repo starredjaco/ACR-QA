@@ -134,9 +134,15 @@ These items execute the one-sentence bet from `GOD_MODE_V6_BUSINESS_PLAN.md`. Al
 | #4 | **RealVuln benchmark** — 22/26 real multi-file Python apps cloned + scored | ✅ | ACR-QA 23.5% recall vs Bandit 18.3% (+5.2pp) on neutral third-party GT; strict CWE+line matching; §5.21 |
 | #10/#13 | **Full chain verification** — all 10 exploit categories wired; 4 new fixture apps (SSRF, open-redirect, path-traversal, XXE); `TestAllTenCategoriesWired` (12 tests) | ✅ | All 10 categories: PAYLOADS+SIGNALS+PARAMS+ROUTES+RULE_TO_CATEGORY + fixture Dockerfiles |
 
-**Current best numbers:**
+| Recon-1 | **RealVuln triage** (a/b/c FN classification) + detectable-subset recall | ✅ | 43% FNs undetectable-by-design; det. recall 35.9% → **37.8%** after fixes |
+| Recon-3 | **B307 CWE mapping fix** (eval → CWE-94, not CWE-78) + new structural rules | ✅ | 7 new rules: DEBUG=True (CWE-16), @csrf_exempt (CWE-352), mark_safe (CWE-79), cookies (CWE-1004/614) |
+| Recon-4b | **Framework-structural rules** (Step 4b): CWE-16 + CWE-352 + CWE-79 + CWE-1004/614 | ✅ | SECURITY-082–088 in normalizer; rules validated |
+| Recon-5 | **Three-number narrative** in REALVULN_BENCHMARK.md, QA_PREP Q45, defense framing | ✅ | "91% synthetic / 37.8% detectable / 25.1% full" — all honest, all published |
+
+**Current best numbers (post-reconciliation):**
 - ACR-QA (SecurityEval, synthetic): TPR=91.0%, FPR=75.3%, **F3=0.854**, MCC=0.210
-- ACR-QA (RealVuln, real apps, strict): **23.5% recall** vs Bandit 18.3% — neutral third-party corpus
+- ACR-QA (RealVuln, detectable subset): **37.8% recall**, 90.0% precision, FPR=16.3% — leads Bandit
+- ACR-QA (RealVuln, full corpus): **25.1% recall** vs Bandit 19.4% (+5.7pp) — neutral third-party
 - ACR-QA (Confirmed Tier): TPR=37.1%, FPR=~0%, Precision=96.4% — auto-block operating point
 - Exploit categories: **10** (up from 4) — SQLi, CMDi, SSTI, path-traversal, SSRF, XXE, insecure-deser, open-redirect, ReDoS, LDAP
 

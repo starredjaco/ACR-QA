@@ -2,6 +2,52 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v5.0.0rc2 — RealVuln Reconciliation] — 2026-06-03
+
+### Summary
+
+Executes the RealVuln Reconciliation Plan: FN triage (a/b/c), detectable-subset recall,
+mapping fixes (eval→CWE-94), and 7 new framework-structural rules (DEBUG=True, @csrf_exempt,
+XSS, cookie flags). Full-corpus recall 23.5% → 25.1%; detectable recall 35.9% → 37.8%.
+Future Work §5.22 added for semantic IDOR (BACScan/EvoCrawl citations).
+
+### Added — FN Triage + Detectable Subset (Steps 1+2)
+
+- **`scripts/triage_realvuln_misses.py`** — classifies every FN into (a) undetectable-by-design,
+  (b) detectable-but-missed, (c) scoring artifact. Computes detectable-subset recall with
+  `DETECTABLE_CWES` frozenset (injection/secrets/crypto/config). Writes `REALVULN_TRIAGE.md`.
+- **`docs/evaluation/REALVULN_TRIAGE.md`** — triage table: 43% FNs are undetectable (authz/CSRF),
+  37% detectable-but-missed, 20% scoring artifacts.
+
+### Fixed — CWE Mapping (Step 3, free recall)
+
+- **B307 mapping**: `eval()` → CWE-78 (wrong, OS injection) corrected to CWE-94 (code injection).
+  Affects both `run_realvuln_benchmark.py` and `triage_realvuln_misses.py`.
+
+### Added — Framework-Structural Rules (Step 4b: safe, structural absence)
+
+- **`TOOLS/semgrep/python-rules.yml`**: 7 new rules (SECURITY-082–088):
+  - `acrqa-django-debug-true` → CWE-16 (Django DEBUG=True)
+  - `acrqa-flask-debug-true` → CWE-16 (Flask debug=True in app.run)
+  - `acrqa-django-csrf-exempt` → CWE-352 (@csrf_exempt decorator)
+  - `acrqa-flask-markup-xss` → CWE-79 (Flask Markup() without escape)
+  - `acrqa-django-format-html-injection` → CWE-79 (mark_safe / format_html)
+  - `acrqa-cookie-no-httponly` → CWE-1004 (HttpOnly=False)
+  - `acrqa-cookie-no-secure` → CWE-614 (Secure=False)
+- **`CORE/engines/normalizer.py`**: RULE_MAPPING entries for all 7 new rules.
+
+### Updated — Narrative (Step 5)
+
+- **`docs/evaluation/REALVULN_BENCHMARK.md`**: Three-number summary (91%/37.8%/25.1%),
+  defense framing, triage results, Future Work reference.
+- **`docs/EVALUATION_CHAPTER.md` §5.21**: Updated with post-reconciliation numbers, triage,
+  and reconciliation moves table.
+- **`docs/EVALUATION_CHAPTER.md` §5.22**: New — Future Work: Semantic Authorization Detection.
+  Cites BACScan (CCS 2025, 35 CVEs), EvoCrawl (NDSS 2025), Lin & Mohaisen NDSS 2025 (23–65%
+  precision on standalone LLM). Positions authz detection on the dynamic/exploit side.
+- **`docs/QA_PREP.md` Q45**: Updated with three-number answer (91%/37.8%/25.1%).
+- **`docs/ACTIVE_ROADMAP.md`**: v9 reconciliation rows added; current numbers updated.
+
 ## [v5.0.0rc2 — God Mode v9 #4+#10/#13] — 2026-06-03
 
 ### Added — RealVuln Benchmark (#4)

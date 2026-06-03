@@ -686,3 +686,86 @@ rules:
       category: security
       canonical_rule_id: SECURITY-001
       cwe: CWE-094
+
+  # ── Step 4b: Framework-structural rules (CWE-16 / CWE-352) ──────────────────
+
+  - id: acrqa-django-debug-true
+    patterns:
+      - pattern: DEBUG = True
+    message: "Django DEBUG=True leaks sensitive info (stack traces, SQL queries) in production (CWE-489/CWE-16)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-082
+      cwe: CWE-16
+
+  - id: acrqa-flask-debug-true
+    patterns:
+      - pattern: app.run(..., debug=True, ...)
+      - pattern: Flask(...).run(..., debug=True, ...)
+    message: "Flask app.run(debug=True) enables the Werkzeug debugger with code execution in production (CWE-489/CWE-16)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-083
+      cwe: CWE-16
+
+  - id: acrqa-django-csrf-exempt
+    pattern: "@csrf_exempt"
+    message: "@csrf_exempt disables CSRF protection on this view — ensure it is intentionally exempt (e.g., HMAC-signed API endpoint). Review required (CWE-352)."
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-084
+      cwe: CWE-352
+
+  - id: acrqa-flask-markup-xss
+    patterns:
+      - pattern: Markup($X)
+      - pattern-not: Markup(flask.escape(...))
+      - pattern-not: Markup(escape(...))
+      - pattern-not: Markup("")
+    message: "Markup() marks a string as safe HTML — if $X contains user input, this causes XSS (CWE-79)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-085
+      cwe: CWE-79
+
+  - id: acrqa-django-format-html-injection
+    pattern-either:
+      - pattern: format_html($FMT, ...)
+      - pattern: mark_safe($X)
+    message: "mark_safe() / format_html() with user-controlled input enables XSS (CWE-79)."
+    severity: ERROR
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-086
+      cwe: CWE-79
+
+  - id: acrqa-cookie-no-httponly
+    patterns:
+      - pattern: response.set_cookie(..., httponly=False, ...)
+    message: "Cookie set without HttpOnly flag — accessible to JavaScript, enabling session theft via XSS (CWE-1004)."
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-087
+      cwe: CWE-1004
+
+  - id: acrqa-cookie-no-secure
+    patterns:
+      - pattern: response.set_cookie(..., secure=False, ...)
+    message: "Cookie set without Secure flag — transmitted over HTTP, enabling interception (CWE-614)."
+    severity: WARNING
+    languages: [python]
+    metadata:
+      category: security
+      canonical_rule_id: SECURITY-088
+      cwe: CWE-614

@@ -1,0 +1,3611 @@
+{
+  "generated": "2026-06-03T15:03:22.059274+00:00",
+  "version": "5.0.0rc2",
+  "detectable_subset": {
+    "recall": 0.3782,
+    "fpr": 0.163,
+    "precision": 0.9,
+    "f3": 0.4014
+  },
+  "per_repo": [
+    {
+      "slug": "realvuln-damn-vulnerable-flask-application",
+      "a": [
+        {
+          "cwe": "CWE-256",
+          "id": "damn-vulnerable-flask-app-010",
+          "file": "app.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "damn-vulnerable-flask-app-012",
+          "file": "app.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "damn-vulnerable-flask-app-013",
+          "file": "app.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "damn-vulnerable-flask-app-014",
+          "file": "app.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "damn-vulnerable-flask-app-015",
+          "file": "app.py"
+        }
+      ],
+      "b": [],
+      "c": [
+        {
+          "cwe": "CWE-78",
+          "id": "damn-vulnerable-flask-app-003",
+          "file": "app.py",
+          "gt_line": 140,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-1336",
+          "id": "damn-vulnerable-flask-app-007",
+          "file": "app.py",
+          "gt_line": 205,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-215",
+          "id": "damn-vulnerable-flask-app-011",
+          "file": "app.py",
+          "gt_line": 208,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-94",
+          "id": "damn-vulnerable-flask-app-001"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "damn-vulnerable-flask-app-002"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "damn-vulnerable-flask-app-004"
+        },
+        {
+          "cwe": "CWE-611",
+          "id": "damn-vulnerable-flask-app-005"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "damn-vulnerable-flask-app-006"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "damn-vulnerable-flask-app-008"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "damn-vulnerable-flask-app-009"
+        }
+      ],
+      "fp_trap": [
+        {
+          "cwe": "CWE-798",
+          "id": "damn-vulnerable-flask-app-fp-004"
+        }
+      ]
+    },
+    {
+      "slug": "realvuln-damn-vulnerable-graphql-application",
+      "a": [
+        {
+          "cwe": "CWE-862",
+          "id": "dvga-012",
+          "file": "core/views.py"
+        },
+        {
+          "cwe": "CWE-639",
+          "id": "dvga-013",
+          "file": "core/views.py"
+        },
+        {
+          "cwe": "CWE-639",
+          "id": "dvga-014",
+          "file": "core/views.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "dvga-016",
+          "file": "core/views.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "dvga-017",
+          "file": "core/views.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "dvga-021",
+          "file": "core/views.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "dvga-022",
+          "file": "core/views.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "dvga-023",
+          "file": "core/views.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "dvga-024",
+          "file": "core/views.py"
+        },
+        {
+          "cwe": "CWE-807",
+          "id": "dvga-027",
+          "file": "core/middleware.py"
+        },
+        {
+          "cwe": "CWE-16",
+          "id": "dvga-028",
+          "file": "core/security.py"
+        },
+        {
+          "cwe": "CWE-862",
+          "id": "dvga-030",
+          "file": "core/security.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "dvga-034",
+          "file": "core/views.py"
+        },
+        {
+          "cwe": "CWE-284",
+          "id": "dvga-035",
+          "file": "core/views.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "dvga-036",
+          "file": "core/views.py"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-78",
+          "id": "dvga-002",
+          "file": "core/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "dvga-003",
+          "file": "core/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-78",
+          "id": "dvga-004",
+          "file": "core/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-78",
+          "id": "dvga-005",
+          "file": "core/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "dvga-008",
+          "file": "templates/paste.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "dvga-009",
+          "file": "templates/paste.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "dvga-011",
+          "file": "core/view_override.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-674",
+          "id": "dvga-018",
+          "file": "core/views.py",
+          "class": "borderline"
+        },
+        {
+          "cwe": "CWE-117",
+          "id": "dvga-019",
+          "file": "core/models.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-916",
+          "id": "dvga-020",
+          "file": "core/models.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "dvga-025",
+          "file": "core/security.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-693",
+          "id": "dvga-029",
+          "file": "core/middleware.py",
+          "class": "borderline"
+        },
+        {
+          "cwe": "CWE-312",
+          "id": "dvga-031",
+          "file": "core/models.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-295",
+          "id": "dvga-033",
+          "file": "core/views.py",
+          "class": "detectable"
+        }
+      ],
+      "c": [
+        {
+          "cwe": "CWE-22",
+          "id": "dvga-010",
+          "file": "core/helpers.py",
+          "gt_line": 25,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-330",
+          "id": "dvga-026",
+          "file": "core/helpers.py",
+          "gt_line": 14,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "dvga-032",
+          "file": "core/helpers.py",
+          "gt_line": 28,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-89",
+          "id": "dvga-001"
+        },
+        {
+          "cwe": "CWE-321",
+          "id": "dvga-006"
+        },
+        {
+          "cwe": "CWE-347",
+          "id": "dvga-007"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "dvga-015"
+        }
+      ],
+      "fp_trap": []
+    },
+    {
+      "slug": "realvuln-djangoat",
+      "a": [
+        {
+          "cwe": "CWE-200",
+          "id": "djangoat-013",
+          "file": "app/views/users/work_info/views.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "djangoat-015",
+          "file": "template/users/work_info/index.html"
+        },
+        {
+          "cwe": "CWE-862",
+          "id": "djangoat-018",
+          "file": "app/views/admin/views.py"
+        },
+        {
+          "cwe": "CWE-862",
+          "id": "djangoat-019",
+          "file": "app/views/admin/views.py"
+        },
+        {
+          "cwe": "CWE-862",
+          "id": "djangoat-020",
+          "file": "app/views/admin/views.py"
+        },
+        {
+          "cwe": "CWE-639",
+          "id": "djangoat-021",
+          "file": "app/views/users/messages/views.py"
+        },
+        {
+          "cwe": "CWE-915",
+          "id": "djangoat-022",
+          "file": "app/views/admin/views.py"
+        },
+        {
+          "cwe": "CWE-287",
+          "id": "djangoat-026",
+          "file": "app/views/password_resets/views.py"
+        },
+        {
+          "cwe": "CWE-287",
+          "id": "djangoat-028",
+          "file": "app/views/api/users/views.py"
+        },
+        {
+          "cwe": "CWE-639",
+          "id": "djangoat-031",
+          "file": "app/views/users/pay/views.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "djangoat-034",
+          "file": "template/admin/modal.html"
+        },
+        {
+          "cwe": "CWE-384",
+          "id": "djangoat-040",
+          "file": "app/views/sessions/views.py"
+        },
+        {
+          "cwe": "CWE-640",
+          "id": "djangoat-041",
+          "file": "app/views/password_resets/views.py"
+        },
+        {
+          "cwe": "CWE-862",
+          "id": "djangoat-043",
+          "file": "app/views/users/messages/views.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "djangoat-044",
+          "file": "app/views/api/mobile/views.py"
+        },
+        {
+          "cwe": "CWE-915",
+          "id": "djangoat-045",
+          "file": "app/views/users/views.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "djangoat-047",
+          "file": "app/views/api/users/views.py"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-22",
+          "id": "djangoat-007",
+          "file": "app/views/users/benefit_forms/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-601",
+          "id": "djangoat-008",
+          "file": "app/views/sessions/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-204",
+          "id": "djangoat-016",
+          "file": "app/views/sessions/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-614",
+          "id": "djangoat-029",
+          "file": "app/views/sessions/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "djangoat-030",
+          "file": "app/models/Benefits/benefits.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "djangoat-033",
+          "file": "template/users/signup.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "djangoat-035",
+          "file": "template/admin/modal.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "djangoat-036",
+          "file": "template/users/performance/index.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-329",
+          "id": "djangoat-038",
+          "file": "app/models/utils.py",
+          "class": "borderline"
+        },
+        {
+          "cwe": "CWE-354",
+          "id": "djangoat-039",
+          "file": "app/models/utils.py",
+          "class": "borderline"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "djangoat-042",
+          "file": "pygoat/docker_settings.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "djangoat-046",
+          "file": "template/layouts/shared/not_logged_in.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "djangoat-048",
+          "file": "static/app/javascript/users/pay/index.js",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "djangoat-050",
+          "file": "app/views/users/views.py",
+          "class": "detectable"
+        }
+      ],
+      "c": [
+        {
+          "cwe": "CWE-798",
+          "id": "djangoat-012",
+          "file": "app/management/commands/seed.py",
+          "gt_line": 10,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-312",
+          "id": "djangoat-014",
+          "file": "app/models/User/user.py",
+          "gt_line": 131,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-204",
+          "id": "djangoat-017",
+          "file": "app/views/password_resets/views.py",
+          "gt_line": 17,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "djangoat-023",
+          "file": "pygoat/settings.py",
+          "gt_line": 25,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "djangoat-049",
+          "file": "app/views/users/views.py",
+          "gt_line": 80,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-89",
+          "id": "djangoat-001"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "djangoat-002"
+        },
+        {
+          "cwe": "CWE-502",
+          "id": "djangoat-003"
+        },
+        {
+          "cwe": "CWE-94",
+          "id": "djangoat-004"
+        },
+        {
+          "cwe": "CWE-94",
+          "id": "djangoat-005"
+        },
+        {
+          "cwe": "CWE-78",
+          "id": "djangoat-006"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "djangoat-009"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "djangoat-010"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "djangoat-011"
+        },
+        {
+          "cwe": "CWE-16",
+          "id": "djangoat-024"
+        },
+        {
+          "cwe": "CWE-328",
+          "id": "djangoat-025"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "djangoat-027"
+        },
+        {
+          "cwe": "CWE-328",
+          "id": "djangoat-032"
+        },
+        {
+          "cwe": "CWE-327",
+          "id": "djangoat-037"
+        }
+      ],
+      "fp_trap": []
+    },
+    {
+      "slug": "realvuln-dsvpwa",
+      "a": [
+        {
+          "cwe": "CWE-384",
+          "id": "dsvpwa-010",
+          "file": "dsvpwa/attacks.py"
+        },
+        {
+          "cwe": "CWE-862",
+          "id": "dsvpwa-011",
+          "file": "dsvpwa/attacks.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "dsvpwa-012",
+          "file": "dsvpwa/attacks.py"
+        },
+        {
+          "cwe": "CWE-16",
+          "id": "dsvpwa-022",
+          "file": "dsvpwa/handlers.py"
+        },
+        {
+          "cwe": "CWE-16",
+          "id": "dsvpwa-023",
+          "file": "dsvpwa/handlers.py"
+        },
+        {
+          "cwe": "CWE-256",
+          "id": "dsvpwa-025",
+          "file": "dsvpwa/server.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "dsvpwa-029",
+          "file": "dsvpwa/attacks.py"
+        },
+        {
+          "cwe": "CWE-384",
+          "id": "dsvpwa-030",
+          "file": "dsvpwa/handlers.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "dsvpwa-032",
+          "file": "templates/guestbook.html"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-79",
+          "id": "dsvpwa-003",
+          "file": "dsvpwa/attacks.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "dsvpwa-004",
+          "file": "dsvpwa/attacks.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-601",
+          "id": "dsvpwa-005",
+          "file": "dsvpwa/attacks.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-1021",
+          "id": "dsvpwa-013",
+          "file": "dsvpwa/attacks.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "dsvpwa-015",
+          "file": "static/js/custom.js",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "dsvpwa-017",
+          "file": "db/users.xml",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-326",
+          "id": "dsvpwa-020",
+          "file": "dsvpwa.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-1004",
+          "id": "dsvpwa-021",
+          "file": "dsvpwa/handlers.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-598",
+          "id": "dsvpwa-024",
+          "file": "templates/login.html",
+          "class": "borderline"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "dsvpwa-028",
+          "file": "dsvpwa/handlers.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "dsvpwa-031",
+          "file": "dsvpwa/handlers.py",
+          "class": "detectable"
+        }
+      ],
+      "c": [
+        {
+          "cwe": "CWE-22",
+          "id": "dsvpwa-008",
+          "file": "dsvpwa/attacks.py",
+          "gt_line": 211,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "dsvpwa-018",
+          "file": "dsvpwa/attacks.py",
+          "gt_line": 40,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "dsvpwa-019",
+          "file": "dsvpwa/attacks.py",
+          "gt_line": 290,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-330",
+          "id": "dsvpwa-026",
+          "file": "dsvpwa/handlers.py",
+          "gt_line": 202,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-601",
+          "id": "dsvpwa-027",
+          "file": "dsvpwa/attacks.py",
+          "gt_line": 233,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-89",
+          "id": "dsvpwa-001"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "dsvpwa-002"
+        },
+        {
+          "cwe": "CWE-78",
+          "id": "dsvpwa-006"
+        },
+        {
+          "cwe": "CWE-502",
+          "id": "dsvpwa-007"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "dsvpwa-009"
+        },
+        {
+          "cwe": "CWE-78",
+          "id": "dsvpwa-014"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "dsvpwa-016"
+        }
+      ],
+      "fp_trap": [
+        {
+          "cwe": "CWE-89",
+          "id": "dsvpwa-fp-006"
+        }
+      ]
+    },
+    {
+      "slug": "realvuln-dsvw",
+      "a": [
+        {
+          "cwe": "CWE-400",
+          "id": "dsvw-009",
+          "file": "dsvw.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "dsvw-020",
+          "file": "dsvw.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "dsvw-021",
+          "file": "dsvw.py"
+        },
+        {
+          "cwe": "CWE-16",
+          "id": "dsvw-026",
+          "file": "dsvw.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "dsvw-027",
+          "file": "dsvw.py"
+        }
+      ],
+      "b": [],
+      "c": [
+        {
+          "cwe": "CWE-79",
+          "id": "dsvw-002",
+          "file": "dsvw.py",
+          "gt_line": 33,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "dsvw-004",
+          "file": "dsvw.py",
+          "gt_line": 37,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-643",
+          "id": "dsvw-008",
+          "file": "dsvw.py",
+          "gt_line": 43,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "dsvw-010",
+          "file": "dsvw.py",
+          "gt_line": 50,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "dsvw-011",
+          "file": "dsvw.py",
+          "gt_line": 54,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-94",
+          "id": "dsvw-012",
+          "file": "dsvw.py",
+          "gt_line": 56,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-601",
+          "id": "dsvw-013",
+          "file": "dsvw.py",
+          "gt_line": 61,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "dsvw-014",
+          "file": "dsvw.py",
+          "gt_line": 65,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-113",
+          "id": "dsvw-016",
+          "file": "dsvw.py",
+          "gt_line": 78,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "dsvw-017",
+          "file": "dsvw.py",
+          "gt_line": 11,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "dsvw-018",
+          "file": "dsvw.py",
+          "gt_line": 72,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "dsvw-019",
+          "file": "dsvw.py",
+          "gt_line": 10,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-312",
+          "id": "dsvw-022",
+          "file": "dsvw.py",
+          "gt_line": 19,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-330",
+          "id": "dsvw-023",
+          "file": "dsvw.py",
+          "gt_line": 68,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-235",
+          "id": "dsvw-024",
+          "file": "dsvw.py",
+          "gt_line": 26,
+          "class": "borderline"
+        },
+        {
+          "cwe": "CWE-1004",
+          "id": "dsvw-025",
+          "file": "dsvw.py",
+          "gt_line": 68,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-89",
+          "id": "dsvw-001"
+        },
+        {
+          "cwe": "CWE-502",
+          "id": "dsvw-003"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "dsvw-005"
+        },
+        {
+          "cwe": "CWE-78",
+          "id": "dsvw-006"
+        },
+        {
+          "cwe": "CWE-611",
+          "id": "dsvw-007"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "dsvw-015"
+        }
+      ],
+      "fp_trap": [
+        {
+          "cwe": "CWE-89",
+          "id": "dsvw-fp-001"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "dsvw-fp-002"
+        }
+      ]
+    },
+    {
+      "slug": "realvuln-dvblab",
+      "a": [
+        {
+          "cwe": "CWE-639",
+          "id": "dvblab-010",
+          "file": "backend/routes/auth_routes.py"
+        },
+        {
+          "cwe": "CWE-639",
+          "id": "dvblab-011",
+          "file": "backend/routes/transaction_routes.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "dvblab-016",
+          "file": "backend/routes/auth_routes.py"
+        },
+        {
+          "cwe": "CWE-613",
+          "id": "dvblab-017",
+          "file": "backend/routes/auth_routes.py"
+        },
+        {
+          "cwe": "CWE-862",
+          "id": "dvblab-021",
+          "file": "backend/routes/auth_routes.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "dvblab-022",
+          "file": "backend/routes/auth_routes.py"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-798",
+          "id": "dvblab-007",
+          "file": "backend/auth.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-942",
+          "id": "dvblab-014",
+          "file": "backend/app.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-312",
+          "id": "dvblab-015",
+          "file": "backend/app.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-20",
+          "id": "dvblab-018",
+          "file": "backend/routes/transaction_routes.py",
+          "class": "borderline"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "dvblab-020",
+          "file": "docker-compose.yml",
+          "class": "detectable"
+        }
+      ],
+      "c": [
+        {
+          "cwe": "CWE-798",
+          "id": "dvblab-006",
+          "file": "backend/routes/auth_routes.py",
+          "gt_line": 48,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-362",
+          "id": "dvblab-019",
+          "file": "backend/routes/transaction_routes.py",
+          "gt_line": 30,
+          "class": "borderline"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-89",
+          "id": "dvblab-001"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "dvblab-002"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "dvblab-003"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "dvblab-004"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "dvblab-005"
+        },
+        {
+          "cwe": "CWE-328",
+          "id": "dvblab-008"
+        },
+        {
+          "cwe": "CWE-328",
+          "id": "dvblab-009"
+        },
+        {
+          "cwe": "CWE-502",
+          "id": "dvblab-012"
+        },
+        {
+          "cwe": "CWE-16",
+          "id": "dvblab-013"
+        }
+      ],
+      "fp_trap": [
+        {
+          "cwe": "CWE-89",
+          "id": "dvblab-fp-001"
+        }
+      ]
+    },
+    {
+      "slug": "realvuln-dvpwa",
+      "a": [
+        {
+          "cwe": "CWE-352",
+          "id": "dvpwa-009",
+          "file": "sqli/app.py"
+        },
+        {
+          "cwe": "CWE-862",
+          "id": "dvpwa-012",
+          "file": "sqli/views.py"
+        },
+        {
+          "cwe": "CWE-862",
+          "id": "dvpwa-013",
+          "file": "sqli/views.py"
+        },
+        {
+          "cwe": "CWE-384",
+          "id": "dvpwa-014",
+          "file": "sqli/views.py"
+        },
+        {
+          "cwe": "CWE-16",
+          "id": "dvpwa-015",
+          "file": "sqli/app.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "dvpwa-016",
+          "file": "sqli/schema/config.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "dvpwa-017",
+          "file": "sqli/views.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "dvpwa-018",
+          "file": "sqli/views.py"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-79",
+          "id": "dvpwa-002",
+          "file": "sqli/templates/course.jinja2",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "dvpwa-003",
+          "file": "sqli/templates/students.jinja2",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "dvpwa-004",
+          "file": "sqli/templates/course.jinja2",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "dvpwa-005",
+          "file": "sqli/templates/courses.jinja2",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "dvpwa-006",
+          "file": "sqli/templates/student.jinja2",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-1004",
+          "id": "dvpwa-010",
+          "file": "sqli/middlewares.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "dvpwa-011",
+          "file": "sqli/templates/errors/50x.jinja2",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-312",
+          "id": "dvpwa-019",
+          "file": "sqli/utils/jinja2.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-312",
+          "id": "dvpwa-020",
+          "file": "sqli/services/db.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-319",
+          "id": "dvpwa-021",
+          "file": "sqli/services/db.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-1395",
+          "id": "dvpwa-022",
+          "file": "sqli/static/js/jquery-3.2.1.min.js",
+          "class": "borderline"
+        }
+      ],
+      "c": [],
+      "tp": [
+        {
+          "cwe": "CWE-89",
+          "id": "dvpwa-001"
+        },
+        {
+          "cwe": "CWE-16",
+          "id": "dvpwa-007"
+        },
+        {
+          "cwe": "CWE-916",
+          "id": "dvpwa-008"
+        }
+      ],
+      "fp_trap": []
+    },
+    {
+      "slug": "realvuln-extremely-vulnerable-flask-app",
+      "a": [
+        {
+          "cwe": "CWE-639",
+          "id": "extremely-vulnerable-flask-app-009",
+          "file": "routes/account.py"
+        },
+        {
+          "cwe": "CWE-639",
+          "id": "extremely-vulnerable-flask-app-010",
+          "file": "routes/notes.py"
+        },
+        {
+          "cwe": "CWE-915",
+          "id": "extremely-vulnerable-flask-app-011",
+          "file": "routes/account.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "extremely-vulnerable-flask-app-013",
+          "file": "routes/account.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "extremely-vulnerable-flask-app-017",
+          "file": "routes/login.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "extremely-vulnerable-flask-app-019",
+          "file": "routes/login.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "extremely-vulnerable-flask-app-020",
+          "file": "routes/signup.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "extremely-vulnerable-flask-app-026",
+          "file": "utils/profile_image.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "extremely-vulnerable-flask-app-fp-010",
+          "file": "routes/registration_codes.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "extremely-vulnerable-flask-app-fp-011",
+          "file": "routes/notes.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "extremely-vulnerable-flask-app-fp-012",
+          "file": "routes/notes.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "extremely-vulnerable-flask-app-fp-013",
+          "file": "routes/account.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "extremely-vulnerable-flask-app-fp-014",
+          "file": "routes/account.py"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-79",
+          "id": "extremely-vulnerable-flask-app-006",
+          "file": "templates/home.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "extremely-vulnerable-flask-app-007",
+          "file": "templates/search.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "extremely-vulnerable-flask-app-008",
+          "file": "templates/personal_notes.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "extremely-vulnerable-flask-app-014",
+          "file": "db_seed.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "extremely-vulnerable-flask-app-015",
+          "file": "db_seed.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-532",
+          "id": "extremely-vulnerable-flask-app-018",
+          "file": "models/__init__.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "extremely-vulnerable-flask-app-021",
+          "file": "templates/account.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "extremely-vulnerable-flask-app-022",
+          "file": "templates/base.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-319",
+          "id": "extremely-vulnerable-flask-app-024",
+          "file": "conf/nginx.conf",
+          "class": "detectable"
+        }
+      ],
+      "c": [
+        {
+          "cwe": "CWE-1336",
+          "id": "extremely-vulnerable-flask-app-003",
+          "file": "app.py",
+          "gt_line": 31,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-614",
+          "id": "extremely-vulnerable-flask-app-023",
+          "file": "app.py",
+          "gt_line": 10,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-1004",
+          "id": "extremely-vulnerable-flask-app-025",
+          "file": "routes/account.py",
+          "gt_line": 127,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-1004",
+          "id": "extremely-vulnerable-flask-app-027",
+          "file": "routes/account.py",
+          "gt_line": 105,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-614",
+          "id": "extremely-vulnerable-flask-app-028",
+          "file": "routes/account.py",
+          "gt_line": 105,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-89",
+          "id": "extremely-vulnerable-flask-app-001"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "extremely-vulnerable-flask-app-002"
+        },
+        {
+          "cwe": "CWE-502",
+          "id": "extremely-vulnerable-flask-app-004"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "extremely-vulnerable-flask-app-005"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "extremely-vulnerable-flask-app-012"
+        }
+      ],
+      "fp_trap": []
+    },
+    {
+      "slug": "realvuln-flask-xss",
+      "a": [
+        {
+          "cwe": "CWE-256",
+          "id": "flask-xss-012",
+          "file": "app/models/models.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "flask-xss-013",
+          "file": "app/models/models.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "flask-xss-014",
+          "file": "app/blueprints/api/views.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "flask-xss-017",
+          "file": "app/blueprints/api/views.py"
+        },
+        {
+          "cwe": "CWE-16",
+          "id": "flask-xss-018",
+          "file": "app/flask_xss.py"
+        },
+        {
+          "cwe": "CWE-384",
+          "id": "flask-xss-022",
+          "file": "app/blueprints/login/views.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "flask-xss-023",
+          "file": "app/blueprints/login/views.py"
+        },
+        {
+          "cwe": "CWE-639",
+          "id": "flask-xss-024",
+          "file": "app/blueprints/api/views.py"
+        },
+        {
+          "cwe": "CWE-284",
+          "id": "flask-xss-025",
+          "file": "app/blueprints/admin/views.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "flask-xss-026",
+          "file": "app/blueprints/api/views.py"
+        },
+        {
+          "cwe": "CWE-284",
+          "id": "flask-xss-028",
+          "file": "app/models/models.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "flask_xss-fp-007",
+          "file": "app/blueprints/account_area/views.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "flask_xss-fp-008",
+          "file": "app/blueprints/account_area/views.py"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-79",
+          "id": "flask-xss-001",
+          "file": "app/blueprints/sandboxes/templates/sandboxes/unsafe_params.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "flask-xss-002",
+          "file": "app/blueprints/sandboxes/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "flask-xss-003",
+          "file": "app/blueprints/sandboxes/templates/sandboxes/unsafe_cookies.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "flask-xss-004",
+          "file": "app/blueprints/sandboxes/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "flask-xss-005",
+          "file": "app/templates/admin/message.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "flask-xss-006",
+          "file": "app/templates/admin/message.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "flask-xss-007",
+          "file": "app/blueprints/account_area/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "flask-xss-008",
+          "file": "app/blueprints/api/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "flask-xss-009",
+          "file": "app/templates/_base.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-522",
+          "id": "flask-xss-019",
+          "file": "app/blueprints/login/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-522",
+          "id": "flask-xss-020",
+          "file": "app/blueprints/account_area/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-522",
+          "id": "flask-xss-021",
+          "file": "app/blueprints/account_area/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-312",
+          "id": "flask-xss-027",
+          "file": "app/flask_xss.py",
+          "class": "detectable"
+        }
+      ],
+      "c": [
+        {
+          "cwe": "CWE-215",
+          "id": "flask-xss-011",
+          "file": "app/flask_xss.py",
+          "gt_line": 26,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-798",
+          "id": "flask-xss-010"
+        },
+        {
+          "cwe": "CWE-259",
+          "id": "flask-xss-015"
+        },
+        {
+          "cwe": "CWE-601",
+          "id": "flask-xss-016"
+        }
+      ],
+      "fp_trap": []
+    },
+    {
+      "slug": "realvuln-insecure-web",
+      "a": [
+        {
+          "cwe": "CWE-256",
+          "id": "insecure-web-005",
+          "file": "app/app.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "insecure-web-006",
+          "file": "app/app.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "insecure-web-008",
+          "file": "app/templates/index.html"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "insecure-web-009",
+          "file": "app/app.py"
+        }
+      ],
+      "b": [],
+      "c": [
+        {
+          "cwe": "CWE-614",
+          "id": "insecure-web-007",
+          "file": "app/app.py",
+          "gt_line": 38,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-89",
+          "id": "insecure-web-001"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "insecure-web-002"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "insecure-web-003"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "insecure-web-004"
+        }
+      ],
+      "fp_trap": [
+        {
+          "cwe": "CWE-79",
+          "id": "insecure-web-fp-002"
+        }
+      ]
+    },
+    {
+      "slug": "realvuln-intentionally-vulnerable-python-application",
+      "a": [
+        {
+          "cwe": "CWE-307",
+          "id": "intentionally-vulnerable-python-app-006",
+          "file": "VulnerablePythonScript.py"
+        }
+      ],
+      "b": [],
+      "c": [
+        {
+          "cwe": "CWE-79",
+          "id": "intentionally-vulnerable-python-app-007",
+          "file": "VulnerablePythonScript.py",
+          "gt_line": 44,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-78",
+          "id": "intentionally-vulnerable-python-app-001"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "intentionally-vulnerable-python-app-002"
+        },
+        {
+          "cwe": "CWE-502",
+          "id": "intentionally-vulnerable-python-app-003"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "intentionally-vulnerable-python-app-004"
+        },
+        {
+          "cwe": "CWE-215",
+          "id": "intentionally-vulnerable-python-app-005"
+        }
+      ],
+      "fp_trap": [
+        {
+          "cwe": "CWE-918",
+          "id": "intentionally-vulnerable-python-app-fp-001"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "intentionally-vulnerable-python-app-fp-002"
+        }
+      ]
+    },
+    {
+      "slug": "realvuln-lets-be-bad-guys",
+      "a": [
+        {
+          "cwe": "CWE-862",
+          "id": "lets-be-bad-guys-010",
+          "file": "badguys/vulnerable/views.py"
+        },
+        {
+          "cwe": "CWE-639",
+          "id": "lets-be-bad-guys-011",
+          "file": "badguys/vulnerable/views.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "lets-be-bad-guys-014",
+          "file": "badguys/settings.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "lets-be-bad-guys-016",
+          "file": "badguys/templates/vulnerable/csrf/gift_card.html"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "lets-be-bad-guys-017",
+          "file": "badguys/settings.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "lets-be-bad-guys-020",
+          "file": "badguys/templates/vulnerable/injection/code_execution.html"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "lets-be-bad-guys-021",
+          "file": "badguys/templates/vulnerable/injection/sql.html"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-22",
+          "id": "lets-be-bad-guys-001",
+          "file": "badguys/vulnerable/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "lets-be-bad-guys-004",
+          "file": "badguys/templates/vulnerable/xss/form.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "lets-be-bad-guys-005",
+          "file": "badguys/templates/vulnerable/xss/path.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "lets-be-bad-guys-006",
+          "file": "badguys/templates/vulnerable/xss/query.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "lets-be-bad-guys-007",
+          "file": "badguys/templates/vulnerable/csrf/image.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "lets-be-bad-guys-018",
+          "file": "badguys/vulnerable/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-1004",
+          "id": "lets-be-bad-guys-022",
+          "file": "badguys/vulnerable/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-614",
+          "id": "lets-be-bad-guys-023",
+          "file": "badguys/vulnerable/views.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-614",
+          "id": "lets-be-bad-guys-024",
+          "file": "badguys/settings.py",
+          "class": "detectable"
+        }
+      ],
+      "c": [
+        {
+          "cwe": "CWE-94",
+          "id": "lets-be-bad-guys-009",
+          "file": "badguys/vulnerable/views.py",
+          "gt_line": 183,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-1021",
+          "id": "lets-be-bad-guys-019",
+          "file": "badguys/settings.py",
+          "gt_line": 106,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-94",
+          "id": "lets-be-bad-guys-002"
+        },
+        {
+          "cwe": "CWE-94",
+          "id": "lets-be-bad-guys-003"
+        },
+        {
+          "cwe": "CWE-601",
+          "id": "lets-be-bad-guys-008"
+        },
+        {
+          "cwe": "CWE-215",
+          "id": "lets-be-bad-guys-012"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "lets-be-bad-guys-013"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "lets-be-bad-guys-015"
+        }
+      ],
+      "fp_trap": []
+    },
+    {
+      "slug": "realvuln-python-insecure-app",
+      "a": [
+        {
+          "cwe": "CWE-200",
+          "id": "python-insecure-app-006",
+          "file": "app/main.py"
+        },
+        {
+          "cwe": "CWE-16",
+          "id": "python-insecure-app-007",
+          "file": "caddy/Caddyfile"
+        }
+      ],
+      "b": [],
+      "c": [
+        {
+          "cwe": "CWE-1336",
+          "id": "python-insecure-app-001",
+          "file": "app/main.py",
+          "gt_line": 41,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "python-insecure-app-002",
+          "file": "app/main.py",
+          "gt_line": 38,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "python-insecure-app-003",
+          "file": "app/main.py",
+          "gt_line": 38,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-918",
+          "id": "python-insecure-app-004"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "python-insecure-app-005"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "python-insecure-app-008"
+        }
+      ],
+      "fp_trap": []
+    },
+    {
+      "slug": "realvuln-pythonssti",
+      "a": [],
+      "b": [],
+      "c": [
+        {
+          "cwe": "CWE-79",
+          "id": "python-ssti-002",
+          "file": "main.py",
+          "gt_line": 14,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-1336",
+          "id": "python-ssti-001"
+        }
+      ],
+      "fp_trap": [
+        {
+          "cwe": "CWE-1336",
+          "id": "python-ssti-fp-001"
+        }
+      ]
+    },
+    {
+      "slug": "realvuln-threatbyte",
+      "a": [
+        {
+          "cwe": "CWE-352",
+          "id": "threatbyte-009",
+          "file": "server/routes.py"
+        },
+        {
+          "cwe": "CWE-639",
+          "id": "threatbyte-010",
+          "file": "server/api/v1/api_v1.py"
+        },
+        {
+          "cwe": "CWE-862",
+          "id": "threatbyte-011",
+          "file": "server/api/v1/api_v1.py"
+        },
+        {
+          "cwe": "CWE-915",
+          "id": "threatbyte-012",
+          "file": "server/routes.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "threatbyte-016",
+          "file": "server/routes.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "threatbyte-018",
+          "file": "server/routes.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "threatbyte-020",
+          "file": "server/api/v1/api_v1.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "threatbyte-022",
+          "file": "server/api/v1/api_v1.py"
+        },
+        {
+          "cwe": "CWE-16",
+          "id": "threatbyte-024",
+          "file": ".github/workflows/dast-zap.yml"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "threatbyte-fp-008",
+          "file": "server/routes.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "threatbyte-fp-009",
+          "file": "server/routes.py"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-79",
+          "id": "threatbyte-002",
+          "file": "client/templates/dashboard.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "threatbyte-003",
+          "file": "client/templates/profile.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "threatbyte-004",
+          "file": "client/templates/dashboard.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-434",
+          "id": "threatbyte-013",
+          "file": "server/routes.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "threatbyte-014",
+          "file": "server/routes.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-321",
+          "id": "threatbyte-017",
+          "file": "server/api/v1/api_v1.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "threatbyte-019",
+          "file": "server/routes.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-829",
+          "id": "threatbyte-023",
+          "file": ".github/workflows/sast-opengrep.yml",
+          "class": "borderline"
+        }
+      ],
+      "c": [
+        {
+          "cwe": "CWE-798",
+          "id": "threatbyte-021",
+          "file": "db/create_dummy_data.py",
+          "gt_line": 19,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-89",
+          "id": "threatbyte-001"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "threatbyte-005"
+        },
+        {
+          "cwe": "CWE-328",
+          "id": "threatbyte-006"
+        },
+        {
+          "cwe": "CWE-215",
+          "id": "threatbyte-007"
+        },
+        {
+          "cwe": "CWE-1004",
+          "id": "threatbyte-008"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "threatbyte-015"
+        }
+      ],
+      "fp_trap": [
+        {
+          "cwe": "CWE-89",
+          "id": "threatbyte-fp-003"
+        }
+      ]
+    },
+    {
+      "slug": "realvuln-vampi",
+      "a": [
+        {
+          "cwe": "CWE-639",
+          "id": "vampi-002",
+          "file": "api_views/users.py"
+        },
+        {
+          "cwe": "CWE-639",
+          "id": "vampi-003",
+          "file": "api_views/books.py"
+        },
+        {
+          "cwe": "CWE-915",
+          "id": "vampi-004",
+          "file": "api_views/users.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "vampi-005",
+          "file": "api_views/users.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "vampi-011",
+          "file": "api_views/main.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "vampi-013",
+          "file": "api_views/users.py"
+        },
+        {
+          "cwe": "CWE-256",
+          "id": "vampi-014",
+          "file": "models/user_model.py"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-204",
+          "id": "vampi-006",
+          "file": "api_views/users.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-1333",
+          "id": "vampi-007",
+          "file": "api_views/users.py",
+          "class": "borderline"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "vampi-015",
+          "file": "api_views/users.py",
+          "class": "detectable"
+        }
+      ],
+      "c": [
+        {
+          "cwe": "CWE-489",
+          "id": "vampi-009",
+          "file": "app.py",
+          "gt_line": 17,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-770",
+          "id": "vampi-010",
+          "file": "config.py",
+          "gt_line": 27,
+          "class": "borderline"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vampi-012",
+          "file": "models/user_model.py",
+          "gt_line": 98,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-89",
+          "id": "vampi-001"
+        },
+        {
+          "cwe": "CWE-321",
+          "id": "vampi-008"
+        }
+      ],
+      "fp_trap": []
+    },
+    {
+      "slug": "realvuln-vfapi",
+      "a": [
+        {
+          "cwe": "CWE-200",
+          "id": "vfapi-006",
+          "file": "main.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "vfapi-008",
+          "file": "main.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "vfapi-009",
+          "file": "main.py"
+        }
+      ],
+      "b": [],
+      "c": [],
+      "tp": [
+        {
+          "cwe": "CWE-89",
+          "id": "vfapi-001"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vfapi-002"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vfapi-003"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vfapi-004"
+        },
+        {
+          "cwe": "CWE-943",
+          "id": "vfapi-005"
+        },
+        {
+          "cwe": "CWE-916",
+          "id": "vfapi-007"
+        }
+      ],
+      "fp_trap": []
+    },
+    {
+      "slug": "realvuln-vulnerable-flask-app",
+      "a": [
+        {
+          "cwe": "CWE-639",
+          "id": "vulnerable-flask-app-009",
+          "file": "app/app.py"
+        },
+        {
+          "cwe": "CWE-639",
+          "id": "vulnerable-flask-app-010",
+          "file": "app/app.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "vulnerable-flask-app-011",
+          "file": "app/app.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "vulnerable-flask-app-012",
+          "file": "app/app.py"
+        },
+        {
+          "cwe": "CWE-256",
+          "id": "vulnerable-flask-app-015",
+          "file": "app/app.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "vulnerable-flask-app-018",
+          "file": "app/app.py"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-209",
+          "id": "vulnerable-flask-app-019",
+          "file": "app/app.py",
+          "class": "detectable"
+        }
+      ],
+      "c": [
+        {
+          "cwe": "CWE-1336",
+          "id": "vulnerable-flask-app-001",
+          "file": "app/app.py",
+          "gt_line": 112,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-1336",
+          "id": "vulnerable-flask-app-003",
+          "file": "app/app.py",
+          "gt_line": 271,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "vulnerable-flask-app-013",
+          "file": "app/app.py",
+          "gt_line": 271,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-611",
+          "id": "vulnerable-flask-app-016",
+          "file": "app/app.py",
+          "gt_line": 303,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "vulnerable-flask-app-021",
+          "file": "app/app.py",
+          "gt_line": 148,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-89",
+          "id": "vulnerable-flask-app-002"
+        },
+        {
+          "cwe": "CWE-502",
+          "id": "vulnerable-flask-app-004"
+        },
+        {
+          "cwe": "CWE-345",
+          "id": "vulnerable-flask-app-005"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulnerable-flask-app-006"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulnerable-flask-app-007"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulnerable-flask-app-008"
+        },
+        {
+          "cwe": "CWE-328",
+          "id": "vulnerable-flask-app-014"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulnerable-flask-app-017"
+        },
+        {
+          "cwe": "CWE-338",
+          "id": "vulnerable-flask-app-020"
+        }
+      ],
+      "fp_trap": []
+    },
+    {
+      "slug": "realvuln-vulnerable-python-apps",
+      "a": [
+        {
+          "cwe": "CWE-200",
+          "id": "vulnerable-python-apps-015",
+          "file": "Insecure_Frameworks/bad_mvc.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "vulnerable-python-apps-018",
+          "file": "SQLI/main.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "vulnerable-python-apps-022",
+          "file": "Other/vuln_payment_code.py"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-89",
+          "id": "vulnerable-python-apps-002",
+          "file": "SQLI/main.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulnerable-python-apps-003",
+          "file": "SQLI/main.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vulnerable-python-apps-005",
+          "file": "SQLI/sqli_example.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vulnerable-python-apps-006",
+          "file": "SQLI/sqli_example.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vulnerable-python-apps-007",
+          "file": "SQLI/sqli_example.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vulnerable-python-apps-008",
+          "file": "SQLI/sqli_example.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-502",
+          "id": "vulnerable-python-apps-010",
+          "file": "Insecure_Deserialization/serialize_server.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-295",
+          "id": "vulnerable-python-apps-014",
+          "file": "Other/host_header_injection.py",
+          "class": "detectable"
+        }
+      ],
+      "c": [
+        {
+          "cwe": "CWE-22",
+          "id": "vulnerable-python-apps-001",
+          "file": "Directory_Traversal/Dir_Traversal.py",
+          "gt_line": 22,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnerable-python-apps-009",
+          "file": "Insecure_Frameworks/bad_mvc.py",
+          "gt_line": 37,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-328",
+          "id": "vulnerable-python-apps-012",
+          "file": "Other/length_extension_attack.py",
+          "gt_line": 17,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-328",
+          "id": "vulnerable-python-apps-013",
+          "file": "Other/vuln_payment_code.py",
+          "gt_line": 12,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnerable-python-apps-017",
+          "file": "Insecure_Deserialization/serialize_server.py",
+          "gt_line": 30,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-354",
+          "id": "vulnerable-python-apps-019",
+          "file": "Insecure_Frameworks/bad_mvc.py",
+          "gt_line": 15,
+          "class": "borderline"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-798",
+          "id": "vulnerable-python-apps-004"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnerable-python-apps-011"
+        },
+        {
+          "cwe": "CWE-502",
+          "id": "vulnerable-python-apps-016"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulnerable-python-apps-020"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulnerable-python-apps-021"
+        }
+      ],
+      "fp_trap": []
+    },
+    {
+      "slug": "realvuln-vulnerable-tornado-app",
+      "a": [
+        {
+          "cwe": "CWE-16",
+          "id": "vulnerable-tornado-app-006",
+          "file": "server.py"
+        },
+        {
+          "cwe": "CWE-256",
+          "id": "vulnerable-tornado-app-008",
+          "file": "server.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "vulnerable-tornado-app-009",
+          "file": "server.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "vulnerable-tornado-app-013",
+          "file": "server.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "vulnerable-tornado-app-014",
+          "file": "server.py"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-89",
+          "id": "vulnerable-tornado-app-001",
+          "file": "server.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-78",
+          "id": "vulnerable-tornado-app-002",
+          "file": "server.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnerable-tornado-app-003",
+          "file": "server.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnerable-tornado-app-004",
+          "file": "server.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnerable-tornado-app-005",
+          "file": "server.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulnerable-tornado-app-007",
+          "file": "server.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-434",
+          "id": "vulnerable-tornado-app-010",
+          "file": "server.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-532",
+          "id": "vulnerable-tornado-app-011",
+          "file": "server.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-1021",
+          "id": "vulnerable-tornado-app-012",
+          "file": "server.py",
+          "class": "detectable"
+        }
+      ],
+      "c": [],
+      "tp": [],
+      "fp_trap": []
+    },
+    {
+      "slug": "realvuln-vulnpy",
+      "a": [
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-058",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-059",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-060",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-061",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-062",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-063",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-064",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-065",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-066",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-067",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-068",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-069",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-070",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-071",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-072",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-400",
+          "id": "vulnpy-073",
+          "file": "src/vulnpy/trigger/redos.py"
+        },
+        {
+          "cwe": "CWE-16",
+          "id": "vulnpy-075",
+          "file": "src/vulnpy/wsgi/app.py"
+        },
+        {
+          "cwe": "CWE-16",
+          "id": "vulnpy-076",
+          "file": "src/vulnpy/wsgi/app.py"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-89",
+          "id": "vulnpy-007",
+          "file": "src/vulnpy/trigger/sqli.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vulnpy-008",
+          "file": "src/vulnpy/trigger/sqli.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vulnpy-009",
+          "file": "src/vulnpy/trigger/sqli.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-010",
+          "file": "src/vulnpy/trigger/pt.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-011",
+          "file": "src/vulnpy/trigger/pt.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-012",
+          "file": "src/vulnpy/trigger/pt.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-013",
+          "file": "src/vulnpy/trigger/pt.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-014",
+          "file": "src/vulnpy/trigger/pt.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnpy-018",
+          "file": "src/vulnpy/trigger/ssrf.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnpy-019",
+          "file": "src/vulnpy/trigger/ssrf.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnpy-020",
+          "file": "src/vulnpy/trigger/ssrf.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnpy-021",
+          "file": "src/vulnpy/trigger/ssrf.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnpy-022",
+          "file": "src/vulnpy/trigger/ssrf.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnpy-023",
+          "file": "src/vulnpy/trigger/ssrf.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnpy-024",
+          "file": "src/vulnpy/trigger/ssrf.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnpy-025",
+          "file": "src/vulnpy/trigger/ssrf.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnpy-026",
+          "file": "src/vulnpy/trigger/ssrf.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnpy-027",
+          "file": "src/vulnpy/trigger/ssrf.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnpy-028",
+          "file": "src/vulnpy/trigger/ssrf.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnpy-029",
+          "file": "src/vulnpy/trigger/ssrf.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-918",
+          "id": "vulnpy-030",
+          "file": "src/vulnpy/trigger/ssrf.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnpy-040",
+          "file": "src/vulnpy/flask/blueprint.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnpy-041",
+          "file": "src/vulnpy/django/vulnerable.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnpy-042",
+          "file": "src/vulnpy/django/vulnerable_asgi.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnpy-043",
+          "file": "src/vulnpy/falcon/vulnerable.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnpy-044",
+          "file": "src/vulnpy/falcon/vulnerable_asgi.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnpy-045",
+          "file": "src/vulnpy/fastapi/vulnerable.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnpy-046",
+          "file": "src/vulnpy/pyramid/vulnerable_routes.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnpy-047",
+          "file": "src/vulnpy/bottle/vulnerable_routes.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnpy-048",
+          "file": "src/vulnpy/aiohttp/vulnerable_routes.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnpy-049",
+          "file": "src/vulnpy/quart/blueprint.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnpy-050",
+          "file": "src/vulnpy/wsgi/app.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-525",
+          "id": "vulnpy-074",
+          "file": "src/vulnpy/wsgi/app.py",
+          "class": "borderline"
+        }
+      ],
+      "c": [
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-015",
+          "file": "src/vulnpy/trigger/pt.py",
+          "gt_line": 48,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-016",
+          "file": "src/vulnpy/trigger/pt.py",
+          "gt_line": 57,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-017",
+          "file": "src/vulnpy/trigger/pt.py",
+          "gt_line": 66,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-643",
+          "id": "vulnpy-034",
+          "file": "src/vulnpy/trigger/xpath.py",
+          "gt_line": 25,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-643",
+          "id": "vulnpy-035",
+          "file": "src/vulnpy/trigger/xpath.py",
+          "gt_line": 29,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-643",
+          "id": "vulnpy-036",
+          "file": "src/vulnpy/trigger/xpath.py",
+          "gt_line": 33,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnpy-078",
+          "file": "apps/flask_app.py",
+          "gt_line": 11,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-78",
+          "id": "vulnpy-001"
+        },
+        {
+          "cwe": "CWE-78",
+          "id": "vulnpy-002"
+        },
+        {
+          "cwe": "CWE-502",
+          "id": "vulnpy-003"
+        },
+        {
+          "cwe": "CWE-502",
+          "id": "vulnpy-004"
+        },
+        {
+          "cwe": "CWE-502",
+          "id": "vulnpy-005"
+        },
+        {
+          "cwe": "CWE-502",
+          "id": "vulnpy-006"
+        },
+        {
+          "cwe": "CWE-94",
+          "id": "vulnpy-031"
+        },
+        {
+          "cwe": "CWE-94",
+          "id": "vulnpy-032"
+        },
+        {
+          "cwe": "CWE-94",
+          "id": "vulnpy-033"
+        },
+        {
+          "cwe": "CWE-611",
+          "id": "vulnpy-037"
+        },
+        {
+          "cwe": "CWE-611",
+          "id": "vulnpy-038"
+        },
+        {
+          "cwe": "CWE-611",
+          "id": "vulnpy-039"
+        },
+        {
+          "cwe": "CWE-328",
+          "id": "vulnpy-051"
+        },
+        {
+          "cwe": "CWE-328",
+          "id": "vulnpy-052"
+        },
+        {
+          "cwe": "CWE-328",
+          "id": "vulnpy-053"
+        },
+        {
+          "cwe": "CWE-330",
+          "id": "vulnpy-054"
+        },
+        {
+          "cwe": "CWE-330",
+          "id": "vulnpy-055"
+        },
+        {
+          "cwe": "CWE-330",
+          "id": "vulnpy-056"
+        },
+        {
+          "cwe": "CWE-330",
+          "id": "vulnpy-057"
+        },
+        {
+          "cwe": "CWE-78",
+          "id": "vulnpy-077"
+        }
+      ],
+      "fp_trap": [
+        {
+          "cwe": "CWE-502",
+          "id": "vulnpy-fp-011"
+        },
+        {
+          "cwe": "CWE-611",
+          "id": "vulnpy-fp-013"
+        },
+        {
+          "cwe": "CWE-611",
+          "id": "vulnpy-fp-014"
+        },
+        {
+          "cwe": "CWE-328",
+          "id": "vulnpy-fp-015"
+        }
+      ]
+    },
+    {
+      "slug": "realvuln-vulpy",
+      "a": [
+        {
+          "cwe": "CWE-565",
+          "id": "vulpy-006",
+          "file": "bad/libsession.py"
+        },
+        {
+          "cwe": "CWE-256",
+          "id": "vulpy-008",
+          "file": "bad/libuser.py"
+        },
+        {
+          "cwe": "CWE-306",
+          "id": "vulpy-013",
+          "file": "bad/mod_mfa.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "vulpy-014",
+          "file": "bad/mod_user.py"
+        },
+        {
+          "cwe": "CWE-862",
+          "id": "vulpy-015",
+          "file": "bad/mod_user.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "vulpy-018",
+          "file": "bad/libuser.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "vulpy-029",
+          "file": "bad/mod_posts.py"
+        },
+        {
+          "cwe": "CWE-639",
+          "id": "vulpy-030",
+          "file": "bad/mod_api.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "vulpy-033",
+          "file": "bad/libapi.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "vulpy-034",
+          "file": "bad/libposts.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "vulpy-035",
+          "file": "bad/mod_user.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "vulpy-036",
+          "file": "bad/mod_api.py"
+        },
+        {
+          "cwe": "CWE-639",
+          "id": "vulpy-037",
+          "file": "bad/mod_api.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "vulpy-038",
+          "file": "bad/mod_mfa.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "vulpy-045",
+          "file": "good/mod_api.py"
+        },
+        {
+          "cwe": "CWE-307",
+          "id": "vulpy-046",
+          "file": "good/mod_user.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "vulpy-047",
+          "file": "good/mod_mfa.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "vulpy-049",
+          "file": "good/libmfa.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "vulpy-fp-011",
+          "file": "bad/mod_mfa.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "vulpy-fp-012",
+          "file": "good/mod_user.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "vulpy-fp-013",
+          "file": "good/mod_mfa.py"
+        },
+        {
+          "cwe": "CWE-352",
+          "id": "vulpy-fp-014",
+          "file": "good/mod_posts.py"
+        },
+        {
+          "cwe": "CWE-200",
+          "id": "vulpy-052",
+          "file": "bad/libmfa.py"
+        }
+      ],
+      "b": [
+        {
+          "cwe": "CWE-79",
+          "id": "vulpy-004",
+          "file": "bad/templates/posts.view.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulpy-005",
+          "file": "bad/templates/messages.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulpy-024",
+          "file": "good/templates/posts.view.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulpy-025",
+          "file": "good/templates/messages.html",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-338",
+          "id": "vulpy-039",
+          "file": "utils/skey.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulpy-042",
+          "file": "good/db_init.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "vulpy-050",
+          "file": "good/libuser.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-209",
+          "id": "vulpy-051",
+          "file": "good/libposts.py",
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-916",
+          "id": "vulpy-054",
+          "file": "utils/skey.py",
+          "class": "detectable"
+        }
+      ],
+      "c": [
+        {
+          "cwe": "CWE-798",
+          "id": "vulpy-007",
+          "file": "bad/db_init.py",
+          "gt_line": 9,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-330",
+          "id": "vulpy-011",
+          "file": "bad/libapi.py",
+          "gt_line": 14,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulpy-012",
+          "file": "bad/libapi.py",
+          "gt_line": 16,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-614",
+          "id": "vulpy-016",
+          "file": "bad/libsession.py",
+          "gt_line": 7,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-521",
+          "id": "vulpy-017",
+          "file": "bad/libuser.py",
+          "gt_line": 59,
+          "class": "borderline"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulpy-021",
+          "file": "bad/db.py",
+          "gt_line": 7,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-321",
+          "id": "vulpy-028",
+          "file": "good/libsession.py",
+          "gt_line": 9,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulpy-031",
+          "file": "bad/libapi.py",
+          "gt_line": 33,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-312",
+          "id": "vulpy-032",
+          "file": "bad/libapi.py",
+          "gt_line": 20,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-1004",
+          "id": "vulpy-048",
+          "file": "good/libsession.py",
+          "gt_line": 32,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-89",
+          "id": "vulpy-001"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vulpy-002"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vulpy-003"
+        },
+        {
+          "cwe": "CWE-215",
+          "id": "vulpy-009"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulpy-010"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vulpy-019"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vulpy-020"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulpy-022"
+        },
+        {
+          "cwe": "CWE-215",
+          "id": "vulpy-023"
+        },
+        {
+          "cwe": "CWE-89",
+          "id": "vulpy-026"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulpy-027"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulpy-040"
+        },
+        {
+          "cwe": "CWE-798",
+          "id": "vulpy-041"
+        },
+        {
+          "cwe": "CWE-489",
+          "id": "vulpy-043"
+        },
+        {
+          "cwe": "CWE-489",
+          "id": "vulpy-044"
+        }
+      ],
+      "fp_trap": [
+        {
+          "cwe": "CWE-78",
+          "id": "vulpy-fp-006"
+        }
+      ]
+    }
+  ],
+  "det_scores": [
+    {
+      "n_det_tp": 10,
+      "n_det_fp": 4,
+      "tp": 7,
+      "fp": 1,
+      "fn": 3,
+      "tn": 3,
+      "recall": 0.7,
+      "precision": 0.875,
+      "fpr": 0.25,
+      "f3": 0.7143,
+      "mcc": 0.4108,
+      "slug": "realvuln-damn-vulnerable-flask-application"
+    },
+    {
+      "n_det_tp": 19,
+      "n_det_fp": 4,
+      "tp": 4,
+      "fp": 0,
+      "fn": 15,
+      "tn": 4,
+      "recall": 0.2105,
+      "precision": 1.0,
+      "fpr": 0.0,
+      "f3": 0.2286,
+      "mcc": 0.2105,
+      "slug": "realvuln-damn-vulnerable-graphql-application"
+    },
+    {
+      "n_det_tp": 30,
+      "n_det_fp": 6,
+      "tp": 13,
+      "fp": 0,
+      "fn": 17,
+      "tn": 6,
+      "recall": 0.4333,
+      "precision": 1.0,
+      "fpr": 0.0,
+      "f3": 0.4594,
+      "mcc": 0.3362,
+      "slug": "realvuln-djangoat"
+    },
+    {
+      "n_det_tp": 22,
+      "n_det_fp": 6,
+      "tp": 7,
+      "fp": 1,
+      "fn": 15,
+      "tn": 5,
+      "recall": 0.3182,
+      "precision": 0.875,
+      "fpr": 0.1667,
+      "f3": 0.3398,
+      "mcc": 0.1376,
+      "slug": "realvuln-dsvpwa"
+    },
+    {
+      "n_det_tp": 21,
+      "n_det_fp": 4,
+      "tp": 6,
+      "fp": 2,
+      "fn": 15,
+      "tn": 2,
+      "recall": 0.2857,
+      "precision": 0.75,
+      "fpr": 0.5,
+      "f3": 0.3046,
+      "mcc": -0.1684,
+      "slug": "realvuln-dsvw"
+    },
+    {
+      "n_det_tp": 13,
+      "n_det_fp": 3,
+      "tp": 8,
+      "fp": 1,
+      "fn": 5,
+      "tn": 2,
+      "recall": 0.6154,
+      "precision": 0.8889,
+      "fpr": 0.3333,
+      "f3": 0.6349,
+      "mcc": 0.2219,
+      "slug": "realvuln-dvblab"
+    },
+    {
+      "n_det_tp": 12,
+      "n_det_fp": 4,
+      "tp": 2,
+      "fp": 0,
+      "fn": 10,
+      "tn": 4,
+      "recall": 0.1667,
+      "precision": 1.0,
+      "fpr": 0.0,
+      "f3": 0.1818,
+      "mcc": 0.2182,
+      "slug": "realvuln-dvpwa"
+    },
+    {
+      "n_det_tp": 19,
+      "n_det_fp": 4,
+      "tp": 5,
+      "fp": 0,
+      "fn": 14,
+      "tn": 4,
+      "recall": 0.2632,
+      "precision": 1.0,
+      "fpr": 0.0,
+      "f3": 0.2841,
+      "mcc": 0.2418,
+      "slug": "realvuln-extremely-vulnerable-flask-app"
+    },
+    {
+      "n_det_tp": 17,
+      "n_det_fp": 5,
+      "tp": 3,
+      "fp": 0,
+      "fn": 14,
+      "tn": 5,
+      "recall": 0.1765,
+      "precision": 1.0,
+      "fpr": 0.0,
+      "f3": 0.1923,
+      "mcc": 0.2155,
+      "slug": "realvuln-flask-xss"
+    },
+    {
+      "n_det_tp": 5,
+      "n_det_fp": 2,
+      "tp": 4,
+      "fp": 1,
+      "fn": 1,
+      "tn": 1,
+      "recall": 0.8,
+      "precision": 0.8,
+      "fpr": 0.5,
+      "f3": 0.8,
+      "mcc": 0.3,
+      "slug": "realvuln-insecure-web"
+    },
+    {
+      "n_det_tp": 6,
+      "n_det_fp": 2,
+      "tp": 5,
+      "fp": 2,
+      "fn": 1,
+      "tn": 0,
+      "recall": 0.8333,
+      "precision": 0.7143,
+      "fpr": 1.0,
+      "f3": 0.8197,
+      "mcc": -0.2182,
+      "slug": "realvuln-intentionally-vulnerable-python-application"
+    },
+    {
+      "n_det_tp": 16,
+      "n_det_fp": 4,
+      "tp": 5,
+      "fp": 0,
+      "fn": 11,
+      "tn": 4,
+      "recall": 0.3125,
+      "precision": 1.0,
+      "fpr": 0.0,
+      "f3": 0.3356,
+      "mcc": 0.2887,
+      "slug": "realvuln-lets-be-bad-guys"
+    },
+    {
+      "n_det_tp": 6,
+      "n_det_fp": 1,
+      "tp": 3,
+      "fp": 0,
+      "fn": 3,
+      "tn": 1,
+      "recall": 0.5,
+      "precision": 1.0,
+      "fpr": 0.0,
+      "f3": 0.5263,
+      "mcc": 0.3536,
+      "slug": "realvuln-python-insecure-app"
+    },
+    {
+      "n_det_tp": 2,
+      "n_det_fp": 1,
+      "tp": 1,
+      "fp": 1,
+      "fn": 1,
+      "tn": 0,
+      "recall": 0.5,
+      "precision": 0.5,
+      "fpr": 1.0,
+      "f3": 0.5,
+      "mcc": -0.5,
+      "slug": "realvuln-pythonssti"
+    },
+    {
+      "n_det_tp": 14,
+      "n_det_fp": 5,
+      "tp": 6,
+      "fp": 1,
+      "fn": 8,
+      "tn": 4,
+      "recall": 0.4286,
+      "precision": 0.8571,
+      "fpr": 0.2,
+      "f3": 0.4511,
+      "mcc": 0.2087,
+      "slug": "realvuln-threatbyte"
+    },
+    {
+      "n_det_tp": 6,
+      "n_det_fp": 2,
+      "tp": 2,
+      "fp": 0,
+      "fn": 4,
+      "tn": 2,
+      "recall": 0.3333,
+      "precision": 1.0,
+      "fpr": 0.0,
+      "f3": 0.3571,
+      "mcc": 0.3333,
+      "slug": "realvuln-vampi"
+    },
+    {
+      "n_det_tp": 6,
+      "n_det_fp": 2,
+      "tp": 6,
+      "fp": 0,
+      "fn": 0,
+      "tn": 2,
+      "recall": 1.0,
+      "precision": 1.0,
+      "fpr": 0.0,
+      "f3": 1.0,
+      "mcc": 1.0,
+      "slug": "realvuln-vfapi"
+    },
+    {
+      "n_det_tp": 14,
+      "n_det_fp": 4,
+      "tp": 8,
+      "fp": 0,
+      "fn": 6,
+      "tn": 4,
+      "recall": 0.5714,
+      "precision": 1.0,
+      "fpr": 0.0,
+      "f3": 0.597,
+      "mcc": 0.4781,
+      "slug": "realvuln-vulnerable-flask-app"
+    },
+    {
+      "n_det_tp": 18,
+      "n_det_fp": 5,
+      "tp": 5,
+      "fp": 0,
+      "fn": 13,
+      "tn": 5,
+      "recall": 0.2778,
+      "precision": 1.0,
+      "fpr": 0.0,
+      "f3": 0.2994,
+      "mcc": 0.2778,
+      "slug": "realvuln-vulnerable-python-apps"
+    },
+    {
+      "n_det_tp": 9,
+      "n_det_fp": 3,
+      "tp": 0,
+      "fp": 0,
+      "fn": 9,
+      "tn": 3,
+      "recall": 0.0,
+      "precision": 0.0,
+      "fpr": 0.0,
+      "f3": 0.0,
+      "mcc": 0.0,
+      "slug": "realvuln-vulnerable-tornado-app"
+    },
+    {
+      "n_det_tp": 59,
+      "n_det_fp": 15,
+      "tp": 20,
+      "fp": 4,
+      "fn": 39,
+      "tn": 11,
+      "recall": 0.339,
+      "precision": 0.8333,
+      "fpr": 0.2667,
+      "f3": 0.3604,
+      "mcc": 0.0621,
+      "slug": "realvuln-vulnpy"
+    },
+    {
+      "n_det_tp": 33,
+      "n_det_fp": 6,
+      "tp": 15,
+      "fp": 1,
+      "fn": 18,
+      "tn": 5,
+      "recall": 0.4545,
+      "precision": 0.9375,
+      "fpr": 0.1667,
+      "f3": 0.4792,
+      "mcc": 0.2112,
+      "slug": "realvuln-vulpy"
+    }
+  ]
+}
