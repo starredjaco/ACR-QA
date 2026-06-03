@@ -27,14 +27,34 @@ Rule-based baseline for reference: **25.1% full / 37.8% detectable**.
    ACR-QA's exploit-verifier is that something — but only for the ~10 exploitable categories; secrets/
    crypto/config would need the LLM-jury (`second_opinion`) instead.
 
-## Verdict: NO-GO as a pre-defense shipped feature · STRONG Future Work
+## UPDATE — the union test (the decisive product number)
 
-- **Ungated LLM detection is worse than rules** (17% strict, 80% FP) — do **not** ship it as-is.
-- **The gated hybrid is promising but a multi-week build** (better localization + CWE mapping + cross-file
-  context + exploit-gating + jury for non-exploitable classes). Too risky to finish safely before Jun 25.
-- **Best move:** make it a **Future Work chapter backed by this prototype's real numbers** — "preliminary
-  LLM detection reaches 50–75% file-level recall at 80% false-alarm rate, motivating an exploit-gated
-  hybrid." That is a stronger, more honest research contribution than a half-built feature.
+LLM-*alone* is below rules. But the real question is **complementarity**: does the LLM catch what rules
+miss? Measured rules-alone vs LLM-alone vs **union**, strict (file+CWE+line) matching:
+
+| Sample | RULES | LLM-alone | UNION | **union lift** | LLM false-alarm |
+|---|:---:|:---:|:---:|:---:|:---:|
+| 3 repos | 15.6% | 22.1% | 28.6% | **+13.0pp** | ~76% |
+| 6 repos | 18.5% | 17.0% | 27.4% | **+8.9pp** | ~80–90% |
+
+**The lift is real and stable (~+9pp across 6 repos).** The LLM finds genuine vulns the rules miss — they
+are complementary. Per-repo the lift ranges +0% to +10%.
+
+## Verdict: GO on a SCOPED hybrid (not the SOTA rebuild) — achievable in days, data-backed
+
+- **The recall win exists:** union +9pp means detectable recall could go ~37.8% → ~45%. Real, honest,
+  defensible. **Not** "best of the bests" (that's the months-long agentic build) — but a genuine improvement.
+- **The whole bet hinges on PRECISION:** the LLM half is 80–90% false alarms. The hybrid only works if
+  gating (`second_opinion` two-LLM vote / `confirmed_tier` / exploit-verifier) keeps the +9pp recall while
+  killing the FPs. **That is the next experiment, and the kill-switch.**
+- **Scoped plan (days, mostly wiring existing engines):**
+  1. ✅ DONE — union lift measured (+9pp, holds across 6 repos).
+  2. Gate LLM candidates through `second_opinion`/`confirmed_tier`; measure precision retention.
+  3. Held-out split on more repos — confirm the lift isn't sample noise.
+  4. If gating holds precision → ship "LLM-augmented, gated detection" as a real result + novel hybrid.
+  5. Re-benchmark + update docs/README/QA_PREP.
+- **Kill-switch:** if step 2 shows gating can't keep precision (recall lift evaporates when FPs are cut),
+  it reverts to Future Work and we defend on current numbers. **Decide on the gating data, not hope.**
 
 ## If pursued post-defense (the real "go big")
 

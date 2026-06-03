@@ -48,6 +48,28 @@ def _load_keys() -> list[str]:
 _KEYS = _load_keys()
 _MODEL = "llama-3.3-70b-versatile"
 _key_idx = 0
+_CACHE = _ROOT / "DATA" / "proto_llm_cache"
+_CACHE.mkdir(parents=True, exist_ok=True)
+
+
+# ---------- CWE-family normalization (use RealVuln's own families) ----------
+def _load_cwe_family_map() -> dict[str, str]:
+    fam_file = _RV / "config" / "cwe-families.json"
+    out: dict[str, str] = {}
+    if fam_file.exists():
+        d = json.loads(fam_file.read_text())
+        for fam, info in d.get("families", {}).items():
+            for cwe in info.get("cwes", []):
+                out[cwe.upper()] = fam
+    return out
+
+
+_CWE_FAM = _load_cwe_family_map()
+
+
+def _fam(cwe: str) -> str | None:
+    return _CWE_FAM.get(cwe.upper())
+
 
 DETECT_PROMPT = """You are a security code auditor. Analyze the following Python file for \
 SECURITY VULNERABILITIES ONLY (injection, XSS, command injection, SSRF, path traversal, \
@@ -148,18 +170,24 @@ def score_repo(repo: str) -> dict:
     if not src.exists() or not tp_entries:
         return {"repo": repo, "skip": True}
 
-    # gather LLM candidates across all python files
-    cands: list[dict] = []
-    pyfiles = sorted(src.rglob("*.py"))
-    for pf in pyfiles:
-        rel = str(pf.relative_to(src))
-        try:
-            code = pf.read_text(errors="replace")
-        except Exception:  # noqa: BLE001
-            continue
-        if not code.strip():
-            continue
-        cands.extend(_llm_detect_file(rel, code))
+    # gather LLM candidates across all python files (cached — iterate scoring for free)
+    cache_f = _CACHE / f"{repo}.json"
+    if cache_f.exists():
+        cands = json.loads(cache_f.read_text())
+        print("    (using cached candidates)")
+    else:
+        cands = []
+        pyfiles = sorted(src.rglob("*.py"))
+        for pf in pyfiles:
+            rel = str(pf.relative_to(src))
+            try:
+                code = pf.read_text(errors="replace")
+            except Exception:  # noqa: BLE001
+                continue
+            if not code.strip():
+                continue
+            cands.extend(_llm_detect_file(rel, code))
+        cache_f.write_text(json.dumps(cands))
 
     # recall at three strictness levels (diagnose: missing vs mislocalizing)
     def _file_line(c, e):  # ignore CWE
@@ -173,7 +201,31 @@ def score_repo(repo: str) -> dict:
     def _file_only(c, e):
         return c["file"] == e.get("file")
 
+    def _fam_match(c, e):  # CWE-NORMALIZED: same family + file + line±tol
+        if c["file"] != e.get("file"):
+            return False
+        cf = _fam(c["cwe"])
+        if cf is None or cf not in {_fam(x) for x in e.get("acceptable_cwes", [])}:
+            return False
+        s, en = _gt_lines(e)
+        if s is None:
+            return True
+        return (s - LINE_TOL) <= c["line"] <= ((en or s) + LINE_TOL)
+
+    # rule-based findings (Bandit+Semgrep+custom) on the SAME repo → union test
+    try:
+        from scripts.run_realvuln_benchmark import run_acrqa_full
+
+        rule_f = run_acrqa_full(str(src))
+    except Exception as exc:  # noqa: BLE001
+        print(f"    ! rule-based run failed: {str(exc)[:90]}")
+        rule_f = []
+    union = cands + rule_f
+    rec_rules = sum(1 for e in tp_entries if any(_matches(c, e) for c in rule_f)) / len(tp_entries)
+    rec_union = sum(1 for e in tp_entries if any(_matches(c, e) for c in union)) / len(tp_entries)
+
     matched = sum(1 for e in tp_entries if any(_matches(c, e) for c in cands))
+    matched_fam = sum(1 for e in tp_entries if any(_fam_match(c, e) for c in cands))
     matched_fl = sum(1 for e in tp_entries if any(_file_line(c, e) for c in cands))
     matched_fo = sum(1 for e in tp_entries if any(_file_only(c, e) for c in cands))
     recall = matched / len(tp_entries) if tp_entries else 0.0
@@ -195,6 +247,10 @@ def score_repo(repo: str) -> dict:
         "llm_candidates": len(cands),
         "matched": matched,
         "llm_recall": round(recall, 3),
+        "recall_rules": round(rec_rules, 3),
+        "recall_union": round(rec_union, 3),
+        "union_lift": round(rec_union - rec_rules, 3),
+        "recall_cwe_family": round(matched_fam / len(tp_entries), 3) if tp_entries else 0,
         "recall_file_line": round(matched_fl / len(tp_entries), 3) if tp_entries else 0,
         "recall_file_only": round(matched_fo / len(tp_entries), 3) if tp_entries else 0,
         "false_alarms": fp_hits,
@@ -218,25 +274,39 @@ def main() -> None:
             continue
         rows.append(r)
         print(
-            f"  TP={r['tp_entries']:3}  recall strict={r['llm_recall']:.0%} "
-            f"file+line={r['recall_file_line']:.0%} file-only={r['recall_file_only']:.0%}  "
-            f"cands={r['llm_candidates']:3} false_alarms={r['false_alarms']:3} fpr~={r['llm_fpr_proxy']:.0%}"
+            f"  TP={r['tp_entries']:3}  RULES={r['recall_rules']:.0%}  LLM={r['llm_recall']:.0%}  "
+            f"UNION={r['recall_union']:.0%} (lift {r['union_lift']:+.0%})  "
+            f"llm-file+line={r['recall_file_line']:.0%} fpr~={r['llm_fpr_proxy']:.0%}"
         )
 
     if rows:
         tot_tp = sum(r["tp_entries"] for r in rows)
         tot_m = sum(r["matched"] for r in rows)
-        tot_fa = sum(r["false_alarms"] for r in rows)
+        tot_r = sum(round(r["recall_rules"] * r["tp_entries"]) for r in rows)
+        tot_u = sum(round(r["recall_union"] * r["tp_entries"]) for r in rows)
         agg_recall = tot_m / tot_tp if tot_tp else 0
-        agg_fpr = tot_fa / (tot_fa + tot_m) if (tot_fa + tot_m) else 0
+        agg_rules = tot_r / tot_tp if tot_tp else 0
+        agg_union = tot_u / tot_tp if tot_tp else 0
         print("=" * 72)
         print(
-            f"AGGREGATE  LLM recall = {agg_recall:.1%} ({tot_m}/{tot_tp})  "
-            f"false-alarms={tot_fa}  fpr~={agg_fpr:.1%}"
+            f"AGGREGATE  RULES={agg_rules:.1%}  LLM-alone={agg_recall:.1%}  "
+            f"UNION={agg_union:.1%}  (union lift {agg_union - agg_rules:+.1%})"
         )
+        print("DECISION: union lift > ~+8pp = real fast win. ≈0 = LLM adds only noise → future work.")
         print("\nCompare vs RealVuln rule-based baseline (full: 25.1%, detectable: 37.8%).")
         out = _ROOT / "docs" / "evaluation" / "PROTO_LLM_DETECTION.json"
-        out.write_text(json.dumps({"rows": rows, "agg_recall": agg_recall, "agg_fpr": agg_fpr}, indent=2))
+        out.write_text(
+            json.dumps(
+                {
+                    "rows": rows,
+                    "agg_rules": agg_rules,
+                    "agg_llm": agg_recall,
+                    "agg_union": agg_union,
+                    "union_lift": agg_union - agg_rules,
+                },
+                indent=2,
+            )
+        )
         print(f"\nWrote {out}")
 
 
