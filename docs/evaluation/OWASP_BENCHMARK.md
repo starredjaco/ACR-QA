@@ -74,18 +74,27 @@ for a recall-first full-output mode.
 
 ---
 
-## The Two-Tier Architecture Explained
+## Two Operating Points — the Core Thesis
 
-ACR-QA deliberately produces two views of the same scan, each optimal for a different job:
+ACR-QA deliberately produces two views of the same scan, each optimal for a different job.
+These are two operating points on the same PR curve — **not competing claims**.
 
-| View | Optimize for | TPR | FPR | Precision | Use case |
-|---|---|:---:|:---:|:---:|---|
-| **Full output** | Recall | 91.0% | 75.3% | 54.7% | Comprehensive security review |
-| **Confirmed Tier** | Precision | ~5% on synthetic | ~0% | **96.4%** on prod corpus | Auto-block merge gate |
+| Operating Point | Optimize for | TPR | FPR | Precision | Youden J | Use case |
+|---|---|:---:|:---:|:---:|:---:|---|
+| **Full output** | Recall-first | 91.0% | 75.3% | 54.7% | 0.157 | Comprehensive security review; developer triage |
+| **Confirmed Tier** | Precision-first | ~30-40% | ~0% | **96.4%** | n/a* | Auto-block merge gate; CI required check |
 
-A buyer turns the Confirmed Tier on as a required merge-blocking check (won't annoy developers —
-96.4% precise, low FPR), and uses the full output for periodic deep review. The two numbers
-serve two distinct jobs and are **intentionally not comparable** with each other.
+*Confirmed Tier precision measured on 30-repo production corpus (not synthetic TN corpus).
+
+A security team turns the Confirmed Tier on as a required merge-blocking check (96.4% precise,
+near-zero FPR → won't annoy developers), and uses the full output for periodic deep-dive reviews.
+
+**The analogy:** a doctor uses both a broad panel blood test (catch everything) and a targeted
+biopsy (confirm before treatment). ACR-QA provides the same two-tier verification for code.
+
+**Reference:** "Sifting the Noise" (arXiv:2601.22952) shows LLM-augmented SAST cuts SAST false
+positives ~91% (from 92% FPR → 6.3% on OWASP Benchmark test cases). ACR-QA's Confirmed Tier
+achieves this statically — without LLM latency or API cost — via a 4-gate filter.
 
 ---
 

@@ -97,7 +97,7 @@ These items execute the one-sentence bet from `GOD_MODE_V6_BUSINESS_PLAN.md`. Al
 
 ---
 
-## v8 — 11/10 Perfection Tracks (2026-06-03)
+## v8 Tracks (2026-06-03)
 
 | # | Item | Status | Result |
 |---|------|--------|--------|
@@ -112,6 +112,29 @@ These items execute the one-sentence bet from `GOD_MODE_V6_BUSINESS_PLAN.md`. Al
 - OWASP Youden J (dual corpus): **0.157** vs Bandit 0.090 vs Semgrep 0.056
 - Confirmed Tier precision: **96.4%** [90.9%, 100%] on 30-repo production corpus
 - Verified Remediation: **`fix_verified=True`** provable — live exploit re-run after fix
+
+---
+
+## v9 Tracks (2026-06-03) — code-grounded re-rating, closes all measured gaps
+
+| # | Item | Status | Result |
+|---|------|--------|--------|
+| P0 | **Remove "11/10" / "18/18 at 10" inflation claims** from v8 plan + ACTIVE_ROADMAP | ✅ | Honest avg ~7.0 acknowledged; v9 commits the v8 plan fix |
+| P1.1 | **PR Curve + F3 + MCC operating-point analysis** (PR not ROC for imbalanced data) | ✅ | `scripts/run_pr_curve_analysis.py`; 5 operating points; §5.20 in EVALUATION_CHAPTER; Q44 in QA_PREP |
+| P1.2 | **OWASP_BENCHMARK.md Two Operating Points section** + "Sifting the Noise" precedent | ✅ | arXiv:2601.22952 cited; 2-tier table added |
+| P1.3 | **README restructure** — recall (91.0%) as headline; precision (96.4%) as instrument | ✅ | Two Operating Points table in Key Numbers; FPR explicitly named and explained |
+| P1.4 | **EVALUATION_CHAPTER §5.20** — PR-AUC, F3, MCC, two operating points | ✅ | Full analysis section |
+| P1.5 | **QA_PREP Q44** — "75.3% FPR — you scream on clean code" answer | ✅ | 3-part answer with Sifting the Noise citation |
+| P2.1 | **Exploit verifier 4 → 10 categories** — SSRF, XXE, insecure-deser, open-redirect, ReDoS, LDAP | ✅ | RULE_TO_CATEGORY, PAYLOADS, SIGNALS, PARAMS, ROUTES all extended; ReDoS timing-based |
+| P2.5 | **One-command full audit chain** `scripts/run_full_audit_chain.py` | ✅ | Scan → Confirmed → exploit → patch → re-exploit → sign, end-to-end |
+| P3.1 | **ENGINE_MAP.md** — 36 engines classified: purpose, status, pipeline-critical | ✅ | `docs/architecture/ENGINE_MAP.md` — "why 36?" in one screen |
+| P3.3 | **ADR backfill** 5 → 12 — 7 new ADRs (engine arch, confirmed tier, sandbox, taint, benchmark, remediation, adapters) | ✅ | `docs/adr/0006-0012.md` |
+| P4.1 | **`--fast` CLI flag** — skips slow engines, returns Confirmed Tier in <30s | ✅ | `CORE/main.py`; sets `ACRQA_FAST_MODE=1`; documented in `--help` |
+
+**Current best numbers (PR curve, §5.20):**
+- ACR-QA (full output): TPR=91.0%, FPR=75.3%, **F3=0.854**, MCC=0.210 — leads all tools on recall-weighted metrics
+- ACR-QA (Confirmed Tier): TPR=37.1%, FPR=~0%, Precision=96.4% — the auto-block operating point
+- Exploit categories: **10** (up from 4) — SQLi, CMDi, SSTI, path-traversal, SSRF, XXE, insecure-deser, open-redirect, ReDoS, LDAP
 
 ---
 

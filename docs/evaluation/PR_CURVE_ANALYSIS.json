@@ -1,0 +1,82 @@
+{
+  "generated": "2026-06-03T08:40:07.673235+00:00",
+  "methodology": "OWASP dual-corpus (SecurityEval detectable CWE subset)",
+  "operating_points": [
+    {
+      "name": "ACR-QA (full output)",
+      "tp": 81,
+      "tn": 22,
+      "fp": 67,
+      "fn": 8,
+      "tpr": 0.9101,
+      "fpr": 0.7528,
+      "precision": 0.5473,
+      "recall": 0.9101,
+      "f1": 0.6835,
+      "f3": 0.8535,
+      "mcc": 0.2101,
+      "youden_j": 0.1573
+    },
+    {
+      "name": "Bandit (HIGH confidence)",
+      "tp": 11,
+      "tn": 82,
+      "fp": 7,
+      "fn": 78,
+      "tpr": 0.1236,
+      "fpr": 0.0787,
+      "precision": 0.6111,
+      "recall": 0.1236,
+      "f1": 0.2056,
+      "f3": 0.1343,
+      "mcc": 0.0745,
+      "youden_j": 0.0449
+    },
+    {
+      "name": "ACR-QA (Confirmed Tier)",
+      "tp": 33,
+      "tn": 60,
+      "fp": 29,
+      "fn": 56,
+      "tpr": 0.3708,
+      "fpr": 0.3258,
+      "precision": 0.5323,
+      "recall": 0.3708,
+      "f1": 0.4371,
+      "f3": 0.3824,
+      "mcc": 0.0472,
+      "youden_j": 0.0449
+    },
+    {
+      "name": "Bandit (full output)",
+      "tp": 45,
+      "tn": 52,
+      "fp": 37,
+      "fn": 44,
+      "tpr": 0.5056,
+      "fpr": 0.4157,
+      "precision": 0.5488,
+      "recall": 0.5056,
+      "f1": 0.5263,
+      "f3": 0.5096,
+      "mcc": 0.0902,
+      "youden_j": 0.0899
+    },
+    {
+      "name": "Semgrep CE",
+      "tp": 21,
+      "tn": 73,
+      "fp": 16,
+      "fn": 68,
+      "tpr": 0.236,
+      "fpr": 0.1798,
+      "precision": 0.5676,
+      "recall": 0.236,
+      "f1": 0.3333,
+      "f3": 0.2506,
+      "mcc": 0.0692,
+      "youden_j": 0.0562
+    }
+  ],
+  "why_pr_not_roc": "ROC masks FPR on imbalanced corpora. PR-curve Precision = TP/(TP+FP) is corpus-size invariant and reflects the developer signal-to-noise experience. Reference: Davis & Goadrich, ICML 2006."
+}
