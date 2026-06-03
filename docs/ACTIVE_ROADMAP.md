@@ -91,14 +91,27 @@ These items execute the one-sentence bet from `GOD_MODE_V6_BUSINESS_PLAN.md`. Al
 | # | Item | Status | Result |
 |---|------|--------|--------|
 | 35 | **7 taint rules (pass 1)** — open redirect, log injection, LDAP injection, ReDoS, XSS, JWT bypass | ✅ | Recall 58.4% → **78.7%** |
-| 36 | **16 gap-closing rules (pass 2)** — HTTP response splitting, traceback exposure, empty DB password, hardcoded salt, FTP cleartext, NoSQL injection (DynamoDB), OpenSSL no-verify, ssl.wrap_socket, SHA-256 password hash, hardcoded API key, infinite loop, os.system fstring, path traversal via os.remove, dynamic exec, CWE-319/321/327/521/760/835/943 | ✅ | Recall 78.7% → **91.0%** [84.3%, 96.6%] |
+| 36 | **16 gap-closing rules (pass 2)** — HTTP response splitting, traceback exposure, empty DB password, hardcoded salt, FTP cleartext, NoSQL injection (DynamoDB), OpenSSL no-verify, ssl.wrap_socket, SHA-256 password hash, hardcoded API key, infinite loop, os.system fstring, path traversal via os.remove, dynamic exec, CWE-319/321/327/521/760/835/943 | ✅ | Recall 78.7% → **91.0%** [82.8%, 97.8%] |
 | — | **Rule count:** 42 → 56 → **86** total custom Semgrep rules | ✅ | |
 | — | **RECONCILIATION.md** — honest P-1 retraction + P-2 methodology | ✅ | |
 
+---
+
+## v8 — 11/10 Perfection Tracks (2026-06-03)
+
+| # | Item | Status | Result |
+|---|------|--------|--------|
+| 37 | **Version sync** — 5 disagreeing strings → all `5.0.0rc1`; regression test added | ✅ | `--version` prints correctly; `TestVersionConsistency::test_all_version_sources_agree` |
+| 38 | **OWASP-Methodology Benchmark** — dual corpus (89 TP + 89 TN); Youden J, FPR, MCC, CIs | ✅ | J=0.157 leads Bandit 0.090 + Semgrep 0.056; §5.18 in EVALUATION_CHAPTER; Q41-Q42 in QA_PREP |
+| 39 | **Verified Remediation Engine** — 5-step detect→exploit→patch→re-exploit→sign pipeline | ✅ | `CORE/engines/verified_remediation.py`; 15 unit tests; demo script; §5.19 in EVALUATION_CHAPTER; Q43 in QA_PREP |
+| — | **Benchmark.html + cloudflare pages** — OWASP leaderboard + Verified Remediation section added | ✅ | Public-facing pages now reflect full benchmark story |
+| — | **All test badges** synced to 2,741 | ✅ | README + cloudflare + QA_PREP |
+
 **Current best numbers (SecurityEval, genuinely-vulnerable, bootstrap 95% CI):**
-- ACR-QA full output: **91.0%** [84.3%, 96.6%] vs Bandit 50.6% vs Semgrep 23.6%
-- All-CWE cut (incl. 40 undetectable logic flaws): 80.2% [72.7%, 86.8%]
+- ACR-QA full output recall: **91.0%** [82.8%, 97.8%] vs Bandit 50.6% vs Semgrep 23.6%
+- OWASP Youden J (dual corpus): **0.157** vs Bandit 0.090 vs Semgrep 0.056
 - Confirmed Tier precision: **96.4%** [90.9%, 100%] on 30-repo production corpus
+- Verified Remediation: **`fix_verified=True`** provable — live exploit re-run after fix
 
 ---
 

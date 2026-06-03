@@ -289,9 +289,9 @@ It's the expected behavior of a recall-first tool. The full output maximizes rec
 | Metric | Value |
 |--------|------:|
 | Version | v5.0.0rc1 |
-| Python tests | 2,726 |
+| Python tests | 2,741 |
 | TypeScript tests | 104 |
-| Total tests | **2,830** |
+| Total tests | **2,845** |
 | API endpoints | **52** |
 | Alembic migrations | 18 |
 | Eval corpus | **13 repos, 4 languages** |
