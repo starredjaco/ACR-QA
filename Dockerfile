@@ -1,5 +1,5 @@
 # =============================================================================
-# ACR-QA Multi-Stage Dockerfile  v5.0.0rc1
+# ACR-QA Multi-Stage Dockerfile  v5.0.0rc2
 # Stage 1 (node-builder)  — build React dashboard with Vite
 # Stage 2 (py-builder)    — install Python deps into a venv
 # Stage 3 (go-tools)      — pre-built gosec + staticcheck binaries (no Go compile)

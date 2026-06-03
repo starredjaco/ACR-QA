@@ -85,8 +85,8 @@ def _make_diff(original_path: Path, patched_path: Path) -> str:
     """Generate a simple unified diff between original and patched file."""
     import difflib
 
-    original_lines = original_path.read_text(errors="replace").splitlines(keepends=True)
-    patched_lines = patched_path.read_text(errors="replace").splitlines(keepends=True)
+    original_lines = original_path.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
+    patched_lines = patched_path.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
     diff = list(
         difflib.unified_diff(
             original_lines,
@@ -196,15 +196,25 @@ class VerifiedRemediationEngine:
             result.duration_seconds = time.monotonic() - start
             return result
 
-        # Step 3 — apply patch in a temp copy of target_dir
+        # Step 3 — apply patch in a temp copy of target_dir.
+        # Paths are resolved and bounds-checked to prevent traversal.
         with tempfile.TemporaryDirectory(prefix="acrqa-remediation-") as tmp:
-            patched_dir = Path(tmp) / "patched"
-            shutil.copytree(target_dir, str(patched_dir))
+            patched_dir = Path(tmp).resolve() / "patched"
+            target_dir_resolved = Path(target_dir).resolve()
+            shutil.copytree(str(target_dir_resolved), str(patched_dir))
 
-            original_file = Path(finding.get("file", finding.get("file_path", "")))
-            if not original_file.is_absolute():
-                original_file = Path(target_dir) / original_file
-            patched_file = patched_dir / original_file.relative_to(target_dir)
+            raw_file = finding.get("file", finding.get("file_path", ""))
+            original_file = Path(raw_file).resolve() if raw_file else Path()
+            if not str(original_file).startswith(str(target_dir_resolved)):
+                result.error = "Step 3 failed: finding file path escapes target_dir"
+                result.duration_seconds = time.monotonic() - start
+                return result
+            rel = original_file.relative_to(target_dir_resolved)
+            patched_file = (patched_dir / rel).resolve()
+            if not str(patched_file).startswith(str(patched_dir)):
+                result.error = "Step 3 failed: patched file path escapes sandbox"
+                result.duration_seconds = time.monotonic() - start
+                return result
 
             try:
                 patched_file.parent.mkdir(parents=True, exist_ok=True)
@@ -251,13 +261,13 @@ class VerifiedRemediationEngine:
         return self._fixer.generate_fix(finding) if self._fixer.can_fix(rule_id) else None
 
     def _apply_patch_to_file(self, patch: dict, target_file: Path) -> None:
-        """Write the patched content to target_file."""
+        """Write the patched content to target_file (path already bounds-checked by caller)."""
         if patch.get("patched_content"):
-            target_file.write_text(patch["patched_content"])
+            target_file.write_text(patch["patched_content"], encoding="utf-8")
         elif patch.get("fixed") is not None and patch.get("original") is not None:
-            content = target_file.read_text()
+            content = target_file.read_text(encoding="utf-8")
             content = content.replace(patch["original"] + "\n", patch["fixed"] + "\n", 1)
-            target_file.write_text(content)
+            target_file.write_text(content, encoding="utf-8")
         else:
             raise ValueError(f"Unrecognised patch format: {list(patch.keys())}")
 

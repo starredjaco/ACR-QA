@@ -310,6 +310,7 @@ class TestOperatorLogic:
 
     def _import_controller(self):
         """Import controller with k8s mocked out."""
+        pytest.importorskip("kubernetes", reason="kubernetes package not installed")
         with mock.patch("kubernetes.config.load_incluster_config", side_effect=Exception):
             with mock.patch("kubernetes.config.load_kube_config"):
                 with mock.patch("kubernetes.client.CustomObjectsApi"):
