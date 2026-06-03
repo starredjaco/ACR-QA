@@ -266,14 +266,26 @@ Three things: (1) Tag v5.0.0 final (removing the beta label) after defense. (2) 
 
 ---
 
+### Q41. "Your numbers look cherry-picked. Why not use a standard benchmark?" ⚠️ HIGH RISK
+
+We did. The OWASP Benchmark methodology is the field's standard — TPR, FPR, Youden J. We ran it on SecurityEval (s2e-lab, NeurIPS-cited) with dual corpus: 89 vulnerable TP files + 89 secure TN files. Result: ACR-QA Youden J=0.157 vs Bandit 0.090 vs Semgrep 0.056 — we lead on the primary OWASP metric. The FPR on the full output is 75.3% — I report it honestly. That FPR is what the Confirmed Tier is designed to eliminate: it targets 96.4% precision by accepting low recall on the auto-block stratum. `OWASP_BENCHMARK.md` has the full scorecard with bootstrap CIs, per-CWE breakdown, and reproduce commands.
+
+---
+
+### Q42. "Why is your FPR so high on OWASP? Doesn't that undermine the tool?"
+
+It's the expected behavior of a recall-first tool. The full output maximizes recall (91.0% — best of all tools). High FPR is the cost. The Confirmed Tier inverts the trade-off: it targets near-zero FPR for merge-blocking, at the cost of recall. These are two different instruments. The OWASP methodology actually shows ACR-QA makes the best J trade-off of any tool tested (J=0.157 vs Bandit 0.090) — meaning even accounting for FPR, ACR-QA is net more useful than its competitors.
+
+---
+
 ## Summary Card — Key Numbers
 
 | Metric | Value |
 |--------|------:|
 | Version | v5.0.0rc1 |
-| Python tests | 2,653 |
+| Python tests | 2,726 |
 | TypeScript tests | 104 |
-| Total tests | **2,757** |
+| Total tests | **2,830** |
 | API endpoints | **52** |
 | Alembic migrations | 18 |
 | Eval corpus | **13 repos, 4 languages** |
@@ -285,5 +297,7 @@ Three things: (1) Tag v5.0.0 final (removing the beta label) after defense. (2) 
 | FP rate (httpx) | **2.3%** |
 | Inter-rater κ | **0.74** (substantial) |
 | OWASP coverage | 9/10 |
+| OWASP Methodology Youden J | **0.157** (leads Bandit 0.090, Semgrep 0.056) |
+| P-2 recall (detectable CWEs) | **91.0%** vs Bandit 50.6%, Semgrep 23.6% |
 | Novel engines | 10 contributions |
 | Distribution | `pip install acrqa==5.0.0rc1` + GitHub Actions Marketplace |
