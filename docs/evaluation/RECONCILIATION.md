@@ -1,9 +1,10 @@
 # Benchmark Reconciliation — Reading the Numbers Honestly
 
-> **Created:** 2026-06-02
-> **Purpose:** Reconcile three numbers that look contradictory until you understand what each
-> measures: the internal 96.4% precision, the P-1 SecurityEval 64.3%/3.6%, and the P-2 rigorous
-> 91.0% recall. This is the integrity document — it is meant to be read by an examiner or a skeptic.
+> **Created:** 2026-06-02 · **Updated:** 2026-06-03 (added OWASP-methodology results)
+> **Purpose:** Reconcile four numbers that look contradictory until you understand what each
+> measures: the internal 96.4% precision, the P-1 SecurityEval 64.3%/3.6% (retracted), the P-2
+> rigorous 91.0% recall, and the OWASP-methodology Youden J=0.157. This is the integrity
+> document — it is meant to be read by an examiner or a skeptic.
 
 ---
 
@@ -13,13 +14,16 @@
 |--------|------------------|---------|
 | **96.4% precision** | Manual-triage precision of the Confirmed Tier on a 30-repo production corpus | Valid, but corpus-specific — a precision claim, not a recall claim |
 | **P-1: 64.3% precision, 3.6% recall** | A *flawed* first benchmark | **Retracted** — wrong ground truth, see below |
-| **P-2: 91.0% recall (full), best of all tools** | Recall on genuinely-vulnerable code, fair methodology | **The defensible headline** |
+| **P-2: 91.0% recall (full), best of all tools** | Recall on genuinely-vulnerable code, fair methodology | **The defensible headline on detection** |
+| **OWASP J=0.157, FPR=75.3%** | OWASP-methodology scoring (TPR−FPR) on dual corpus (TPs+TNs) | **Honest full picture — ACR-QA leads on J; FPR is real on full output** |
 
 **The honest story:** ACR-QA's *full output* detects more real vulnerabilities than Bandit or
-Semgrep (91.0% vs 50.6% vs 23.6% on the detectable subset). Its *Confirmed Tier* trades recall for
-precision — a small, high-confidence subset safe to auto-block. The 96.4% is the Confirmed Tier's
-precision on a different corpus. None of these contradict each other once you separate
-**precision (of the confirmed subset)** from **recall (of the full output)**.
+Semgrep (91.0% vs 50.6% vs 23.6% recall; Youden J=0.157 vs 0.090 vs 0.056). Its *Confirmed Tier*
+trades recall for precision — a small, high-confidence subset safe to auto-block (96.4% precise,
+near-zero FPR on production code). The full output's 75.3% FPR on synthetic micro-files is real
+and expected: it is a recall-first tool. None of these contradict each other once you separate
+**precision (Confirmed Tier on prod corpus)** from **recall (full output on vulnerable corpus)**
+from **dual-corpus OWASP scoring (both simultaneously)**.
 
 ---
 
