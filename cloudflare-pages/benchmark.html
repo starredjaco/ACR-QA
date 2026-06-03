@@ -98,12 +98,12 @@
     <tbody>
       <tr class="winner">
         <td class="tool-name">🥇 ACR-QA (full output)</td>
-        <td>52 / 89</td>
+        <td>81 / 89</td>
         <td class="val-green">
           91.0%
           <span class="bar-wrap"><span class="bar-fill" style="width:91.0%;background:#22c55e"></span></span>
         </td>
-        <td><small>[84.3%, 96.6%]</small></td>
+        <td><small>[82.8%, 97.8%]</small></td>
       </tr>
       <tr>
         <td>Bandit</td>
@@ -134,6 +134,89 @@
   </p>
 </section>
 
+<!-- OWASP METHODOLOGY LEADERBOARD -->
+<section class="section">
+  <div class="section-tag">OWASP-Methodology Benchmark — Dual Corpus (TP + TN)</div>
+  <h2>Youden J = TPR − FPR (OWASP primary metric)</h2>
+  <div class="note">
+    <strong>Methodology:</strong> SecurityEval dual-corpus — 89 vulnerable TP files
+    (<code>Testcases_Insecure_Code/</code>) + 89 secure TN files (<code>Testcases_Copilot/</code>).
+    A tool is scored on <em>both</em>: catching real vulns (TPR) AND staying silent on safe code (FPR).
+    Primary metric: <strong>Youden J = TPR − FPR</strong>. J=0 means random; J=1 means perfect.
+    This is strictly stronger than recall-only — it penalizes false-positive-heavy tools.
+    Bootstrap 95% CIs (2,000 resamples). <a href="https://github.com/ahmed-145/ACR-QA/blob/main/docs/evaluation/OWASP_BENCHMARK.md">Full scorecard →</a>
+  </div>
+  <table class="lb-table">
+    <thead>
+      <tr><th>Tool</th><th>TPR (recall)</th><th>FPR</th><th>Youden J ↓</th><th>MCC</th></tr>
+    </thead>
+    <tbody>
+      <tr class="winner">
+        <td class="tool-name">🥇 ACR-QA (full output)</td>
+        <td class="val-green">91.0%</td>
+        <td>75.3%</td>
+        <td class="val-green"><strong>0.157</strong></td>
+        <td>0.210</td>
+      </tr>
+      <tr>
+        <td>Bandit</td>
+        <td>50.6%</td>
+        <td>41.6%</td>
+        <td class="val-orange">0.090</td>
+        <td>0.090</td>
+      </tr>
+      <tr>
+        <td>Semgrep CE</td>
+        <td>23.6%</td>
+        <td>18.0%</td>
+        <td class="val-red">0.056</td>
+        <td>0.069</td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="font-size:0.78rem;color:var(--muted);margin-top:0.75rem;">
+    ACR-QA leads on Youden J — the OWASP standard. The full output's 75.3% FPR is honest and expected:
+    it is recall-first. The <strong>Confirmed Tier</strong> inverts the trade-off (96.4% precision, near-zero FPR)
+    for the merge-blocking use case. See
+    <a href="https://github.com/ahmed-145/ACR-QA/blob/main/docs/evaluation/RECONCILIATION.md">RECONCILIATION.md</a>
+    for why the three numbers (96.4%, 91.0%, J=0.157) are not contradictory.
+  </p>
+</section>
+
+<!-- VERIFIED REMEDIATION -->
+<section class="section">
+  <div class="section-tag">Beyond Detection — Verified Remediation</div>
+  <h2>The only tool that proves the fix closes the exploit</h2>
+  <div class="note">
+    <strong>The frontier:</strong> Snyk retests fixes with a static re-scan. ACR-QA re-runs the
+    actual exploit against the patched code in a Docker sandbox. <code>fix_verified=True</code>
+    only if the exploit now fails — ground truth, not a probability estimate.
+    The <code>(vuln_proof, fix_diff, fix_proof)</code> triple is ECDSA-signed to Rekor.
+  </div>
+  <div class="steps">
+    <div class="step">
+      <span class="step-num">1</span>
+      <span><strong>Detect</strong> — ExploitVerifier confirms exploit fires on original code (<code>verified-exploitable</code>)</span>
+    </div>
+    <div class="step">
+      <span class="step-num">2</span>
+      <span><strong>Patch</strong> — AutoFixEngine generates an LLM-powered fix; applied to a sandbox copy</span>
+    </div>
+    <div class="step">
+      <span class="step-num">3</span>
+      <span><strong>Re-exploit</strong> — Same exact payload re-sent to patched code → must fail (<code>verified-unexploitable</code>)</span>
+    </div>
+    <div class="step">
+      <span class="step-num">4</span>
+      <span><strong>Attest</strong> — ECDSA-sign <code>(vuln_proof, fix_diff, fix_proof)</code> as one Rekor-logged bundle</span>
+    </div>
+  </div>
+  <p style="margin-top:1rem;font-size:0.85rem;color:var(--muted2);">
+    Supported classes: SQL injection, command injection, SSTI (Jinja2).
+    <a href="https://github.com/ahmed-145/ACR-QA/blob/main/docs/evaluation/VERIFIED_REMEDIATION.md">Full documentation →</a>
+  </p>
+</section>
+
 <!-- DATASETS -->
 <section class="section">
   <div class="section-tag">Benchmark Datasets</div>
@@ -146,10 +229,10 @@
       <a href="https://github.com/s2e-lab/SecurityEval">github.com/s2e-lab/SecurityEval →</a>
     </div>
     <div class="dataset-card">
-      <h3>OWASP Benchmark <small style="color:var(--muted)">planned</small></h3>
-      <p>2,740 Java test cases with verified true/false positives.
-      The industry-standard SAST benchmark. Python port in progress.</p>
-      <a href="https://owasp.org/www-project-benchmark/">owasp.org →</a>
+      <h3>OWASP-Methodology Benchmark ✅</h3>
+      <p>SecurityEval dual-corpus: 89 TP files (Insecure_Code) + 89 TN files (Copilot).
+      OWASP scoring: TPR, FPR, Youden J. ACR-QA J=0.157 vs Bandit 0.090 vs Semgrep 0.056.</p>
+      <a href="https://github.com/ahmed-145/ACR-QA/blob/main/docs/evaluation/OWASP_BENCHMARK.md">OWASP_BENCHMARK.md →</a>
     </div>
     <div class="dataset-card">
       <h3>LLMSecEval <small style="color:var(--muted)">planned</small></h3>

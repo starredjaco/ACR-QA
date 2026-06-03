@@ -413,8 +413,6 @@ def score_tool(
 
 
 def write_markdown(results: list[dict], detectable_only: bool, out_path: Path) -> None:
-    slug = "detectable" if detectable_only else "allcwe"
-    date_str = _NOW.strftime("%Y-%m-%d")
     lines = [
         "# ACR-QA OWASP-Methodology Python Benchmark",
         "",

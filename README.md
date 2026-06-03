@@ -13,7 +13,7 @@
 [![Signed](https://img.shields.io/badge/Cosign-signed-green?logo=sigstore&logoColor=white)](./.github/workflows/sign-images.yml)
 [![Self-Scan](https://img.shields.io/badge/Self--Scan-0%20critical-22c55e)](./.github/workflows/self-scan.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-2726%20passing-22c55e?logo=pytest&logoColor=white)](./TESTS/)
+[![Tests](https://img.shields.io/badge/Tests-2741%20passing-22c55e?logo=pytest&logoColor=white)](./TESTS/)
 [![OWASP Youden J](https://img.shields.io/badge/OWASP%20Youden%20J-0.157%20%28leads%20all%20tools%29-22c55e)](./docs/evaluation/OWASP_BENCHMARK.md)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab?logo=python&logoColor=white)](https://www.python.org/)
 
@@ -102,7 +102,7 @@ ACR-QA integrates *with* Semgrep and Snyk (not against them) — it adds the ver
 
 ---
 
-## Key Numbers (v5.0.0rc1)
+## Key Numbers (v5.0.0rc2)
 
 **Independent benchmark — SecurityEval, genuinely-vulnerable corpus, bootstrap 95% CI** ([reconciliation](./docs/evaluation/RECONCILIATION.md)):
 
@@ -117,12 +117,13 @@ ACR-QA detects **more real vulnerabilities than either competitor** — near-per
 Plus:
 **96.4%** Confirmed Tier *precision* (the auto-block subset, 30-repo corpus, 95% CI [90.9%, 100%]) ·
 **100%** CVE recall (8/8 battery) ·
+**Youden J=0.157** (OWASP dual-corpus — leads Bandit 0.090, Semgrep 0.056) ·
 9/10 OWASP Top 10 ·
-**2,757 tests** ·
-84 async FastAPI endpoints ·
-19 analysis engines ·
+**2,741 tests** ·
+52 async FastAPI endpoints ·
 327+ rule mappings ·
-**0 critical findings on self-scan**
+**0 critical findings on self-scan** ·
+**Verified Remediation** — fix_verified=True proven by live re-exploit
 
 > **Reading the numbers:** *recall* (91.0%, beats competitors) is the full-output metric; *precision*
 > (96.4%) is the Confirmed Tier's — two views of the same scan, for two jobs. See the
@@ -219,7 +220,7 @@ python3 CORE/main.py --target-dir . --json --no-ai > findings.json
 
 ---
 
-## What's New in v5.0.0rc1
+## What's New in v5.0.0rc2
 
 **The headline result:** Confirmed Tier — **96.4% precision / 100% CVE recall / F1 = 98.2%** on a 30-repo adversarial corpus of mature production libraries (top-20 PyPI + top-6 npm + top-4 Go). The precision funnel:
 
@@ -547,7 +548,7 @@ marimo edit notebooks/walkthrough.py
 | **Supervisor** | Dr. Samy AbdelNabi |
 | **Institution** | King Salman International University (KSIU) |
 | **Timeline** | October 2025 – June 2026 |
-| **Status** | v5.0.0rc1 · P4 Confirmed Tier 96.4% / F1=98.2% · SLSA L3 · 15-item roadmap in progress |
+| **Status** | v5.0.0rc2 · P4 Confirmed Tier 96.4% / F1=98.2% · SLSA L3 · 15-item roadmap in progress |
 
 ### Remaining Thesis Work
 

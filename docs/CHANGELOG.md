@@ -2,6 +2,60 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v5.0.0rc2] — 2026-06-03
+
+### Summary
+
+God Mode v8 — Three 11/10 pillars executed: version hygiene, OWASP-methodology benchmark,
+and Verified Remediation (the frontier move: re-exploit after fix, sign the proof).
+
+### Fixed — Version Sync (Track 0)
+
+- **5 stale version strings** in `CORE/main.py` (v3.2.5×2, v3.6.0, v4.6.0) and
+  `CORE/__init__.py` (5.0.0b1) all updated to `5.0.0rc1` — matching `pyproject.toml`.
+- **`TestVersionConsistency::test_all_version_sources_agree`** — regression test asserting
+  `pyproject.toml`, `__init__`, and `--version` CLI output always agree.
+
+### Added — OWASP-Methodology Python Benchmark (Track A)
+
+- **`scripts/run_owasp_methodology_benchmark.py`** — SecurityEval dual-corpus (89 TP + 89 TN),
+  OWASP scoring (TPR, FPR, Youden J, MCC), bootstrap 95% CIs (2,000 resamples).
+- **`docs/evaluation/OWASP_BENCHMARK.md`** — permanent summary: scorecard, two-tier explanation,
+  honest FPR disclosure, reproduce commands, industry baseline comparison.
+- **`docs/evaluation/OWASP_BENCHMARK_detectable_20260602.{md,json}`** — detectable CWE subset results.
+- **`docs/evaluation/OWASP_BENCHMARK_allcwe_20260602.{md,json}`** — all-CWE results.
+- **`docs/EVALUATION_CHAPTER.md` §5.18** — OWASP-methodology section.
+- **`docs/QA_PREP.md` Q41, Q42** — cherry-picking defense and FPR explanation.
+- **Key results:** ACR-QA **Youden J=0.157** (detectable CWEs) vs Bandit 0.090 vs Semgrep 0.056.
+  Comparable to SonarQube (J=0.15) while leading on recall (91.0% vs ~50%).
+
+### Added — Verified Remediation Engine (Track C, Pillar P1)
+
+- **`CORE/engines/verified_remediation.py`** — `VerifiedRemediationEngine` + `RemediationResult`.
+  5-step pipeline: verify_before → generate_patch → apply_patch → verify_after → attest.
+  `fix_verified=True` only if exploit fires before AND fails after — live ground truth, not a
+  static re-scan probability. ECDSA-signs `(vuln_proof, fix_diff, fix_proof)` as one bundle.
+- **`scripts/run_verified_remediation_demo.py`** — one-command defense demo across 3 scenarios
+  (SQLi, CMDi, SSTI). Exits 0 if ≥1 scenario achieves `fix_verified=True`.
+- **`TESTS/test_verified_remediation.py`** — 15 unit tests + 2 `@pytest.mark.exploit` integration
+  tests covering every pipeline step, abort condition, and attestation path.
+- **`docs/evaluation/VERIFIED_REMEDIATION.md`** — methodology, signed bundle schema, demo output,
+  defense talking points.
+- **`docs/EVALUATION_CHAPTER.md` §5.19** — Verified Remediation section.
+- **`docs/QA_PREP.md` Q43** — "Does your autofix actually work?" answer.
+- **Competitive moat:** Snyk retests statically (80% claimed accuracy). ACR-QA retests by
+  re-exploiting. Binary ground truth. Nobody else signs the fix.
+
+### Updated — Docs & Landing Pages
+
+- `README.md` — tests badge → 2741; OWASP Youden J badge added.
+- `cloudflare-pages/benchmark.html` — corrected 52/89 → 81/89; OWASP leaderboard table added;
+  Verified Remediation section added; OWASP Benchmark card updated from "planned" to done.
+- `cloudflare-pages/index.html` — tests stat updated to 2,741.
+- `docs/ACTIVE_ROADMAP.md` — v8 track table added with all 3 pillars ✅.
+- `docs/QA_PREP.md` — summary card corrected to 2,741/104/2,845.
+- `docs/evaluation/RECONCILIATION.md` — OWASP J=0.157 added to TL;DR table.
+
 ## [v5.0.0rc1] — 2026-05-31
 
 ### Summary

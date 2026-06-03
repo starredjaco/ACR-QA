@@ -869,7 +869,7 @@ class TestVersionConsistency:
         python_exe = str(venv_python) if venv_python.exists() else sys.executable
         result = subprocess.run([python_exe, "-m", "CORE", "--version"], capture_output=True, text=True, cwd=repo)
         cli_ver_line = (result.stdout + result.stderr).strip()
-        # output is like "ACR-QA 5.0.0rc1"
+        # output is like "ACR-QA 5.0.0rc2"
         cli_ver = cli_ver_line.split()[-1] if cli_ver_line else "UNKNOWN"
 
         assert pyproject_ver == init_ver, f"pyproject.toml ({pyproject_ver}) ≠ CORE/__init__.py ({init_ver})"
@@ -1641,7 +1641,7 @@ class TestExploitVerifierGodMode:
     def test_version_is_350(self):
         from CORE import __version__
 
-        assert __version__ == "5.0.0rc1"
+        assert __version__ == "5.0.0rc2"
 
 
 class TestAttestationGodMode:
@@ -1724,7 +1724,7 @@ class TestAttestationGodMode:
     def test_version_is_360(self):
         from CORE import __version__
 
-        assert __version__ == "5.0.0rc1"
+        assert __version__ == "5.0.0rc2"
 
 
 if __name__ == "__main__":
