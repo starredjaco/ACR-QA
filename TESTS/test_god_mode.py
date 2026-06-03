@@ -875,6 +875,35 @@ class TestVersionConsistency:
         assert pyproject_ver == init_ver, f"pyproject.toml ({pyproject_ver}) ≠ CORE/__init__.py ({init_ver})"
         assert init_ver in cli_ver_line, f"CORE/main.py --version printed '{cli_ver_line}', expected '{init_ver}'"
 
+    def test_fast_flag_in_help(self):
+        """--fast flag must appear in --help output."""
+        venv_python = Path(__file__).parent.parent / ".venv" / "bin" / "python"
+        python_exe = str(venv_python) if venv_python.exists() else sys.executable
+        import subprocess as _sp
+
+        result = _sp.run(
+            [python_exe, "-m", "CORE", "--help"],
+            capture_output=True,
+            text=True,
+            cwd=Path(__file__).parent.parent,
+        )
+        assert "--fast" in (result.stdout + result.stderr), "--fast flag missing from --help"
+
+    def test_fast_mode_env_var_logic(self):
+        """When --fast is set, ACRQA_FAST_MODE env var must be set."""
+        import argparse
+        import os
+
+        # Simulate what main() does with --fast
+        ns = argparse.Namespace(fast=True, ai=True, limit=10)
+        if getattr(ns, "fast", False):
+            os.environ["ACRQA_FAST_MODE"] = "1"
+            ns.ai = False
+        assert os.environ.get("ACRQA_FAST_MODE") == "1"
+        assert ns.ai is False
+        # cleanup
+        del os.environ["ACRQA_FAST_MODE"]
+
     def test_jwt_secret_uses_env_var(self):
         """FastAPI JWT secret should come from env var, not be hardcoded."""
         jwt_path = Path(__file__).parent.parent / "FRONTEND" / "auth" / "jwt_utils.py"

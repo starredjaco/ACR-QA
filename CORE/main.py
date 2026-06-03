@@ -1477,9 +1477,8 @@ def main():
 
     # --fast: skip slow engines, return Confirmed Tier only in <30s
     if getattr(args, "fast", False):
-        import os as _os_fast
-
-        _os_fast.environ["ACRQA_FAST_MODE"] = "1"
+        # Internal mode flag — not sensitive data, used only within this process.
+        os.environ["ACRQA_FAST_MODE"] = "1"
         logger.info("⚡ Fast mode: skipping taint, AI explanations, supply-chain, reachability")
         args.ai = False  # skip LLM explanations
 
