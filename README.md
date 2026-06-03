@@ -104,30 +104,31 @@ ACR-QA integrates *with* Semgrep and Snyk (not against them) — it adds the ver
 
 ## Key Numbers (v5.0.0rc2)
 
-**Independent benchmark — SecurityEval, genuinely-vulnerable corpus, bootstrap 95% CI** ([reconciliation](./docs/evaluation/RECONCILIATION.md)):
+### Detection Recall — the headline (full output, recall-first)
 
-| Tool | Recall (detectable CWEs) | 95% CI |
-|------|:------------------------:|--------|
-| **ACR-QA (full output)** | **91.0%** | [84.3%, 96.6%] |
+**SecurityEval, genuinely-vulnerable corpus, bootstrap 95% CI** ([reconciliation](./docs/evaluation/RECONCILIATION.md)):
+
+| Tool | Recall (detectable CWEs, n=89) | 95% CI |
+|------|:------------------------------:|--------|
+| **ACR-QA (full output)** | **91.0%** | [82.8%, 97.8%] |
 | Bandit | 50.6% | [39.3%, 60.7%] |
 | Semgrep CE | 23.6% | [14.6%, 32.6%] |
 
-ACR-QA detects **more real vulnerabilities than either competitor** — near-perfect on the high-severity classes (command-injection 2/2, SQLi 2/2, insecure-deserialization 4/4, XXE 6/6, SSRF 2/2).
+ACR-QA detects **more real vulnerabilities than either competitor** — near-perfect on high-severity classes (command-injection 2/2, SQLi 2/2, insecure-deserialization 4/4, XXE 6/6, SSRF 2/2). OWASP dual-corpus Youden J=0.157 leads Bandit 0.090 and Semgrep 0.056.
 
-Plus:
-**96.4%** Confirmed Tier *precision* (the auto-block subset, 30-repo corpus, 95% CI [90.9%, 100%]) ·
-**100%** CVE recall (8/8 battery) ·
-**Youden J=0.157** (OWASP dual-corpus — leads Bandit 0.090, Semgrep 0.056) ·
-9/10 OWASP Top 10 ·
-**2,741 tests** ·
-52 async FastAPI endpoints ·
-327+ rule mappings ·
-**0 critical findings on self-scan** ·
-**Verified Remediation** — fix_verified=True proven by live re-exploit
+### Two Operating Points — One Scan
 
-> **Reading the numbers:** *recall* (91.0%, beats competitors) is the full-output metric; *precision*
-> (96.4%) is the Confirmed Tier's — two views of the same scan, for two jobs. See the
-> [honest reconciliation](./docs/evaluation/RECONCILIATION.md), which retracts an earlier flawed benchmark.
+ACR-QA produces two views of every scan. They are not competing claims — they are two points on the same Precision-Recall curve, optimized for different jobs:
+
+| Operating Point | TPR | FPR | Precision | Use Case |
+|---|:---:|:---:|:---:|---|
+| **Full output** (recall-first) | 91.0% | 75.3% | 54.7% | Developer triage; comprehensive review |
+| **Confirmed Tier** (precision-first) | ~30% | ~0% | **96.4%** | Auto-block merge gate; CI required check |
+
+The Confirmed Tier's 96.4% precision mirrors what "Sifting the Noise" (arXiv:2601.22952) achieves via LLM post-processing (~92% → 6.3% FPR on OWASP). ACR-QA achieves this *statically* — 4-gate filter, zero LLM latency.
+
+**Other metrics:**
+**100%** CVE recall (8/8 pre-registered battery) · 9/10 OWASP Top 10 · **2,741 tests** · 52 FastAPI endpoints · 327+ rule mappings · **0 critical findings on self-scan** · **Verified Remediation** — fix_verified=True by live re-exploit + ECDSA signed
 
 ---
 

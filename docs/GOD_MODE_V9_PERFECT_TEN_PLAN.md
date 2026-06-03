@@ -39,12 +39,12 @@ External literature review changed three things in this plan. Citations are load
 | What I had wrong / thin | The correction (with source) | Plan impact |
 |---|---|---|
 | "Plot the **ROC** curve" (#3) | For massively-imbalanced SAST data, **ROC masks the FPR** — the huge True-Negative count artificially depresses the x-axis. Use **Precision-Recall curve + PR-AUC** (the statistically-superior, examiner-recognized choice). SastBench plots exactly this Pareto frontier. | #2/#3 switch to **PR-AUC**, not ROC. |
-| "Verified Remediation — the frontier nobody has" | **Commercially** unprecedented (Snyk/Copilot/Semgrep all re-*scan statically*), but **academically it's the 2025/26 vanguard**: **VulnRepairEval** (arXiv 2509.03331) does the exact containerized differential — PoC compromises vuln container, *fails* on patched container; **SymRadar** (2026) does PoC-centered bounded verification; **VulnFix** proves exploit thwarted. | Reposition honestly: *"surpasses commercial static re-scan; aligned with VulnRepairEval-class AVR."* Claiming pure novelty = an examiner who knows the paper sinks you. |
-| SecurityEval dual-corpus as the FPR benchmark | SecurityEval/LLMSecEval/CyberSecEval are **generative-LLM** benchmarks — *no secure-code half*, so **useless for FPR**. The real neutral standard is **RealVuln** (26 real Python repos, **676 vulns + 120 explicit FP traps**, MIT) → then **NIST SARD** Python suites 114/115 for algorithmic soundness → then **OWASP BenchmarkPython v0.1** (exists! but beta) for brand recognition. | #4 swaps the corpus: **RealVuln** primary, SARD for soundness, BenchmarkPython for the OWASP name. |
+| "Verified Remediation — the frontier nobody has" | **Commercially** unprecedented (Snyk/Copilot/Semgrep all re-*scan statically*), but **academically it's the 2025 vanguard** (both web-verified): **VulnRepairEval** (arXiv:2509.03331, Sept 2025) does the exact containerized differential — PoC compromises vuln container, *fails* on patched container; **CVE-Bench** (arXiv:2503.17332, ICML'25) evaluates by exploiting 40 real CVEs in containers. *(SymRadar/VulnFix were claimed by deep-research but could not be verified — do not cite.)* | Reposition honestly: *"surpasses commercial static re-scan; aligned with VulnRepairEval-class AVR."* Claiming pure novelty = an examiner who knows the paper sinks you. |
+| SecurityEval dual-corpus as the FPR benchmark | SecurityEval/LLMSecEval/CyberSecEval are **generative-LLM** benchmarks — *no secure-code half*, so **useless for FPR**. Three real corpora **(I verified the GitHub repos exist, 2026-06-03)**: **RealVuln** (`kolega-ai/Real-Vuln-Benchmark` — 26 real Python repos, 676 vulns + 120 FP traps, recall-weighted F2, MIT), **BenchProctor** (`TheAuditorTool/BenchProctor` — SARIF-in/TPR-FPR-Youden-out, Apache-2.0), **xAST** (`alipay/ant-application-security-testing-benchmark` — Python soundness+completeness cases). | #4 becomes a **multi-benchmark** strategy (kills the "tested on your own data" trap). |
 
 **Two more findings folded into the relevant rows below:**
-- **Metrics:** Youden's J is what OWASP scores on, but security literature calls equal-weighting naïve (cost asymmetry — a miss >> a false alarm). Report **F3** (recall weighted 9×) and **MCC** alongside. Reference point: standalone Semgrep on OWASP J≈0.477; LLM-augmented (QASecClaw) drove it to **0.823 by cutting FPs** — which is *exactly* what our Confirmed Tier does. That's the citation that turns our FPR weakness into the textbook fix.
-- **Calibration (#B5):** ECE + reliability diagrams are a recognized SAST-quality metric. Comparables: DeepSecure (2026) ECE=0.19; TaCCS-DFA (2026) ECE=0.023; per-rule **local Platt-scaling** is the cutting edge. Our ECE<0.1 target is legit and citable.
+- **Metrics:** Youden's J is what OWASP scores on, but security literature calls equal-weighting naïve (cost asymmetry — a miss >> a false alarm). Report **F2/F3** (recall-weighted) and **MCC** alongside. Reference point (real, web-verified): LLM-augmented SAST cuts false positives ~91% — Semgrep's AI layer + "Sifting the Noise" (arXiv:2601.22952) drive OWASP FP rates from 92% to ~6.3% — which is *exactly* what our Confirmed Tier does. That's the precedent that turns our FPR weakness into the textbook fix.
+- **Calibration (#B5):** ECE + reliability diagrams are a recognized metric concept; per-rule **local Platt-scaling** is the cutting edge. *(The named comparables Gemini gave — DeepSecure/TaCCS-DFA — are fabricated; find a real ECE-for-SAST source before putting a number in the thesis.)* Our ECE<0.1 target is legit as a method.
 
 ---
 
@@ -57,7 +57,7 @@ effort. Sorted by leverage (FPR cluster first — it drags the most perspectives
 
 | # | Perspective | Now | Blocker | Move → DoD | Effort |
 |---|---|:--:|---|---|:--:|
-| 2 | External examiner (skeptic) | 6.5 | 75.3% FPR reads as "screams on clean code" | **Report metrics per *tier*.** Compute TPR/FPR/precision/recall for **full output → Confirmed Tier** as *operating points on one PR curve* — Confirmed should land near-0 FPR / high precision. Cite QASecClaw (Semgrep J 0.477→0.823 *by cutting FPs* = our exact mechanism). → DoD: `OWASP_BENCHMARK.md` shows a 2-point PR table (full vs Confirmed) + one-line "which to merge against." | 1 day |
+| 2 | External examiner (skeptic) | 6.5 | 75.3% FPR reads as "screams on clean code" | **Report metrics per *tier*.** Compute TPR/FPR/precision/recall for **full output → Confirmed Tier** as *operating points on one PR curve* — Confirmed should land near-0 FPR / high precision. Precedent (real): Semgrep's AI layer + "Sifting the Noise" (arXiv:2601.22952) cut SAST FPs ~91% (92%→6.3% on OWASP) = our exact mechanism. → DoD: `OWASP_BENCHMARK.md` shows a 2-point PR table (full vs Confirmed) + one-line "which to merge against." | 1 day |
 | 3 | CS researcher | 6.5 | J=0.157 alone looks weak; no curve | **Plot the PR curve + PR-AUC** across confidence thresholds (full → Confirmed). *PR, not ROC* — ROC masks FPR on imbalanced data. Add **F3** (recall-weighted) and **MCC** columns. A curve bowing above Bandit/Semgrep at every operating point is publishable, not embarrassing. → DoD: `pr_curve.png` + PR-AUC + F3 + MCC in the eval chapter. | 1–2 days |
 | 18 | "Is it cooked?" | 7.5 | recall 91% / precision 96.4% sit confusingly close | **README restructure:** recall = headline (the win), precision = the *instrument* the gate uses. Frame as two operating points on one curve, never two bare numbers side by side. → DoD: README passes the "one-skeptic-question" read. | ½ day |
 
@@ -65,14 +65,14 @@ effort. Sorted by leverage (FPR cluster first — it drags the most perspectives
 
 | # | Perspective | Now | Blocker | Move → DoD | Effort |
 |---|---|:--:|---|---|:--:|
-| 4 | Statistician | 6.5 | n=55 / n=89, wide CIs; SecurityEval has no secure-code half (can't measure FPR) | **Add a corpus with real FP traps.** Primary: **RealVuln** (26 real Python repos, 676 vulns + 120 FP traps, MIT). Soundness: **NIST SARD** Python suites 114/115. Brand: **OWASP BenchmarkPython v0.1** (exists, beta). Keep the 20-CVE battery. → DoD: every headline stat has CI narrower than ±10pp; n>200; **MCC + F3** columns everywhere. | 2–3 days |
+| 4 | Statistician | 6.5 | n=55 / n=89, wide CIs; SecurityEval has no secure-code half (can't measure FPR) | **Multi-benchmark, real FP traps (all 3 repos verified to exist):** Primary **RealVuln** (26 real repos, 676 vulns + 120 FP traps) → cross-validate **BenchProctor** (SARIF; quarterly-rotated, anti-leakage) → soundness/completeness **xAST** (`alipay`) → keep 20-CVE battery. → DoD: every headline stat CI < ±10pp; n>200; **MCC + F2/F3** columns; ≥2 independent corpora agree. | 2–3 days |
 
 ### Cluster III — Widen the moat (fixes #6, #10, strengthens #13)
 
 | # | Perspective | Now | Blocker | Move → DoD | Effort |
 |---|---|:--:|---|---|:--:|
 | 6 | Security hiring mgr | 7.5 | 4 exploit categories | **Expand `exploit_verifier.py` 4 → 10+** using the safe observable signals in §1.5 below: SSRF (canary listener), XXE (canary-file UUID echo), insecure-deserialization (canary-file write via `__reduce__`), open-redirect (Location header), ReDoS (TTFB timing), LDAP-injection (mock OpenLDAP). Sandbox: `--network none`/isolated bridge, no egress. → DoD: ≥10 categories, each an exploit test red→green. | 4–5 days |
-| 10 | Competitor | 8.0 | Verified Remediation narrow; novelty over-claimed | **Extend Verified Remediation to every new category** from #6 + **reposition honestly:** "commercially unprecedented; aligned with VulnRepairEval/SymRadar-class AVR; surpasses static re-scan." → DoD: ≥6 vuln classes with a fix *proven* to close the exploit in-sandbox; positioning cites the 2 papers. | rides on #6 |
+| 10 | Competitor | 8.0 | Verified Remediation narrow; novelty over-claimed | **Extend Verified Remediation to every new category** from #6 + **reposition honestly:** "commercially unprecedented; aligned with VulnRepairEval-class AVR (arXiv:2509.03331) + CVE-Bench (ICML'25); surpasses static re-scan." → DoD: ≥6 vuln classes with a fix *proven* to close the exploit in-sandbox; positioning cites the 2 verified papers. | rides on #6 |
 | 13 | Auditor (SOC2/ISO) | 8.0 | evidence chain not demoed end-to-end | **One-command full chain:** `scan → exploit → autofix → re-exploit-fails → sign → Rekor → evidence pack`. → DoD: single script, public Rekor UUID resolves. | 1 day |
 
 ### Cluster IV — Kill the sprawl smell (fixes #7, #15, #17)
@@ -183,22 +183,70 @@ replace the perfect-score claim with the work that earns it, and make the act of
 
 ---
 
+## 4.5 Defense armor — the honesty framing that turns weaknesses into rigor
+
+These serve perspectives #1, #2, #16 directly and cost nothing to write. Memorize the framings, not just the facts.
+
+### The 3 classic traps that sink security-tool defenses (preempt all 3 in the thesis text)
+
+| Trap | The objection | Our preemption |
+|---|---|---|
+| **Synthetic benchmark** | "95% on Juliet/OWASP is a dataset artifact, not real-world skill." | We evaluate on **RealVuln + BenchProctor + xAST** (real, multi-file, with FP traps). We *openly state* real-world scores are lower (50–70% F-range) and frame that as **methodological honesty**, not weakness. |
+| **Data contamination** | "You tuned rules on the same repos you tested on / the LLM saw these CVEs in training." | Cryptographic train/eval separation (commit-SHA-pinned corpora); the 20-CVE holdout battery; document it. |
+| **Engineering vs. novelty** | "You piped Semgrep JSON into an LLM + subprocess. Where's the CS?" | The contribution is **not the plumbing** — it's the *translation layer*: static finding (source, sink, line, inferred types) → a deterministic dynamic exploit constraint, re-run before+after the fix. That bridge is the novelty. |
+
+### The soundness/completeness statement (say this, it reads as mastery)
+
+By **Rice's theorem** no static analyzer is both sound and complete for a Turing-complete language; Python's
+duck typing, monkey-patching, `getattr`/`eval`, decorators and late binding make a *sound* inter-procedural
+CFG computationally intractable. So state it plainly:
+
+> *"The SAST layer makes no claim to formal soundness. It is a high-recall heuristic filter for common
+> web-framework topologies; its well-documented false-positive cost is **the exact motivation** for the
+> dynamic exploit-verification phase, which delegates the proof of exploitability to a deterministic
+> runtime. The hybrid trades static **completeness** (can't prove absence of all bugs) for **precision**
+> (every *verified* finding is a genuine, exploited threat) — and re-runs the exploit after the fix for
+> runtime proof of remediation that static delta-analysis cannot give."*
+
+Precedent for phrasing limits as scope, not apology: **Meta's Pysa docs** ("there is no way to build a
+perfect static analyzer… Python, as a dynamic language…"). Cite it.
+
+### Reachability = the *floor* of exploitability (frames the B3 reachability score honestly)
+
+3 tiers: dependency-level (SCA) → function-level (call graph) → contextual/data-flow (taint). Even perfect
+taint proves *reachable*, not *exploitable* — runtime sanitizers, framework auto-escaping, WAFs sit above it.
+**Reachability proves a vuln *might* fire; our exploit-verification proves it *does*.** EPSS/KEV only cover
+*known public CVEs in dependencies* — they cannot speak to first-party code, which is exactly why first-party
+exploitability must be *proven computationally*, finding by finding. That's the gap the tool fills.
+
+---
+
 ## 5. Citations to memorize (the defense-armor)
 
-| Topic | Source | Use it to… |
-|---|---|---|
-| Neutral Python corpus w/ FP traps | **RealVuln** — github.com/kolega-ai/Real-Vuln-Benchmark (MIT) | justify the FPR measurement on *real* code |
-| Algorithmic soundness | **NIST SARD** Python suites 114/115 — samate.nist.gov/SARD | prove taint logic on synthetic edge cases |
-| Brand-name benchmark | **OWASP BenchmarkPython v0.1** — github.com/OWASP-Benchmark/BenchmarkPython | the recognizable name (note: beta) |
-| Why PR not ROC | Google ML crash course (ROC masks FPR on imbalance); **SastBench** PR-Pareto | defend the PR-AUC choice |
-| Cost-asymmetric metric | RealVuln **F3** (recall ×9); **MCC** for imbalance | answer "why not just F1?" |
-| FP-cut precedent | **QASecClaw** — Semgrep J 0.477→0.823 by LLM-cutting FPs | frame Confirmed Tier as the textbook move |
-| Exploit-fix verification (AVR) | **VulnRepairEval** arXiv:2509.03331; **SymRadar** (2026); **VulnFix** | position Verified Remediation honestly + ahead of commercial |
-| Confidence calibration | **DeepSecure** (ECE 0.19); **TaCCS-DFA** (ECE 0.023); per-rule Platt-scaling | justify ECE<0.1 as a real contribution |
+> **Verification status (checked 2026-06-03):** ✅ = I confirmed the GitHub repo exists. ⚠️ = claimed by
+> deep-research but **not yet verified** (future-dated arXiv IDs — read the paper before citing as fact).
+
+| ✓ | Topic | Source | Use it to… |
+|:--:|---|---|---|
+| ✅ | Real Python corpus w/ FP traps | **RealVuln** — github.com/kolega-ai/Real-Vuln-Benchmark (MIT, F2) | justify FPR measurement on *real* code |
+| ✅ | Cross-validation corpus | **BenchProctor** — github.com/TheAuditorTool/BenchProctor (Apache-2.0, SARIF) | second independent corpus; anti-leakage |
+| ✅ | Soundness/completeness | **xAST** — github.com/alipay/ant-application-security-testing-benchmark | algorithmic soundness/completeness on Python |
+| ✅ | Brand-name benchmark | **OWASP BenchmarkPython** — github.com/OWASP-Benchmark/BenchmarkPython | the recognizable name (beta) |
+| ✅ | Limits-as-scope precedent | **Meta Pysa docs** ("no perfect static analyzer… Python dynamic…") | phrase soundness limits as rigor |
+| ✅ | Why PR not ROC | Google ML crash course (ROC masks FPR on imbalance) | defend the PR-AUC choice |
+| ✅ | Exploit-based fix eval (AVR) | **VulnRepairEval** — arXiv:**2509.03331** (Sept 2025); containerized differential, top LLM 5/23=21.7% | the cornerstone: position Verified Remediation as same-paradigm-as-vanguard, ahead of commercial static re-scan |
+| ✅ | Exploitability benchmark | **CVE-Bench** — arXiv:**2503.17332**, ICML'25 spotlight, github.com/uiuc-kang-lab/cve-bench; 40 CVEs in containers w/ reference exploits | the precedent for "evaluate by exploiting, not detecting" |
+| ✅ | Multi-commit Python benchmark | **CrossCommitVuln-Bench** — github.com/motornomad/crosscommitvuln-bench; 15 CVEs, 87% invisible to per-commit SAST | optional 4th corpus; the "snapshot SAST misses chains" angle |
+| ✅ | FP-cut precedent (real) | **Semgrep AI** blogs + **"Sifting the Noise"** arXiv:2601.22952 + InfoWorld — LLM verification cuts SAST FPs ~91% (92%→6.3% on OWASP) | frame Confirmed Tier as the textbook move |
+| ✅ | Reachability prior art | **SAVANT** — arXiv:2506.17798 (Jun 2025); semantic-guided reachability **(Java, not Python — note it)** | position reachability scoring honestly |
+| ⚠️ | Cost-asymmetric metric | RealVuln **F2/F3** (recall-weighted); **MCC** for imbalance | answer "why not just F1?" |
+| ⚠️ | Confidence calibration | per-rule Platt-scaling; ECE-for-vuln-detection concept is real *(find a real named source before citing)* | justify ECE<0.1 |
+| ❌ | **DO NOT CITE — fabricated** | **SymRadar**, **DeepSecure (ECE 0.19)**, **QASecClaw**, **TaCCS-DFA** — absent from Gemini's own source list AND unfindable on the web (2026-06-03). Gemini prose hallucinations. | — |
 
 **The one honest sentence about novelty:** *"Re-running the exploit to verify the fix is unprecedented
-among commercial SAST/SCA vendors, who re-scan statically; it aligns with the 2025/26 academic vanguard
-(VulnRepairEval, SymRadar) and brings that rigor into an integrated, attested, production-shaped tool."*
+among commercial SAST/SCA vendors, who re-scan statically; it aligns with the 2025 academic vanguard of
+exploit-based evaluation (VulnRepairEval, arXiv:2509.03331; CVE-Bench, ICML'25) and brings that rigor
+into an integrated, attested, production-shaped tool."* — both citations web-verified 2026-06-03.
 
 ---
 

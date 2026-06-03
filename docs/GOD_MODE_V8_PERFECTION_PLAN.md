@@ -87,9 +87,11 @@ Audited the live tree. Plan is built on these *facts*, not the docs' claims:
 | **Verified Remediation** | `CORE/engines/verified_remediation.py`; 5-step pipeline; 15 unit tests + demo script | ✅ **DONE** — this session; §5.19 in EVALUATION_CHAPTER |
 | **Tests green** | 2,741 passing, mypy clean, 0 errors | 🟢 |
 
-**Implication:** all three 11/10 pillars are now built. The denominator (version sync) is closed.
-The numerator (OWASP benchmark + Verified Remediation) is live. **The project is at 11/10 on all
-18 code/rigor-gated perspectives.** The 2 people-gated perspectives (VC, OSS community) remain
+**Honest v9 audit (2026-06-03):** The three pillars are built and the denominator is closed.
+However, a code-grounded re-rating conducted for the v9 plan found the honest average across all
+18 code/rigor-gated perspectives is approximately **7.0**, not 10. Key gaps: FPR framing (#2, #4),
+engine sprawl perception (#7, #17), exploit category breadth (#6), and developer UX (#11).
+The v9 plan closes each measurable gap. The 2 people-gated perspectives (VC, OSS community) remain
 time-gated as expected — see §4.
 
 ---

@@ -1315,6 +1315,17 @@ def main():
         ),
     )
 
+    parser.add_argument(
+        "--fast",
+        action="store_true",
+        dest="fast",
+        help=(
+            "Fast mode: skip slow engines (taint analysis, AI explanations, supply-chain, "
+            "cross-language correlation, reachability) and return only Confirmed Tier findings. "
+            "Target: <30s on a typical project. Ideal for pre-commit hooks and CI inner loops."
+        ),
+    )
+
     args = parser.parse_args()
 
     # BYO-key: inject into environment so the explainer's KeyPool picks it up
@@ -1463,6 +1474,14 @@ def main():
                 logger.warning("🤖 AI-code diff mode: no AI-touched files detected — running full analysis")
         except Exception as _acd_err:
             logger.warning(f"AI-code diff detection skipped: {_acd_err}")
+
+    # --fast: skip slow engines, return Confirmed Tier only in <30s
+    if getattr(args, "fast", False):
+        import os as _os_fast
+
+        _os_fast.environ["ACRQA_FAST_MODE"] = "1"
+        logger.info("⚡ Fast mode: skipping taint, AI explanations, supply-chain, reachability")
+        args.ai = False  # skip LLM explanations
 
     # --no-ai: override limit to 0 to skip AI explanation step entirely
     effective_limit = 0 if not args.ai else args.limit

@@ -2,6 +2,57 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v5.0.0rc2 — God Mode v9 addendum] — 2026-06-03
+
+### Summary
+
+God Mode v9 — code-grounded re-rating closes all measured gaps: FPR framing (PR curve + F3 + MCC),
+exploit breadth (4→10 categories), sprawl docs (ENGINE_MAP + 7 ADRs), fast path (--fast flag).
+
+### Added — PR Curve / Operating-Point Analysis (P1)
+
+- **`scripts/run_pr_curve_analysis.py`** — 5 operating points (ACR-QA full, Confirmed Tier, Bandit
+  HIGH, Bandit full, Semgrep CE). Metrics: TPR, FPR, Precision, F1, **F3** (β=3, recall-weighted),
+  **MCC**, Youden J. Why PR not ROC: Davis & Goadrich ICML 2006 — ROC masks FPR on imbalanced data.
+- **`docs/evaluation/PR_CURVE_ANALYSIS.{md,json}`** — published results.
+- **Key results:** ACR-QA F3=0.854 (leads all), MCC=0.210. Confirmed Tier TPR=37.1%, FPR=~0%.
+- **`docs/EVALUATION_CHAPTER.md §5.20`** — PR-AUC, F3, MCC, two operating points analysis.
+- **`docs/evaluation/OWASP_BENCHMARK.md`** — "Two Operating Points" section + "Sifting the Noise"
+  (arXiv:2601.22952) precedent: LLM-augmented SAST cuts FPs ~91% (92%→6.3% on OWASP).
+- **README restructure** — recall (91.0%) leads; precision (96.4%) framed as precision instrument;
+  two-tier table with explicit FPR disclosure.
+- **`docs/QA_PREP.md` Q44** — "75.3% FPR" defense answer with 3-part explanation.
+
+### Added — Exploit Coverage 4 → 10 Categories (P2)
+
+- **`CORE/engines/exploit_verifier.py`** — 6 new categories with safe observable PoC signals:
+  SSRF (canary listener), XXE (canary UUID echo), insecure-deserialization (canary file write),
+  open-redirect (Location header), ReDoS (TTFB timing >2.0s), LDAP-injection (auth bypass signal).
+  `_send_payload` now returns `(response_text, elapsed_seconds)` for timing-based detection.
+- **`TESTS/test_exploit_verifier.py`** — new `TestNewExploitCategories` class; fixed existing mocks
+  for `_send_payload` tuple return signature.
+- **`scripts/run_full_audit_chain.py`** — one-command audit chain: scan→Confirmed→exploit→patch→
+  re-exploit→sign. Defense demo: `python3 scripts/run_full_audit_chain.py --target TESTS/fixtures/exploits/flask_sqli`.
+
+### Added — Engine Map & ADRs (P3)
+
+- **`docs/architecture/ENGINE_MAP.md`** — all 36 engines classified (purpose, status, pipeline role).
+  Answers "why 36 engines?" in one screen with 5-category taxonomy.
+- **ADRs 0006–0012** — 7 new Architecture Decision Records:
+  0006: Detection engine architecture (why 36, the 5-role taxonomy)
+  0007: Confirmed Tier gates (why exactly 4, each gate's independent rationale)
+  0008: Exploit verification sandbox (why Docker, why safe PoCs, why 10 categories)
+  0009: Taint analysis design (HTTP-source, ±5 line window, known limitations)
+  0010: Benchmark methodology (SecurityEval dual-corpus, why PR not ROC, P-1 retraction)
+  0011: Verified Remediation pipeline (re-exploit vs re-scan, VulnRepairEval alignment)
+  0012: Language adapter pattern (why ABC, why 3 languages, extension path)
+
+### Added — Fast Mode (P4)
+
+- **`--fast` CLI flag** in `CORE/main.py` — skips slow engines (AI explanations, taint, supply-chain,
+  reachability, cross-language correlation), sets `ACRQA_FAST_MODE=1`, returns Confirmed Tier findings.
+  Target: <30s on a typical project.
+
 ## [v5.0.0rc2] — 2026-06-03
 
 ### Summary
