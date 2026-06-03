@@ -1,11 +1,13 @@
 # Go Big — LLM-Augmented Detection, Exploit-Gated (the "best of the bests" bet)
 
-> **Created:** 2026-06-03 · **Owner:** Ahmed + agent · **Status:** ✅ PROTOTYPE DONE → **NO-GO pre-defense, STRONG Future Work**
-> **Phase 0 result (`docs/evaluation/PROTO_LLM_DETECTION.md`):** single-file zero-shot LLM detection =
-> ~17% strict recall (below rules' 25%) BUT 50–75% *file-level* recall at ~80% false-alarm rate. The LLM
-> finds the right files; it mislabels CWE/line and is noisy. Promising hybrid signal, but a multi-week
-> build — too risky before Jun 25. **Decision: defend on current honest numbers; ship this as a Future
-> Work chapter backed by the prototype's real data.** Phases 1–3 below = post-defense.
+> **Created:** 2026-06-03 · **Owner:** Ahmed + agent · **Status:** ✅ PHASE 0 DONE → **GO on SCOPED hybrid (days, data-backed)**
+> **Phase 0 result (`docs/evaluation/PROTO_LLM_DETECTION.md`):** LLM-alone is below rules, BUT the **union
+> (rules ∪ LLM) beats rules-alone by +8.9pp recall, stable across 6 repos** — they're complementary. The
+> LLM half is 80–90% false alarms, so the bet hinges on gating keeping precision. **Decision: GO on the
+> SCOPED hybrid (LLM-detect → gate through existing `second_opinion`/`confirmed_tier`/exploit-verifier),
+> achievable in days. NOT the months-long SOTA agentic rebuild.** Realistic outcome: detectable recall
+> ~37.8% → ~45% + a novel gated-hybrid contribution. **Kill-switch:** if gating can't hold precision, revert
+> to Future Work. Next experiment = the gating-precision test (Phase 2 below, pulled forward).
 > **Thesis line:** *"The only tool that detects aggressively with an LLM **and** proves every finding by
 > exploitation — so it competes on recall without paying the LLM false-positive tax."*
 
