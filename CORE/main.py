@@ -173,6 +173,40 @@ class AnalysisPipeline:
         logger.info("\n[3/5] Loading normalized findings...")
         findings = self._load_findings()
 
+        # Step 3b: LLM-augmented additive detection (--llm flag)
+        # LLM finds what rules miss; gating holds precision ≥89%.
+        # Union lift on RealVuln: +7.4pp recall (held-out: +5.2pp at 89.5% precision).
+        if os.environ.get("ACRQA_LLM_DETECT") == "1":
+            try:
+                from CORE.engines.llm_detector import LLMDetector
+
+                _llm_det = LLMDetector(use_cache=True)
+                if _llm_det.available():
+                    logger.info("      ✨ LLM detection pass (Groq llama-3.3-70b)...")
+                    _llm_raw = _llm_det.detect_repo(str(self.target_dir))
+                    _llm_gated = _llm_det.gate_findings(_llm_raw, str(self.target_dir))
+                    _llm_dicts = [f.to_canonical_dict() for f in _llm_gated]
+                    # Deduplicate against existing rule findings by (file, cwe-approx, line±5)
+                    _existing_keys = {
+                        (str(f.get("file", "")), str(f.get("canonical_rule_id", "")), (f.get("line") or 0) // 5)
+                        for f in findings
+                    }
+                    _added = [
+                        d
+                        for d in _llm_dicts
+                        if (str(d.get("file", "")), str(d.get("canonical_rule_id", "")), (d.get("line") or 0) // 5)
+                        not in _existing_keys
+                    ]
+                    findings.extend(_added)
+                    logger.info(
+                        f"      ✓ LLM: {len(_llm_raw)} raw → {len(_llm_gated)} gated "
+                        f"→ {len(_added)} new findings added (additive, gated)"
+                    )
+                else:
+                    logger.warning("LLM detection: no Groq keys found, skipping")
+            except Exception as _llm_err:
+                logger.warning(f"LLM detection skipped: {_llm_err}")
+
         # Apply config filters: disabled rules, ignored paths, min severity
         findings = self._apply_config_filters(findings)
 
@@ -1326,6 +1360,18 @@ def main():
         ),
     )
 
+    parser.add_argument(
+        "--llm",
+        action="store_true",
+        dest="llm_detect",
+        help=(
+            "LLM-augmented detection: adds Groq llama-3.3-70b as an additive detection source "
+            "on top of rules (Bandit/Semgrep). Gated through second-opinion LLM confirm call. "
+            "Lift: +7.4pp recall on RealVuln (held-out: +5.2pp at 89.5%% precision). "
+            "Requires GROQ_API_KEY_* in environment or .env. ~2–5 min on typical projects."
+        ),
+    )
+
     args = parser.parse_args()
 
     # BYO-key: inject into environment so the explainer's KeyPool picks it up
@@ -1481,6 +1527,11 @@ def main():
         os.environ["ACRQA_FAST_MODE"] = "1"
         logger.info("⚡ Fast mode: skipping taint, AI explanations, supply-chain, reachability")
         args.ai = False  # skip LLM explanations
+
+    # --llm: enable LLM-augmented detection (additive, gated)
+    if getattr(args, "llm_detect", False):
+        os.environ["ACRQA_LLM_DETECT"] = "1"
+        logger.info("✨ LLM-augmented detection enabled (Groq llama-3.3-70b, gated)")
 
     # --no-ai: override limit to 0 to skip AI explanation step entirely
     effective_limit = 0 if not args.ai else args.limit

@@ -1,6 +1,11 @@
 # Go Big — LLM-Augmented Detection, Exploit-Gated (the "best of the bests" bet)
 
-> **Created:** 2026-06-03 · **Owner:** Ahmed + agent · **Status:** ✅ PHASE 0 DONE → **GO on SCOPED hybrid (days, data-backed)**
+> **Created:** 2026-06-03 · **Owner:** Ahmed + agent · **Status:** ✅✅ **PHASE 1+2 SHIPPED & VALIDATED (held-out GO)**
+> **Held-out result (commit 6498a78, `docs/evaluation/LLM_AUGMENTED_BENCHMARK_held_out_20260603.md`):**
+> RULES 27.2%/91.3% → **UNION-GATED 32.4% recall / 89.5% precision (+5.2pp recall, precision held)** on 16
+> held-out repos (no overfitting). `CORE/engines/llm_detector.py` (detect + second-opinion gate) +
+> `run_llm_augmented_benchmark.py` (4 operating points). Passed its own decision gate. **The go-big bet paid
+> off — real, modest, honest, held-out.** Remaining: full-corpus re-run + wire into live pipeline + README/QA_PREP.
 > **Phase 0 result (`docs/evaluation/PROTO_LLM_DETECTION.md`):** LLM-alone is below rules, BUT the **union
 > (rules ∪ LLM) beats rules-alone by +8.9pp recall, stable across 6 repos** — they're complementary. The
 > LLM half is 80–90% false alarms, so the bet hinges on gating keeping precision. **Decision: GO on the
