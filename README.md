@@ -13,7 +13,7 @@
 [![Signed](https://img.shields.io/badge/Cosign-signed-green?logo=sigstore&logoColor=white)](./.github/workflows/sign-images.yml)
 [![Self-Scan](https://img.shields.io/badge/Self--Scan-0%20critical-22c55e)](./.github/workflows/self-scan.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-2759%20passing-22c55e?logo=pytest&logoColor=white)](./TESTS/)
+[![Tests](https://img.shields.io/badge/Tests-2805%20passing-22c55e?logo=pytest&logoColor=white)](./TESTS/)
 [![OWASP Youden J](https://img.shields.io/badge/OWASP%20Youden%20J-0.157%20%28leads%20all%20tools%29-22c55e)](./docs/evaluation/OWASP_BENCHMARK.md)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab?logo=python&logoColor=white)](https://www.python.org/)
 
@@ -127,8 +127,25 @@ ACR-QA produces two views of every scan. They are not competing claims — they 
 
 The Confirmed Tier's 96.4% precision mirrors what "Sifting the Noise" (arXiv:2601.22952) achieves via LLM post-processing (~92% → 6.3% FPR on OWASP). ACR-QA achieves this *statically* — 4-gate filter, zero LLM latency.
 
+### LLM-Augmented Detection (`--llm`)
+
+ACR-QA adds a **gated LLM detection pass** (Groq llama-3.3-70b) as an optional additive source on top of static rules. The LLM finds what rules miss; a second-opinion gate holds precision.
+
+| Operating Point | Recall | Precision | Lift | Split |
+|---|:---:|:---:|:---:|---|
+| Rules-only (baseline) | 25.1% | 90.3% | — | Full (22 repos) |
+| **UNION-GATED (`--llm`)** | **32.4%** | 87.4% | **+7.4pp** | Full (22 repos) |
+| UNION-GATED (held-out) | 32.4% | **89.5%** | **+5.2pp** | Held-out (16 repos, no overfitting) |
+
+**The thesis differentiator:** every LLM finding still flows through the Confirmed Tier — the only pipeline where aggressive LLM recall meets proven precision.
+
+```bash
+# Enable LLM-augmented detection (requires GROQ_API_KEY_* in .env)
+python CORE/main.py --target-dir your-repo --llm
+```
+
 **Other metrics:**
-**100%** CVE recall (8/8 pre-registered battery) · 9/10 OWASP Top 10 · **2,759 tests** · 52 FastAPI endpoints · 327+ rule mappings · **0 critical findings on self-scan** · **Verified Remediation** — fix_verified=True by live re-exploit + ECDSA signed
+**100%** CVE recall (8/8 pre-registered battery) · 9/10 OWASP Top 10 · **2,805 tests** · 52 FastAPI endpoints · 327+ rule mappings · **0 critical findings on self-scan** · **Verified Remediation** — fix_verified=True by live re-exploit + ECDSA signed
 
 ---
 

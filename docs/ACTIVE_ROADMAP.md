@@ -144,7 +144,8 @@ These items execute the one-sentence bet from `GOD_MODE_V6_BUSINESS_PLAN.md`. Al
 - ACR-QA (RealVuln, detectable subset): **37.8% recall**, 90.0% precision, FPR=16.3% — leads Bandit
 - ACR-QA (RealVuln, full corpus): **25.1% recall** vs Bandit 19.4% (+5.7pp) — neutral third-party
 - ACR-QA (Confirmed Tier): TPR=37.1%, FPR=~0%, Precision=96.4% — auto-block operating point
-- Exploit categories: **10** (up from 4) — SQLi, CMDi, SSTI, path-traversal, SSRF, XXE, insecure-deser, open-redirect, ReDoS, LDAP
+- Exploit categories: **10** (up from 4)
+- LLM-augmented detection: **UNION-GATED +7.4pp recall** (25.1%→32.4%) at 87.4% precision (held-out: +5.2pp, 89.5% precision) — SQLi, CMDi, SSTI, path-traversal, SSRF, XXE, insecure-deser, open-redirect, ReDoS, LDAP
 
 ---
 

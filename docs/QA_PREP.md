@@ -148,7 +148,7 @@ Copilot review had a 22% hallucination rate in the 2024 audit. It has no recall 
 
 ## Category 5 — Test Suite
 
-### Q23. "2,759 tests — where did they come from? Did you write them all?"
+### Q23. "2,805 tests — where did they come from? Did you write them all?"
 
 Yes. Starting from Phase 1's ~30 happy-path tests, I wrote them iteratively alongside each feature. Categories: unit tests per engine, database integration tests, FastAPI endpoint tests (including auth, rate limiting, SSE), chaos engineering (Postgres/Redis failure injection), supply chain (pip-audit/npm-audit mocked), WCAG accessibility (axe-core), and property-based tests using Hypothesis. The test count is not padding — each test class is in a separate file with a specific failure scenario.
 
@@ -256,7 +256,7 @@ Two things. First, I'd add Java support earlier — Go coverage gave +28.8pp aga
 
 ### Q39. "What is CI/CD?"
 
-Continuous Integration / Continuous Deployment. Every git push triggers GitHub Actions (free for open source): linting, type checking, and all 2,759 tests run automatically. If any test fails, the push is blocked from `main`. This means every commit to `main` has passed 2,759 tests — no manual testing required. The green checkmarks in the Actions tab are the proof.
+Continuous Integration / Continuous Deployment. Every git push triggers GitHub Actions (free for open source): linting, type checking, and all 2,805 tests run automatically. If any test fails, the push is blocked from `main`. This means every commit to `main` has passed 2,805 tests — no manual testing required. The green checkmarks in the Actions tab are the proof.
 
 ---
 
@@ -275,6 +275,12 @@ Three numbers, all published: (1) **91.0%** on SecurityEval synthetic snippets �
 ### Q46. "Can your exploit verifier actually handle 10 different vulnerability types?"
 
 Yes — fully wired and unit-tested. All 10 categories (SQLi, CMDi, SSTI, path-traversal, SSRF, XXE, insecure-deserialization, open-redirect, ReDoS, LDAP-injection) have PAYLOADS, EXPLOITATION_SIGNALS, COMMON_PARAMS, DEFAULT_ROUTES, RULE_TO_CATEGORY mappings, and Docker fixture apps. `TestAllTenCategoriesWired` (12 unit tests) verifies all constants and routing. The full chain demo: `python3 scripts/run_full_audit_chain.py --target TESTS/fixtures/exploits/flask_sqli` (requires Docker).
+
+---
+
+### Q47. "You added LLM detection — doesn't that make ACR-QA just another noisy LLM scanner?" ⚠️ HIGH RISK
+
+The opposite. Raw LLMs are noisy (23–65% precision, NDSS 2025). ACR-QA's LLM detection is gated through two filters: (1) a **second-opinion LLM confirm call** — a different temperature/prompt asks "is this real?" and blocks the finding if it answers NO; (2) the **Confirmed Tier** — the same 4-gate, 96.4%-precision filter used for rule-based findings. The result on RealVuln (held-out 16 repos, no overfitting): UNION-GATED **+5.2pp recall** at **89.5% precision** — precision held within 0.8pp of rules-only baseline. The lift is +7.4pp on the full 22-repo corpus (25.1% → 32.4%). Three honest points: (1) FPR increases (15.5% → 22.2% on held-out) — the gated union is the recall-first mode, not the precision mode; (2) every LLM finding can still reach the Confirmed Tier (exploit-verified); (3) `--llm` is opt-in, never the default. Rules are always the trustworthy core. See `docs/evaluation/LLM_AUGMENTED_BENCHMARK_held_out_20260603.md`.
 
 ---
 
@@ -307,9 +313,9 @@ It's the expected behavior of a recall-first tool. The full output maximizes rec
 | Metric | Value |
 |--------|------:|
 | Version | v5.0.0rc2 |
-| Python tests | 2,759 |
+| Python tests | 2,805 |
 | TypeScript tests | 104 |
-| Total tests | **2,863** |
+| Total tests | **2,897** |
 | API endpoints | **52** |
 | Alembic migrations | 18 |
 | Eval corpus | **13 repos, 4 languages** |

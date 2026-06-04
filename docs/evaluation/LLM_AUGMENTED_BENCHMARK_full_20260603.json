@@ -1,0 +1,49 @@
+{
+  "generated": "2026-06-03T23:51:13.261523+00:00",
+  "version": "5.0.0rc2",
+  "model": "llama-3.3-70b-versatile",
+  "aggregate": {
+    "rules": {
+      "tp": 140,
+      "fp": 15,
+      "fn": 418,
+      "tn": 82,
+      "recall": 0.2509,
+      "precision": 0.9032,
+      "fpr": 0.1546
+    },
+    "llm_raw": {
+      "tp": 92,
+      "fp": 16,
+      "fn": 466,
+      "tn": 81,
+      "recall": 0.1649,
+      "precision": 0.8519,
+      "fpr": 0.1649
+    },
+    "union": {
+      "tp": 181,
+      "fp": 26,
+      "fn": 377,
+      "tn": 71,
+      "recall": 0.3244,
+      "precision": 0.8744,
+      "fpr": 0.268
+    },
+    "union_gated": {
+      "tp": 174,
+      "fp": 21,
+      "fn": 384,
+      "tn": 76,
+      "recall": 0.3118,
+      "precision": 0.8923,
+      "fpr": 0.2165
+    }
+  },
+  "per_repo_counts": {
+    "rules": 22,
+    "llm_raw": 22,
+    "union": 22,
+    "union_gated": 22
+  }
+}

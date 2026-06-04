@@ -2,6 +2,19 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v5.0.0rc2 — LLM-Augmented Detection (Phase 1+2+3)] — 2026-06-04
+
+Held-out: +5.2pp recall at 89.5% precision. Full-corpus: 25.1%→32.4% (+7.4pp).
+`CORE/engines/llm_detector.py` + `--llm` CLI flag + 34 unit tests + §5.23 docs.
+
+### Added
+- `CORE/engines/llm_detector.py` — `LLMDetector`: detect_file, detect_repo, gate_findings
+- `--llm` flag in `CORE/main.py` → `ACRQA_LLM_DETECT=1` → additive Step 3b in pipeline
+- `TESTS/test_llm_detector.py` — 34 unit tests (all mocked)
+- `docs/evaluation/LLM_AUGMENTED_BENCHMARK_{full,held_out}_20260603.md`
+- `docs/EVALUATION_CHAPTER.md §5.23` + `docs/QA_PREP.md Q47` + README LLM table
+- Tests: **2,805** (was 2,771)
+
 ## [v5.0.0rc2 — RealVuln Reconciliation] — 2026-06-03
 
 ### Summary
