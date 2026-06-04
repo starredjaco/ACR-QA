@@ -46,19 +46,106 @@ def format_severity_emoji(severity):
     return {"high": "🔴", "medium": "🟡", "low": "🟢"}.get(severity, "⚪")
 
 
+def format_detonation_trace(finding: dict) -> str:
+    """
+    Format the exploit-verification detonation trace for a PR comment.
+    This is the 'ends the argument' block — shows the actual PoC that fired.
+    """
+    tier = finding.get("exploit_tier", "")
+    proof_raw = finding.get("exploit_proof") or finding.get("proof_json") or ""
+    if not tier or tier not in ("verified-exploitable", "verified-unexploitable"):
+        return ""
+
+    lines = []
+    if tier == "verified-exploitable":
+        lines.append("")
+        lines.append("> **💥 EXPLOIT VERIFIED** — ACR-QA fired a real payload in a Docker sandbox")
+        lines.append("> and received an exploitation signal. This finding is proven, not guessed.")
+        lines.append("")
+        # Parse proof JSON if available
+        if proof_raw:
+            try:
+                import json as _json
+
+                proof = _json.loads(proof_raw) if isinstance(proof_raw, str) else proof_raw
+                if proof.get("payload"):
+                    lines.append(f"> **Payload fired:** `{proof['payload']}`")
+                if proof.get("evidence"):
+                    evidence_snippet = str(proof["evidence"])[:200]
+                    lines.append(f"> **Response signal:** `{evidence_snippet}`")
+                if proof.get("category"):
+                    lines.append(f"> **Category:** {proof['category']}")
+            except Exception:
+                pass
+        lines.append("> **Fix priority:** BLOCK merge until resolved.")
+        lines.append("")
+    elif tier == "verified-unexploitable":
+        lines.append("")
+        lines.append("> **✅ Exploit attempt: NOT EXPLOITABLE** — payload fired; no exploitation signal.")
+        lines.append("> Finding is still flagged (may be exploitable in different configuration).")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def format_verified_fix_trace(finding: dict) -> str:
+    """Format the verified-remediation trace — proves fix killed the exploit."""
+    fix_verified = finding.get("fix_verified", False)
+    fix_diff = finding.get("fix_diff", "")
+    if not fix_verified:
+        return ""
+    lines = [
+        "",
+        "> **🔒 FIX VERIFIED** — ACR-QA applied the AI patch and re-fired the exploit.",
+        "> The exploit now FAILS on the patched code. Fix is cryptographically attested.",
+        "",
+    ]
+    if fix_diff:
+        lines.append("<details><summary>View verified fix diff</summary>")
+        lines.append("")
+        lines.append("```diff")
+        for line in fix_diff.splitlines()[:20]:
+            lines.append(line)
+        if fix_diff.count("\n") > 20:
+            lines.append("# ... (truncated)")
+        lines.append("```")
+        lines.append("")
+        lines.append("</details>")
+        lines.append("")
+    return "\n".join(lines)
+
+
 def format_inline_comment(finding):
     """Format a single finding into a short inline comment"""
     sev = finding.get("canonical_severity", "low")
     emoji = format_severity_emoji(sev)
 
+    # Lead with exploit tier if available
+    tier = finding.get("exploit_tier", "")
+    tier_badge = ""
+    if tier == "verified-exploitable":
+        tier_badge = " 💥 **[EXPLOIT-PROVEN]**"
+    elif tier == "verified-unexploitable":
+        tier_badge = " ✅ [not exploitable in sandbox]"
+
     base_comment = (
-        f"{emoji} **{finding['canonical_rule_id']}** — {finding.get('category', 'security')}\n"
+        f"{emoji}{tier_badge} **{finding['canonical_rule_id']}** — {finding.get('category', 'security')}\n"
         f"> {finding['message']}\n"
         f"{sev.title()} Severity | [ACR-QA]"
     )
 
+    # Add detonation trace
+    trace = format_detonation_trace(finding)
+    if trace:
+        base_comment += "\n" + trace
+
+    # Add verified fix trace
+    fix_trace = format_verified_fix_trace(finding)
+    if fix_trace:
+        base_comment += "\n" + fix_trace
+
     fix_code = finding.get("fix_code")
-    if fix_code:
+    if fix_code and not finding.get("fix_verified"):
         suggestion = f"\n```suggestion\n{fix_code.strip()}\n```\n"
         return base_comment + "\n" + suggestion
 
@@ -87,40 +174,96 @@ def format_pr_comment(findings):
     medium_count = len(by_severity["medium"])
     low_count = len(by_severity["low"])
 
+    # Separate exploit-verified findings
+    verified = [f for f in findings if f.get("exploit_tier") == "verified-exploitable"]
+    verified_fixes = [f for f in findings if f.get("fix_verified")]
+
     # Build comment
     lines = []
-    lines.append("## 🤖 ACR-QA Code Review")
+    lines.append("## 🛡️ ACR-QA — Provable AppSec Testing")
     lines.append("")
-    lines.append(f"**Analysis Complete:** Found **{total} issues**")
+
+    # Exploit-verified banner (the wedge)
+    if verified:
+        lines.append(f"### 💥 {len(verified)} EXPLOIT-PROVEN Finding{'s' if len(verified) != 1 else ''}")
+        lines.append("")
+        lines.append("> These findings were **proven by firing real payloads in a Docker sandbox**.")
+        lines.append("> Not alerts. Not estimates. Detonation traces with response evidence.")
+        lines.append("> **Block this merge** until these are resolved.")
+        lines.append("")
+    if verified_fixes:
+        lines.append(
+            f"### 🔒 {len(verified_fixes)} AI Fix{'es' if len(verified_fixes) != 1 else ''} Cryptographically Verified"
+        )
+        lines.append("")
+        lines.append("> These fixes were proven by re-firing the exploit on the patched code.")
+        lines.append("> The exploit now fails. Evidence is ECDSA-signed.")
+        lines.append("")
+
+    lines.append(f"**Full scan:** {total} findings — {high_count} high · {medium_count} medium · {low_count} low")
     lines.append("")
 
     # Summary table
-    lines.append("| Severity | Count |")
-    lines.append("|----------|-------|")
-    lines.append(f"| 🔴 High | {high_count} |")
-    lines.append(f"| 🟡 Medium | {medium_count} |")
-    lines.append(f"| 🟢 Low | {low_count} |")
+    lines.append("| | Count | Status |")
+    lines.append("|---|:---:|---|")
+    lines.append(f"| 💥 Exploit-verified (HIGH, proven) | {len(verified)} | Block merge |")
+    lines.append(f"| 🔒 Fixes verified | {len(verified_fixes)} | Safe to merge after these |")
+    lines.append(f"| 🔴 High (all) | {high_count} | Review required |")
+    lines.append(f"| 🟡 Medium | {medium_count} | |")
+    lines.append(f"| 🟢 Low | {low_count} | |")
     lines.append("")
 
-    # HIGH severity findings (show all)
-    if by_severity["high"]:
+    # EXPLOIT-VERIFIED findings first (the detonation traces)
+    if verified:
         lines.append("---")
         lines.append("")
-        lines.append("### 🔴 High Priority Issues")
+        lines.append("### 💥 Exploit-Proven Findings — Detonation Traces")
+        lines.append("")
+        for i, finding in enumerate(verified, 1):
+            lines.append(
+                f"#### {i}. `{finding['canonical_rule_id']}` in `{clean_file_path(finding.get('file_path', ''))}:{finding.get('line_number', '?')}`"
+            )
+            lines.append("")
+            lines.append(f"> {finding['message']}")
+            lines.append("")
+            # The detonation trace
+            trace = format_detonation_trace(finding)
+            if trace:
+                lines.append(trace)
+            # Verified fix if available
+            fix_trace = format_verified_fix_trace(finding)
+            if fix_trace:
+                lines.append(fix_trace)
+            explanation = finding.get("explanation_text")
+            if explanation:
+                lines.append("<details><summary>AI Explanation</summary>")
+                lines.append("")
+                lines.append(explanation)
+                lines.append("")
+                lines.append("</details>")
+                lines.append("")
+            lines.append("---")
+            lines.append("")
+
+    # Non-verified HIGH severity findings
+    non_verified_high = [f for f in by_severity["high"] if f.get("exploit_tier") != "verified-exploitable"]
+    if non_verified_high:
+        lines.append("---")
+        lines.append("")
+        lines.append("### 🔴 High Severity (Pattern-Detected)")
         lines.append("**⚠️ These issues should be addressed immediately**")
         lines.append("")
 
-        for i, finding in enumerate(by_severity["high"], 1):
-            lines.append(f"#### {i}. {finding['canonical_rule_id']} - {finding['category']}")
+        for i, finding in enumerate(non_verified_high, 1):
+            lines.append(f"#### {i}. {finding['canonical_rule_id']} - {finding.get('category', 'security')}")
             lines.append("")
-            clean_path = clean_file_path(finding["file_path"])
-            lines.append(f"**📍 Location:** `{clean_path}:{finding['line_number']}`")
+            clean_path = clean_file_path(finding.get("file_path", ""))
+            lines.append(f"**📍 Location:** `{clean_path}:{finding.get('line_number', '?')}`")
             lines.append("")
             lines.append("**📝 Issue:**")
             lines.append(f"> {finding['message']}")
             lines.append("")
 
-            # Get explanation from database
             explanation = finding.get("explanation_text")
             if explanation:
                 lines.append("**💡 AI Explanation:**")
