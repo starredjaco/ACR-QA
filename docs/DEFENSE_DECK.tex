@@ -598,6 +598,7 @@ severity_override:
         \item Corpus is 54\% Python -- Java/C++ unvalidated
         \item Inter-rater $\kappa$ measured on 2 raters; 5-rater study in progress
         \item CVE overall battery: 40\% (12/20 are structural SAST limits, not tool bugs)
+        \item RealVuln (real apps): \good{25--31\%} -- still \emph{beats} Bandit \& Semgrep; 52\% of that corpus is authz/IDOR no SAST can reach
         \item Mutation score: 61\% (exceeds 60\% target; room to grow)
       \end{enumerate}
     \end{column}
@@ -730,15 +731,16 @@ severity_override:
     \begin{column}{0.5\textwidth}
       \begin{enumerate}\small
         \addtocounter{enumi}{6}
-        \item PR Risk Score (6-signal, size-penalty, CI gate)
-        \item Second Opinion cross-model verdict system
-        \item ECDSA-signed provenance attestation per scan
-        \item Pre-registered 20-CVE recall battery (8/8 detectable = 100\%)
+        \item \good{Exploit verification} -- fire a live PoC in a sandbox (10 categories)
+        \item \good{Verified Remediation} -- re-run the exploit after the fix; ship only if it now fails
+        \item ECDSA + Rekor-signed provenance \& remediation chain
+        \item Pre-registered 20-CVE battery (8/8 detectable = 100\%)
       \end{enumerate}
       \vspace{6pt}
-      \begin{exampleblock}{Key metric}
-        100\% recall vs 71.2\% (Semgrep CE)\\
-        \textbf{+28.8 pp on 13-repo corpus}
+      \begin{exampleblock}{The claim no other tool can make}
+        Every confirmed finding is \textbf{exploit-proven}; every fix is
+        \textbf{re-proven by re-exploitation} and \textbf{signed}.\\
+        Snyk retests \emph{statically}. We retest by \emph{exploitation}.
       \end{exampleblock}
     \end{column}
   \end{columns}
