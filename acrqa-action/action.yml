@@ -1,10 +1,13 @@
-name: "ACR-QA Code Review"
-description: "AI-powered code review: 10 static analysers + RAG-grounded explanations + ECDSA-signed provenance"
+name: "ACR-QA — Provable AppSec Testing"
+description: >
+  The only SAST action that proves vulnerabilities by firing real exploits in a Docker sandbox
+  and proves your AI fix actually worked by re-firing the exploit on the patched code —
+  then cryptographically signs the chain. Output: SARIF v2.1.0 with exploit-verified findings only.
 author: "Ahmed Mahmoud Abbas (KSIU)"
 
 branding:
   icon: "shield"
-  color: "purple"
+  color: "green"
 
 inputs:
   target-dir:
@@ -12,42 +15,64 @@ inputs:
     required: false
     default: "."
   fail-on:
-    description: "Severity threshold to fail CI — high | medium | low | none"
+    description: >
+      Severity threshold to fail the merge gate — high | medium | low | none.
+      Only exploit-VERIFIED findings of this severity block the merge.
     required: false
     default: "high"
-  groq-key:
-    description: "Groq API key for AI explanations (optional — static analysis runs without it)"
+  confirmed-only:
+    description: >
+      Emit only Confirmed Tier findings (exploit-verified, 96.4% precision) in the SARIF.
+      Recommended for merge-blocking. Set to false to include all findings.
     required: false
+    default: "true"
+  groq-key:
+    description: >
+      Groq API key for AI explanations and LLM-augmented detection (optional).
+      Static analysis + exploit verification run without it.
+    required: false
+  llm-detect:
+    description: >
+      Enable LLM-augmented detection pass (additive, Groq llama-3.3-70b).
+      Lifts recall +7.4pp on RealVuln; gated second-opinion holds 89.5% precision.
+      Adds ~2-5 min. Requires groq-key.
+    required: false
+    default: "false"
   repo-name:
-    description: "Repository name label for reports (defaults to github.repository)"
+    description: "Repository name label for scan records"
     required: false
     default: ${{ github.repository }}
-  limit:
-    description: "Maximum number of findings to return (0 = unlimited)"
-    required: false
-    default: "0"
-  output-sarif:
-    description: "Write SARIF v2.1.0 output to this path (leave empty to skip)"
+  sarif-output:
+    description: "Path to write SARIF v2.1.0 output"
     required: false
     default: "acrqa-results.sarif"
+  upload-sarif:
+    description: >
+      Upload SARIF to GitHub Code Scanning (GHAS) after scan.
+      Requires Actions read + security-events write permissions.
+    required: false
+    default: "true"
 
 outputs:
-  findings-count:
-    description: "Total number of findings detected"
-  high-count:
-    description: "Number of HIGH-severity findings"
-  medium-count:
-    description: "Number of MEDIUM-severity findings"
+  verified-count:
+    description: "Number of exploit-VERIFIED findings (highest trust — these are real)"
+  confirmed-count:
+    description: "Number of Confirmed Tier findings (exploit-verified or pattern-confirmed)"
+  total-count:
+    description: "Total findings (all severities, full output)"
   sarif-file:
-    description: "Path to the SARIF v2.1.0 output file"
+    description: "Path to the written SARIF v2.1.0 file"
+  attestation-id:
+    description: "Sigstore Rekor entry ID for the ECDSA-signed scan attestation"
 
 runs:
   using: "docker"
-  image: "docker://ghcr.io/ahmed-145/acrqa-action:v4.6.0"
+  image: "docker://ghcr.io/ahmed-145/acrqa:latest"
   env:
     GROQ_API_KEY_1: ${{ inputs.groq-key }}
     ACRQA_TARGET_DIR: ${{ inputs.target-dir }}
     ACRQA_FAIL_ON: ${{ inputs.fail-on }}
     ACRQA_REPO_NAME: ${{ inputs.repo-name }}
-    ACRQA_LIMIT: ${{ inputs.limit }}
-    ACRQA_OUTPUT_SARIF: ${{ inputs.output-sarif }}
+    ACRQA_SARIF_OUTPUT: ${{ inputs.sarif-output }}
+    ACRQA_CONFIRMED_ONLY: ${{ inputs.confirmed-only }}
+    ACRQA_LLM_DETECT: ${{ inputs.llm-detect == 'true' && '1' || '0' }}

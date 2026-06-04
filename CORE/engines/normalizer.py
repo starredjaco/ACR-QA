@@ -214,6 +214,9 @@ RULE_MAPPING = {
     "acrqa-django-format-html-injection": "SECURITY-086",  # CWE-79 / XSS
     "acrqa-cookie-no-httponly": "SECURITY-087",  # CWE-1004
     "acrqa-cookie-no-secure": "SECURITY-088",  # CWE-614
+    # ── P3: NoSQL/GraphQL/JWT-alg exploit categories (CLI-Competitive roadmap) ──
+    "acrqa-graphql-injection": "SECURITY-089",  # CWE-943 variant
+    "acrqa-jwt-alg-confusion": "SECURITY-090",  # CWE-347
     # ── Bugs found in god-mode live test (2026-03-31) ──
     "bare-except": "EXCEPT-001",  # Semgrep custom rule — bare except clause
     "too-many-parameters": "SOLID-001",  # Semgrep custom rule — too many function params
