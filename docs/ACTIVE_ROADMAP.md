@@ -1,21 +1,19 @@
 # ACR-QA Active Roadmap — Ahmed's Personal Execution Plan
 
-> **What this is:** The actual list Ahmed is executing. Everything here is **completely free** (no domain, no card, no surprise bills) and **realistic for a fresh-grad backend + DevOps engineer**.
+> **What this is:** The actual execution log for ACR-QA v5.0.0rc2. All items below are
+> **completely free** (no domain, no card, no surprise bills) and realistic for a
+> fresh-grad backend + DevOps engineer.
 >
-> **What this is NOT:** A wish list. The full menu lives in [`GOD_MODE_V5_PLAN.md`](GOD_MODE_V5_PLAN.md) — pick from there in future years.
+> **Current plan:** [`GOD_MODE_V10_PERFECT_TEN_ROADMAP.md`](GOD_MODE_V10_PERFECT_TEN_ROADMAP.md) —
+> verified-research repositioning (2026-06-04). Supersedes v9 scoring; grounds every claim in
+> web-verified 2026 literature.
 >
-> **v6 Business Direction:** [`GOD_MODE_V6_BUSINESS_PLAN.md`](GOD_MODE_V6_BUSINESS_PLAN.md) — harsh product/startup plan. The one-sentence bet:
-> *"Auto-block merges you can trust — every finding is exploit-verified and cryptographically attested."*
-> Phase 0 of v6 is now executing — see items 16–20 below.
+> **Archive (do not re-execute):** v5/v6/v7/v8/v9 God Mode plans — superseded by v10.
+> Strategic menu for post-defense: [`GOD_MODE_V5_PLAN.md`](GOD_MODE_V5_PLAN.md).
 >
-> **v7 Compete-to-Win Direction:** [`GOD_MODE_V7_COMPETE_PLAN.md`](GOD_MODE_V7_COMPETE_PLAN.md) — the competitive layer.
-> Triggered by the P-1 benchmark reality (64.3% file-level, contestable). Response: run the field's
-> standard corpora (OWASP Benchmark, SastBench/MCC), widen the exploit-verification moat, and ship
-> **Verified Remediation** (re-exploit after fix — nobody else does it). Start with V7-0 (credibility) this week.
->
-> **Created:** 2026-05-31 · **v6 Phase 0 added:** 2026-06-02 · **v7 added:** 2026-06-02
-> **Horizon:** ~25 weeks (defense day is one waypoint, not the finish line)
-> **Total cost:** $0 ongoing. Possibly $0 setup.
+> **Created:** 2026-05-31 · **v10 repositioning:** 2026-06-04 · **Last updated:** 2026-06-05
+> **Horizon:** defense day 2026-06-25 + post-defense adoption runway
+> **Total cost:** $0 ongoing. $0 setup.
 
 ---
 
@@ -145,7 +143,35 @@ These items execute the one-sentence bet from `GOD_MODE_V6_BUSINESS_PLAN.md`. Al
 - ACR-QA (RealVuln, full corpus): **25.1% recall** vs Bandit 19.4% (+5.7pp) — neutral third-party
 - ACR-QA (Confirmed Tier): TPR=37.1%, FPR=~0%, Precision=96.4% — auto-block operating point
 - Exploit categories: **10** (up from 4)
-- LLM-augmented detection: **UNION-GATED +7.4pp recall** (25.1%→32.4%) at 87.4% precision (held-out: +5.2pp, 89.5% precision) — SQLi, CMDi, SSTI, path-traversal, SSRF, XXE, insecure-deser, open-redirect, ReDoS, LDAP
+- LLM-augmented detection: **UNION-GATED +7.4pp recall** (25.1%→32.4%) at 87.4% precision (held-out: +5.2pp, 89.5% precision)
+- Exploit categories: **13** (NoSQL, GraphQL, JWT-alg-confusion added in CLI-Competitive roadmap)
+
+---
+
+## v10 Tracks (2026-06-04) — verified-research repositioning, honest positioning
+
+| # | Item | Status | Result |
+|---|------|--------|--------|
+| P4/7.1 | **Drop false-primacy claims** — "commercially unprecedented" deleted; convergence paragraph replacing it | ✅ | README, benchmark.html, action README, PRICING all updated |
+| P4/7.1 | **Competitor re-exploit table** — ACR-QA/Qualys/ZeroPath vs static-rescan incumbents | ✅ | README + PRICING_POSITIONING.md |
+| P4/10.1 | **RealVuln 2026 leaderboard** in README/QA_PREP (Semgrep 17.5%, Snyk 17.4, SonarQube 6.5%) | ✅ | Verified arXiv:2604.13764; beats all rule-based tools |
+| P4/10.1 | **Q48+Q49 in QA_PREP** — Qualys/ZeroPath convergence answer; RealVuln 3-number answer | ✅ | Defense answers memorizable |
+| P1/3.1 | **EXPLOIT_VERIFICATION.md** expanded to 13 categories (3 Docker-live, 10 unit-tested) | ✅ | Honest status per category |
+| P1/4.2 | **§5.24 in EVALUATION_CHAPTER** — competitor landscape, RealVuln leaderboard, ECE/RuleForge, fabricated-citations blacklist | ✅ | All citations web-verified 2026-06-04 |
+| P3/5.1 | **Exception narrowing** in trust paths — exploit_verifier, verified_remediation, attestation | ✅ | Silent swallows replaced with logged specific exceptions |
+| P0.1 | **Wheel builds clean** — `acrqa-5.0.0rc2-py3-none-any.whl` produced | ✅ | `acrqa` entry point verified |
+
+**Current honest scores (post-v10):**
+- **Installability (#1):** wheel builds ✅ · PyPI pending Ahmed's 3 manual steps → 9
+- **Detection/recall (#2):** 25.1%/48% beats Semgrep 17.5%/Snyk 17.4/SonarQube 6.5% on RealVuln → 8
+- **Trust wedge (#3):** 13 cats wired; 3 Docker-live; "unprecedented" dropped → 8
+- **FPR/calibration (#4):** Confirmed Tier 96.4% precision; RuleForge ECE 0.17 cited → 8
+- **Engineering quality (#5):** trust-path exceptions narrowed → 8.5
+- **Focus (#6):** ENGINE_MAP + one-headline README → 8
+- **Differentiation (#7):** convergence narrative + verified competitor table → 9
+- **Traction (#8):** honestly stated as GTM runway, not faked → honest 7
+- **Frontend (#9):** dist builds needed → 5 (deferred)
+- **Docs/honesty (#10):** 3-number framing + §5.24 + verified cites everywhere → 9.5
 
 ---
 
@@ -284,5 +310,5 @@ The plan succeeds if, **by the end of week 11 (defense day)**:
 
 ---
 
-*Active roadmap updated 2026-06-01. Updated weekly until all 15 items are ✅.*
-*See [`GOD_MODE_V5_PLAN.md`](GOD_MODE_V5_PLAN.md) for the full strategic menu.*
+*Active roadmap updated 2026-06-05. All v10 tracks complete ✅. See [`GOD_MODE_V10_PERFECT_TEN_ROADMAP.md`](GOD_MODE_V10_PERFECT_TEN_ROADMAP.md) for the current execution plan.*
+*Strategic menu for post-defense lanes lives in [`GOD_MODE_V5_PLAN.md`](GOD_MODE_V5_PLAN.md).*

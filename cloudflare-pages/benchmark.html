@@ -186,10 +186,13 @@
 <!-- VERIFIED REMEDIATION -->
 <section class="section">
   <div class="section-tag">Beyond Detection — Verified Remediation</div>
-  <h2>The only tool that proves the fix closes the exploit</h2>
+  <h2>Exploit-verified remediation — the 2026 vanguard, at $0 in CI</h2>
   <div class="note">
-    <strong>The frontier:</strong> Snyk retests fixes with a static re-scan. ACR-QA re-runs the
-    actual exploit against the patched code in a Docker sandbox. <code>fix_verified=True</code>
+    <strong>The frontier (2026):</strong> Qualys TruConfirm &amp; ZeroPath now ship exploit-re-detonation commercially.
+    VulnRepairEval (arXiv:2509.03331) and PatchEval (arXiv:2511.11019) institutionalized it academically.
+    ACR-QA independently converges for <strong>first-party application source code, in CI, ECDSA-attested, at $0</strong>.
+    Snyk/Semgrep/GHAS still retest fixes with a static re-scan. ACR-QA re-runs the actual exploit
+    against the patched code in a Docker sandbox. <code>fix_verified=True</code>
     only if the exploit now fails — ground truth, not a probability estimate.
     The <code>(vuln_proof, fix_diff, fix_proof)</code> triple is ECDSA-signed to Rekor.
   </div>

@@ -288,6 +288,18 @@ The contribution is not the LLM — it's the **machinery that makes an unreliabl
 
 ---
 
+### Q48. "Qualys and ZeroPath already do exploit-verified remediation. You're not novel." ⚠️ HIGH RISK
+
+Correct that the paradigm is no longer unoccupied — and I say that openly. Qualys TruConfirm (Mar 2026) re-detonates CVEs on deployed infrastructure (Exposure/Threat Management layer, not SAST). ZeroPath is AI-native SAST+DAST, closed-source. VulnRepairEval (arXiv:2509.03331) and PatchEval (arXiv:2511.11019) institutionalized it academically in 2025. **Convergence is not a weakness — it's validation.** The novel contribution is the convergence point: exploit-verified remediation for *first-party application source code, in CI, open-source, ECDSA-attested to Rekor, at $0*. Qualys targets deployed CVEs on servers; ZeroPath is proprietary. ACR-QA is the open, first-party-SAST, CI-native version of the same paradigm. The thesis honestly names the frontier beyond this: autonomous PoC generation + self-healing feedback (EvoRepair arXiv:2605.30105, SEC-bench arXiv:2506.11791) as future work.
+
+---
+
+### Q49. "Your recall is 25% on RealVuln — how does that compare to tools like Semgrep?" ⚠️ HIGH RISK
+
+On the RealVuln 2026 real-world benchmark (arXiv:2604.13764 — 26 real Python apps, 697 labels, strict CWE+file+line±10 matching): Semgrep CE: **17.5%** (F3 17.7). Snyk: **F3 17.4**. SonarQube: **6.5%**. ACR-QA full corpus: **25.1%** — leading every traditional SAST tool and every SARIF-native incumbent. On the *statically-detectable subset* (injection/secrets/crypto — the 64% of the corpus that no-SAST-can-miss vs can-detect): ACR-QA reaches **~48%**. The gap between 48% and the specialized tools (Kolega.Dev 80.9%) is the LLM-augmented tier that I name as the frontier. I report all three numbers: 91% SecurityEval (isolated synthetic), 48% RealVuln detectable, 25.1% RealVuln full — each with a clear corpus and what it measures.
+
+---
+
 ### Q44. "Your OWASP FPR is 75.3% — you scream on clean code. Why should I trust this tool?" ⚠️ HIGH RISK
 
 This is the right question and I welcome it. Three-part answer: (1) **Two operating points, one scan.** The 75.3% FPR is the *full output* — the recall-first mode used for developer triage. The *Confirmed Tier* (the auto-block mode) has near-zero FPR on production code. These are two points on the same Precision-Recall curve. You pick the operating point for your use case. (2) **The FPR is a corpus artefact.** SecurityEval has only 89 "clean" TN files — tiny snippets. On a real 10,000-file codebase, the absolute false positive *count* stays bounded while the FPR denominator grows. Precision (54.7% full output) is the corpus-size-immune metric; it means roughly 1 in 2 alerts is real in developer review mode. (3) **Precedent.** "Sifting the Noise" (arXiv:2601.22952) shows LLM-augmented SAST cuts SAST FPs ~91% (from 92% to 6.3% FPR on OWASP). ACR-QA's Confirmed Tier achieves a comparable reduction *statically*, targeting auto-block precision of 96.4%.

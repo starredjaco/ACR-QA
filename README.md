@@ -88,15 +88,34 @@ Conservative precision **96.4%** (95% CI [90.9%, 100%]) · F1 = **98.2%** vs Ban
 
 ## Competitive Position
 
-| | Snyk Code | Semgrep | CodeRabbit | **ACR-QA** |
+### Re-exploit-to-verify-fix: who does it
+
+Exploit-verified remediation became the 2026 vanguard. ACR-QA independently converges on
+the same paradigm for **first-party application source code, in CI, ECDSA-attested, at $0**:
+
+| Tool | Re-exploits to verify fix | Layer | Notes |
+|---|:---:|---|---|
+| **ACR-QA** | ✅ | First-party SAST in CI | ECDSA-signed, $0, 13 exploit categories |
+| Qualys TruConfirm | ✅ | CVE/deployed-asset ETM | Re-detonates CVEs on deployed infra (Mar 2026) |
+| ZeroPath | ✅ | AI-native SAST+DAST | Exploit proof + fix verification, closed source |
+| Snyk / Semgrep / GHAS | ❌ | — | Static re-scan only: guesses if fix worked |
+| Checkmarx / SonarQube | ❌ | — | Static re-scan only |
+
+The true frontier (named honestly as future work): autonomous PoC generation + self-healing feedback
+loops — EvoRepair (arXiv:2605.30105), SEC-bench (arXiv:2506.11791, NeurIPS'25).
+
+### Feature comparison
+
+| | Snyk Code | Semgrep | GHAS/CodeQL | **ACR-QA** |
 |--|:---------:|:-------:|:----------:|:----------:|
 | Exploit verification | ❌ | ❌ | ❌ | ✅ Docker sandbox |
+| Re-exploit to verify fix | ❌ | ❌ | ❌ | ✅ |
 | Cryptographic attestation | ❌ | ❌ | ❌ | ✅ ECDSA + Rekor |
 | SLSA L3 provenance | ❌ | ❌ | ❌ | ✅ |
 | Confirmed Tier (auto-block) | ❌ | ❌ | ❌ | ✅ 96.4% precision |
-| Taint + reachability gate | partial | partial | ❌ | ✅ HTTP-source confirmation |
-| CVE recall (8/8 battery) | — | 71.2% | — | ✅ 100% |
+| LLM-augmented detection | partial | ❌ | ❌ | ✅ +7.4pp, gated |
 | Self-hosted / $0 recurring | ❌ | ❌ | ❌ | ✅ |
+| RealVuln recall (2026 benchmark) | 17.4% F3 | 17.5% | — | **25%** full / **48%** detectable |
 
 ACR-QA integrates *with* Semgrep and Snyk (not against them) — it adds the verification and attestation layer their output is missing.
 
@@ -104,17 +123,31 @@ ACR-QA integrates *with* Semgrep and Snyk (not against them) — it adds the ver
 
 ## Key Numbers (v5.0.0rc2)
 
-### Detection Recall — the headline (full output, recall-first)
+### Detection Recall — Three Honest Numbers
 
-**SecurityEval, genuinely-vulnerable corpus, bootstrap 95% CI** ([reconciliation](./docs/evaluation/RECONCILIATION.md)):
+ACR-QA reports three recall numbers across two corpora, each with a clear context:
 
-| Tool | Recall (detectable CWEs, n=89) | 95% CI |
-|------|:------------------------------:|--------|
-| **ACR-QA (full output)** | **91.0%** | [82.8%, 97.8%] |
-| Bandit | 50.6% | [39.3%, 60.7%] |
-| Semgrep CE | 23.6% | [14.6%, 32.6%] |
+| Number | Corpus | Meaning |
+|---|---|:---:|
+| **91.0%** | SecurityEval (single-file synthetic, n=89 detectable CWEs) | Algorithmic soundness on isolated patterns |
+| **48%** | RealVuln **detectable subset** (26 real Python apps, statically-feasible CWEs only) | Real multi-file apps, static-ceiling recall |
+| **25.1%** | RealVuln **full corpus** (all 697 TPs including auth/CSRF/IDOR no-SAST-can-detect) | Total honest recall, undetectable classes included |
 
-ACR-QA detects **more real vulnerabilities than either competitor** — near-perfect on high-severity classes (command-injection 2/2, SQLi 2/2, insecure-deserialization 4/4, XXE 6/6, SSRF 2/2). OWASP dual-corpus Youden J=0.157 leads Bandit 0.090 and Semgrep 0.056.
+**RealVuln 2026 leaderboard** (arXiv:2604.13764, verified 2026-06-04):
+
+| Tool | RealVuln recall | RealVuln F3 |
+|------|:---:|:---:|
+| Kolega.Dev (specialized) | 80.9% | 73.0 |
+| Claude Sonnet 4.6 (agentic) | ~50% | 51.7 |
+| **ACR-QA (full output)** | **25.1%** | ≈0.27 |
+| **ACR-QA (detectable subset)** | **~48%** | — |
+| Semgrep CE | 17.5% | 17.7 |
+| Snyk | — | 17.4 |
+| SonarQube | 6.5% | — |
+
+**ACR-QA beats every rule-based SAST tool and every SARIF-native incumbent on the 2026 real-world benchmark.** The gap vs agentic LLMs is real and documented — the honest position is to name it and show the exploit-verification moat that LLM-only tools lack.
+
+SecurityEval Youden J=0.157 leads Bandit 0.090 and Semgrep 0.056.
 
 ### Two Operating Points — One Scan
 
