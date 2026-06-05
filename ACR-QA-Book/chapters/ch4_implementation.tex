@@ -51,34 +51,17 @@ acr-qa/
 ├── CORE/
 │   ├── main.py              # Pipeline orchestrator
 │   ├── adapters/            # PythonAdapter, JSAdapter, GoAdapter
-│   └── engines/
-│       ├── normalizer.py    # Canonical schema mapper
-│       ├── confidence_scorer.py  # 5-signal scoring
-│       ├── taint_analyzer.py     # Intra-procedural taint
-│       ├── call_graph.py         # BFS reachability
-│       ├── explainer.py          # RAG + entropy + Groq
-│       ├── auto_fix.py           # AI patch generator
-│       ├── cbom_scanner.py       # CBoM (62 algorithms)
-│       ├── sca_scanner.py        # Dependency CVEs
-│       ├── secrets_detector.py   # 15+ regex patterns
-│       ├── quality_gate.py       # Policy-as-Code gate
-│       ├── attestation.py        # ECDSA + Dilithium3
-│       ├── verified_remediation.py # detect->exploit->fix->re-exploit
-│       ├── llm_detector.py       # LLM-augmented detection (+5.2pp recall)
-│       └── cross_lang.py         # Cross-language correlator
+│   └── engines/             # 14 engines: normalizer, confidence_scorer,
+│                            #   taint_analyzer, call_graph, explainer,
+│                            #   auto_fix, cbom_scanner, sca_scanner,
+│                            #   secrets_detector, quality_gate,
+│                            #   attestation, verified_remediation,
+│                            #   llm_detector, cross_lang
 ├── FRONTEND/api/            # FastAPI (52 endpoints)
-│   ├── main.py              # App factory + middleware
-│   ├── routers/             # Runs, findings, auth, metrics
-│   └── models/              # Pydantic v2 schemas
-├── dashboard/               # React 18 + TypeScript SPA
-│   ├── src/
-│   │   ├── pages/           # ScansPage, RunDetail, Settings
-│   │   ├── components/      # shadcn/ui wrappers
-│   │   └── i18n/            # EN + AR bundles
-│   └── tests/               # Vitest + Playwright
+├── dashboard/               # React 18 + TypeScript SPA (EN + AR RTL)
 ├── DATABASE/database.py     # psycopg2 DAO layer
 ├── config/rules.yml         # 66 rules, 422 mappings
-├── TESTS/                   # 2,805 pytest cases
+├── TESTS/                   # 2,897 pytest + Vitest cases
 ├── deploy/helm/ & terraform/ # K8s Helm chart + IaC
 ├── docker-compose.yml       # 7 services
 └── .acrqa.yml               # Quality gate config

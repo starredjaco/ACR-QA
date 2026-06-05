@@ -86,21 +86,21 @@ The current release of \ACRQA{} v5.0.0rc2 has the following acknowledged limitat
 \subsection{Near-Term Extensions (v5.1 --- Q3 2026)}
 
 \begin{itemize}
-  \item \textbf{Inter-procedural taint analysis:} Extend the taint engine across function call boundaries using a lightweight interprocedural call graph. Initial estimates suggest a 10--15 percentage-point increase in injection-class recall on real-world codebases, making this the single highest-impact precision improvement available.
+  \item \textbf{Inter-procedural taint analysis:} Extend the taint engine across function boundaries via a lightweight interprocedural call graph; estimated 10--15~pp improvement in injection-class recall.
 
-  \item \textbf{Automatic pull-request generation:} Integrate the validated autofix patches with the GitHub API \cite{owasp_api_top10} to open pull requests automatically. The autofix engine already generates and sandbox-validates patches; the GitHub integration layer is the remaining gap.
+  \item \textbf{Automatic pull-request generation:} Integrate validated autofix patches with the GitHub API \cite{owasp_api_top10} to open pull requests automatically.
 
-  \item \textbf{PHP, Java, and Rust adapters:} Extend language coverage via PHPCS-Security-Audit, SpotBugs, and Cargo-audit. The adapter framework is language-agnostic; only tool-invocation and output-parsing layers require implementation.
+  \item \textbf{PHP, Java, and Rust adapters:} Extend language coverage via PHPCS-Security-Audit, SpotBugs, and Cargo-audit; the adapter framework is language-agnostic.
 \end{itemize}
 
 \subsection{Research Directions (v6.0 --- 2027)}
 
 \begin{itemize}
-  \item \textbf{Proof-of-Exploit at scale:} The X2 evaluation confirmed detect~$\to$~exploit~$\to$~fix on 13 vulnerability categories (3 Docker-live + 10 unit-tested synthetic fixtures), with the Verified Remediation Engine attesting each fix. Future work targets parallel Docker sandboxes for simultaneous multi-category live verification and automatic PoC generation from canonical rule metadata.
+  \item \textbf{Proof-of-Exploit at scale:} Extend X2's detect~$\to$~exploit~$\to$~fix pipeline to parallel Docker sandboxes for simultaneous multi-category live verification and automatic PoC generation from canonical rule metadata.
 
-  \item \textbf{User study completion and publication:} Complete the pre-registered A/B study ($n \geq 10$ engineers) comparing raw tool output to \ACRQA{} AI-enriched output across time-to-understand, remediation accuracy, and developer trust, targeting an IEEE or ACM software engineering venue.
+  \item \textbf{User study completion and publication:} Complete the pre-registered A/B study ($n \geq 10$ engineers) comparing raw tool output to \ACRQA{} AI-enriched output on time-to-understand, remediation accuracy, and developer trust, targeting an IEEE or ACM venue.
 
-  \item \textbf{Agentic remediation loop:} Build an autonomous agent that runs \ACRQA{}, generates patches via the autofix engine, tests the patched code via CI, and merges verified fixes — closing the full detect-explain-fix-verify loop for a defined class of well-understood vulnerability patterns.
+  \item \textbf{Agentic remediation loop:} Build an autonomous agent that runs \ACRQA{}, generates patches, tests via CI, and merges verified fixes --- closing the full detect-explain-fix-verify loop.
 \end{itemize}
 
 % -----------------------------------------------------------------

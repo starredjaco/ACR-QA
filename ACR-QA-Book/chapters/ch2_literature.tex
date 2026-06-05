@@ -80,17 +80,11 @@ Empirical studies across industrial codebases report false positive rates rangin
 
 \subsection{Machine Learning and Large Language Models for Code}
 
-Early ML approaches applied classifiers to features from code property graphs (ASTs + CFGs + PDGs) \cite{yamaguchi2014modeling} and neural models such as Code2Vec \cite{alon2019code2vec} and VulDeePecker \cite{li2018vuldeepecker}. These approaches require large, labelled vulnerability datasets and generalise poorly across codebases.
-
-Transformer-based LLMs (GitHub Copilot \cite{chen2021evaluating}, CodeBERT \cite{feng2020codebert}, CodeLlama \cite{roziere2023code}) demonstrated strong zero-shot generalisation for vulnerability detection \cite{thapa2022transformer} but introduced hallucination risks. Pearce et al.\ \cite{pearce2022asleep} found Copilot generated vulnerable code in 40\% of scenarios; Ni et al.\ \cite{ni2023chatgpt} showed LLM vulnerability-detection performance is highly sensitive to prompt formulation.
-
-The key insight exploited by \ACRQA{} is that LLMs are most effective for contextual reasoning and explanation --- not as primary detectors. Detection is delegated to deterministic SAST tools; the LLM enriches and contextualises confirmed findings.
+Early ML approaches applied classifiers to features from code property graphs (ASTs + CFGs + PDGs) \cite{yamaguchi2014modeling} and neural models such as Code2Vec \cite{alon2019code2vec} and VulDeePecker \cite{li2018vuldeepecker}, but require large labelled datasets and generalise poorly across codebases. Transformer-based LLMs (GitHub Copilot \cite{chen2021evaluating}, CodeBERT \cite{feng2020codebert}, CodeLlama \cite{roziere2023code}) demonstrated strong zero-shot generalisation \cite{thapa2022transformer} but introduced hallucination risks: Pearce et al.\ \cite{pearce2022asleep} found Copilot generated vulnerable code in 40\% of scenarios, and Ni et al.\ \cite{ni2023chatgpt} showed detection performance is highly sensitive to prompt formulation.
 
 \subsection{Hallucination and Consistency Challenges}
 
-A critical limitation of LLM use in high-stakes contexts is hallucination --- the generation of plausible-sounding but factually incorrect content \cite{ji2023survey}. In a security context, a hallucinated explanation that incorrectly characterises a vulnerability's exploitability or recommends an incorrect remediation can cause more harm than no explanation at all.
-
-Prior work on hallucination mitigation has focused on retrieval augmentation (discussed in Section~\ref{sec:rag_background}), uncertainty quantification, and consistency-based filtering. The entropy-based consistency filter in \ACRQA{} draws on the observation that consistent, well-grounded LLM responses tend to exhibit lower token-level perplexity variance across multiple independent generations \cite{kuhn2023semantic}.
+A critical limitation of LLM use in high-stakes contexts is hallucination --- the generation of plausible-sounding but factually incorrect content \cite{ji2023survey}. In a security context, a hallucinated explanation that mischaracterises exploitability or recommends an incorrect remediation can cause more harm than no explanation. Mitigations include retrieval augmentation, uncertainty quantification, and consistency-based filtering on N-gram entropy distributions \cite{kuhn2023semantic}.
 
 % -----------------------------------------------------------------
 \section{Retrieval-Augmented Generation (RAG)}
@@ -107,31 +101,17 @@ Retrieval-Augmented Generation was introduced by Lewis et al.\ \cite{lewis2020re
 
 The key advantage of RAG over pure parametric LLMs \cite{brown2020language} is that the knowledge base can be updated independently of the model, enabling the system to stay current with evolving security guidance without model fine-tuning.
 
-\subsection{RAG in Security Contexts}
+\subsection{RAG in Security Contexts and Knowledge Base Construction}
 
-RAG has been applied to several security domains. ChatSec \cite{chatsec2024} demonstrated a RAG system for answering questions about CVE advisories by retrieving relevant vulnerability descriptions from the National Vulnerability Database \cite{nvd_database}. SecurityLLM \cite{securityllm2024} applied RAG to malware analysis, grounding LLM classification decisions in retrieved behavioural signatures.
-
-The application of RAG to SAST finding enrichment --- as employed by \ACRQA{} --- is less explored in the literature. The closest related work is the AutoCodeRover system \cite{zhang2024autocoderover}, which uses RAG to retrieve relevant code context for automated patch generation, though it operates at the patch-generation level rather than finding-enrichment level.
-
-\subsection{Knowledge Base Construction}
-
-The quality of RAG outputs is strongly dependent on the quality and structure of the knowledge base \cite{guu2020retrieval}. In \ACRQA{}, the knowledge base of 66 security rules (with 422 canonical mappings across the three supported languages) was curated from three primary sources: the OWASP Secure Coding Practices Quick Reference \cite{owasp_scp}, the NIST SP 800-53 security control catalogue \cite{nist_800_53}, and CWE descriptions from MITRE's Common Weakness Enumeration taxonomy \cite{mitre_cwe}. The OWASP Application Security Verification Standard \cite{owasp_asvs} and OWASP API Security Top~10 \cite{owasp_api_top10} additionally informed the security rule set for API-level and authentication-related findings. Each knowledge base entry is structured to include: vulnerability class, description, impact, detection patterns, and remediation guidance.
+RAG has been applied to CVE Q\&A \cite{chatsec2024}, malware analysis \cite{securityllm2024}, and automated patch generation \cite{zhang2024autocoderover}. Application to SAST finding enrichment --- as employed by \ACRQA{} --- is less explored. The quality of RAG outputs is strongly dependent on knowledge base quality \cite{guu2020retrieval}; the \ACRQA{} knowledge base of 66 security rules (422 canonical mappings) was curated from OWASP SCP \cite{owasp_scp}, NIST SP~800-53 \cite{nist_800_53}, MITRE CWE \cite{mitre_cwe}, OWASP ASVS \cite{owasp_asvs}, and OWASP API Security Top~10 \cite{owasp_api_top10}.
 
 % -----------------------------------------------------------------
 \section{Cryptographic Bill of Materials (CBoM)}
 \label{sec:cbom_background}
 
-\subsection{Software Bill of Materials}
+The Software Bill of Materials (SBOM) --- a machine-readable component inventory --- gained regulatory momentum following the 2021 US Executive Order on Cybersecurity \cite{white_house_eo_2021}. Supply chain attacks have grown significantly \cite{ladisa2023sok}; SBOM formats SPDX \cite{spdx_standard} and CycloneDX \cite{cyclonedx} are now widely adopted, as is SARIF \cite{sarif_standard} for static analysis result interchange.
 
-The concept of a Software Bill of Materials (SBOM) --- a machine-readable inventory of all components in a software artefact --- gained regulatory prominence following the 2021 US Executive Order on Improving the Nation's Cybersecurity \cite{white_house_eo_2021}. Software supply chain attacks have grown significantly in frequency and impact \cite{ladisa2023sok}, making component-level transparency an essential security control. SBOM formats including SPDX \cite{spdx_standard} and CycloneDX \cite{cyclonedx} are now widely adopted. SBOM formats including SPDX and CycloneDX are now widely adopted for software supply chain transparency. Alongside SBOM, the SARIF (Static Analysis Results Interchange Format) standard \cite{sarif_standard} has emerged as the canonical exchange format for static analysis tool output, enabling integration with platforms such as GitHub Advanced Security.
-
-\subsection{Cryptographic Bill of Materials}
-
-A Cryptographic Bill of Materials (CBoM) extends the SBOM concept to cryptographic assets specifically: public keys, digital certificates, signing algorithms, hash functions, symmetric cipher modes, and key agreement protocols used within a software system. The CBoM concept is particularly relevant in the context of post-quantum cryptography migration, where organisations must identify all uses of classical public-key algorithms (RSA, ECC, ECDSA, ECDH) that will be vulnerable to sufficiently powerful quantum computers running Shor's algorithm \cite{shor1994algorithms} and Grover's algorithm \cite{grover1996fast}.
-
-\subsection{NIST Post-Quantum Cryptography Standardisation}
-
-NIST's Post-Quantum Cryptography Standardisation project, launched in 2016 and completing its first round of standardisation in 2024 \cite{nist_pqc_2024}, selected four algorithms for standardisation: CRYSTALS-Kyber (key encapsulation), CRYSTALS-Dilithium, FALCON, and SPHINCS+ (digital signatures). Organisations are recommended to begin cryptographic inventory and migration planning immediately. The CBoM module in \ACRQA{} directly supports this planning by inventorying cryptographic primitives and flagging those scheduled for deprecation.
+A Cryptographic Bill of Materials (CBoM) extends this concept to cryptographic assets --- public keys, certificates, algorithms, cipher modes --- relevant for post-quantum migration planning, as classical public-key algorithms will be vulnerable to Shor's algorithm \cite{shor1994algorithms} and Grover's algorithm \cite{grover1996fast}. NIST's PQC Standardisation project (finalised 2024) \cite{nist_pqc_2024} selected CRYSTALS-Kyber \cite{nist_fips_203}, CRYSTALS-Dilithium \cite{nist_fips_204}, and others for standardisation \cite{nist_fips_197}; organisations are recommended to begin inventory and migration immediately. The CBoM module in \ACRQA{} directly supports this by inventorying cryptographic primitives and flagging those scheduled for deprecation.
 
 % -----------------------------------------------------------------
 \section{Related Systems and Identified Gaps}

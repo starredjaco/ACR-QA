@@ -75,9 +75,7 @@ vulnerable-node                  & JS     & Node.js app with NoSQL injection & 1
 
 \subsection{Ground Truth Construction}
 
-Ground truth annotation for the four core Python repositories was performed through independent source-code review by the project author and supervisor (Dr.\ Samy AbdelNabi), with consensus resolution for disputed findings, CWE classification, OWASP Top~10 (2021) category mapping, and cross-reference against each repository's documented vulnerability list. This process follows the OWASP Application Security Verification Standard \cite{owasp_asvs} criteria for security test validation.
-
-For DVPWA specifically, the ground truth includes six known vulnerability categories: SQL injection (CWE-89), hardcoded database credentials (CWE-259), MD5 password hashing (CWE-328), reflected XSS (CWE-79), debug mode enabled in production (CWE-215), and missing CSRF tokens (CWE-352). The two undetected categories --- hardcoded credentials (missed by all tools on the specific DVPWA configuration file format) and CSRF tokens (excluded by design as a static analysis limit) --- account for the 67\% ground-truth recall on DVPWA.
+Ground truth annotation for the four core Python repositories was performed through independent source-code review by the project author and supervisor (Dr.\ Samy AbdelNabi), with consensus resolution for disputed findings, CWE classification, OWASP Top~10 (2021) mapping, and cross-reference against each repository's documented vulnerability list, following OWASP ASVS \cite{owasp_asvs} criteria. The 67\% recall on DVPWA reflects two excluded categories: hardcoded credentials stored in an unconventional configuration format not matched by secrets-detection patterns, and CSRF tokens, which require runtime form-submission analysis outside static analysis scope.
 
 % -----------------------------------------------------------------
 \section{Evaluation Metrics}
@@ -149,11 +147,7 @@ A10:2021 & Server-Side Request Forgery    & \checkmark Detected & 2 \\
 \end{tabularx}
 \end{table}
 
-Nine of ten OWASP Top 10 categories \cite{owasp_top10_2021} are fully covered. A04 (Insecure Design), previously uncovered in v3.2.4, is now detected via three dedicated code-quality pattern rules (\texttt{PATTERN-001}, \texttt{SOLID-001}, \texttt{COMPLEXITY-001}) that flag structural anti-patterns linked to CWE-209 (Error Handling) and CWE-256 (Unprotected Credentials Storage). The remaining gap, A09 (Security Logging Failures), requires runtime observation of logging behaviour and cannot be reliably detected by static analysis alone; it remains an acknowledged limitation (see Chapter~\ref{ch:conclusion}).
-
-\subsection{Finding Category and Severity Distribution}
-
-Of the 836 findings, the leading categories are Injection/XSS (148; 17.7\%), Dependency Vulnerabilities via SCA (136; 16.3\%), SSRF (108; 12.9\%), and Security Misconfiguration (106; 12.7\%). Style and dead-code findings (95 combined; 11.4\%) carry lower confidence scores and do not affect security-class precision. By severity, CRITICAL and HIGH findings total 280 (33.5\%) and represent the highest-priority remediations; MEDIUM findings account for 314 (37.6\%); and LOW/INFO findings total 242 (29.0\%), primarily code-quality observations.
+Nine of ten OWASP Top 10 categories \cite{owasp_top10_2021} are fully covered. A04 (Insecure Design), previously uncovered in v3.2.4, is now detected via three dedicated code-quality pattern rules. The remaining gap, A09 (Security Logging Failures), requires runtime observation and cannot be reliably detected by static analysis alone (see Chapter~\ref{ch:conclusion}). Of the 836 findings, leading categories are Injection/XSS (148; 17.7\%), Dependency Vulnerabilities via SCA (136; 16.3\%), SSRF (108; 12.9\%), and Security Misconfiguration (106; 12.7\%); CRITICAL and HIGH findings total 280 (33.5\%).
 
 \subsection{Confidence Scoring Effectiveness --- Confusion Matrix}
 
