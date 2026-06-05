@@ -5,8 +5,6 @@
 \chapter{System Design and Architecture}
 \label{ch:design}
 
-\section{Overview}
-
 This chapter presents the complete design and architecture of the \ACRQA{} system. It describes the twelve-stage processing pipeline, the canonical finding schema, the component interaction model, the database design, and the API surface. Design decisions are motivated throughout, with particular attention to how the architecture addresses the three deficiencies identified in Chapter~\ref{ch:intro}: fragmentation, signal noise, and lack of contextual reasoning.
 
 % -----------------------------------------------------------------
@@ -169,18 +167,9 @@ Figure~\ref{fig:rag_process} illustrates the complete enrichment process.
 
 Each completed scan produces a SLSA-compliant \cite{slsa_framework} cryptographic attestation document signed with both ECDSA-P256 (classical) and CRYSTALS-Dilithium3 (NIST FIPS 204, post-quantum resistant). The attestation captures the pipeline's input hash, findings count, tool versions, and timestamp, providing a tamper-evident audit trail for compliance workflows.
 
-\subsection{Stage 5 — Supply Chain Analysis}
+\subsection{Stages 5--7 — Supply Chain, Quality Gate, and Output Delivery}
 
-Stage 5 runs two parallel sub-analyses. The \textbf{SCA} scanner parses Python \texttt{requirements.txt} and Node.js \texttt{package-lock.json}, querying an offline OSV snapshot \cite{osv_database} ($\sim$1.5\,GB, updated weekly) to report dependency CVEs with CVSS scores and affected version ranges. The \textbf{CBoM} scanner performs AST-based detection of cryptographic API usage, classifying 62 algorithms as NIST Approved, Deprecated, or PQC-Vulnerable, and outputs a CycloneDX CBoM JSON document.
-
-\subsection{Stage 6 — Quality Gate Enforcement}
-
-Stage 6 evaluates results against configurable quality gate rules defined in \texttt{.acrqa.yml} and produces a binary pass/fail verdict. The gate fails on any CRITICAL finding with $C_s \geq 70$, more than five HIGH findings at that threshold, more than three security-class findings with $C_s \geq 50$, or any hardcoded secret above $C_s = 50$. PQC-vulnerable or deprecated cryptographic algorithms in the CBoM trigger warnings rather than failures. All remaining configurations yield a pass.
-
-\subsection{Stage 7 — Structured Output Delivery}
-
-Stage 7 serialises the complete analysis result. The REST API exposes four output formats:
-JSON (full structured result), SARIF~2.1 \cite{sarif_standard} (GitHub Advanced Security integration), HTML self-contained report, and PDF compliance report. Findings are also posted as inline PR review comments to the triggering GitHub pull request, if a \texttt{GITHUB\_TOKEN} is configured.
+Stage~5 runs two parallel sub-analyses: the SCA scanner queries an offline OSV snapshot \cite{osv_database} ($\sim$1.5\,GB) for Python and Node.js dependency CVEs, and the CBoM scanner performs AST-based detection of 62 cryptographic algorithms, outputting a CycloneDX CBoM JSON document. Stage~6 evaluates findings against configurable quality gate rules in \texttt{.acrqa.yml}, producing a binary pass/fail verdict (fail condition: any CRITICAL finding with $C_s \geq 70$, or $>$5 HIGH findings at that threshold, or any hardcoded secret above $C_s = 50$). Stage~7 serialises the complete result in four formats --- JSON, SARIF~2.1 \cite{sarif_standard}, HTML, and PDF --- and, when a \texttt{GITHUB\_TOKEN} is configured, posts findings as inline PR review comments.
 
 % -----------------------------------------------------------------
 \section{Advanced Analysis Engines}

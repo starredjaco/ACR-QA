@@ -10,10 +10,11 @@
 This chapter presents the testing strategy and quantitative evaluation of \ACRQA{} v5.0.0rc2. The evaluation is organised around the four research questions of Chapter~\ref{ch:intro}: (RQ1) RAG hallucination reduction, (RQ2) AI provenance, (RQ3) label-free confidence scoring, (RQ4) precision/recall vs.\ commercial SAST. The evaluation comprises four layers: (i) a small ground-truth corpus (Layer~A: DVPWA, Pygoat, VulPy, DSVW); (ii) a 30-repo adversarial precision corpus of mature production libraries (Layer~B); (iii) a 20-CVE recall battery; and (iv) five novel evaluations (X1--X5) covering live-CVE generalisation, exploit verification, AI-generated code, time-travel prediction, and head-to-head benchmarking. The P4 \emph{Confirmed Tier} stratum achieves \textbf{96.4\% conservative} (95\% CI [90.9\%, 100\%]) and \textbf{100\% optimistic} precision with 100\% CVE recall, clearing the $\geq$80\% industry threshold for autonomous PR-blocking pipelines.
 
 % -----------------------------------------------------------------
-\section{Testing Strategy}
+% -----------------------------------------------------------------
+\section{Testing Strategy and Coverage}
 \label{sec:testing_strategy}
 
-The test suite is structured in four layers following the testing pyramid principle \cite{mcconnell2004code,kim2016devops}, as summarised in Table~\ref{tab:test_layers}, chosen to maximise confidence in system correctness while keeping the full suite runnable in a single CI pipeline execution \cite{shahin2017continuous,github_actions}.
+The test suite is structured in four layers following the testing pyramid principle \cite{mcconnell2004code,kim2016devops}, runnable in a single CI pipeline execution \cite{shahin2017continuous,github_actions}. All tests executed in the full Docker Compose stack (Python 3.11.8, Node.js 20.11 LTS, PostgreSQL 15.5, Redis 7.2, four Celery workers, Prometheus 2.49, Grafana 10.3) on an Intel Core i7-12700H workstation (32 GB DDR5 RAM, Ubuntu 22.04 LTS / WSL2). The suite achieves \textbf{84.89\%} line coverage over the CORE module and \textbf{82.66\%} combined CORE + DATABASE (CI gate: 82\%); all safety-critical paths (authentication, confidence scoring, deduplication, quality gate) remain above 93\%.
 
 \begin{table}[H]
 \caption{Test Suite Layer Summary --- \ACRQA{} v5.0.0rc2}
@@ -31,43 +32,13 @@ Accessibility (axe-core) & 14 & WCAG~2.1~AA \cite{wcag21} across 5 dashboard pag
 End-to-End (Playwright) & 15 & Full user journeys: scan submission, result browsing, suppression, SARIF \cite{sarif_standard} export \\
 TypeScript (Vitest) & 63 & Component, hook, and API client tests; FindingHistory, PRRisk, RunHeatmap \\
 \midrule
-\textbf{Total} & \textbf{2,897} & CI gate: 82\% line coverage; run time $\approx$6 min \\
+\textbf{Total} & \textbf{2,897} & CI gate: 82\% line coverage (CORE: 84.89\%); run time $\approx$6 min \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 % -----------------------------------------------------------------
-\section{Test Environment}
-\label{sec:test_environment}
 
-All tests were executed in the full Docker Compose stack (Python 3.11.8, Node.js 20.11 LTS, PostgreSQL 15.5, Redis 7.2, four Celery workers, Prometheus 2.49, Grafana 10.3) on an Intel Core i7-12700H workstation (32 GB DDR5 RAM, Ubuntu 22.04 LTS / WSL2).
-
-% -----------------------------------------------------------------
-\section{Code Coverage Results}
-\label{sec:coverage}
-
-The full Python test suite achieves \textbf{84.89\%} line coverage over the CORE module and \textbf{82.66\%} over the combined CORE + DATABASE scope (the CI gate threshold is 82\%). Table~\ref{tab:unit_coverage} breaks coverage down by engine module.
-
-\begin{table}[H]
-\caption{Code Coverage Summary --- \ACRQA{} v5.0.0rc2}
-\label{tab:unit_coverage}
-\centering
-\renewcommand{\arraystretch}{1.3}
-\begin{tabular}{@{} l r r @{}}
-\toprule
-\textbf{Scope} & \textbf{Python LoC} & \textbf{Coverage} \\
-\midrule
-CORE module (14 engines + 3 adapters) & $\sim$12{,}400 & \textbf{84.89\%} \\
-CORE + DATABASE combined (CI gate)    & $\sim$13{,}000 & \textbf{82.66\%} \\
-\midrule
-CI gate threshold & & 82\% (enforced on every PR) \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The slight reduction from the v3.2.4 figure of 87.03\% reflects seven new engine modules (taint analyser, reachability, autofix, triage agent, attestation, supply-chain, Trivy adapter) whose complex conditional paths are harder to exercise with synthetic fixtures. All safety-critical paths (authentication, confidence scoring, deduplication, quality gate) remain above 93\%.
-
-% -----------------------------------------------------------------
 \section{Benchmark Dataset}
 \label{sec:benchmark}
 
@@ -112,16 +83,7 @@ For DVPWA specifically, the ground truth includes six known vulnerability catego
 \section{Evaluation Metrics}
 \label{sec:metrics}
 
-The following standard information-retrieval metrics are used throughout this chapter:
-
-\begin{align}
-  \text{Precision} &= \frac{TP}{TP + FP} \label{eq:precision} \\[6pt]
-  \text{Recall}    &= \frac{TP}{TP + FN} \label{eq:recall} \\[6pt]
-  F_1              &= \frac{2 \cdot \text{Precision} \cdot \text{Recall}}
-                         {\text{Precision} + \text{Recall}} \label{eq:f1}
-\end{align}
-
-where $TP$ is the number of ground-truth vulnerabilities correctly identified, $FP$ is the number of tool-reported findings absent from the ground truth, and $FN$ is the number of ground-truth vulnerabilities not detected. Two precision figures are reported throughout: \textit{overall} precision counts findings across all categories (security, style, dead-code, complexity); \textit{security} precision counts only security-category findings.
+Standard information-retrieval metrics are used: Precision $= TP / (TP+FP)$, Recall $= TP / (TP+FN)$, and $F_1 = 2\,\text{Prec}\cdot\text{Rec}/(\text{Prec}+\text{Rec})$, where $TP$ is correctly identified vulnerabilities, $FP$ is tool findings absent from ground truth, and $FN$ is missed ground-truth vulnerabilities. Two precision figures are reported throughout: \textit{overall} (all finding categories) and \textit{security} (security-class only).
 
 % -----------------------------------------------------------------
 \section{System Evaluation Results}
@@ -129,11 +91,7 @@ where $TP$ is the number of ground-truth vulnerabilities correctly identified, $
 
 \subsection{Overall Detection Performance}
 
-On the Layer~A ground-truth corpus (DVPWA, Pygoat, VulPy, DSVW), \ACRQA{} v5.0.0rc2 evaluated \textbf{836 deduplicated findings} (812 TP, 24 FP), achieving \textbf{97.1\% overall precision} and \textbf{100.0\% security-class precision}: all 24 false positives are dead-code style findings, not security vulnerabilities. Layer~A is favourable by construction (intentionally vulnerable apps). Section~\ref{sec:adversarial} reports the harder Layer~B adversarial corpus where the Confirmed Tier reaches 96.4\% on production-library code. Every finding received an AI-generated explanation (\textbf{100\% enrichment rate}), 9/10 OWASP Top~10 categories are covered, and the CI/CD pipeline (\textbf{2,897 tests, 84.89\% CORE coverage}) passes on GitHub Actions.
-
-\subsection{Per-Repository Breakdown}
-
-Table~\ref{tab:per_repo_results} breaks results down per benchmark repository.
+On the Layer~A ground-truth corpus (DVPWA, Pygoat, VulPy, DSVW), \ACRQA{} v5.0.0rc2 evaluated \textbf{836 deduplicated findings}, achieving \textbf{97.1\% overall precision} and \textbf{100.0\% security-class precision}: all 24 FPs are dead-code style findings. Section~\ref{sec:adversarial} reports the harder Layer~B corpus where the Confirmed Tier reaches 96.4\%. Table~\ref{tab:per_repo_results} breaks results down per repository.
 
 \begin{table}[H]
 \caption{Detection Performance Per Core Benchmark Repository}

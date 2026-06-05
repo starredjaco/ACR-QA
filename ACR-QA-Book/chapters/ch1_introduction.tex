@@ -5,21 +5,19 @@
 \chapter{Introduction}
 \label{ch:intro}
 
-\section{Overview}
+The rapid proliferation of software applications across every domain of modern life has simultaneously amplified the consequences of software security failures. From critical infrastructure control systems to consumer mobile applications, vulnerabilities in source code translate directly into financial losses, privacy breaches, and systemic risks. The Open Web Application Security Project (OWASP) estimates that over 70\% of successful cyber attacks exploit known, preventable software weaknesses --- weaknesses that competent static analysis could detect before deployment \cite{owasp_top10_2021}.
 
-The rapid proliferation of software applications across every domain of modern life has simultaneously amplified the consequences of software security failures. From critical infrastructure control systems to consumer mobile applications, vulnerabilities in source code translate directly into financial losses, privacy breaches, and systemic risks. The Open Web Application Security Project (OWASP) estimates that over 70\% of successful cyber attacks exploit known, preventable software weaknesses — weaknesses that competent static analysis could detect before deployment \cite{owasp_top10_2021}.
-
-Static Application Security Testing (SAST) represents the first line of automated defence in the software development lifecycle. By analysing source code without executing it, SAST tools identify patterns associated with known vulnerability classes — SQL injection, cross-site scripting, insecure cryptographic primitives, hardcoded secrets, and dozens of other categories — and surface them to developers early in the development cycle, where remediation costs are lowest. Despite decades of maturity, however, the SAST tooling landscape in 2024--2026 exhibits three persistent and interrelated deficiencies:
+Static Application Security Testing (SAST) represents the first line of automated defence in the software development lifecycle. By analysing source code without executing it, SAST tools identify patterns associated with known vulnerability classes --- SQL injection, cross-site scripting, insecure cryptographic primitives, hardcoded secrets, and dozens of other categories --- and surface them to developers early in the development cycle, where remediation costs are lowest. Despite decades of maturity, however, the SAST tooling landscape in 2024--2026 exhibits three persistent and interrelated deficiencies:
 
 \begin{enumerate}
   \item \textbf{Fragmentation.} No single tool provides comprehensive coverage across all languages, vulnerability classes, and coding contexts. Python-focused tools miss JavaScript-specific issues; dependency scanners overlook logical flaws; secrets detectors know nothing about algorithmic vulnerabilities. Achieving adequate coverage therefore requires operating multiple tools simultaneously, each with its own invocation syntax, configuration format, and output schema.
 
-  \item \textbf{Signal noise.} Static analysis tools are designed for high recall — they prefer to report a potential issue rather than miss one. The result is a large number of false positives that erode developer trust and cause \textit{alert fatigue}. When developers learn to ignore tool output, the value of analysis drops to zero \cite{johnson2013dont}. Studies report false positive rates ranging from 35\% to over 80\% in production deployments \cite{muske2016survey}.
+  \item \textbf{Signal noise.} Static analysis tools are designed for high recall --- they prefer to report a potential issue rather than miss one. The result is a large number of false positives that erode developer trust and cause \textit{alert fatigue}. When developers learn to ignore tool output, the value of analysis drops to zero \cite{johnson2013dont}. Studies report false positive rates ranging from 35\% to over 80\% in production deployments \cite{muske2016survey}.
 
   \item \textbf{Lack of contextual reasoning.} Traditional SAST tools pattern-match against known rule libraries. They cannot explain \textit{why} a finding matters in the specific codebase under review, assess exploitability in context, suggest targeted remediation strategies, or understand architectural patterns. This gap leaves developers without the guidance they need to prioritise and fix issues efficiently.
 \end{enumerate}
 
-\ACRQA{} (Automated Code Review \& Quality Assurance) was conceived specifically to address these three deficiencies through a single, self-hosted, AI-augmented platform that orchestrates multiple tools, normalises their outputs, and enriches each finding with context-aware AI reasoning — all at zero recurring licensing cost.
+\ACRQA{} (Automated Code Review \& Quality Assurance) was conceived specifically to address these three deficiencies through a single, self-hosted, AI-augmented platform that orchestrates multiple tools, normalises their outputs, and enriches each finding with context-aware AI reasoning --- all at zero recurring licensing cost.
 
 % -----------------------------------------------------------------
 \section{Problem Statement}
@@ -86,31 +84,7 @@ These four questions map directly onto the four novel contributions described in
 \section{Significance of the Work}
 \label{sec:significance}
 
-This project makes ten novel contributions to software security and AI-assisted development tooling:
-
-\begin{enumerate}
-  \item \textbf{Unified multi-tool orchestration:} To the best of the author's knowledge, \ACRQA{} is the first open-source platform to combine nineteen SAST engines with RAG-backed LLM enrichment, AST call-graph reachability, intra-procedural taint analysis, and cross-language correlation in a single self-hosted service at zero recurring cost, achieving 100\% CVE recall (8/8 detectable) while reaching F\textsubscript{1}~98.2\% in its Confirmed Tier --- the only evaluated tool in the head-to-head benchmark with both 100\% recall and near-perfect high-confidence precision.
-
-  \item \textbf{Label-free confidence scoring:} The five-signal weighted scorer enables finding prioritisation without any labelled vulnerability dataset --- applicable from the first scan and validated at 94.2\% false-positive suppression accuracy.
-
-  \item \textbf{Entropy-based hallucination filtering:} The N-gram entropy filter ($\tau = 3.2$ bits) across three independent LLM runs rejects 96\% of low-quality responses without human review, providing a reusable pattern for any AI-assisted developer tooling.
-
-  \item \textbf{PQC-aware Cryptographic Bill of Materials:} The CBoM module classifies 62 algorithms against NIST's 2024 post-quantum migration guidance \cite{nist_pqc_2024} and attests scan artefacts with both ECDSA-P256 and CRYSTALS-Dilithium3 signatures.
-
-  \item \textbf{Call-graph reachability gating:} An AST-based BFS reachability engine penalises findings in dead code with a $-20$ confidence adjustment, achieving a 0\% false-positive rate across all fixture repositories.
-
-  \item \textbf{Cross-language vulnerability correlation:} Detects vulnerability chains spanning Python, JavaScript, and Go stack layers invisible to single-language tools.
-
-  \item \textbf{Heuristic Risk Predictor:} An explainable, label-free file-risk scorer (churn, cyclomatic complexity, age, author count, test gap) with documented auditable weights and empirically validated $r = 0.71$ correlation with true-positive density.
-
-  \item \textbf{Time-Travel Vulnerability Analyzer:} The first SAST-integrated engine to answer \textit{when} and \textit{by whom} a vulnerability was introduced, with regression-chain tracking bounded to the last $N$ commits.
-
-  \item \textbf{IaC Security Scanner:} Pure-Python analysis of Terraform, Kubernetes, Dockerfile, and GitHub Actions assets producing 28 canonical \texttt{IAC-*} findings through the same \texttt{CanonicalFinding} schema.
-
-  \item \textbf{PR Risk Score:} A single 0--100 mergeable-or-not signal combining reachability, taint coverage, exploit verification, file risk, and PR size into one CI-consumable gate metric.
-
-  \item \textbf{Verified Remediation Engine:} A fully-signed detect~$\to$~exploit~$\to$~patch~$\to$~re-exploit pipeline spanning 13 vulnerability categories, producing a cryptographically attested remediation bundle (ECDSA-P256 + Dilithium3 signatures over the (vuln\_proof, fix\_diff, fix\_proof) triple) --- to the author's knowledge the first open-source SAST engine to close the detect-to-verified-fix loop.
-\end{enumerate}
+This project makes \textbf{thirteen novel contributions} to software security and AI-assisted development tooling, spanning: unified multi-tool orchestration across nineteen SAST engines; label-free confidence scoring; entropy-based hallucination filtering; a PQC-aware Cryptographic Bill of Materials with CRYSTALS-Dilithium3 attestation; call-graph reachability gating (0\% FP rate); cross-language vulnerability correlation; the Heuristic Risk Predictor; the Time-Travel Vulnerability Analyzer; an IaC Security Scanner; the PR Risk Score; the P4 Confirmed Tier (96.4\% precision, 100\% CVE recall); the five-track novel empirical battery (X1--X5); and the Verified Remediation Engine (detect~$\to$~exploit~$\to$~patch~$\to$~re-exploit with dual cryptographic attestation). Full details are in Chapter~\ref{ch:conclusion}.
 
 % -----------------------------------------------------------------
 \section{Methodology Overview}
