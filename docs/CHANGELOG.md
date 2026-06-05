@@ -2,6 +2,66 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v5.0.0rc2 — v10 doc-sync: ACTIVE_ROADMAP header + footer updated] — 2026-06-05
+
+### Changed — Documentation
+
+- `docs/ACTIVE_ROADMAP.md` header: removed stale v6/v7 God Mode cross-links;
+  now points to `GOD_MODE_V10_PERFECT_TEN_ROADMAP.md` as the current live plan.
+  Archive note added to prevent re-execution of superseded v5–v9 tracks.
+- `docs/ACTIVE_ROADMAP.md` footer: updated date to 2026-06-05; confirmed all v10
+  tracks complete ✅.
+
+---
+
+## [v5.0.0rc2 — God Mode v10: verified research repositioning] — 2026-06-04
+
+### Summary
+
+Executes GOD_MODE_V10_PERFECT_TEN_ROADMAP.md: drops false-primacy claims, honest convergence
+narrative, RealVuln leaderboard baselines (Semgrep 17.5%, Snyk 17.4, SonarQube 6.5%),
+competitor re-exploit table (ACR-QA/Qualys/ZeroPath vs static re-scan), 13-category
+EXPLOIT_VERIFICATION.md, trust-path exception narrowing, wheel build verified.
+
+### Changed — P4/7.1: Drop false-primacy, add convergence narrative
+
+- README Competitive Position: replaced single table with **re-exploit-to-verify-fix market map**
+  (ACR-QA ✅, Qualys ✅ ETM-layer, ZeroPath ✅ closed, Snyk/GHAS ❌) + RealVuln recall row.
+- README Detection Recall: replaced with **3-number framing** (91% SecurityEval / 48% RealVuln
+  detectable / 25.1% full) + **RealVuln 2026 leaderboard table** (verified arXiv:2604.13764).
+- `acrqa-action/README.md`: fully rewritten around PAST wedge — "Provable AppSec Testing",
+  convergence paragraph, competitor table, 13-category exploit list.
+- `cloudflare-pages/benchmark.html`: "The only tool" → "Exploit-verified remediation — the
+  2026 vanguard, at $0 in CI"; Qualys/ZeroPath/VulnRepairEval/PatchEval cited.
+- `docs/EVALUATION_CHAPTER.md §5.23`: Novelty claim hardened — "held-out validated" not "only".
+- `docs/PRICING_POSITIONING.md`: Honest market map section added; RealVuln recall row added.
+
+### Added — P4/10.1: Verified citations + §5.24
+
+- **`docs/EVALUATION_CHAPTER.md §5.24`**: Competitive positioning — verified market landscape
+  table, RealVuln 2026 leaderboard, ECE/RuleForge (arXiv:2604.01977 JHU+AWS ECE 0.17),
+  fabricated-citations blacklist (Ghost Security CAST, DeepSecure, TaCCS-DFA, QASecClaw, SymRadar).
+- **`docs/QA_PREP.md` Q48**: "Qualys and ZeroPath already do it" — convergence vs novelty answer.
+- **`docs/QA_PREP.md` Q49**: "Your RealVuln recall is 25%" — 3-number framing, leaderboard context.
+
+### Updated — P1/3.1: EXPLOIT_VERIFICATION.md → 13 categories
+
+- All 13 categories tabulated: SQLi/CMDi/SSTI (Docker-live ✅) + 10 others (wired, unit-tested,
+  Docker pending). Fixture apps listed; timing/canary signal documented per category.
+
+### Fixed — P3/5.1: Trust-path exception narrowing
+
+- `exploit_verifier.py`: `except Exception` on AST parse → `(OSError, SyntaxError, UnicodeDecodeError)`;
+  docker check → `(FileNotFoundError, subprocess.SubprocessError, OSError)`.
+- `verified_remediation.py`: pipeline broad except logged at WARNING; LLM patch fallback narrowed.
+- `attestation.py`: key-load except narrowed to `(ValueError, TypeError, UnicodeDecodeError)`;
+  signature verify except → `cryptography.exceptions.InvalidSignature`.
+
+### Fixed — P0.1: Wheel build verified
+
+- `python -m build --wheel` produces `acrqa-5.0.0rc2-py3-none-any.whl` with `acrqa` entry point.
+- `docs/PYPI_PUBLISH_GUIDE.md` documents three manual steps for Ahmed to publish.
+
 ## [v5.0.0rc2 — LLM-Augmented Detection (Phase 1+2+3)] — 2026-06-04
 
 Held-out: +5.2pp recall at 89.5% precision. Full-corpus: 25.1%→32.4% (+7.4pp).

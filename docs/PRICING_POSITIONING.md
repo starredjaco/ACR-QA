@@ -3,25 +3,38 @@
 > **Positioning:** *"We don't sell noisy alerts; we fire real exploits to prove what's vulnerable,
 > and re-fire the exploit to prove your fix actually worked."*
 >
-> **Category we create:** Provable AppSec Testing (PAST) — a new sub-category of SAST where
-> every finding is exploit-proven, not just pattern-detected.
+> **Category:** Provable AppSec Testing (PAST) — exploit-verified remediation for first-party
+> application source code, in CI, ECDSA-attested, at $0.
+>
+> **Honest positioning (2026):** Exploit-verified remediation is now the 2026 vanguard. Qualys
+> TruConfirm/Agent Val (Feb–Mar 2026) re-detonates CVEs on deployed infrastructure. ZeroPath ships
+> AI-native SAST+DAST with fix verification (closed-source). VulnRepairEval (arXiv:2509.03331) and
+> PatchEval (arXiv:2511.11019) institutionalized it academically. ACR-QA **independently converges**
+> for first-party SAST in CI — the open, developer-facing, $0 version. Convergence validates the
+> paradigm; differentiation is the layer (CI-native / first-party / open / attested).
 
 ---
 
-## Why Incumbents Can't Follow
+## Market Map — Who Does Re-Exploit-to-Verify-Fix
+
+| Tool | Layer | Re-exploit fix verify | Open | Notes |
+|---|---|:---:|:---:|---|
+| **ACR-QA** | First-party SAST in CI | ✅ | ✅ | $0, ECDSA, 13 exploit categories |
+| Qualys TruConfirm | CVE/deployed ETM | ✅ | ❌ | Deployed infra only, Mar 2026 |
+| ZeroPath | AI-native SAST+DAST | ✅ | ❌ | Closed source |
+| Snyk / Semgrep / GHAS | Traditional SAST | ❌ | varies | Static re-scan only |
+
+## Why Traditional Incumbents Still Lose
 
 | Pain point (verified research) | Incumbent | ACR-QA |
 |---|---|---|
 | 30–40% false positives | Snyk, Checkmarx, CodeQL | **0%** on Confirmed Tier (exploit-proven) |
-| "Is this real?" argument in PRs | All | Detonation trace in the PR comment — ends the argument |
-| Static retest only (guesses if fix worked) | All 5 incumbents | Re-exploit proves the fix killed the vuln |
+| "Is this real?" argument in PRs | All traditional | Detonation trace in the PR comment |
+| Static retest only (guesses if fix worked) | Snyk, Semgrep, GHAS | Re-exploit proves the fix killed the vuln |
 | Per-LOC pricing grows with AI code | SonarQube | Flat per-core-contributor |
 | 90-day committer bloat | GitHub Advanced Security | N/A |
 | No cryptographic audit trail | All | ECDSA-P256 + Sigstore Rekor (tamper-evident) |
-
-**Structural moat:** incumbents are built on static analysis. Adding exploit-verification
-requires a fundamentally different architecture (Docker sandbox, exploit engine, re-exploit loop).
-This is a 12–18 month rebuild for a billion-dollar org to deprioritize other work.
+| RealVuln recall (real apps, 2026 benchmark) | Semgrep 17.5% / Snyk 17.4 / SonarQube 6.5% | **ACR-QA 25.1%** (beats all rule-based tools) |
 
 ---
 

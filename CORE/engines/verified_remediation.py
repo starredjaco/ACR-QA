@@ -24,6 +24,7 @@ Public types:
 
 from __future__ import annotations
 
+import logging
 import shutil
 import tempfile
 import time
@@ -32,9 +33,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from CORE.engines.attestation import AttestationEngine
-from CORE.engines.autofix import AutoFixEngine
-from CORE.engines.exploit_verifier import ExploitResult, ExploitVerifier
+logger = logging.getLogger(__name__)
+
+from CORE.engines.attestation import AttestationEngine  # noqa: E402
+from CORE.engines.autofix import AutoFixEngine  # noqa: E402
+from CORE.engines.exploit_verifier import ExploitResult, ExploitVerifier  # noqa: E402
 
 
 @dataclass
@@ -150,9 +153,12 @@ class VerifiedRemediationEngine:
 
         try:
             result = self._pipeline(finding, target_dir, result, start)
-        except Exception:
+        except Exception:  # intentionally broad: pipeline errors must never crash the caller
             result.error = traceback.format_exc(limit=3)
             result.duration_seconds = time.monotonic() - start
+            logger.warning(
+                "VerifiedRemediation: pipeline failed for %s: %s", finding.get("canonical_rule_id"), result.error[:200]
+            )
 
         return result
 
@@ -255,8 +261,8 @@ class VerifiedRemediationEngine:
             patch = self._fixer.generate_patch(finding, target_dir=target_dir, context_lines=10)
             if patch and patch.get("patched_content"):
                 return patch
-        except Exception:
-            pass
+        except (RuntimeError, ValueError, KeyError, OSError) as _patch_err:
+            logger.debug("VerifiedRemediation: LLM patch failed, falling back to rule-based: %s", _patch_err)
         rule_id = finding.get("canonical_rule_id", "")
         return self._fixer.generate_fix(finding) if self._fixer.can_fix(rule_id) else None
 

@@ -30,6 +30,7 @@ import logging
 import os
 import time
 
+import cryptography.exceptions
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
@@ -53,7 +54,7 @@ def _load_or_generate_key() -> ec.EllipticCurvePrivateKey:
             if not isinstance(key, ec.EllipticCurvePrivateKey):
                 raise TypeError("Expected ECDSA key")
             return key
-        except Exception as exc:
+        except (ValueError, TypeError, UnicodeDecodeError) as exc:
             logger.warning("Could not load ACRQA_SIGNING_KEY, generating ephemeral key: %s", exc)
     return ec.generate_private_key(ec.SECP256R1())
 
@@ -149,7 +150,7 @@ class AttestationEngine:
                 sig_bytes = bytes.fromhex(sig_entry["signature"])
                 self._key.public_key().verify(sig_bytes, payload, ec.ECDSA(hashes.SHA256()))
                 return True
-            except Exception:
+            except (ValueError, TypeError, cryptography.exceptions.InvalidSignature):
                 return False
         return False
 
