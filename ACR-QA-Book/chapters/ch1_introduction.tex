@@ -23,18 +23,9 @@ Static Application Security Testing (SAST) represents the first line of automate
 \section{Problem Statement}
 \label{sec:problem}
 
-Modern software teams face a paradox: the more security tools they adopt, the more overwhelmed their developers become. Consider a typical mid-sized repository written in Python and JavaScript. To achieve reasonable security coverage, a team might run Bandit \cite{bandit_tool} for Python vulnerabilities, ESLint with security plugins \cite{eslint_security} for JavaScript, Semgrep \cite{semgrep_tool} for cross-language pattern matching, TruffleHog for secrets detection, and pip-audit for dependency vulnerabilities \cite{cve_program}. Each tool:
+Modern software teams face a paradox: the more security tools they adopt, the more overwhelmed their developers become. A team achieving reasonable security coverage must run Bandit \cite{bandit_tool} for Python, ESLint with security plugins \cite{eslint_security} for JavaScript, Semgrep \cite{semgrep_tool} for cross-language patterns, secrets detectors, and dependency auditors \cite{cve_program} --- each producing output in a distinct format, requiring separate configuration, using its own severity taxonomy, and generating overlapping findings that must be manually deduplicated. Aggregating, deduplicating, and prioritising hundreds of raw tool findings requires significant manual effort before remediation begins. More critically, raw tool output lacks contextual interpretation: a junior developer confronted with ``CWE-89: SQL Injection'' and a code snippet may not know what exploit is possible, how severe the risk is in context, or what the correct remediation looks like.
 
-\begin{itemize}
-  \item Produces output in a distinct format (SARIF, JSON, plain text, CSV);
-  \item Requires separate installation, configuration, and maintenance;
-  \item Reports findings using its own severity taxonomy and rule identifiers;
-  \item Generates duplicated or overlapping findings that must be manually deduplicated.
-\end{itemize}
-
-Aggregating, deduplicating, and prioritising hundreds or thousands of raw tool findings requires significant manual effort before any remediation work begins. More critically, raw tool output lacks the contextual interpretation that makes findings actionable: a junior developer confronted with a finding labelled ``CWE-89: SQL Injection'' and a snippet of vulnerable code may not know what exploit scenario is possible, how severe the risk is in the current context, or what the correct remediation looks like.
-
-Existing commercial solutions — such as Snyk, Veracode, SonarQube Enterprise, and CodeRabbit — address parts of this problem but introduce new barriers: high licensing costs, dependency on cloud infrastructure, limited transparency into AI reasoning, lock-in to vendor-defined rule sets, and a tendency toward LLM hallucination in AI-generated explanations. No open-source alternative combining multi-tool orchestration with RAG-grounded AI enrichment, call-graph reachability filtering, and post-quantum cryptographic awareness existed at the time of this project.
+Existing commercial solutions --- Snyk, Veracode, SonarQube Enterprise --- address parts of this problem but introduce barriers: high licensing costs, cloud infrastructure dependency, limited transparency into AI reasoning, and a tendency toward LLM hallucination. No open-source alternative combining multi-tool orchestration with RAG-grounded AI enrichment, call-graph reachability filtering, and post-quantum cryptographic awareness existed at the time of this project.
 
 % -----------------------------------------------------------------
 \section{Project Objectives}
@@ -50,16 +41,14 @@ The primary objective is to design, implement, and validate \ACRQA{}: a self-hos
   \item \textbf{Filter dead code} through call-graph BFS reachability from Flask/FastAPI routes, Celery tasks, and \texttt{\_\_main\_\_} blocks; penalise unreachable findings rather than suppressing them.
   \item \textbf{Detect taint propagation} intra-procedurally from HTTP sources to SQL/eval/subprocess sinks with confidence decay over hop depth.
   \item \textbf{Generate a CBoM} inventorying 62 cryptographic algorithms and flagging deprecated and PQC-vulnerable primitives per NIST FIPS~203 \cite{nist_fips_203} and FIPS~204 \cite{nist_fips_204}.
-  \item \textbf{Deliver} the full stack as an 8-service Docker Compose \cite{docker_security} application at zero recurring cost: FastAPI \cite{fastapi_framework} (52 endpoints), React~18 dashboard (WCAG~2.1~AA \cite{wcag21}), Celery \cite{celery_project} workers, PostgreSQL (18-migration schema), Redis, Prometheus \cite{prometheus_docs}, and Grafana \cite{grafana_docs}.
+  \item \textbf{Deliver} the full stack as a Docker Compose application at zero recurring cost: FastAPI \cite{fastapi_framework} (52 endpoints), React~18 dashboard (WCAG~2.1~AA \cite{wcag21}), Celery \cite{celery_project} workers, PostgreSQL, Redis, Prometheus \cite{prometheus_docs}, and Grafana \cite{grafana_docs}.
 \end{enumerate}
 
 % -----------------------------------------------------------------
 \section{Scope and Limitations}
 \label{sec:scope}
 
-\ACRQA{} covers static analysis of Python, JavaScript/TypeScript, and Go repositories, addressing injection flaws, insecure dependencies, hardcoded secrets, cryptographic weaknesses, dead code, and code quality defects. The full stack includes a FastAPI REST API (52 endpoints), React~18 dashboard (WCAG~2.1~AA, Arabic RTL), Celery async workers, PostgreSQL provenance schema, GitHub Actions \cite{github_actions} CI/CD, and a 2,897-test suite (pytest \cite{pytest_tool} + Vitest) at 84.89\% CORE coverage.
-
-Explicitly outside scope: dynamic testing (DAST/fuzzing), runtime monitoring, compiled binaries without source, mobile security, CSRF detection (requires runtime analysis of form submissions), and IDOR detection (requires authorisation context).
+\ACRQA{} covers static analysis of Python, JavaScript/TypeScript, and Go repositories, addressing injection flaws, insecure dependencies, hardcoded secrets, cryptographic weaknesses, dead code, and code quality defects. Explicitly outside scope: dynamic testing (DAST/fuzzing), runtime monitoring, compiled binaries without source, mobile security, CSRF detection (requires runtime form-submission analysis), and IDOR detection (requires authorisation context).
 
 % -----------------------------------------------------------------
 \needspace{18\baselineskip}
