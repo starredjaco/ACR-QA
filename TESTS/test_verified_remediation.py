@@ -271,6 +271,93 @@ class TestVerifiedRemediationEngineUnit:
         # Must not raise
         json.dumps(result.to_dict())
 
+    def test_pipeline_path_traversal_escapes_target(self, tmp_path):
+        """If finding file path escapes target_dir, pipeline must abort at step 3."""
+        engine = self._engine()
+        inside_dir = tmp_path / "inside"
+        inside_dir.mkdir()
+        outside_file = tmp_path / "outside.py"
+        outside_file.write_text("x = 1\n")
+
+        finding = _sqli_finding(str(outside_file))
+        mock_before = _make_exploit_result("verified-exploitable", verified=True)
+        mock_patch = {"original": "x = 1", "fixed": "x = 2"}
+
+        with (
+            patch.object(engine._verifier, "can_verify", return_value=True),
+            patch.object(engine._verifier, "verify_finding", return_value=mock_before),
+            patch.object(engine, "_generate_patch", return_value=mock_patch),
+        ):
+            result = engine.run(finding, str(inside_dir))
+
+        assert result.fix_verified is False
+        assert "escapes" in (result.error or "")
+
+    def test_pipeline_path_traversal_escapes_sandbox(self, tmp_path):
+        """If patched file path escapes sandbox, pipeline must abort at step 3."""
+        engine = self._engine()
+        subdir = tmp_path / "subdir"
+        subdir.mkdir()
+        escaped_file = tmp_path / "escaped.py"
+        escaped_file.write_text("x = 1\n")
+
+        finding = _sqli_finding(str(tmp_path / "subdir" / ".." / "escaped.py"))
+        mock_before = _make_exploit_result("verified-exploitable", verified=True)
+        mock_patch = {"original": "x = 1", "fixed": "x = 2"}
+
+        with (
+            patch.object(engine._verifier, "can_verify", return_value=True),
+            patch.object(engine._verifier, "verify_finding", return_value=mock_before),
+            patch.object(engine, "_generate_patch", return_value=mock_patch),
+        ):
+            result = engine.run(finding, str(subdir))
+
+        assert result.fix_verified is False
+        assert "escapes" in (result.error or "")
+
+    def test_pipeline_patch_apply_error(self, tmp_path):
+        """If applying patch raises exception, pipeline aborts with step 3 failed."""
+        engine = self._engine()
+        finding = _sqli_finding(str(tmp_path / "app.py"))
+        mock_before = _make_exploit_result("verified-exploitable", verified=True)
+        mock_patch = {"unrecognized": "format"}
+
+        with (
+            patch.object(engine._verifier, "can_verify", return_value=True),
+            patch.object(engine._verifier, "verify_finding", return_value=mock_before),
+            patch.object(engine, "_generate_patch", return_value=mock_patch),
+        ):
+            result = engine.run(finding, str(tmp_path))
+
+        assert result.fix_verified is False
+        assert "Step 3 failed" in (result.error or "")
+
+    def test_pipeline_sign_bundle_error(self, tmp_path):
+        """If signing bundle fails, returns unsigned bundle in attestation."""
+        engine = self._engine()
+        mock_attester = MagicMock()
+        mock_attester.sign.side_effect = Exception("sign error")
+        engine._attester = mock_attester
+
+        app_file = tmp_path / "app.py"
+        app_file.write_text("x = 1\n")
+        finding = _sqli_finding(str(app_file))
+
+        mock_before = _make_exploit_result("verified-exploitable", verified=True)
+        mock_after = _make_exploit_result("verified-unexploitable", verified=False)
+        mock_patch = {"original": "x = 1", "fixed": "x = 2"}
+
+        with (
+            patch.object(engine._verifier, "can_verify", return_value=True),
+            patch.object(engine._verifier, "verify_finding", side_effect=[mock_before, mock_after]),
+            patch.object(engine, "_generate_patch", return_value=mock_patch),
+        ):
+            result = engine.run(finding, str(tmp_path))
+
+        assert result.fix_verified is True
+        assert "unsigned_bundle" in result.attestation
+        assert result.attestation["error"] == "sign error"
+
 
 # ---------------------------------------------------------------------------
 # Integration tests — require Docker

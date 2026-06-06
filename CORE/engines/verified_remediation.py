@@ -211,14 +211,19 @@ class VerifiedRemediationEngine:
 
             raw_file = finding.get("file", finding.get("file_path", ""))
             original_file = Path(raw_file).resolve() if raw_file else Path()
-            if not str(original_file).startswith(str(target_dir_resolved)):
-                result.error = "Step 3 failed: finding file path escapes target_dir"
-                result.duration_seconds = time.monotonic() - start
-                return result
-            rel = original_file.relative_to(target_dir_resolved)
-            patched_file = (patched_dir / rel).resolve()
-            if not str(patched_file).startswith(str(patched_dir)):
-                result.error = "Step 3 failed: patched file path escapes sandbox"
+            try:
+                if not original_file.is_relative_to(target_dir_resolved):
+                    result.error = "Step 3 failed: finding file path escapes target_dir"
+                    result.duration_seconds = time.monotonic() - start
+                    return result
+                rel = original_file.relative_to(target_dir_resolved)
+                patched_file = (patched_dir / rel).resolve()
+                if not patched_file.is_relative_to(patched_dir):
+                    result.error = "Step 3 failed: patched file path escapes sandbox"
+                    result.duration_seconds = time.monotonic() - start
+                    return result
+            except ValueError:
+                result.error = "Step 3 failed: path traversal validation failed"
                 result.duration_seconds = time.monotonic() - start
                 return result
 

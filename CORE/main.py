@@ -468,7 +468,7 @@ class AnalysisPipeline:
 
         # Save run ID for GitHub Actions
         try:
-            with open("/tmp/acr_run_id.txt", "w") as f:
+            with open(".acr_run_id.txt", "w") as f:
                 f.write(str(run_id))
         except OSError:
             pass
@@ -1038,7 +1038,7 @@ class AnalysisPipeline:
 
         # Save run ID for GitHub Actions
         try:
-            with open("/tmp/acr_run_id.txt", "w") as fh:
+            with open(".acr_run_id.txt", "w") as fh:
                 fh.write(str(run_id))
         except OSError:
             pass
