@@ -10,6 +10,8 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from CORE.engines.llm_detector import (
     CANONICAL_CWE_MAP,
     LLMDetector,
@@ -309,6 +311,18 @@ class TestLLMDetectorAvailable:
 
 
 class TestPipelineIntegration:
+    def _make_detector(self) -> LLMDetector:
+        d = LLMDetector.__new__(LLMDetector)
+        d._keys = ["fake-key"]
+        d._use_cache = False
+        d._gate = False
+        return d
+
+    def _make_finding(self, **kw) -> LLMFinding:
+        defaults = dict(file="app.py", line=10, cwe="CWE-89", cwe_family="sql_injection", severity="high", why="test")
+        defaults.update(kw)
+        return LLMFinding(**defaults)
+
     def test_llm_finding_dict_has_required_pipeline_keys(self):
         f = LLMFinding(file="app.py", line=5, cwe="CWE-89", cwe_family="sql_injection", severity="high", why="test")
         d = f.to_canonical_dict()
@@ -340,3 +354,190 @@ class TestPipelineIntegration:
             [python_exe, "-m", "CORE", "--help"], capture_output=True, text=True, cwd=Path(__file__).parent.parent
         )
         assert "--llm" in (result.stdout + result.stderr), "--llm flag missing from --help"
+
+    def test_load_keys_parsing(self, tmp_path):
+        import os
+
+        import CORE.engines.llm_detector as ld
+
+        env_content = (
+            "GROQ_API_KEY_0 = 'gsk_key0_longer_than_ten'\n"
+            'GROQ_API_KEY_1 = "gsk_key1_longer_than_ten"\n'
+            "GROQ_API_KEY_2 = your_placeholder_key\n"
+            "OTHER_VAR = value\n"
+        )
+
+        mock_env = tmp_path / ".env"
+        mock_env.write_text(env_content)
+
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch("CORE.engines.llm_detector._ROOT", tmp_path),
+        ):
+            keys = ld._load_keys()
+            assert len(keys) == 2
+            assert "gsk_key0_longer_than_ten" in keys
+            assert "gsk_key1_longer_than_ten" in keys
+
+    @patch("CORE.engines.llm_detector._load_keys", return_value=[])
+    def test_groq_call_no_keys(self, mock_load):
+        from CORE.engines.llm_detector import _groq_call
+
+        with pytest.raises(RuntimeError, match="No GROQ_API_KEY"):
+            _groq_call("prompt", [])
+
+    @patch("CORE.engines.llm_detector.time.sleep")
+    def test_groq_call_success_on_retry(self, mock_sleep):
+        from unittest.mock import MagicMock
+
+        from CORE.engines.llm_detector import _groq_call
+
+        mock_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "result text"
+        mock_client.chat.completions.create.side_effect = [Exception("fail 1"), Exception("fail 2"), mock_response]
+
+        with patch("groq.Groq", return_value=mock_client):
+            res = _groq_call("prompt", ["key1"])
+            assert res == "result text"
+            assert mock_client.chat.completions.create.call_count == 3
+
+    @patch("CORE.engines.llm_detector.time.sleep")
+    def test_groq_call_failure_after_retries(self, mock_sleep):
+        from unittest.mock import MagicMock
+
+        from CORE.engines.llm_detector import _groq_call
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create.side_effect = Exception("fail")
+
+        with patch("groq.Groq", return_value=mock_client):
+            with pytest.raises(RuntimeError, match="failed after 3 attempts"):
+                _groq_call("prompt", ["key1"])
+
+    def test_returns_empty_on_broken_json_with_brackets(self):
+        assert _parse_llm_json("[broken json]") == []
+
+    def test_detector_init(self):
+        with patch("CORE.engines.llm_detector._load_keys", return_value=["key1"]):
+            d = LLMDetector(use_cache=False, gate=False)
+            assert d._use_cache is False
+            assert d._gate is False
+            assert d._keys == ["key1"]
+
+    def test_detect_file_reads_from_disk(self, tmp_path):
+        app_file = tmp_path / "app.py"
+        app_file.write_text("x = 1\n")
+        detector = self._make_detector()
+        with patch("CORE.engines.llm_detector._groq_call", return_value="[]"):
+            res = detector.detect_file(str(app_file), code=None)
+            assert res == []
+
+    def test_detect_file_disk_read_error(self):
+        detector = self._make_detector()
+        res = detector.detect_file("non_existent_file.py", code=None)
+        assert res == []
+
+    def test_detect_file_loads_from_cache(self, tmp_path):
+        import hashlib
+
+        from CORE.engines.llm_detector import _CACHE, _file_hash
+
+        detector = self._make_detector()
+        detector._use_cache = True
+
+        code = "x = 1  # some extra characters to make it longer than 20 chars\n"
+        cache_key = _file_hash(code)
+        safe_fname = hashlib.sha256(str(tmp_path / "app.py").encode()).hexdigest()[:16]
+        cache_file = _CACHE / f"{safe_fname}_{cache_key}.json"
+
+        # Populate cache
+        cache_file.write_text('[{"line": 2, "cwe": "CWE-89", "severity": "high", "why": "SQLi"}]')
+
+        try:
+            res = detector.detect_file(str(tmp_path / "app.py"), code)
+            assert len(res) == 1
+            assert res[0].cwe == "CWE-89"
+        finally:
+            if cache_file.exists():
+                cache_file.unlink()
+
+    def test_detect_file_writes_to_cache(self, tmp_path):
+        import hashlib
+        import json
+
+        from CORE.engines.llm_detector import _CACHE, _file_hash
+
+        detector = self._make_detector()
+        detector._use_cache = True
+
+        code = "x = 2  # some extra characters to make it longer than 20 chars\n"
+        cache_key = _file_hash(code)
+        safe_fname = hashlib.sha256(str(tmp_path / "app.py").encode()).hexdigest()[:16]
+        cache_file = _CACHE / f"{safe_fname}_{cache_key}.json"
+        if cache_file.exists():
+            cache_file.unlink()
+
+        try:
+            with patch("CORE.engines.llm_detector._groq_call", return_value='[{"line": 3, "cwe": "CWE-79"}]'):
+                res = detector.detect_file(str(tmp_path / "app.py"), code)
+                assert len(res) == 1
+                assert cache_file.exists()
+                cached_data = json.loads(cache_file.read_text())
+                assert cached_data[0]["cwe"] == "CWE-79"
+        finally:
+            if cache_file.exists():
+                cache_file.unlink()
+
+    def test_detect_repo_scans_files(self, tmp_path):
+        detector = self._make_detector()
+
+        # Create a mock repo structure
+        app_file = tmp_path / "app.py"
+        app_file.write_text("x = 1\n" * 5)
+        test_dir = tmp_path / "tests"
+        test_dir.mkdir(parents=True, exist_ok=True)
+        test_file = test_dir / "app.py"
+        test_file.write_text("x = 2\n" * 5)
+
+        with patch.object(
+            detector, "detect_file", return_value=[LLMFinding("app.py", 1, "CWE-89", "sql_injection", "high", "why")]
+        ) as mock_detect:
+            res = detector.detect_repo(str(tmp_path))
+            assert len(res) == 1
+            assert res[0].file == "app.py"
+            # Only app.py should be scanned, not tests/app.py
+            mock_detect.assert_called_once()
+            assert mock_detect.call_args[0][0] != str(test_file)
+
+    def test_gate_finding_fallback_path(self, tmp_path):
+        detector = self._make_detector()
+        finding = self._make_finding(file="direct.py")
+
+        # Create file in current directory temporarily
+        app_file = Path("direct.py")
+        app_file.write_text("x = 1\n" * 20)
+
+        try:
+            with patch("CORE.engines.llm_detector._groq_call", return_value="YES 0.8 conf"):
+                conf = detector._gate_finding(finding, str(tmp_path))
+                assert conf == 0.8
+        finally:
+            if app_file.exists():
+                app_file.unlink()
+
+    def test_gate_finding_os_error(self, tmp_path):
+        detector = self._make_detector()
+        finding = self._make_finding(file="nonexistent.py")
+        conf = detector._gate_finding(finding, str(tmp_path))
+        assert conf == 0.0
+
+    def test_gate_finding_groq_error(self, tmp_path):
+        detector = self._make_detector()
+        finding = self._make_finding()
+        (tmp_path / "app.py").write_text("x = 1\n" * 20)
+
+        with patch("CORE.engines.llm_detector._groq_call", side_effect=RuntimeError("fail")):
+            conf = detector._gate_finding(finding, str(tmp_path))
+            assert conf == 0.0

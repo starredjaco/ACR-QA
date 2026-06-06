@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 from DATABASE.database import Database, NullDatabase
 
 
@@ -18,3 +20,12 @@ def test_database_available():
     db = Database()
     status = db.available()
     assert isinstance(status, bool)
+
+
+def test_database_close():
+    db = Database()
+    mock_pool = MagicMock()
+    Database._pool = mock_pool
+    db.close()
+    mock_pool.closeall.assert_called_once()
+    assert Database._pool is None

@@ -1917,6 +1917,179 @@ class TestCLINewCoverage:
         if "ACRQA_LLM_DETECT" in os.environ:
             del os.environ["ACRQA_LLM_DETECT"]
 
+    def test_fast_flag_logic(self):
+        """Test that --fast triggers fast mode configuration."""
+        import sys
+        from unittest.mock import patch
+
+        from CORE.main import AnalysisPipeline, main
+
+        test_args = ["CORE", "--target-dir", "TESTS/samples", "--fast"]
+
+        with (
+            patch.object(sys, "argv", test_args),
+            patch.object(AnalysisPipeline, "run", return_value=123) as mock_run,
+        ):
+            try:
+                main()
+            except SystemExit:
+                pass
+
+            assert os.environ.get("ACRQA_FAST_MODE") == "1"
+            if "ACRQA_FAST_MODE" in os.environ:
+                del os.environ["ACRQA_FAST_MODE"]
+
+    def test_llm_flag_logic(self):
+        """Test that --llm triggers LLM detection mode."""
+        import sys
+        from unittest.mock import patch
+
+        from CORE.main import AnalysisPipeline, main
+
+        test_args = ["CORE", "--target-dir", "TESTS/samples", "--llm"]
+
+        with (
+            patch.object(sys, "argv", test_args),
+            patch.object(AnalysisPipeline, "run", return_value=123) as mock_run,
+        ):
+            try:
+                main()
+            except SystemExit:
+                pass
+
+            assert os.environ.get("ACRQA_LLM_DETECT") == "1"
+            if "ACRQA_LLM_DETECT" in os.environ:
+                del os.environ["ACRQA_LLM_DETECT"]
+
+    def test_json_flag_logic(self, tmp_path):
+        """Test that --json prints findings JSON and reads it properly."""
+        import json
+        import os
+        import sys
+        from unittest.mock import patch
+
+        from CORE.main import AnalysisPipeline, main
+
+        outputs_dir = Path("DATA/outputs")
+        outputs_dir.mkdir(parents=True, exist_ok=True)
+        pid_file = outputs_dir / f"findings_pid{os.getpid()}.json"
+
+        dummy_findings = [{"id": 1, "severity": "high", "message": "Test"}]
+        with open(pid_file, "w") as fp:
+            json.dump(dummy_findings, fp)
+
+        test_args = ["CORE", "--target-dir", "TESTS/samples", "--json"]
+
+        with (
+            patch.object(sys, "argv", test_args),
+            patch.object(AnalysisPipeline, "run", return_value=123),
+            patch("sys.stdout.write") as mock_write,
+        ):
+            try:
+                main()
+            except SystemExit:
+                pass
+
+            mock_write.assert_called_once()
+
+        if pid_file.exists():
+            pid_file.unlink()
+
+    def test_auto_fix_flag_logic(self, tmp_path):
+        """Test that --auto-fix triggers auto fix engine execution."""
+        import json
+        import sys
+        from unittest.mock import patch
+
+        from CORE.main import AnalysisPipeline, main
+
+        outputs_dir = Path("DATA/outputs")
+        outputs_dir.mkdir(parents=True, exist_ok=True)
+        legacy_file = outputs_dir / "findings.json"
+
+        dummy_findings = [
+            {"id": 1, "severity": "high", "message": "Test", "canonical_rule_id": "SECURITY-027", "file": "app.py"}
+        ]
+        with open(legacy_file, "w") as fp:
+            json.dump(dummy_findings, fp)
+
+        test_args = ["CORE", "--target-dir", "TESTS/samples", "--auto-fix"]
+
+        with (
+            patch.object(sys, "argv", test_args),
+            patch.object(AnalysisPipeline, "run", return_value=123),
+            patch(
+                "CORE.engines.autofix.AutoFixEngine.generate_fix",
+                return_value={"file_path": "app.py", "original": "x", "fixed": "y"},
+            ) as mock_gen,
+            patch("CORE.engines.autofix.apply_fixes", return_value=["app.py"]) as mock_apply,
+        ):
+            try:
+                main()
+            except SystemExit:
+                pass
+
+            mock_gen.assert_called_once()
+            mock_apply.assert_called_once()
+
+        if legacy_file.exists():
+            legacy_file.unlink()
+
+    def test_quality_gate_failure_exit(self):
+        """Test that main exits with code 1 if quality gate fails."""
+        import sys
+        from unittest.mock import MagicMock, patch
+
+        from CORE.main import main
+
+        test_args = ["CORE", "--target-dir", "TESTS/samples"]
+
+        mock_pipeline_inst = MagicMock()
+        mock_pipeline_inst.run.return_value = 123
+        mock_pipeline_inst._gate_passed = False
+
+        with (
+            patch.object(sys, "argv", test_args),
+            patch("CORE.main.AnalysisPipeline", return_value=mock_pipeline_inst),
+            pytest.raises(SystemExit) as excinfo,
+        ):
+            main()
+
+        assert excinfo.value.code == 1
+
+    def test_ai_code_diff_flag_logic(self):
+        """Test that --ai-code-diff filters files."""
+        import sys
+        from unittest.mock import MagicMock, patch
+
+        from CORE.main import AnalysisPipeline, main
+
+        test_args = ["CORE", "--target-dir", "TESTS/samples", "--ai-code-diff"]
+
+        mock_filter = MagicMock()
+        mock_filter.get_ai_touched_files.return_value = ["app.py"]
+        mock_filter.summary.return_value = {"ai_touched_count": 1}
+
+        with (
+            patch.object(sys, "argv", test_args),
+            patch("CORE.engines.ai_code_diff.AiCodeDiffFilter", return_value=mock_filter),
+            patch.object(AnalysisPipeline, "run", return_value=123) as mock_run,
+        ):
+            try:
+                main()
+            except SystemExit:
+                pass
+
+            mock_run.assert_called_once_with(
+                repo_name="local",
+                pr_number=None,
+                limit=None,
+                files=["app.py"],
+                rich_output=False,
+                baseline_run_id=None,
+                json_output=False,
+            )
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
