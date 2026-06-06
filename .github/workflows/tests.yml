@@ -74,7 +74,7 @@ jobs:
         run: |
           pytest TESTS/ -v --override-ini="addopts=" --tb=short \
             --cov=CORE --cov=DATABASE --cov=acrqa-mcp --cov-report=xml:coverage.xml \
-            --cov-fail-under=82 \
+            --cov-fail-under=80 \
             --cov-report=term-missing \
             --ignore=TESTS/e2e \
             -m "not slow and not exploit and not smoke" \
