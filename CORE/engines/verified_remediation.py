@@ -81,7 +81,7 @@ class RemediationResult:
     def summary_line(self) -> str:
         status = "✅ FIX VERIFIED" if self.fix_verified else "❌ NOT VERIFIED"
         err = f" ({self.error})" if self.error else ""
-        return f"{status} — {self.canonical_rule_id} in {Path(self.file).name}" f" [{self.duration_seconds:.1f}s]{err}"
+        return f"{status} — {self.canonical_rule_id} in {Path(self.file).name} [{self.duration_seconds:.1f}s]{err}"
 
 
 def _make_diff(original_path: Path, patched_path: Path) -> str:
@@ -189,8 +189,7 @@ class VerifiedRemediationEngine:
 
         if before.tier != "verified-exploitable":
             result.error = (
-                f"Step 1 failed: exploit did not fire on original code "
-                f"(tier={before.tier!r}, error={before.error!r})"
+                f"Step 1 failed: exploit did not fire on original code (tier={before.tier!r}, error={before.error!r})"
             )
             result.duration_seconds = time.monotonic() - start
             return result
@@ -273,12 +272,19 @@ class VerifiedRemediationEngine:
 
     def _apply_patch_to_file(self, patch: dict, target_file: Path) -> None:
         """Write the patched content to target_file (path already bounds-checked by caller)."""
+        resolved_file = target_file.resolve()
+        import tempfile
+
+        temp_dir = Path(tempfile.gettempdir()).resolve()
+        if not resolved_file.is_relative_to(temp_dir) and not resolved_file.is_relative_to(Path.cwd().resolve()):
+            raise ValueError("Security violation: target path is outside sandbox")
+
         if patch.get("patched_content"):
-            target_file.write_text(patch["patched_content"], encoding="utf-8")
+            resolved_file.write_text(patch["patched_content"], encoding="utf-8")
         elif patch.get("fixed") is not None and patch.get("original") is not None:
-            content = target_file.read_text(encoding="utf-8")
+            content = resolved_file.read_text(encoding="utf-8")
             content = content.replace(patch["original"] + "\n", patch["fixed"] + "\n", 1)
-            target_file.write_text(content, encoding="utf-8")
+            resolved_file.write_text(content, encoding="utf-8")
         else:
             raise ValueError(f"Unrecognised patch format: {list(patch.keys())}")
 

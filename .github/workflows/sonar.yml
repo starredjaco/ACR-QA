@@ -14,8 +14,21 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    # No postgres service — DB-dependent tests are skipped via -m "not integration".
-    # The sonar scan only needs coverage.xml from unit tests.
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: acrqa_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - uses: actions/checkout@v6
@@ -31,14 +44,33 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt pytest-cov
 
-      - name: Run tests with coverage (DB-less; integration tests auto-skip)
+      - name: Run database migrations
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: acrqa_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+        run: |
+          alembic upgrade head || {
+            echo "❌ Alembic migration failed"
+            exit 1
+          }
+
+      - name: Run tests with coverage
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: acrqa_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
         run: |
           python -m pytest TESTS/ \
             --override-ini="addopts=" \
             --cov=. \
             --cov-report=xml:coverage.xml \
             --cov-fail-under=0 \
-            -m "not slow and not exploit and not smoke and not integration" \
+            -m "not slow and not exploit and not smoke" \
             --ignore=TESTS/e2e \
             -q || true
         continue-on-error: true
