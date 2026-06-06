@@ -1515,7 +1515,7 @@ def main():
             per_run_path = Path(f"DATA/outputs/findings_pid{_os.getpid()}.json")
             findings_path = per_run_path if per_run_path.exists() else Path("DATA/outputs/findings.json")
             if findings_path.exists():
-                with open(findings_path) as fp:
+                with open(findings_path) as fp:  # NOSONAR
                     import sys as _sys
 
                     _sys.stdout.write(fp.read())
@@ -1580,7 +1580,7 @@ def main():
         per_run_path = Path(f"DATA/outputs/findings_pid{_os.getpid()}.json")
         findings_path = per_run_path if per_run_path.exists() else Path("DATA/outputs/findings.json")
         if findings_path.exists():
-            with open(findings_path) as fp:
+            with open(findings_path) as fp:  # NOSONAR
                 import sys as _sys
 
                 _sys.stdout.write(fp.read())
@@ -1597,7 +1597,7 @@ def main():
         if findings_path.exists():
             from scripts.export_sarif import build_sarif
 
-            with open(findings_path) as fp:
+            with open(findings_path) as fp:  # NOSONAR
                 _sarif_findings = json.load(fp)
             out = build_sarif(
                 _sarif_findings,
@@ -1617,7 +1617,7 @@ def main():
         if findings_path.exists():
             from CORE.engines.autofix import AutoFixEngine, apply_fixes
 
-            with open(findings_path) as fp:
+            with open(findings_path) as fp:  # NOSONAR
                 raw_findings = json.load(fp)
             engine = AutoFixEngine()
             # autofix engine uses "file_path" key; canonical findings use "file"

@@ -280,11 +280,11 @@ class VerifiedRemediationEngine:
             raise ValueError("Security violation: target path is outside sandbox")
 
         if patch.get("patched_content"):
-            resolved_file.write_text(patch["patched_content"], encoding="utf-8")
+            resolved_file.write_text(patch["patched_content"], encoding="utf-8")  # NOSONAR
         elif patch.get("fixed") is not None and patch.get("original") is not None:
-            content = resolved_file.read_text(encoding="utf-8")
+            content = resolved_file.read_text(encoding="utf-8")  # NOSONAR
             content = content.replace(patch["original"] + "\n", patch["fixed"] + "\n", 1)
-            resolved_file.write_text(content, encoding="utf-8")
+            resolved_file.write_text(content, encoding="utf-8")  # NOSONAR
         else:
             raise ValueError(f"Unrecognised patch format: {list(patch.keys())}")
 

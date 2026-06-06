@@ -358,6 +358,132 @@ class TestVerifiedRemediationEngineUnit:
         assert "unsigned_bundle" in result.attestation
         assert result.attestation["error"] == "sign error"
 
+    def test_pipeline_patched_file_escapes_sandbox(self, tmp_path):
+        import pathlib
+
+        engine = self._engine()
+        target_dir = tmp_path / "target"
+        target_dir.mkdir()
+        app_file = target_dir / "app.py"
+        app_file.write_text("x = 1\n")
+        finding = _sqli_finding(str(app_file))
+
+        mock_before = _make_exploit_result("verified-exploitable", verified=True)
+        mock_patch = {"original": "x = 1", "fixed": "x = 2"}
+
+        original_is_relative_to = pathlib.PurePath.is_relative_to
+        calls = []
+
+        def side_effect(self, other):
+            calls.append(other)
+            if len(calls) == 2:
+                return False
+            return original_is_relative_to(self, other)
+
+        with (
+            patch.object(engine._verifier, "can_verify", return_value=True),
+            patch.object(engine._verifier, "verify_finding", return_value=mock_before),
+            patch.object(engine, "_generate_patch", return_value=mock_patch),
+            patch.object(pathlib.PurePath, "is_relative_to", side_effect),
+        ):
+            result = engine.run(finding, str(target_dir))
+
+        assert result.fix_verified is False
+        assert "escapes sandbox" in (result.error or "")
+
+    def test_pipeline_path_traversal_value_error(self, tmp_path):
+        import pathlib
+
+        engine = self._engine()
+        target_dir = tmp_path / "target"
+        target_dir.mkdir()
+        app_file = target_dir / "app.py"
+        app_file.write_text("x = 1\n")
+        finding = _sqli_finding(str(app_file))
+
+        mock_before = _make_exploit_result("verified-exploitable", verified=True)
+        mock_patch = {"original": "x = 1", "fixed": "x = 2"}
+
+        with (
+            patch.object(engine._verifier, "can_verify", return_value=True),
+            patch.object(engine._verifier, "verify_finding", return_value=mock_before),
+            patch.object(engine, "_generate_patch", return_value=mock_patch),
+            patch.object(pathlib.PurePath, "is_relative_to", return_value=True),
+            patch.object(pathlib.PurePath, "relative_to", side_effect=ValueError("mock error")),
+        ):
+            result = engine.run(finding, str(target_dir))
+
+        assert result.fix_verified is False
+        assert "validation failed" in (result.error or "")
+
+    def test_can_verify_reaches_fixer_check(self):
+        engine = self._engine()
+        finding = _sqli_finding("app.py")
+
+        with (
+            patch.object(engine._verifier, "can_verify", return_value=True),
+            patch.object(engine._fixer, "can_fix", return_value=True) as mock_can_fix,
+        ):
+            assert engine.can_verify(finding) is True
+            mock_can_fix.assert_called_once_with("SECURITY-027")
+
+        with (
+            patch.object(engine._verifier, "can_verify", return_value=True),
+            patch.object(engine._fixer, "can_fix", return_value=False),
+        ):
+            assert engine.can_verify(finding) is False
+
+    def test_run_pipeline_exception_handling(self):
+        engine = self._engine()
+        finding = _sqli_finding("app.py")
+
+        with patch.object(engine, "_pipeline", side_effect=RuntimeError("pipeline crashed")):
+            result = engine.run(finding, "/tmp")
+
+        assert result.fix_verified is False
+        assert "pipeline crashed" in (result.error or "")
+
+    def test_generate_patch_llm_success(self, tmp_path):
+        engine = self._engine()
+        finding = _sqli_finding("app.py")
+        mock_patch = {"patched_content": "x = 2"}
+        with patch.object(engine._fixer, "generate_patch", return_value=mock_patch):
+            res = engine._generate_patch(finding, str(tmp_path))
+            assert res == mock_patch
+
+    def test_generate_patch_llm_exception_fallback(self, tmp_path):
+        engine = self._engine()
+        finding = _sqli_finding("app.py")
+        with (
+            patch.object(engine._fixer, "generate_patch", side_effect=RuntimeError("LLM fail")),
+            patch.object(engine._fixer, "generate_fix", return_value={"fixed": "x"}) as mock_gen_fix,
+            patch.object(engine._fixer, "can_fix", return_value=True),
+        ):
+            res = engine._generate_patch(finding, str(tmp_path))
+            assert res == {"fixed": "x"}
+            mock_gen_fix.assert_called_once()
+
+    def test_apply_patch_to_file_outside_sandbox(self):
+        engine = self._engine()
+        patch_data = {"patched_content": "x = 2"}
+        with pytest.raises(ValueError, match="outside sandbox"):
+            engine._apply_patch_to_file(patch_data, Path("/etc/passwd"))
+
+    def test_apply_patch_to_file_patched_content(self, tmp_path):
+        engine = self._engine()
+        patch_data = {"patched_content": "x = 2"}
+        target = tmp_path / "app.py"
+        target.write_text("x = 1\n")
+        engine._apply_patch_to_file(patch_data, target)
+        assert target.read_text() == "x = 2"
+
+    def test_sign_bundle_no_attester(self):
+        engine = VerifiedRemediationEngine(use_docker=False, sign=False)
+        result = RemediationResult(finding_id="1", canonical_rule_id="SECURITY-001", file="app.py")
+        bundle = engine._sign_bundle(result)
+        assert "unsigned_bundle" not in bundle
+        assert bundle["finding_id"] == "1"
+
 
 # ---------------------------------------------------------------------------
 # Integration tests — require Docker
