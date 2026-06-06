@@ -73,7 +73,7 @@ jobs:
           DB_PASSWORD: postgres
         run: |
           pytest TESTS/ -v --override-ini="addopts=" --tb=short \
-            --cov=CORE --cov=DATABASE --cov=acrqa-mcp --cov-report=xml:coverage.xml \
+            --cov=. --cov-report=xml:coverage.xml \
             --cov-fail-under=80 \
             --cov-report=term-missing \
             --ignore=TESTS/e2e \

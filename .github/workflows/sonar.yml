@@ -35,8 +35,7 @@ jobs:
         run: |
           python -m pytest TESTS/ \
             --override-ini="addopts=" \
-            --cov=CORE \
-            --cov=acrqa-mcp \
+            --cov=. \
             --cov-report=xml:coverage.xml \
             --cov-fail-under=0 \
             -m "not slow and not exploit and not smoke and not integration" \

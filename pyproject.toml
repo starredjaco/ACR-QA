@@ -137,8 +137,7 @@ ignore_errors = true
 testpaths = ["TESTS"]
 norecursedirs = ["TESTS/evaluation/cloned", "TESTS/evaluation/realvuln", "mutants", ".venv", "node_modules"]
 addopts = [
-    "--cov=CORE",
-    "--cov=acrqa-mcp",
+    "--cov=.",
     "--cov-report=html",
     "--cov-report=term-missing",
     "--cov-fail-under=40",
@@ -156,4 +155,19 @@ markers = [
     "smoke: tests that hit a live deployed server (auto-skip when ACRQA_TEST_URL is unreachable)",
     "e2e: API-level end-to-end tests against a running FastAPI server (auto-skip when unreachable)",
     "offline: tests that require Ollama running locally (auto-skip when not installed)",
+]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "TESTS/**",
+    "scripts/**",
+    "alembic/**",
+    "dashboard/**",
+    "FRONTEND/**",
+    "vscode-extension/**",
+    "mutants/**",
+    "deploy/**",
+    "docs/**",
+    ".venv/**",
 ]
