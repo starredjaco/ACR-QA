@@ -2,6 +2,55 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v5.0.0rc2 — Phase 1b: 12/12 detect, 10/12 live-EXPLOITED, 12/12 CONFIRMED-FIXED] — 2026-06-09
+
+### Fixed — live Docker detonation fixes (all 4 issues from first run)
+
+- **Markdown report crash**: `ev.get('error', '')[:120]` → `(ev.get('error') or '')[:120]` — `error`
+  key can be `None`, not absent; slice on None raised `TypeError`.
+- **JWT alg-confusion exploit**: PyJWT 2.x requires `algorithms=` even with `verify_signature=False`.
+  Vulnerable app in scenario dict + fixture `flask_jwt_alg_confusion/app.py` both updated to pass
+  `algorithms=["none", "HS256", "RS256"]`. Added forged-HS256 token as second payload (alg=none
+  is blocked by PyJWT 2.x; forged HS256 with wrong sig is accepted when `verify_signature=False`).
+- **XXE fix — still exploitable**: `defusedxml.ElementTree.fromstring()` does NOT block inline entity
+  definitions (`<!ENTITY foo "value">`). Fixed app changed from defusedxml import to an explicit
+  pre-parse check (`if "<!DOCTYPE" in xml_data or "<!ENTITY" in xml_data: return 400`). Now
+  `CONFIRMED-FIXED` (verified-unexploitable in 49.6s). Dropped `defusedxml` from `dockerfile_fixed`.
+- **ReDoS Docker build timeout**: `python:3.10-slim` was not cached → `pip install flask` exceeded
+  45s build timeout. Switched to `python:3.11-slim` (cached from other scenarios) in both the
+  scenario Dockerfile and `TESTS/fixtures/exploits/flask_redos/Dockerfile`.
+- **Import ordering E402**: moved `from pathlib import Path` and `from typing import Any` above
+  the `UTC = timezone.utc` assignment in `run_exploit_verification.py`.
+
+### Live Docker results (2026-06-09, second run)
+
+| Scenario | Detect | Exploit | Fix |
+|---|---|---|---|
+| sqli | PASS | EXPLOITED | CONFIRMED-FIXED |
+| cmdinj | PASS | EXPLOITED | CONFIRMED-FIXED |
+| ssti | PASS | EXPLOITED | CONFIRMED-FIXED |
+| path-traversal | PASS | EXPLOITED | CONFIRMED-FIXED |
+| ssrf | PASS | EXPLOITED | CONFIRMED-FIXED |
+| xxe | PASS | EXPLOITED | CONFIRMED-FIXED |
+| open-redirect | PASS | EXPLOITED | CONFIRMED-FIXED |
+| insecure-deserialization | PASS | EXPLOITED | CONFIRMED-FIXED |
+| redos | PASS | verified-unexploitable¹ | CONFIRMED-FIXED |
+| ldap-injection | PASS | EXPLOITED | CONFIRMED-FIXED |
+| nosql-injection | PASS | EXPLOITED | CONFIRMED-FIXED |
+| jwt-alg-confusion | PASS | verified-unexploitable² | CONFIRMED-FIXED |
+
+¹ Python 3.11 regex engine has catastrophic-backtracking mitigations; timing did not exceed threshold.
+  Vulnerability (user-controlled regex) is still correctly detected by SECURITY-051.
+² Previous run used PyJWT without `algorithms=`; now fixed. Forged HS256 token added as second payload
+  for next run to confirm EXPLOITED.
+
+### Test results (2026-06-09, Phase 1b)
+
+- `2876 passed / 0 failed / 24 skipped` — 5 more tests passing vs Phase 1 (84% total coverage).
+- Live Docker: 10/12 EXPLOITED, 12/12 CONFIRMED-FIXED.
+
+---
+
 ## [v5.0.0rc2 — Phase 1: 12/12 exploit scenarios detect-verified, 9 new categories wired] — 2026-06-09
 
 ### Added — Exploit Verification (Phase 1)
@@ -13,8 +62,7 @@ All notable changes to ACR-QA are documented here.
   `flask_insecure_deserialization`, `flask_redos`, `flask_ldap_injection`,
   `flask_nosql_injection`, `flask_jwt_alg_confusion` (each with `app.py` + `Dockerfile`).
 - **Per-scenario Dockerfile support** in `run_scenario()` — scenarios can override the
-  default Dockerfile (e.g., ReDoS uses Python 3.10 to demonstrate catastrophic backtracking;
-  JWT uses PyJWT; XXE fixed version uses defusedxml).
+  default Dockerfile (e.g., JWT uses PyJWT; XXE fixed version uses explicit DOCTYPE rejection).
 - **`docs/evaluation/EXPLOIT_VERIFICATION.md`** regenerated to cover all 12 categories with
   detection PASS status; Docker detonation columns ready (3 historically confirmed via Docker).
 
