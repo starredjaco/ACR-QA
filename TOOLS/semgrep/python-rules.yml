@@ -136,6 +136,7 @@ rules:
       - pattern: requests.get($URL, ...)
       - pattern: requests.post($URL, ...)
       - pattern: requests.request($METHOD, $URL, ...)
+      - pattern: urllib.request.urlopen($URL, ...)
       - pattern: urllib.request.urlopen($URL)
     message: |
       Potential SSRF (Server-Side Request Forgery). If $URL is user-controlled,

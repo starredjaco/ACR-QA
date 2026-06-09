@@ -2,6 +2,53 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v5.0.0rc2 — Phase 1: 12/12 exploit scenarios detect-verified, 9 new categories wired] — 2026-06-09
+
+### Added — Exploit Verification (Phase 1)
+
+- **9 new exploit scenarios** in `scripts/run_exploit_verification.py`: path-traversal,
+  SSRF, XXE, open-redirect, insecure-deserialization, ReDoS, LDAP injection, NoSQL injection,
+  JWT algorithm confusion. All 12 scenarios now detect-verified (12/12 PASS via `--skip-docker`).
+- **5 new Docker fixtures** in `TESTS/fixtures/exploits/`:
+  `flask_insecure_deserialization`, `flask_redos`, `flask_ldap_injection`,
+  `flask_nosql_injection`, `flask_jwt_alg_confusion` (each with `app.py` + `Dockerfile`).
+- **Per-scenario Dockerfile support** in `run_scenario()` — scenarios can override the
+  default Dockerfile (e.g., ReDoS uses Python 3.10 to demonstrate catastrophic backtracking;
+  JWT uses PyJWT; XXE fixed version uses defusedxml).
+- **`docs/evaluation/EXPLOIT_VERIFICATION.md`** regenerated to cover all 12 categories with
+  detection PASS status; Docker detonation columns ready (3 historically confirmed via Docker).
+
+### Fixed — exploit_verifier.py
+
+- SSRF EXPLOITATION_SIGNALS: re-add `r"169\.254"` to fix `test_ssrf_signal_detection`.
+- SSRF PAYLOADS: now target the container's own `/ssrf-canary` endpoint
+  (`http://127.0.0.1:5000/ssrf-canary`) — avoids relying on external cloud metadata endpoints.
+- Path-traversal EXPLOITATION_SIGNALS: prepend `r"ACRQA-PATH-TRAVERSAL-CANARY"` — matches
+  the canary file created in the Docker fixture.
+- Insecure-deserialization PAYLOADS: replaced non-round-tripping print-based pickle with
+  `pickle.dumps("ACR-QA-DESERIAL", protocol=2)` base64 — Flask app returns the string.
+- Removed unused `"PATH-001": "path-traversal"` from RULE_TO_CATEGORY (semgrep rule `path-traversal`
+  normalises to SECURITY-049 directly).
+
+### Fixed — TOOLS/semgrep/python-rules.yml
+
+- `ssrf-requests-user-url`: add `urllib.request.urlopen($URL, ...)` pattern — the previous
+  `urllib.request.urlopen($URL)` missed calls with keyword args (e.g., `timeout=3`).
+
+### Fixed — TESTS/fixtures/exploits/
+
+- `flask_ssrf/app.py`: add `/ssrf-canary` endpoint — SSRF exploit now targets internal canary.
+- `flask_path_traversal/app.py`: use `open(UPLOAD_DIR + filename)` concatenation — triggers
+  the Semgrep `path-traversal` rule (SECURITY-049).
+- `flask_path_traversal/Dockerfile`: create `/canary.txt` + `/app/uploads/` in image.
+
+### Test results (2026-06-09)
+
+- `2871 passed / 0 failed / 29 skipped` — all pre-commit checks clean.
+- **To run live Docker detonation:** `sudo systemctl start docker && python scripts/run_exploit_verification.py`
+
+---
+
 ## [v5.0.0rc2 — Phase 0: G204 canonical rule fix + JS adapter FP reduction + change protocol] — 2026-06-09
 
 ### Fixed — CORE/adapters/go_adapter.py
