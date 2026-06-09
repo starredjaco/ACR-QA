@@ -5,12 +5,12 @@
 <title>ACR-QA — Code Review That Proves It Found a Real Bug</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta property="og:title" content="ACR-QA — Code Review That Proves It Found a Real Bug">
-<meta property="og:description" content="RAG-grounded AI explanations · 10 static analysers · ECDSA-signed provenance · $0 recurring cost. 97.1% precision on OWASP benchmark repos.">
+<meta property="og:description" content="RAG-grounded AI explanations · 19 static engines · ECDSA-signed provenance · $0 recurring cost. 96.4% Confirmed Tier precision on benchmark repos.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://acr-qa.up.railway.app/ui/landing.html">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="ACR-QA — Code Review That Proves It Found a Real Bug">
-<meta name="twitter:description" content="97.1% precision · 9/10 OWASP Top 10 · $0 recurring cost · Self-hosted via Docker">
+<meta name="twitter:description" content="96.4% precision · 9/10 OWASP Top 10 · $0 recurring cost · Self-hosted via Docker">
 <link rel="stylesheet" href="app.css">
 <style>
   * { box-sizing: border-box; }
@@ -157,10 +157,10 @@
 
 <!-- Hero -->
 <section class="hero">
-  <div class="hero-tag"><span class="dot"></span> KSIU Thesis Project · v4.6.0</div>
+  <div class="hero-tag"><span class="dot"></span> KSIU Thesis Project · v5.0.0rc2</div>
   <h1>Code review that <span class="grad">proves</span> it found a real bug.</h1>
   <p class="hero-sub">
-    RAG-grounded AI explanations · 10 static analysers · ECDSA-signed provenance · $0 recurring cost.
+    RAG-grounded AI explanations · 19 static engines · ECDSA-signed provenance · $0 recurring cost.
     Self-hosted via Docker or deployed to Railway in one command.
   </p>
   <div class="hero-ctas">
@@ -176,14 +176,14 @@
     </div>
     <div class="term-body">
       <span class="t-line"><span class="t-cmd">$</span> <span class="t-out">acrqa scan ./dvpwa --repo dvpwa</span></span>
-      <span class="t-line t-dim">→ Running 10 analysers in parallel…</span>
-      <span class="t-line t-dim">→ Ruff · Semgrep · Bandit · Staticcheck · ESLint · Gosec…</span>
+      <span class="t-line t-dim">→ Running 19 engines in parallel…</span>
+      <span class="t-line t-dim">→ Ruff · Semgrep · Bandit · Staticcheck · ESLint · Gosec · Radon · SCA…</span>
       <span class="t-line"> </span>
       <span class="t-line"><span class="t-high">● HIGH</span>  <span class="t-purple">SECURITY-027</span>  sqli/dao/student.py:18</span>
       <span class="t-line t-dim">  Raw SQL string concat → SQL injection (CWE-89)</span>
       <span class="t-line t-dim">  <span class="t-ok">✓ Exploit verified</span> · AI explanation · ECDSA signed</span>
       <span class="t-line"> </span>
-      <span class="t-line"><span class="t-ok">✓</span> <span class="t-out">836 findings across 4 repos · 97.1% precision</span></span>
+      <span class="t-line"><span class="t-ok">✓</span> <span class="t-out">96.4% precision · 100% CVE recall (8/8)</span></span>
       <span class="t-line"><span class="t-ok">✓</span> <span class="t-out">Attestation bundle: sha256:a3f8… (signed)</span></span>
     </div>
   </div>
@@ -192,11 +192,11 @@
 <!-- Proof strip -->
 <section class="proof">
   <div class="proof-inner">
-    <div class="proof-label">Measured on 10 benchmark repositories</div>
+    <div class="proof-label">Measured on 30 benchmark repositories</div>
     <div class="proof-cards">
       <div class="proof-card">
-        <div class="proof-num">97.1%</div>
-        <div class="proof-desc"><strong>Precision on Layer A corpus.</strong> 836 real bugs detected across DVPWA, PyGoat, VulPy, DSVW — only 24 false positives.</div>
+        <div class="proof-num">96.4%</div>
+        <div class="proof-desc"><strong>Precision on Confirmed Tier.</strong> Measured on 30-repo adversarial corpus with 100% CVE recall (8/8 detectable CVEs).</div>
       </div>
       <div class="proof-card">
         <div class="proof-num">9/10</div>
@@ -219,7 +219,7 @@
       <div class="step">
         <div class="step-num">1</div>
         <h3>Scan</h3>
-        <p>10 analysers run in parallel — Bandit, Semgrep, Ruff, Staticcheck, ESLint, Gosec, Vulture, jscpd, Trivy, TruffleHog. Results normalised to a canonical schema.</p>
+        <p>19 engines run in parallel — Bandit, Semgrep, Ruff, Staticcheck, ESLint, Gosec, Vulture, Radon, Trivy, TruffleHog, SCA, CBoM, LLM Detector, and more. Results normalised to a canonical schema.</p>
       </div>
       <div class="step">
         <div class="step-num">2</div>

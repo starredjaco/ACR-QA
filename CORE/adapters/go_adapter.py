@@ -46,7 +46,7 @@ GOSEC_RULE_MAPPING: dict[str, str] = {
     "G201": "SECURITY-027",  # SQL query construction using format string
     "G202": "SECURITY-028",  # SQL query construction using string concat
     "G203": "SECURITY-029",  # Use of unescaped data in HTML templates
-    "G204": "SECURITY-030",  # Subprocess launched with variable
+    "G204": "SECURITY-030",  # Subprocess launched with variable (Go)
     "G301": "SECURITY-031",  # Poor file permissions (mkdir)
     "G302": "SECURITY-032",  # Poor file permissions (chmod/OpenFile)
     "G303": "SECURITY-033",  # Creating tempfile using predictable path

@@ -11,21 +11,21 @@ expected_findings:
   - id: vulnode-sqli-products
     cwe: CWE-89
     canonical_id: SECURITY-027
-    file: src/routes/products.js
+    file: model/products.js
     severity: high
     description: SQL query string concatenation with unsanitised user input
 
   - id: vulnode-xss-output
     cwe: CWE-79
-    canonical_id: SECURITY-045
-    file: src/routes/users.js
+    canonical_id: SECURITY-064
+    file: views/search.ejs
     severity: high
     description: Unescaped user input rendered in response (reflected XSS)
 
   - id: vulnode-hardcoded-secret
     cwe: CWE-798
     canonical_id: HARDCODE-001
-    file: config/config.js
+    file: app.js
     severity: medium
     description: Hardcoded JWT secret key in configuration file
 
@@ -34,3 +34,6 @@ notes: >
   Ruff, Bandit, Vulture are Python-only — produce 0 findings on .js files.
   Ground truth is based on known vulnerability descriptions in the repo README.
   Confidence: medium — exact line numbers to be confirmed during Tier 3 clone+scan.
+
+recall_target: 0.50
+precision_target: 0.70
