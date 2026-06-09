@@ -107,6 +107,7 @@ class AnalysisPipeline:
         json_output=False,
     ):
         """Run full analysis pipeline."""
+        self.repo_name = repo_name
         logger.info("🚀 ACR-QA v5.0.0rc2 Analysis Pipeline")
         logger.info("=" * 50)
 
@@ -829,6 +830,7 @@ class AnalysisPipeline:
         Goes through the same pipeline steps: extra scanners, config filters,
         dedup, cap, sort, AI explanations, quality gate.
         """
+        self.repo_name = repo_name
         import dataclasses
 
         from CORE.adapters.js_adapter import JavaScriptAdapter

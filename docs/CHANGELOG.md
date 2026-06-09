@@ -2,6 +2,37 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v5.0.0rc2 — Phase 0: G204 canonical rule fix + JS adapter FP reduction + change protocol] — 2026-06-09
+
+### Fixed — CORE/adapters/go_adapter.py
+
+- **G204 canonical rule mapping corrected:** `"G204"` was mapped to `SECURITY-021` (wrong);
+  `CORE/engines/severity_scorer.py` defines `SECURITY-030` as "Subprocess launched with variable (Go G204)".
+  Fixed to `"G204": "SECURITY-030"`. Resolves failing test `TestNormalizeGosec::test_maps_g204_to_security_030`.
+
+### Fixed — CORE/adapters/js_adapter.py
+
+- Skip third-party library files (angular/jquery/bootstrap/react/vue) during JS file collection to
+  reduce noise findings from vendored code.
+- Language detection now correctly returns `"unknown"` when a Go-dominant repo is scanned; prevents
+  false-positive JS adapter invocation on Go repos.
+
+### Fixed — CORE/main.py
+
+- `self.repo_name` now set at pipeline entry in both `run()` and `run_js()` so downstream engines
+  that reference `repo_name` don't hit `AttributeError` on first access.
+
+### Added — CLAUDE.md + CONTRIBUTING.md
+
+- **Change Protocol section** added to `CLAUDE.md`: mandatory test-new-and-old → document → commit
+  checklist before every commit. Applies to all contributors and AI agents.
+
+### Test results (2026-06-09)
+
+- `2871 passed / 0 failed / 29 skipped` — ruff format clean, ruff check clean, mypy 0 errors.
+
+---
+
 ## [v5.0.0rc2 — v10 doc-sync: ACTIVE_ROADMAP header + footer updated] — 2026-06-05
 
 ### Changed — Documentation

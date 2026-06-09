@@ -218,6 +218,10 @@ class JavaScriptAdapter(LanguageAdapter):
             # Skip minified files
             if f.stem.endswith(".min"):
                 continue
+            # Skip common third-party libraries that flood findings with noise
+            stem_lower = f.stem.lower()
+            if any(lib in stem_lower for lib in ("angular", "jquery", "bootstrap", "react", "vue")):
+                continue
 
             filtered_files.append(f)
 
@@ -750,6 +754,10 @@ export default [
         ]
         has_package_json = (target / "package.json").exists()
         has_setup_py = (target / "setup.py").exists() or (target / "pyproject.toml").exists()
+        go_files = list(target.rglob("*.go"))
+
+        if go_files and len(go_files) > len(js_files) and len(go_files) > len(py_files):
+            return "unknown"
 
         if has_package_json and len(js_files) > len(py_files):
             return "javascript"

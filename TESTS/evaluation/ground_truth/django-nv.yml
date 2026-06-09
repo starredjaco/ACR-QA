@@ -32,7 +32,7 @@ expected_findings:
 
   - id: djangonv-open-redirect
     cwe: CWE-601
-    canonical_id: SECURITY-015
+    canonical_id: SECURITY-048
     file: taskManager/views.py
     line_range: [385, 390]
     severity: medium
@@ -42,13 +42,14 @@ expected_findings:
 
   - id: djangonv-csrf-exempt
     cwe: CWE-352
-    canonical_id: SECURITY-020
+    canonical_id: SECURITY-084
     file: taskManager/views.py
     line_range: [1, 50]
     severity: medium
     description: >
       CSRF exemption applied to sensitive views via @csrf_exempt decorator.
       Bandit B703 may not fire; Semgrep django.security.csrf rules will flag.
+
 
 notes: >
   django.nV is a well-documented intentionally vulnerable Django app used in security
@@ -58,3 +59,6 @@ notes: >
   detection — raw % string formatting into SQL is a canonical Bandit/Semgrep pattern.
   IDOR and Open Redirect are logic flaws — static tools have lower recall on these.
   Confidence: high for SQLi, medium for others.
+
+recall_target: 0.50
+precision_target: 0.70

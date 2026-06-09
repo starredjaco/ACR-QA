@@ -60,15 +60,25 @@ docs/sre/            → SLOs and operational runbooks
 1. **Create a branch** from `main`
 2. **Make your changes** following the existing patterns
 3. **Add tests** for new functionality in `TESTS/`
-4. **Run the test suite** — all 2,279 tests must pass:
+4. **Run the test suite — new AND old tests must pass:**
    ```bash
-   .venv/bin/pytest TESTS/ -q
+   .venv/bin/ruff format CORE/ DATABASE/ FRONTEND/ TESTS/
+   .venv/bin/ruff check CORE/ DATABASE/ FRONTEND/ TESTS/ --fix
+   .venv/bin/mypy CORE/ --ignore-missing-imports
+   .venv/bin/pytest TESTS/ -q --tb=short
    ```
-5. **Run the pipeline** to verify integration:
+5. **Document before committing** — update ALL of:
+   - `docs/CHANGELOG.md` — add a version entry describing what changed and why
+   - `docs/ACTIVE_ROADMAP.md` — mark the task complete if applicable
+   - `docs/GOD_MODE_V11_PERFECT_TEN_ALL_PERSPECTIVES.md` — update phase status
+   - `CLAUDE.md` if the change affects dev workflow or commit protocol
+6. **Run the pipeline** to verify integration:
    ```bash
    python3 CORE/main.py --target-dir TESTS/samples/comprehensive-issues --limit 3
    ```
-6. **Submit a PR** — the ACR-QA GitHub Action will analyze your code and Railway will deploy a preview environment automatically.
+7. **Submit a PR** — the ACR-QA GitHub Action will analyze your code and Railway will deploy a preview environment automatically.
+
+> **Rule:** never commit before running tests. Never merge before documenting. One logical change per commit.
 
 ## Database Migrations
 

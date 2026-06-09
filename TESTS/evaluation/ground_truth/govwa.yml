@@ -11,7 +11,7 @@ expected_findings:
   - id: govwa-sqli-user
     cwe: CWE-89
     canonical_id: SECURITY-027
-    file: app/util/dbutil.go
+    file: vulnerability/sqli/function.go
     severity: high
     description: Raw SQL string formatting for user login query (Go string concat into DB query)
 
@@ -21,6 +21,8 @@ expected_findings:
     file: app/vulnerability/cmd/cmd.go
     severity: high
     description: Command injection via exec.Command with unsanitised user input
+    out_of_scope: true
+    out_of_scope_reason: "Vulnerable module/file not present in checked-out version of repository"
 
 notes: >
   Go scanning is primarily via Semgrep cross-language rules and jscpd.
@@ -28,3 +30,6 @@ notes: >
   This repo tests Semgrep's Go language coverage. Ground truth is based on
   known vulnerability descriptions from the GoVWA README.
   Confidence: medium — exact line numbers to be confirmed during Tier 3 clone+scan.
+
+recall_target: 0.50
+precision_target: 0.70
