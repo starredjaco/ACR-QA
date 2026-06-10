@@ -4,12 +4,12 @@
 > **completely free** (no domain, no card, no surprise bills) and realistic for a
 > fresh-grad backend + DevOps engineer.
 >
-> **Current plan:** [`GOD_MODE_V10_PERFECT_TEN_ROADMAP.md`](GOD_MODE_V10_PERFECT_TEN_ROADMAP.md) —
-> verified-research repositioning (2026-06-04). Supersedes v9 scoring; grounds every claim in
+> **Current plan:** [`GOD_MODE_V11_PERFECT_TEN_ALL_PERSPECTIVES.md`](GOD_MODE_V11_PERFECT_TEN_ALL_PERSPECTIVES.md) —
+> dual-scoreboard (thesis + startup) repositioning. Supersedes v10; grounds every claim in
 > web-verified 2026 literature.
 >
-> **Archive (do not re-execute):** v5/v6/v7/v8/v9 God Mode plans — superseded by v10.
-> Strategic menu for post-defense: [`GOD_MODE_V5_PLAN.md`](GOD_MODE_V5_PLAN.md).
+> **Archive (do not re-execute):** v4–v10 God Mode plans — superseded, moved to
+> [`archive/`](archive/). Strategic menu for post-defense: [`GOD_MODE_V5_PLAN.md`](archive/GOD_MODE_V5_PLAN.md).
 >
 > **Created:** 2026-05-31 · **v10 repositioning:** 2026-06-04 · **Last updated:** 2026-06-05
 > **Horizon:** defense day 2026-06-25 + post-defense adoption runway
@@ -195,7 +195,7 @@ These items execute the one-sentence bet from `GOD_MODE_V6_BUSINESS_PLAN.md`. Al
 
 ## Why I'm NOT Doing These (deferred to "upcoming years")
 
-These are great items but wrong-level for fresh-grad scope. They live in [`GOD_MODE_V5_PLAN.md`](GOD_MODE_V5_PLAN.md) and I'll revisit them when I'm 1–3 years into industry.
+These are great items but wrong-level for fresh-grad scope. They live in [`GOD_MODE_V5_PLAN.md`](archive/GOD_MODE_V5_PLAN.md) and I'll revisit them when I'm 1–3 years into industry.
 
 ### Deferred — "advanced backend/distributed-systems patterns"
 - §3.6 Multi-tenancy (real RBAC + orgs)
@@ -306,9 +306,9 @@ The plan succeeds if, **by the end of week 11 (defense day)**:
 
 - The thesis is already done. The numbers (96.4% / 100% / F1=98.2%) are real. This roadmap is about polish, validation, and adoption — not new features.
 - Do the single highest-leverage thing on this list today. Don't read more plans. Don't browse more options. Do #1, then #2, then #3.
-- The full ambition lives in [`GOD_MODE_V5_PLAN.md`](GOD_MODE_V5_PLAN.md). When this 15-item list is fully ✅, come back, pick another lane, and repeat.
+- The full ambition lives in [`GOD_MODE_V5_PLAN.md`](archive/GOD_MODE_V5_PLAN.md). When this 15-item list is fully ✅, come back, pick another lane, and repeat.
 
 ---
 
-*Active roadmap updated 2026-06-05. All v10 tracks complete ✅. See [`GOD_MODE_V10_PERFECT_TEN_ROADMAP.md`](GOD_MODE_V10_PERFECT_TEN_ROADMAP.md) for the current execution plan.*
-*Strategic menu for post-defense lanes lives in [`GOD_MODE_V5_PLAN.md`](GOD_MODE_V5_PLAN.md).*
+*Active roadmap updated 2026-06-05. All v10 tracks complete ✅. See [`GOD_MODE_V10_PERFECT_TEN_ROADMAP.md`](archive/GOD_MODE_V10_PERFECT_TEN_ROADMAP.md) for the current execution plan.*
+*Strategic menu for post-defense lanes lives in [`GOD_MODE_V5_PLAN.md`](archive/GOD_MODE_V5_PLAN.md).*

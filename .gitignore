@@ -63,10 +63,7 @@ node_modules/
 
 # Compiled documents (regenerate from .tex source)
 docs/*.pdf
-docs/assignments/*.pdf
 docs/thesis/*.pdf
-!docs/assignments/assigment1*.pdf
-!docs/assignments/assigment2*.pdf
 ACR-QA-Book/*.pdf
 ACR-QA-Book/*.lof
 ACR-QA-Book/*.lot
@@ -147,3 +144,7 @@ TESTS/evaluation/robustness/cloned/
 TESTS/evaluation/robustness/results/
 # PlantUML-generated scratch (regenerated from .puml; 0 tracked files)
 docs/presentation_assets/figures/
+
+# Archived binaries: preserved on disk, not tracked (trip large-file hygiene)
+docs/archive/assignments/*.pdf
+docs/archive/media/*.png
