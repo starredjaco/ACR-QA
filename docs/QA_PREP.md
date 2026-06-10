@@ -7,6 +7,99 @@
 
 ---
 
+## 🎤 Defense-Day Opening (~90 seconds) — written for a MIXED room
+
+> **The room:** 2–3 judges, at least one **non-technical**. Rule: lead every answer with the plain-English
+> version (one sentence the non-technical judge fully gets), *then* add the technical depth for the others.
+> The opening below is jargon-free until the single number near the end.
+
+**Deliver this, breathing at each ¶ break:**
+
+> "Imagine a smoke alarm that goes off every time you make toast. After a week, you take the battery
+> out — and then you miss the real fire. That is where software security is today: scanners raise so
+> many false alarms that developers stop listening, and real vulnerabilities slip through.
+>
+> And it's getting worse, fast. In 2026, AI writes a growing share of our code — and AI-written code
+> carries about **twice** the security flaws. More alarms, less trust, more real fires.
+>
+> Every tool on the market competes on finding *more* problems. But finding is cheap now — an AI can
+> find thousands. I realised the question nobody actually answers is simpler: *is this one real?*
+> Real enough to stop a release on its own.
+>
+> So my system doesn't just raise an alarm — it **proves** it. When it suspects a vulnerability, it
+> attacks a safe copy of the code and shows the break-in happening. After you fix it, it attacks again
+> to prove the hole is closed — and signs that proof cryptographically, like a tamper-proof seal.
+> *We don't report it unless we can show it firing.*
+>
+> On that 'proven-real' setting it is right **96 times out of 100**, while still catching **100%** of
+> the known vulnerabilities I tested — the bar commercial tools use to block a release automatically.
+>
+> And I'll be the first to tell you its limits: on messy real-world apps it catches about a quarter of
+> everything, because a third of real vulnerabilities can't be found by *any* tool of this kind. I
+> report that number because hiding it would be the real failure.
+>
+> Built as a thesis, it ended up implementing the exact security standards governments are mandating
+> for 2026. The field is moving from noise toward proof — and that is what I built."
+
+**The one sticky line to repeat if you forget everything else:** *"Most tools cry wolf. Mine brings
+you the wolf — then proves the cage holds."*
+
+---
+
+## 🎯 Selling to the non-technical judge (and the room)
+
+Non-technical judges don't score your taint analysis — they score **clarity, poise, and "so what?"**
+Win them with:
+
+1. **Plain-English-first.** Every answer's *first sentence* must need zero background. Then go deep.
+2. **The analogy bank** (reuse relentlessly): smoke alarm that cries wolf · security-camera footage of
+   the break-in (= exploit proof) · tamper-proof seal / notary stamp (= cryptographic attestation) ·
+   a doctor who *runs the test* instead of listing 200 possible diseases.
+3. **The live demo is your strongest sell.** Show ONE thing end-to-end: a vulnerability → the exploit
+   firing (red) → your fix → the same exploit *failing* (green). A non-technical person **sees** it
+   work — that beats every slide. Rehearse it until it's boring.
+4. **The "so what?" money/safety frame:** the EU mandates this class of evidence by **Sept 2026**;
+   one breach costs millions; AI is multiplying the risk now. This makes it *matter*, not just *work*.
+5. **Confidence > completeness.** "That's a great question — the honest answer is X, and here's the
+   limit" scores higher than a hedged info-dump. Slow down. It's fine to pause.
+
+---
+
+## 💬 "Why this project? What's your motivation?" (you WILL be asked)
+
+**Say this — it's true and it's strong:**
+
+> "Honestly? I didn't arrive with a grudge against a scanner — my instructor pointed me at this area.
+> But the more I researched, the more one thing nagged at me: every tool boasts about how *much* it
+> finds, and not one of them can tell you what's actually *real*. That gap is what turned an assigned
+> topic into something I cared about for eight months. I found my own question inside the problem I
+> was handed — and answering it is the contribution."
+
+**Why this works:** it's honest (no fabricated origin story to collapse under questioning), and it
+demonstrates *intellectual ownership* — the exact thing a thesis is meant to show. Owning "it was
+assigned, and here's the angle I made mine" is stronger than pretending to a personal vendetta.
+
+---
+
+## 🛡️ Limitations I Own — turn every weak spot into a trust signal
+
+Volunteer these *before* they're dug out of you. Each = honest limit → why it's a principled choice →
+one-line rebuttal.
+
+| Weak spot | The honest framing that wins |
+|---|---|
+| **25% real-world recall sounds low** | "It's honest. A third of real vulns — auth logic, IDOR, CSRF — can't be caught by *any* static tool. On the detectable subset I'm at ~48%, beating every rule-based tool on the 2026 RealVuln benchmark. I report the low number because hiding it would be the real failure." |
+| **8.6% 'blended' precision looks terrible** | "That's the worst case on the hardest possible corpus — mature libraries that expert teams review continuously. It mixes style rules with security rules. The right number is the **Confirmed Tier: 96.4%**, which is what you'd actually auto-block on." |
+| **Two precision numbers — which is real?** | "Both. They're two points on one curve: recall-first for developer triage, precision-first (96.4%) for the auto-block gate. One scan, two operating points — you pick per job." |
+| **Taint analysis is intra-procedural only** | "Deliberate scope. It traces flow within a function, not across files yet — documented future work worth ~10–15pp recall. I'd rather ship one layer that works than four that half-work." |
+| **Depends on an external LLM (Groq)** | "Detection is **fully deterministic** and runs with `--no-ai`. The LLM only *explains* confirmed findings — it never decides what's a vulnerability. Offline mode (Ollama) exists for air-gapped use." |
+| **Single annotator / no independent expert labels** | "Fair gap. I ran a multi-rater κ study for inter-rater reliability; full independent annotation of real-world true-negatives is the honest next step. No public ground truth exists for it yet." |
+| **"36 engines" vs "19 engines"** | "Two counting levels: **36 total engine modules** across 7 layers; of those, **~19 are detection engines** that produce findings. Not a contradiction — the rest verify, attest, explain, and prioritise." |
+| **"52 endpoints" vs the raw route count** | "52 is the logical `/v1/` API surface. The raw decorator count is higher because it includes health checks, multiple HTTP methods per path, and sub-routers." |
+| **Exploit verification is 13 categories, not all CWEs** | "By design — it covers the high-value, dynamically-detonatable classes (injection, SSTI, path traversal…). Not every CWE *can* be fired in a sandbox; for those, the Confirmed Tier's static gates still apply." |
+
+---
+
 ## Category 1 — Evaluation Validity (Most Dangerous)
 
 ### Q1. "Your benchmarks are toy apps. How do I know this works on real code?" ⚠️ MOST IMPORTANT
