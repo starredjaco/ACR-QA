@@ -89,6 +89,23 @@ class ScanRequest(BaseModel):
     limit: int | None = None
 
 
+class GitHubScanRequest(BaseModel):
+    repo_url: str = Field(..., description="Public GitHub/GitLab HTTPS URL to clone and scan")
+    repo_name: str | None = Field(None, description="Override the repo label; defaults to the URL slug")
+    branch: str = Field("HEAD", description="Branch, tag, or commit SHA to check out")
+
+
+class GitHubScanOut(BaseModel):
+    run_id: int
+    repo_name: str
+    status: str
+    total_findings: int
+    high_count: int
+    medium_count: int
+    low_count: int
+    attestation_key_id: str | None = None
+
+
 class ScanJobOut(BaseModel):
     job_id: str
     status: str  # queued | started | completed | failed

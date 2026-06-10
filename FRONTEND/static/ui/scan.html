@@ -193,6 +193,23 @@
             </button>
           </div>
 
+          <!-- SCAN BY URL -->
+          <div class="panel">
+            <div class="panel-head"><span class="panel-title">Scan GitHub / GitLab URL</span></div>
+            <div class="form-group">
+              <label>Repository URL</label>
+              <input class="form-input" id="github-url" placeholder="https://github.com/owner/repo">
+              <span class="form-hint">Public HTTPS URL from github.com, gitlab.com, or bitbucket.org. Shallow-clones and scans instantly.</span>
+            </div>
+            <div class="form-group" style="margin-top:12px">
+              <label>Label (optional)</label>
+              <input class="form-input" id="github-repo-name" placeholder="e.g. owner/repo (auto-derived if blank)">
+            </div>
+            <button class="btn-scan" id="github-btn" onclick="startGithubScan()" style="margin-top:16px">
+              <span>⬇</span> Clone &amp; Scan
+            </button>
+          </div>
+
           <div class="panel">
             <div class="panel-head"><span class="panel-title">Recent scans</span><span class="panel-sub" id="recent-sub">Loading…</span></div>
             <div class="recent-runs" id="recent-runs">
@@ -341,6 +358,49 @@ async function startScan(){
     toast('Scan failed: '+e.message,'error');
     addLog('Error: '+e.message,'err');
     setProgress(0,'Submission failed',e.message);
+  }
+}
+
+async function startGithubScan(){
+  const url=document.getElementById('github-url').value.trim();
+  const repoName=document.getElementById('github-repo-name').value.trim();
+  if(!url){toast('Repository URL is required','error');return;}
+  if(!url.startsWith('https://')){toast('Only https:// URLs are accepted','error');return;}
+
+  const btn=document.getElementById('github-btn');
+  btn.disabled=true; btn.innerHTML='<span class="prog-spinner" style="width:16px;height:16px;border-width:2px;display:inline-block"></span> Cloning…';
+
+  document.getElementById('progress-card').style.display='';
+  document.getElementById('result-area').innerHTML='';
+  document.getElementById('log-box').innerHTML='';
+  setProgress(5,'Cloning repository…','Shallow clone in progress (up to 90s)');
+  addLog('Cloning '+url+'…');
+
+  try{
+    const body={repo_url:url};
+    if(repoName)body.repo_name=repoName;
+    const data=await api('/v1/scans/github',{method:'POST',body:JSON.stringify(body)});
+    setProgress(100,'Scan complete','');
+    addLog(`Done — run #${data.run_id}: ${data.total_findings} findings (${data.high_count} HIGH)`,'info');
+    toast(`Scan complete — ${data.total_findings} findings (run #${data.run_id})`,'success');
+    document.getElementById('result-area').innerHTML=`
+      <div class="panel" style="margin-top:12px;border:1px solid var(--border)">
+        <div class="panel-head"><span class="panel-title">Result — ${esc(data.repo_name)}</span></div>
+        <div style="display:flex;gap:24px;padding:12px 0;font-size:13px">
+          <span>Run <strong>#${data.run_id}</strong></span>
+          <span style="color:var(--red)">HIGH <strong>${data.high_count}</strong></span>
+          <span style="color:var(--orange,#f90)">MED <strong>${data.medium_count}</strong></span>
+          <span style="color:var(--fg-4)">LOW <strong>${data.low_count}</strong></span>
+          ${data.attestation_key_id?`<span style="color:var(--purple)">Attested <strong>${esc(data.attestation_key_id.slice(0,8))}</strong></span>`:''}
+        </div>
+        <a class="btn-scan" href="finding.html?run=${data.run_id}" style="display:inline-block;text-decoration:none;padding:8px 20px;font-size:13px">View findings</a>
+      </div>`;
+  }catch(e){
+    toast('Scan failed: '+e.message,'error');
+    addLog('Error: '+e.message,'err');
+    setProgress(0,'Failed',e.message);
+  }finally{
+    btn.disabled=false; btn.innerHTML='<span>⬇</span> Clone &amp; Scan';
   }
 }
 

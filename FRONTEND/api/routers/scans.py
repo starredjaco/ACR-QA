@@ -18,6 +18,8 @@ from FRONTEND.api.deps import get_current_user
 from FRONTEND.api.models import (
     AIDetectRequest,
     AnalyzeFileRequest,
+    GitHubScanOut,
+    GitHubScanRequest,
     RefreshFindingsRequest,
     ScanJobOut,
     ScanRequest,
@@ -302,3 +304,114 @@ async def scan_ai_detection(body: AIDetectRequest, user: dict = Depends(get_curr
         "flagged_percentage": results["flagged_percentage"],
         "files": results["files"][:50],
     }
+
+
+# ── GitHub/GitLab scan-by-URL ─────────────────────────────────────────────────
+_ALLOWED_HOSTS = ("github.com", "gitlab.com", "bitbucket.org")
+_CLONE_TIMEOUT = 90  # seconds — generous for large repos on slow links
+_MAX_DEPTH = 1  # shallow clone only
+
+
+@router.post(
+    "/github",
+    response_model=GitHubScanOut,
+    summary="Clone a public GitHub/GitLab repo and scan it (sync)",
+)
+async def scan_github_repo(
+    body: GitHubScanRequest,
+    user: dict = Depends(get_current_user),
+):
+    """Clone a public HTTPS repo URL, run full analysis, return the run summary.
+
+    Security constraints:
+    - Only https:// URLs from github.com, gitlab.com, or bitbucket.org
+    - Shallow clone (--depth 1) — no full history downloaded
+    - 90-second clone timeout
+    - Temp dir cleaned up unconditionally on exit
+    """
+    import re
+    import shutil
+    import urllib.parse
+
+    from fastapi import HTTPException
+
+    from CORE.main import AnalysisPipeline
+
+    url = body.repo_url.strip()
+
+    # ── Security: validate URL ────────────────────────────────────────────────
+    if not url.startswith("https://"):
+        raise HTTPException(status_code=400, detail="Only https:// URLs are accepted")
+
+    parsed = urllib.parse.urlparse(url)
+    if parsed.hostname not in _ALLOWED_HOSTS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Only {', '.join(_ALLOWED_HOSTS)} URLs are accepted",
+        )
+
+    # Strip credentials from URL (should never be there, but belt-and-suspenders)
+    if parsed.username or parsed.password:
+        raise HTTPException(status_code=400, detail="Credentials in URL are not accepted")
+
+    # Derive repo_name from the URL path slug if not provided
+    slug = re.sub(r"\.git$", "", parsed.path.strip("/").split("/")[-1]) or "repo"
+    repo_name = body.repo_name or slug
+
+    # ── Clone ─────────────────────────────────────────────────────────────────
+    tmp_dir = tempfile.mkdtemp(prefix="acrqa_clone_")
+    try:
+        clone_cmd = [
+            "git",
+            "clone",
+            "--depth",
+            str(_MAX_DEPTH),
+            "--single-branch",
+            "--no-tags",
+            "--filter=blob:limit=5m",  # skip blobs > 5 MB (binaries, large assets)
+            url,
+            tmp_dir,
+        ]
+        proc = await asyncio.wait_for(
+            asyncio.to_thread(
+                subprocess.run,
+                clone_cmd,
+                capture_output=True,
+                text=True,
+            ),
+            timeout=_CLONE_TIMEOUT,
+        )
+        if proc.returncode != 0:
+            raise HTTPException(
+                status_code=422,
+                detail=f"git clone failed: {proc.stderr.strip()[:300]}",
+            )
+
+        # ── Scan ──────────────────────────────────────────────────────────────
+        pipeline = AnalysisPipeline(target_dir=tmp_dir)
+        run_id = await asyncio.to_thread(
+            pipeline.run,
+            repo_name=repo_name,
+            limit=0,  # no-ai for speed; findings still persisted to DB
+        )
+
+        # ── Return summary ────────────────────────────────────────────────────
+        db = pipeline.db
+        summary = db.get_run_summary(run_id) or {}
+        attestation = db.get_attestation(run_id)
+        return GitHubScanOut(
+            run_id=run_id,
+            repo_name=repo_name,
+            status="completed",
+            total_findings=summary.get("findings_count", 0),
+            high_count=summary.get("high_severity_count", 0),
+            medium_count=summary.get("medium_severity_count", 0),
+            low_count=summary.get("low_severity_count", 0),
+            attestation_key_id=attestation.get("key_id") if attestation else None,
+        )
+
+    except TimeoutError as exc:
+        raise HTTPException(status_code=408, detail=f"Clone timed out after {_CLONE_TIMEOUT}s") from exc
+
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
