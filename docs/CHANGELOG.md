@@ -2,6 +2,32 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [v5.1.0 — Phase 2: all 7 technical 10s closed] — 2026-06-10
+
+### Added — test coverage & CI hardening
+
+- **DATABASE coverage 49% → 84%**: `TESTS/test_database_coverage.py` — 100 mock-based tests
+  covering all major Database methods (execute, create_analysis_run, PR/file risk scores, embeddings,
+  chat, attestation, dependency findings, verify log, feedback, suppression, inbox, quota, GDPR delete).
+- **main.py coverage 74% → 85%**: `TESTS/test_main_coverage.py` — 35 tests covering setup_logging
+  JSON formatter, `_apply_acrqa_mode` branches (offline/hybrid/cloud), NullDatabase fallback,
+  `_print_rich_output`, `_apply_config_filters`, `get_diff_files`, `run_extra_scanners` Trivy/TH
+  paths, `_load_findings`, and all `main()` CLI branches (llm-key, diff-only, Go/JS/Python paths,
+  gate-failed exit). **Test isolation fix**: `os.environ.setdefault()` inside `_apply_acrqa_mode`
+  bypasses monkeypatch tracking — switched to `try/finally` cleanup.
+- **Engine map in README**: 7-layer × 36-engine table with Always-on column.
+- **ADR 0013**: `CanonicalFinding` as the inter-engine data-flow contract (immutability rule,
+  RULE_MAPPING ownership, field set with types, enforcement via mypy + test_normalizer.py).
+- **Dogfood CI gate**: `.github/workflows/self-scan.yml` now fails CI if any HIGH/CRITICAL findings
+  found in CORE/ — hard block before merge.
+
+### Technical status
+
+- 3011 tests pass, 0 fail; total coverage 88%.
+- mypy CORE/: 0 errors.
+
+---
+
 ## [v5.0.0rc2 — Phase 1b: 12/12 detect, 10/12 live-EXPLOITED, 12/12 CONFIRMED-FIXED] — 2026-06-09
 
 ### Fixed — live Docker detonation fixes (all 4 issues from first run)
