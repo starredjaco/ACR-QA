@@ -209,6 +209,20 @@ export const submitScaScan = (targetDir: string, repoName: string) =>
 export const submitSecretsScan = (targetDir: string, repoName: string) =>
   post<ScanJob>("/v1/scans/secrets", { target_dir: targetDir, repo_name: repoName });
 
+export interface GitHubScanResult {
+  run_id: number;
+  repo_name: string;
+  status: string;
+  total_findings: number;
+  high_count: number;
+  medium_count: number;
+  low_count: number;
+  attestation_key_id: string | null;
+}
+
+export const submitScanByUrl = (repoUrl: string, repoName?: string) =>
+  post<GitHubScanResult>("/v1/scans/github", { repo_url: repoUrl, repo_name: repoName });
+
 // ── PR Risk ───────────────────────────────────────────────────────────────────
 
 export interface PrRisk {
