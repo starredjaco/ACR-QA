@@ -11,7 +11,7 @@
 
 | Document | Description |
 |----------|-------------|
-| [God Mode v4 Plan (completed)](GOD_MODE_V4_PLAN.md) | All P1–P4 + X1–X5 tracks complete (2026-05-31). Headline: P4 Confirmed Tier 96.4% / 100%. |
+| [God Mode v4 Plan (completed)](archive/GOD_MODE_V4_PLAN.md) | All P1–P4 + X1–X5 tracks complete (2026-05-31). Headline: P4 Confirmed Tier 96.4% / 100%. |
 | [IaC Scanner](engines/iac_scanner.md) | 28 canonical rules across Terraform / Kubernetes / Dockerfile · `POST /v1/scans/iac` · A.2 |
 | [Time-Travel Analyzer](engines/time_travel.md) | Bounded `git log -L` history for any finding · `GET /v1/findings/{fid}/history` · A.2 |
 | [Heuristic Risk Predictor](engines/risk_predictor.md) | 0–100 per-file score from 6 transparent features (NOT ML) · `GET /v1/runs/{rid}/risk-map` · A.3 |
@@ -103,7 +103,7 @@
 
 | Document | Description |
 |----------|-------------|
-| [God Mode v4 Plan](GOD_MODE_V4_PLAN.md) | All P1–P4 + X1–X5 tracks complete (2026-05-31). Final empirical battery for the defense. |
+| [God Mode v4 Plan](archive/GOD_MODE_V4_PLAN.md) | All P1–P4 + X1–X5 tracks complete (2026-05-31). Final empirical battery for the defense. |
 | [Evaluation Integrity Charter](evaluation/INTEGRITY.md) | Pre-registration commitment, scoring rules, skipped-CVE log, adversarial review checklist. |
 
 ## Static UI Dashboard (v5.0.0-beta)
