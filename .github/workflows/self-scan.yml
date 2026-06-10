@@ -116,6 +116,16 @@ jobs:
           fi
           echo "color=$COLOR" >> "$GITHUB_OUTPUT"
 
+      - name: Gate — fail CI if HIGH findings found in CORE/
+        run: |
+          HIGH="${{ steps.scan.outputs.high }}"
+          CRITICAL="${{ steps.scan.outputs.critical }}"
+          if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+            echo "❌ Self-scan found $CRITICAL critical + $HIGH high findings in CORE/ — blocking merge."
+            exit 1
+          fi
+          echo "✅ Self-scan clean: 0 critical, 0 high."
+
       - name: Upload SARIF (if generated)
         if: hashFiles('DATA/outputs/findings.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4

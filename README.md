@@ -183,6 +183,24 @@ python CORE/main.py --target-dir your-repo --llm
 
 ---
 
+## Engine Map — Why 36 Engines
+
+ACR-QA decomposes the analysis problem into seven orthogonal layers. Each engine is independently testable, independently enable-able, and writes only `CanonicalFinding` objects — so adding a new engine never breaks an existing one.
+
+| Layer | Count | Engines | Always on? |
+|-------|------:|---------|:----------:|
+| **Language Adapters** (run tools via subprocess) | 6+ | ruff · bandit · semgrep · vulture · radon · jscpd (Python); ESLint · semgrep-js (JS/TS); gosec · staticcheck (Go) | ✅ |
+| **Core Pipeline** (normalise → score → gate) | 6 | `normalizer` · `severity_scorer` · `fingerprint` · `taint_analyzer` · `quality_gate` · `confirmed_tier` | ✅ |
+| **Trust & Verification** (prove findings are real) | 4 | `exploit_verifier` (Docker detonation, 12 categories) · `verified_remediation` · `attestation` (ECDSA-P256 + Rekor) · `confidence_scorer` | ✅ per finding |
+| **AI Augmentation** (optional, requires API key) | 9 | `explainer` · `llm_detector` · `ai_code_detector` · `ai_code_diff` · `path_feasibility` · `second_opinion` · `triage_agent` · `triage_memory` · `ollama_provider` | `--llm` flag |
+| **Supply Chain & SCA** (SBOM + secrets) | 6 | `sca_scanner` · `osv_offline` · `trivy_adapter` · `trufflehog_adapter` · `supply_chain` · `cbom_scanner` | ✅ |
+| **Smart Triage & Risk** (prioritise + auto-fix) | 6 | `risk_predictor` · `pr_risk` · `review_bottleneck` · `learned_suppression` · `autofix` · `time_travel` | ✅ |
+| **Cross-Cutting Analysis** | 4 | `reachability` · `dependency_reachability` · `cross_language_correlator` · `iac_scanner` | ✅ |
+
+Every engine is exercised in `TESTS/` — 2876 fast tests, 84% CORE coverage.
+
+---
+
 ## Architecture
 
 ```mermaid
@@ -529,6 +547,14 @@ Key design decisions are documented in [`docs/adr/`](docs/adr/):
 | [0003](docs/adr/0003-rag-over-generic-llm.md) | RAG + semantic entropy over generic LLM prompts |
 | [0004](docs/adr/0004-groq-as-llm-provider.md) | Groq free tier with 4-key rotation pool |
 | [0005](docs/adr/0005-postgres-for-provenance.md) | PostgreSQL for provenance storage |
+| [0006](docs/adr/0006-ecdsa-attestation.md) | ECDSA-P256 signing + Rekor transparency log |
+| [0007](docs/adr/0007-quality-gate-thresholds.md) | Quality gate threshold design |
+| [0008](docs/adr/0008-exploit-verification-sandbox.md) | Docker sandbox for exploit detonation |
+| [0009](docs/adr/0009-taint-analysis-design.md) | Inter-procedural taint (source→sink→sanitizer) |
+| [0010](docs/adr/0010-benchmark-methodology.md) | Benchmark methodology: DEV/HELD-OUT split |
+| [0011](docs/adr/0011-verified-remediation-pipeline.md) | Verified Remediation pipeline design |
+| [0012](docs/adr/0012-language-adapter-pattern.md) | Language Adapter ABC and 3-language support |
+| [0013](docs/adr/0013-canonical-finding-data-flow-contract.md) | CanonicalFinding as the data-flow contract between all 36 engines |
 
 ---
 
