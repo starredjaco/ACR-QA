@@ -2,6 +2,27 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Unreleased] — 2026-06-11
+
+### Fixed — dashboard honesty (Confirmed Tier tile)
+
+- **Overview Confirmed Tier hero tile now shows the real count, not an estimate.**
+  Previously `overview.tsx` rendered `Math.round(highCount * 0.25)` — a fabricated
+  count sitting directly next to the real "96.4% precision" stat. It now fetches
+  `/v1/runs/{id}/confirmed-summary` for the latest completed run (the same endpoint
+  the PR merge-gate uses) and renders the server-classified `confirmed_tier_count`
+  from the 4-gate `ConfirmedTierEngine`. Handles loading (`—`), zero
+  (`auto-block safe`), and no-runs (empty state, no fetch) states.
+- **New API client + hook:** `getConfirmedSummary()` / `useConfirmedSummary()`.
+- **3 new route-level tests** (`src/test/components/Overview.test.tsx`): asserts the
+  real count renders, the old fabricated value does not, zero-state framing, and
+  that confirmed-summary is fetched for the latest run only (no N+1 aggregation).
+
+### Tests & coverage
+
+- Backend: `second_opinion.py` coverage 63% → 97% (30 new tests); CORE total → 88%.
+- Dashboard: 104 → 107 tests; lint/typecheck/build green.
+
 ## [v5.2.1 — React dashboard wired into the server] — 2026-06-10
 
 ### Fixed — UI serving

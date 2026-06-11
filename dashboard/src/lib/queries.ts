@@ -18,6 +18,13 @@ export const useStats = (runId: number) =>
     enabled: !!runId,
   });
 
+export const useConfirmedSummary = (runId: number | undefined) =>
+  useQuery({
+    queryKey: ["confirmed-summary", runId],
+    queryFn: () => api.getConfirmedSummary(runId!),
+    enabled: !!runId,
+  });
+
 export const useCompliance = (runId: number) =>
   useQuery({
     queryKey: ["compliance", runId],
