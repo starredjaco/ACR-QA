@@ -130,7 +130,7 @@ jobs:
 
       - name: Upload Confirmed-Only SARIF to GitHub Security Tab
         if: steps.changed-files.outputs.any_changed == 'true' && hashFiles('DATA/outputs/findings.sarif') != ''
-        uses: github/codeql-action/upload-sarif@9278b3a81880c5c3a1a0d18cdc0eb9dda5e1c254 # v4
+        uses: github/codeql-action/upload-sarif@1a818fd5f97ed0ee9a823421bd5b171add01227f # v4.36.2
         with:
           sarif_file: DATA/outputs/findings.sarif
           category: acrqa-confirmed-tier
@@ -343,7 +343,7 @@ jobs:
 
       - name: Upload SARIF findings to Security Tab
         if: hashFiles('DATA/outputs/findings.sarif') != ''
-        uses: github/codeql-action/upload-sarif@9278b3a81880c5c3a1a0d18cdc0eb9dda5e1c254 # v4
+        uses: github/codeql-action/upload-sarif@1a818fd5f97ed0ee9a823421bd5b171add01227f # v4.36.2
         with:
           sarif_file: DATA/outputs/findings.sarif
 
