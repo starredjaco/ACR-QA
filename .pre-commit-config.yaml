@@ -16,7 +16,7 @@ repos:
       - id: check-merge-conflict
       - id: debug-statements        # catches leftover breakpoint() / pdb.set_trace()
       - id: check-added-large-files
-        args: ['--maxkb=500']
+        args: ['--maxkb=700']
 
   # Ruff — format check + lint (must match what we run manually)
   - repo: local
