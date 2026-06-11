@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -17,7 +17,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from DATABASE.database import Database
+from DATABASE.database import Database  # noqa: E402
 
 
 def backdate_run(db: Database, run_id: int, days_ago: int) -> None:
@@ -31,15 +31,11 @@ def backdate_run(db: Database, run_id: int, days_ago: int) -> None:
 
     # Update analysis_runs
     db.execute(
-        "UPDATE analysis_runs SET started_at = %s, completed_at = %s WHERE id = %s",
-        (naive_dt, naive_dt, run_id)
+        "UPDATE analysis_runs SET started_at = %s, completed_at = %s WHERE id = %s", (naive_dt, naive_dt, run_id)
     )
 
     # Update findings
-    db.execute(
-        "UPDATE findings SET created_at = %s WHERE run_id = %s",
-        (naive_dt, run_id)
-    )
+    db.execute("UPDATE findings SET created_at = %s WHERE run_id = %s", (naive_dt, run_id))
 
     # Update vulnerabilities
     db.execute(
@@ -48,7 +44,7 @@ def backdate_run(db: Database, run_id: int, days_ago: int) -> None:
         SET first_seen_at = %s, last_seen_at = %s, created_at = %s, updated_at = %s
         WHERE first_seen_run_id = %s
         """,
-        (target_dt, target_dt, target_dt, target_dt, run_id)
+        (target_dt, target_dt, target_dt, target_dt, run_id),
     )
     print(f"✓ Run ID {run_id} backdated successfully.")
 
@@ -74,10 +70,13 @@ def main() -> None:
     cmd = [
         sys.executable,
         "CORE/main.py",
-        "--target-dir", str(repo_path),
-        "--repo-name", repo_name,
-        "--lang", "go",
-        "--no-ai"
+        "--target-dir",
+        str(repo_path),
+        "--repo-name",
+        repo_name,
+        "--lang",
+        "go",
+        "--no-ai",
     ]
 
     env = os.environ.copy()

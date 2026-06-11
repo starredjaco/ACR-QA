@@ -8,8 +8,8 @@ and spreads them out to show realistic scan history/activity.
 from __future__ import annotations
 
 import os
-import sys
 import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -17,8 +17,7 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from DATABASE.database import Database
-
+from DATABASE.database import Database  # noqa: E402
 
 # List of evaluation repos to scan and seed (repo_name, folder_name, days_ago)
 EVAL_REPOS = [
@@ -70,15 +69,11 @@ def backdate_run(db: Database, run_id: int, days_ago: int) -> None:
 
     # Update analysis_runs
     db.execute(
-        "UPDATE analysis_runs SET started_at = %s, completed_at = %s WHERE id = %s",
-        (naive_dt, naive_dt, run_id)
+        "UPDATE analysis_runs SET started_at = %s, completed_at = %s WHERE id = %s", (naive_dt, naive_dt, run_id)
     )
 
     # Update findings
-    db.execute(
-        "UPDATE findings SET created_at = %s WHERE run_id = %s",
-        (naive_dt, run_id)
-    )
+    db.execute("UPDATE findings SET created_at = %s WHERE run_id = %s", (naive_dt, run_id))
 
     # Update vulnerabilities
     db.execute(
@@ -87,7 +82,7 @@ def backdate_run(db: Database, run_id: int, days_ago: int) -> None:
         SET first_seen_at = %s, last_seen_at = %s, created_at = %s, updated_at = %s
         WHERE first_seen_run_id = %s
         """,
-        (target_dt, target_dt, target_dt, target_dt, run_id)
+        (target_dt, target_dt, target_dt, target_dt, run_id),
     )
     print(f"✓ Run ID {run_id} backdated successfully.")
 
@@ -108,33 +103,34 @@ def main() -> None:
             print(f"\n⚠️  Skipping {repo_name} — folder not found at {repo_path}")
             continue
 
-        print(f"\n==================================================")
+        print("\n==================================================")
         print(f"🚀 Scanning {repo_name} ({folder_name})")
-        print(f"==================================================")
+        print("==================================================")
 
         # Execute scan via CORE/main.py
         # We run with --no-ai to avoid making costly LLM API calls and keep it fast
         cmd = [
             sys.executable,
             "CORE/main.py",
-            "--target-dir", str(repo_path),
-            "--repo-name", repo_name,
-            "--lang", "auto",
-            "--no-ai"
+            "--target-dir",
+            str(repo_path),
+            "--repo-name",
+            repo_name,
+            "--lang",
+            "auto",
+            "--no-ai",
         ]
 
         # Run CLI scan
         env = os.environ.copy()
-        result = subprocess.run(cmd, env=env, cwd=str(PROJECT_ROOT))
+        subprocess.run(cmd, env=env, cwd=str(PROJECT_ROOT))
 
         # Note: CORE/main.py exits with 1 when quality gate fails, but the scan still stores results.
         # So exit code 1 is expected and fine as long as run is registered.
 
         # Fetch the latest run ID created for this repo
         latest_run = db.execute(
-            "SELECT id FROM analysis_runs WHERE repo_name = %s ORDER BY id DESC LIMIT 1",
-            (repo_name,),
-            fetch=True
+            "SELECT id FROM analysis_runs WHERE repo_name = %s ORDER BY id DESC LIMIT 1", (repo_name,), fetch=True
         )
 
         if latest_run:

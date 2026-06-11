@@ -138,10 +138,13 @@ def scan_repo(repo: dict, clone_dir: Path) -> dict:
     t0 = time.monotonic()
 
     cmd = [
-        sys.executable, str(MAIN_PY),
-        "--target-dir", str(clone_dir),
+        sys.executable,
+        str(MAIN_PY),
+        "--target-dir",
+        str(clone_dir),
         "--no-ai",
-        "--lang", "python",
+        "--lang",
+        "python",
         "--json",
     ]
 
@@ -166,7 +169,7 @@ def scan_repo(repo: dict, clone_dir: Path) -> dict:
         proc = subprocess.run(
             cmd,
             capture_output=True,
-            timeout=600,  # 10 min max (larger repos can take 5-8 min)
+            timeout=900,  # 15 min max (pydantic v2 / sqlalchemy need ~10 min)
             cwd=str(REPO_ROOT),
         )
         elapsed = time.monotonic() - t0
@@ -213,7 +216,7 @@ def scan_repo(repo: dict, clone_dir: Path) -> dict:
 
         if proc.returncode not in (0, 1):  # 1 = gate failed (normal)
             result["crashed"] = True
-            result["crash_message"] = (stderr[-500:] if stderr else "exit code " + str(proc.returncode))
+            result["crash_message"] = stderr[-500:] if stderr else "exit code " + str(proc.returncode)
 
         print(f"done ({elapsed:.1f}s) | H={result['high']} M={result['medium']} L={result['low']}")
 
@@ -257,10 +260,6 @@ def write_markdown_report(results: list[dict], manifest: dict) -> None:
     crashed = sum(1 for r in results if r["crashed"])
     total_findings = sum(r["total_findings"] for r in results)
     total_high = sum(r["high"] for r in results)
-    high_in_test = sum(
-        sum(1 for f in r["findings_sample"] if f.get("in_test_file"))
-        for r in results
-    )
 
     dev_results = [r for r in results if r["set"] == "dev"]
     held_results = [r for r in results if r["set"] == "held"]
@@ -272,7 +271,7 @@ def write_markdown_report(results: list[dict], manifest: dict) -> None:
         f"**Scanner version:** {manifest['meta']['scanner_version']}  ",
         f"**Flags:** `{manifest['meta']['scan_flags']}`  ",
         f"**Corpus:** {total} repos ({len(dev_results)} DEV · {len(held_results)} HELD)  ",
-        f"**Pre-registration commit:** see `TESTS/evaluation/robustness/PREREGISTERED_REPOS.yml`",
+        "**Pre-registration commit:** see `TESTS/evaluation/robustness/PREREGISTERED_REPOS.yml`",
         "",
         "---",
         "",
@@ -323,9 +322,7 @@ def write_markdown_report(results: list[dict], manifest: dict) -> None:
             lines.append("|---|---|---|---|---|")
             for f in r["findings_sample"]:
                 test_flag = "⚠️ test" if f.get("in_test_file") else "source"
-                lines.append(
-                    f"| `{f['rule']}` | `{f['file']}` | {f['line']} | {test_flag} | {f['message'][:60]} |"
-                )
+                lines.append(f"| `{f['rule']}` | `{f['file']}` | {f['line']} | {test_flag} | {f['message'][:60]} |")
             lines.append("")
 
     lines += [
@@ -376,20 +373,17 @@ _dev_names: set[str] = set()
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="T19 Robustness evaluation harness")
-    parser.add_argument("--set", choices=["dev", "held", "all"], default="dev",
-                        help="Which set to process (default: dev)")
-    parser.add_argument("--repo", metavar="NAME",
-                        help="Scan a single repo by name")
-    parser.add_argument("--clone-only", action="store_true",
-                        help="Clone repos but do not scan")
-    parser.add_argument("--no-clone", action="store_true",
-                        help="Skip cloning (repos already present)")
-    parser.add_argument("--force-clone", action="store_true",
-                        help="Re-clone even if repo already exists")
-    parser.add_argument("--write-md", action="store_true",
-                        help="Write markdown report to docs/evaluation/ROBUSTNESS_T19.md")
-    parser.add_argument("--output", metavar="PATH",
-                        help="Write JSON summary to PATH")
+    parser.add_argument(
+        "--set", choices=["dev", "held", "all"], default="dev", help="Which set to process (default: dev)"
+    )
+    parser.add_argument("--repo", metavar="NAME", help="Scan a single repo by name")
+    parser.add_argument("--clone-only", action="store_true", help="Clone repos but do not scan")
+    parser.add_argument("--no-clone", action="store_true", help="Skip cloning (repos already present)")
+    parser.add_argument("--force-clone", action="store_true", help="Re-clone even if repo already exists")
+    parser.add_argument(
+        "--write-md", action="store_true", help="Write markdown report to docs/evaluation/ROBUSTNESS_T19.md"
+    )
+    parser.add_argument("--output", metavar="PATH", help="Write JSON summary to PATH")
     args = parser.parse_args()
 
     manifest = load_manifest()
@@ -418,15 +412,24 @@ def main() -> None:
                 clone_dir = clone_repo(repo, CLONE_BASE, force=args.force_clone)
             except Exception as exc:
                 print(f"  [skip] clone failed: {exc}")
-                results.append({
-                    "name": name, "github": repo["github"], "ref": repo["ref"],
-                    "set": "dev" if name in _dev_names else "held",
-                    "scanned_at": datetime.now(tz=timezone.utc).isoformat(),
-                    "scan_time_s": 0.0, "crashed": True,
-                    "crash_message": f"clone failed: {exc}",
-                    "total_findings": 0, "high": 0, "medium": 0, "low": 0,
-                    "findings_sample": [], "raw_json_path": None,
-                })
+                results.append(
+                    {
+                        "name": name,
+                        "github": repo["github"],
+                        "ref": repo["ref"],
+                        "set": "dev" if name in _dev_names else "held",
+                        "scanned_at": datetime.now(tz=timezone.utc).isoformat(),
+                        "scan_time_s": 0.0,
+                        "crashed": True,
+                        "crash_message": f"clone failed: {exc}",
+                        "total_findings": 0,
+                        "high": 0,
+                        "medium": 0,
+                        "low": 0,
+                        "findings_sample": [],
+                        "raw_json_path": None,
+                    }
+                )
                 continue
 
         if args.clone_only:
@@ -464,11 +467,16 @@ def main() -> None:
 
     # Write summary JSON
     summary_path = RESULTS_DIR / "summary.json"
-    summary_path.write_text(json.dumps({
-        "generated_at": datetime.now(tz=timezone.utc).isoformat(),
-        "scanner_version": manifest["meta"]["scanner_version"],
-        "repos": results,
-    }, indent=2))
+    summary_path.write_text(
+        json.dumps(
+            {
+                "generated_at": datetime.now(tz=timezone.utc).isoformat(),
+                "scanner_version": manifest["meta"]["scanner_version"],
+                "repos": results,
+            },
+            indent=2,
+        )
+    )
     print(f"\n[saved] {summary_path}")
 
     if args.output:
