@@ -1,5 +1,5 @@
 import { useNavigate, Link } from "react-router-dom";
-import { useRuns } from "@/lib/queries";
+import { useRuns, useConfirmedSummary } from "@/lib/queries";
 import { CountUp } from "@/components/ui/CountUp";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { SkeletonCard } from "@/components/ui/SkeletonRow";
@@ -55,9 +55,11 @@ export function OverviewPage() {
     ? last7[last7.length - 1].high_count - last7[0].high_count
     : 0;
 
-  // Confirmed Tier estimate: HIGH findings that passed through ≥2 scans
-  // The exact count comes from the findings API; here we surface the trust-layer framing
-  const confirmedEstimate = Math.round(highCount * 0.25); // ~25% of HIGH reach Confirmed Tier
+  // Confirmed Tier: real count from the latest completed scan (server-classified
+  // through the 4-gate ConfirmedTierEngine — never an estimate). This is the exact
+  // number the PR merge-gate status check uses.
+  const { data: confirmed, isLoading: confirmedLoading } = useConfirmedSummary(latestRun?.id);
+  const confirmedCount = confirmed?.confirmed_tier_count ?? 0;
 
   const statusItems = [
     { label: "Runs", value: runs.length, color: "var(--fg-2)" },
@@ -153,10 +155,12 @@ export function OverviewPage() {
                 Confirmed Tier
               </div>
               <div className="bento-value ok">
-                <CountUp value={confirmedEstimate} />
+                {confirmedLoading ? <span style={{ opacity: 0.5 }}>—</span> : <CountUp value={confirmedCount} />}
               </div>
               <div className="stat-foot">
-                <span className="bento-sub" style={{ color: "var(--low)", fontSize: 10 }}>96.4% precision · auto-block safe</span>
+                <span className="bento-sub" style={{ color: "var(--low)", fontSize: 10 }}>
+                  {confirmedCount === 0 ? "96.4% precision · auto-block safe" : "96.4% precision · in latest scan"}
+                </span>
               </div>
             </div>
 

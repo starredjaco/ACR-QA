@@ -108,6 +108,23 @@ export interface RunStats {
 export const getStats = (runId: number) =>
   get<RunStats>(`/v1/runs/${runId}/stats`);
 
+export interface ConfirmedSummary {
+  run_id: number;
+  total_findings: number;
+  confirmed_tier_count: number;
+  confirmed_tier_pct: number;
+  signals: Record<string, number>;
+  auto_block_safe: boolean;
+  precision_context: {
+    confirmed_tier_precision: string;
+    false_positive_tolerance: string;
+    gate_criteria: string;
+  };
+}
+
+export const getConfirmedSummary = (runId: number) =>
+  get<ConfirmedSummary>(`/v1/runs/${runId}/confirmed-summary`);
+
 export interface ComplianceData {
   owasp: Record<string, { count: number; severity: string }>;
   overall_score: number;
