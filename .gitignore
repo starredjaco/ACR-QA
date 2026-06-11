@@ -124,6 +124,7 @@ CLAUDE.md
 .acr_run_id.txt
 ACR-QA_BANNER.html
 ACR-QA_Poster.html
+ACR-QA_Q1.html
 
 # Dashboard build output (large bundles)
 FRONTEND/static/dashboard/
