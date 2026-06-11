@@ -9,8 +9,8 @@ import { toast } from "@/components/ui/toast";
 import { CountUp } from "@/components/ui/CountUp";
 import { Sparkline } from "@/components/ui/Sparkline";
 import { StatusBar } from "@/components/ui/StatusBar";
-import { Play, RefreshCw, CheckCircle2, BookOpen } from "lucide-react";
-import { submitIacScan, submitScaScan, submitSecretsScan, postAIDetection } from "@/lib/api";
+import { Play, RefreshCw, CheckCircle2, BookOpen, Globe } from "lucide-react";
+import { submitIacScan, submitScaScan, submitSecretsScan, postAIDetection, submitScanByUrl, type GitHubScanResult } from "@/lib/api";
 
 export function ScansPage() {
   const { data, isLoading, refetch } = useRuns(30);
@@ -23,6 +23,11 @@ export function ScansPage() {
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [scanMode, setScanMode] = useState<"full" | "iac" | "sca" | "secrets" | "ai-detect">("full");
   const [aiResult, setAiResult] = useState<{ flagged: number; total: number; pct: number } | null>(null);
+  const [dialogTab, setDialogTab] = useState<"local" | "url">("local");
+  const [githubUrl, setGithubUrl] = useState("");
+  const [githubName, setGithubName] = useState("");
+  const [urlResult, setUrlResult] = useState<GitHubScanResult | null>(null);
+  const [urlLoading, setUrlLoading] = useState(false);
 
   async function handleScan(e: React.FormEvent) {
     e.preventDefault();
@@ -51,6 +56,24 @@ export function ScansPage() {
     setShowScanDialog(false);
     refetch();
     if (runId) navigate(`/runs/${runId}`);
+  }
+
+  async function handleUrlScan(e: React.FormEvent) {
+    e.preventDefault();
+    if (!githubUrl.startsWith("https://")) { toast("Only https:// URLs accepted", "error"); return; }
+    setUrlLoading(true);
+    setUrlResult(null);
+    try {
+      const result = await submitScanByUrl(githubUrl, githubName || undefined);
+      setUrlResult(result);
+      toast(`Scan complete — ${result.total_findings} findings (run #${result.run_id})`, "success");
+      refetch();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      toast(`Scan failed: ${msg}`, "error");
+    } finally {
+      setUrlLoading(false);
+    }
   }
 
   const runs = data?.runs ?? [];
@@ -190,69 +213,159 @@ export function ScansPage() {
       ]} />
 
       {/* New scan dialog */}
-      <Dialog open={showScanDialog} onClose={() => setShowScanDialog(false)} title="New Scan">
-        <form onSubmit={handleScan} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          <div className="field">
-            <label>Target directory</label>
-            <input className="inp" value={targetDir} onChange={(e) => setTargetDir(e.target.value)} placeholder="/path/to/repo" required />
-          </div>
-          {scanMode !== "ai-detect" && (
+      <Dialog open={showScanDialog} onClose={() => { setShowScanDialog(false); setUrlResult(null); }} title="New Scan">
+        {/* Tab strip */}
+        <div style={{ display: "flex", gap: 4, marginBottom: 16, borderBottom: "1px solid var(--border-2)", paddingBottom: 0 }}>
+          {([
+            { id: "local", label: "Local Path", icon: <Play size={12} aria-hidden /> },
+            { id: "url",   label: "GitHub / GitLab URL", icon: <Globe size={12} aria-hidden /> },
+          ] as const).map(({ id, label, icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => { setDialogTab(id); setUrlResult(null); setAiResult(null); }}
+              style={{
+                padding: "7px 14px",
+                fontSize: 12.5,
+                fontWeight: dialogTab === id ? 600 : 400,
+                color: dialogTab === id ? "var(--purple)" : "var(--fg-4)",
+                background: "none",
+                border: "none",
+                borderBottom: dialogTab === id ? "2px solid var(--purple)" : "2px solid transparent",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginBottom: -1,
+              }}
+            >{icon}{label}</button>
+          ))}
+        </div>
+
+        {/* Local path tab */}
+        {dialogTab === "local" && (
+          <form onSubmit={handleScan} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div className="field">
-              <label>Repo name</label>
-              <input className="inp" value={repoName} onChange={(e) => setRepoName(e.target.value)} placeholder="my-service" required />
+              <label>Target directory</label>
+              <input className="inp" value={targetDir} onChange={(e) => setTargetDir(e.target.value)} placeholder="/path/to/repo" required />
             </div>
-          )}
-          <div className="field">
-            <label>Scan type</label>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 4 }}>
-              {([
-                { mode: "full", title: "Full Scan", desc: "SAST + AI + all engines" },
-                { mode: "iac", title: "IaC Scanner", desc: "Terraform, K8s, Dockerfile" },
-                { mode: "sca", title: "SCA (Dependencies)", desc: "Known CVEs in deps" },
-                { mode: "secrets", title: "Secrets Detector", desc: "API keys, tokens, passwords" },
-                { mode: "ai-detect", title: "AI Code Detector", desc: "Detect LLM-generated code" },
-              ] as const).map(({ mode, title, desc }) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => { setScanMode(mode); setAiResult(null); }}
-                  style={{
-                    borderRadius: 8,
-                    padding: "10px 12px",
-                    textAlign: "left",
-                    background: scanMode === mode ? "var(--ai-bg)" : "transparent",
-                    border: `1px solid ${scanMode === mode ? "var(--ai-bdr)" : "var(--border-2)"}`,
-                    cursor: "pointer",
-                    transition: "background 0.15s",
-                  }}
-                >
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)", marginBottom: 2 }}>{title}</div>
-                  <div style={{ fontSize: 11.5, color: "var(--fg-4)" }}>{desc}</div>
-                </button>
-              ))}
-            </div>
-          </div>
-          {aiResult && (
-            <div style={{ background: "rgba(16,185,129,0.08)", border: "1px solid var(--low-bdr)", borderRadius: 8, padding: "12px 14px" }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: "var(--low-fg)", marginBottom: 4 }}>AI Detection Results</div>
-              <div style={{ fontSize: 12.5, color: "var(--fg-3)" }}>
-                {aiResult.flagged} / {aiResult.total} files flagged ({aiResult.pct.toFixed(1)}% likely AI-generated)
+            {scanMode !== "ai-detect" && (
+              <div className="field">
+                <label>Repo name</label>
+                <input className="inp" value={repoName} onChange={(e) => setRepoName(e.target.value)} placeholder="my-service" required />
+              </div>
+            )}
+            <div className="field">
+              <label>Scan type</label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginTop: 4 }}>
+                {([
+                  { mode: "full", title: "Full Scan", desc: "SAST + AI + all engines" },
+                  { mode: "iac", title: "IaC Scanner", desc: "Terraform, K8s, Dockerfile" },
+                  { mode: "sca", title: "SCA (Dependencies)", desc: "Known CVEs in deps" },
+                  { mode: "secrets", title: "Secrets Detector", desc: "API keys, tokens, passwords" },
+                  { mode: "ai-detect", title: "AI Code Detector", desc: "Detect LLM-generated code" },
+                ] as const).map(({ mode, title, desc }) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => { setScanMode(mode); setAiResult(null); }}
+                    style={{
+                      borderRadius: 8,
+                      padding: "10px 12px",
+                      textAlign: "left",
+                      background: scanMode === mode ? "var(--ai-bg)" : "transparent",
+                      border: `1px solid ${scanMode === mode ? "var(--ai-bdr)" : "var(--border-2)"}`,
+                      cursor: "pointer",
+                      transition: "background 0.15s",
+                    }}
+                  >
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--fg)", marginBottom: 2 }}>{title}</div>
+                    <div style={{ fontSize: 11.5, color: "var(--fg-4)" }}>{desc}</div>
+                  </button>
+                ))}
               </div>
             </div>
-          )}
-          {activeJobId && (
-            <div style={{ border: "1px solid var(--border-2)", borderRadius: 8, padding: 12 }}>
-              <ScanProgress jobId={activeJobId} onComplete={handleScanComplete} />
+            {aiResult && (
+              <div style={{ background: "rgba(16,185,129,0.08)", border: "1px solid var(--low-bdr)", borderRadius: 8, padding: "12px 14px" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--low-fg)", marginBottom: 4 }}>AI Detection Results</div>
+                <div style={{ fontSize: 12.5, color: "var(--fg-3)" }}>
+                  {aiResult.flagged} / {aiResult.total} files flagged ({aiResult.pct.toFixed(1)}% likely AI-generated)
+                </div>
+              </div>
+            )}
+            {activeJobId && (
+              <div style={{ border: "1px solid var(--border-2)", borderRadius: 8, padding: 12 }}>
+                <ScanProgress jobId={activeJobId} onComplete={handleScanComplete} />
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button type="button" className="btn-ghost" onClick={() => setShowScanDialog(false)}>Cancel</button>
+              <button type="submit" className="btn-prim" disabled={submitMutation.isPending || !!activeJobId}>
+                {submitMutation.isPending ? <span className="spinner" style={{ width: 14, height: 14 }} /> : <Play size={13} aria-hidden />}
+                Start Scan
+              </button>
             </div>
-          )}
-          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-            <button type="button" className="btn-ghost" onClick={() => setShowScanDialog(false)}>Cancel</button>
-            <button type="submit" className="btn-prim" disabled={submitMutation.isPending || !!activeJobId}>
-              {submitMutation.isPending ? <span className="spinner" style={{ width: 14, height: 14 }} /> : <Play size={13} aria-hidden />}
-              Start Scan
-            </button>
-          </div>
-        </form>
+          </form>
+        )}
+
+        {/* URL tab */}
+        {dialogTab === "url" && (
+          <form onSubmit={handleUrlScan} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div className="field">
+              <label>Repository URL</label>
+              <input
+                className="inp"
+                value={githubUrl}
+                onChange={(e) => setGithubUrl(e.target.value)}
+                placeholder="https://github.com/owner/repo"
+                required
+              />
+              <span style={{ fontSize: 11.5, color: "var(--fg-5)", marginTop: 4, display: "block" }}>
+                Public HTTPS URL from github.com, gitlab.com, or bitbucket.org
+              </span>
+            </div>
+            <div className="field">
+              <label>Label (optional)</label>
+              <input
+                className="inp"
+                value={githubName}
+                onChange={(e) => setGithubName(e.target.value)}
+                placeholder="Auto-derived from URL"
+              />
+            </div>
+            {urlResult && (
+              <div style={{ background: "rgba(16,185,129,0.08)", border: "1px solid var(--low-bdr)", borderRadius: 8, padding: "12px 14px" }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--low-fg)", marginBottom: 6 }}>
+                  Scan complete — {urlResult.repo_name}
+                </div>
+                <div style={{ display: "flex", gap: 16, fontSize: 12.5, color: "var(--fg-3)", flexWrap: "wrap" }}>
+                  <span>Run <strong>#{urlResult.run_id}</strong></span>
+                  <span style={{ color: "var(--high-fg)" }}>HIGH <strong>{urlResult.high_count}</strong></span>
+                  <span>MED <strong>{urlResult.medium_count}</strong></span>
+                  <span>LOW <strong>{urlResult.low_count}</strong></span>
+                  {urlResult.attestation_key_id && (
+                    <span style={{ color: "var(--purple)" }}>Attested</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="btn-prim"
+                  style={{ marginTop: 10, fontSize: 12 }}
+                  onClick={() => { setShowScanDialog(false); navigate(`/runs/${urlResult.run_id}`); }}
+                >
+                  View findings
+                </button>
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button type="button" className="btn-ghost" onClick={() => setShowScanDialog(false)}>Cancel</button>
+              <button type="submit" className="btn-prim" disabled={urlLoading}>
+                {urlLoading ? <span className="spinner" style={{ width: 14, height: 14 }} /> : <Globe size={13} aria-hidden />}
+                {urlLoading ? "Cloning & scanning…" : "Clone & Scan"}
+              </button>
+            </div>
+          </form>
+        )}
       </Dialog>
     </>
   );

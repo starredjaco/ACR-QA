@@ -148,7 +148,8 @@ class TestGetRuns:
         c, db = client
         db.get_recent_runs.return_value = []
         c.get("/v1/runs?limit=5")
-        db.get_recent_runs.assert_called_once_with(limit=5)
+        # hide_test=True by default → fetches limit*5 to survive filtering
+        db.get_recent_runs.assert_called_once_with(limit=25)
 
     def test_no_summary_defaults_to_zero(self, client):
         c, db = client

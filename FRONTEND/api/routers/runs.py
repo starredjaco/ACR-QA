@@ -18,17 +18,24 @@ from FRONTEND.api.models import FindingsListOut, RunsListOut
 router = APIRouter(prefix="/runs", tags=["runs"])
 
 
+_TEST_PREFIXES = ("test-", "test_", "bench-", "determinism-", "quick-refresh", "debug-")
+
+
 @router.get("", response_model=RunsListOut, summary="List recent analysis runs")
 async def list_runs(
     limit: int = Query(10, ge=1, le=100),
     status: str | None = Query(None, description="Filter by status: completed | running | failed"),
+    hide_test: bool = Query(True, description="Hide test-fixture and benchmark runs from results"),
     user: dict = Depends(get_current_user),
     db: Database = Depends(get_db),
 ):
-    runs = db.get_recent_runs(limit=limit * 3 if status else limit)
+    fetch = limit * 5 if (status or hide_test) else limit
+    runs = db.get_recent_runs(limit=fetch)
     if status:
         runs = [r for r in runs if r.get("status") == status]
-        runs = runs[:limit]
+    if hide_test:
+        runs = [r for r in runs if not any(r.get("repo_name", "").startswith(p) for p in _TEST_PREFIXES)]
+    runs = runs[:limit]
     out = []
     for run in runs:
         summary = db.get_run_summary(run["id"])
