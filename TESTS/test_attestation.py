@@ -267,6 +267,33 @@ class TestVerify:
         eng = AttestationEngine()
         assert eng.verify({}) is False
 
+    def test_cross_process_verify_with_different_engine_instance(self):
+        """A bundle signed by one engine (e.g. the CLI) must verify in a fresh engine
+        (e.g. the API server) that holds a different ephemeral key. Regression: verify
+        used to use the verifier's own key, so cross-process verification always failed.
+        """
+        from CORE.engines.attestation import AttestationEngine, build_attestation
+
+        signer = AttestationEngine()
+        bundle = signer.sign(build_attestation(7, {"repo_name": "demo"}))
+        verifier = AttestationEngine()  # different ephemeral key
+        assert verifier.verify(bundle) is True
+
+    def test_cross_process_tamper_still_detected(self):
+        from CORE.engines.attestation import AttestationEngine, build_attestation
+
+        signer = AttestationEngine()
+        bundle = signer.sign(build_attestation(7, {"repo_name": "demo"}))
+        bundle["attestation"]["predicate"]["findings_count"] = 9999
+        verifier = AttestationEngine()
+        assert verifier.verify(bundle) is False
+
+    def test_ecdsa_signature_embeds_public_key(self):
+        eng, bundle = self._signed_bundle()
+        ecdsa = next(s for s in bundle["signatures"] if s["algorithm"] == "ECDSA-P256")
+        assert "public_key" in ecdsa
+        assert "BEGIN PUBLIC KEY" in ecdsa["public_key"]
+
 
 # ---------------------------------------------------------------------------
 # AttestationEngine.attest_scan

@@ -148,7 +148,18 @@ class AttestationEngine:
                 continue
             try:
                 sig_bytes = bytes.fromhex(sig_entry["signature"])
-                self._key.public_key().verify(sig_bytes, payload, ec.ECDSA(hashes.SHA256()))
+                # Prefer the public key embedded in the bundle (self-verifiable across
+                # processes); fall back to this engine's key for legacy bundles signed by
+                # the same stable ACRQA_SIGNING_KEY.
+                pem = sig_entry.get("public_key")
+                if pem:
+                    loaded = serialization.load_pem_public_key(pem.encode())
+                    if not isinstance(loaded, ec.EllipticCurvePublicKey):
+                        return False
+                    pub = loaded
+                else:
+                    pub = self._key.public_key()
+                pub.verify(sig_bytes, payload, ec.ECDSA(hashes.SHA256()))
                 return True
             except (ValueError, TypeError, cryptography.exceptions.InvalidSignature):
                 return False
@@ -203,6 +214,12 @@ class AttestationEngine:
             "algorithm": "ECDSA-P256",
             "signature": sig.hex(),
             "key_id": self._kid,
+            # Embed the signing public key so the bundle is self-verifiable across
+            # processes. Without a stable ACRQA_SIGNING_KEY each process gets a fresh
+            # ephemeral key, so the API (verifier) could never verify a signature the
+            # CLI (signer) made. The key_id ties the key to its identity; tamper-evidence
+            # holds because altering the payload invalidates the signature.
+            "public_key": self.public_key_pem(),
         }
 
     def _sign_dilithium3(self, payload: bytes) -> dict | None:
