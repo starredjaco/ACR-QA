@@ -19,8 +19,8 @@
 > out — and then you miss the real fire. That is where software security is today: scanners raise so
 > many false alarms that developers stop listening, and real vulnerabilities slip through.
 >
-> And it's getting worse, fast. In 2026, AI writes a growing share of our code — and AI-written code
-> carries about **twice** the security flaws. More alarms, less trust, more real fires.
+> And it's getting worse, fast. In 2026, AI writes a growing share of our code — and **nearly half of
+> AI-written code ships with a known security flaw.** More alarms, less trust, more real fires.
 >
 > Every tool on the market competes on finding *more* problems. But finding is cheap now — an AI can
 > find thousands. I realised the question nobody actually answers is simpler: *is this one real?*
@@ -97,6 +97,98 @@ one-line rebuttal.
 | **"36 engines" vs "19 engines"** | "Two counting levels: **36 total engine modules** across 7 layers; of those, **~19 are detection engines** that produce findings. Not a contradiction — the rest verify, attest, explain, and prioritise." |
 | **"52 endpoints" vs the raw route count** | "52 is the logical `/v1/` API surface. The raw decorator count is higher because it includes health checks, multiple HTTP methods per path, and sub-routers." |
 | **Exploit verification is 13 categories, not all CWEs** | "By design — it covers the high-value, dynamically-detonatable classes (injection, SSTI, path traversal…). Not every CWE *can* be fired in a sandbox; for those, the Confirmed Tier's static gates still apply." |
+
+---
+
+## 🔒 Category 0 — Trust & Skepticism (the "why might you be lying?" questions)
+
+> These are the questions a sharp, *suspicious* judge asks. The meta-strategy: **don't get
+> defensive — agree it's the right question, then show the mechanism that makes lying impossible.**
+> Lead plain-English, every time.
+
+### T1. "You keep showing different numbers for the Confirmed Tier — 96%, 25%, 100%, 55, 4. Which is the real one? Are you cherry-picking?" ⚠️ HIGH RISK — THEY WILL ASK THIS
+
+**Plain-English first:** "They're all real, and they measure *different things* — like a car's
+0–60 time, its top speed, and its fuel economy. One car, three honest numbers. Let me separate them."
+
+Then the structure — **one scan, two settings, three difficulty levels:**
+
+1. **Two operating settings on the same scan.**
+   - *Full output* (loose, for a developer triaging) — high recall, ~55% precision. Noisy on purpose.
+   - *Confirmed Tier* (strict, for auto-blocking a merge) — **96.4% precision.** This is the headline.
+   - These are two points on ONE precision-recall curve. You pick the setting for the job.
+
+2. **Three difficulty levels for *recall* (did I catch them all?):**
+   - **91%** on SecurityEval — isolated synthetic snippets (easy, measures algorithmic soundness).
+   - **~48%** on RealVuln's *detectable subset* (medium — the bugs static analysis *can* find).
+   - **25.1%** on the *full* RealVuln corpus (hard — includes the ~33% of bugs, like auth logic and
+     IDOR, that **no** static tool can detect, proven by Rice's theorem).
+
+3. **55 vs 4 is corpus size, not contradiction.** 55 = Confirmed Tier across the **whole benchmark**
+   (many apps). 4 = the **one** payments-api app in the live demo. Same filter, smaller input.
+
+**The kill line:** *"I publish all of them, each labelled with its exact corpus — including 25% and
+75% FPR. Cherry-picking is showing only the flattering number. I do the opposite: I lead with the ugly one."*
+
+---
+
+### T2. "How do I know you're not lying? You built this, you ran the tests, you wrote the numbers. Why should I believe any of it?" ⚠️ HIGH RISK
+
+**Plain-English first:** "That's exactly the right question — and it's the question my whole system
+is built to answer. I designed it so that *I can't* fudge the results, even if I wanted to. Five
+independent reasons:"
+
+1. **Cryptographic signatures.** Every scan is ECDSA-signed and logged to a public transparency log.
+   I can't quietly change a result after the fact — the signature breaks and anyone can check. *(This
+   is why the attestation feature exists — it's the answer to this exact question.)*
+
+2. **Pre-registration with git timestamps.** For the CVE test, I committed which bugs I expected to
+   catch *before* running anything. The git history is timestamped — you can verify I didn't pick the
+   questions after seeing the answers. *Like sealing a prediction in an envelope.*
+
+3. **It's open source.** The reachability engine is 190 lines you can read in five minutes. The eval
+   harness is in the repo. Don't trust my summary — run it yourself.
+
+4. **Exploit detonation — you watch it happen.** In the demo I don't *tell* you the bug is real, the
+   sandbox *fires the attack live* in front of you. You see the break-in, you don't take my word.
+
+5. **I volunteer the ugly numbers.** 25% real-world recall. 75% raw false-positive rate. Single
+   annotator. I lead with these. *A person fabricating results hides the bad ones — I open with them.*
+
+**The kill line:** *"A liar optimises for looking good. Every design choice here optimises for being
+*checkable* — signed, pre-registered, open, and demonstrated live. You don't have to trust me; you
+can verify me."*
+
+---
+
+### T3. "Your funnel slide says 55 confirmed findings, but the live demo only showed 4. That looks inconsistent." ⚠️ (pre-empt this on slide 9!)
+
+"Good catch — and they're two different things. The **55** is the Confirmed Tier across my **entire
+benchmark evaluation** — dozens of vulnerable apps with known ground truth. The **4** is from
+**one** app, the payments-api in the live demo. Same exact filter, much smaller input — one small
+app produces a handful of confirmed findings; the whole benchmark produces 55. I actually call this
+out on the funnel slide *before* the demo so it's clear they're different corpora." *(If you said the
+pre-empt line on slide 9, this question never gets asked hostilely.)*
+
+---
+
+### T4. "These are your own benchmarks. Why not a standard, third-party one?"
+
+"I use both. The standard ones: OWASP Benchmark methodology, SecurityEval (NeurIPS-cited), and the
+2026 RealVuln leaderboard — third-party ground truth I don't control. On RealVuln I score 25.1%,
+independently beating Semgrep (17.5%) and SonarQube (6.5%) under identical strict matching. My *own*
+labelled repos exist only because measuring recall *requires* ground truth, and for novel categories
+no public ground truth exists yet. The third-party numbers are the ones I'd stake the claim on."
+
+---
+
+### T5. "Isn't 96.4% precision just because you tested on easy, obviously-vulnerable code?"
+
+"No — and the design prevents that. The Confirmed Tier requires an **external** Bandit HIGH-confidence
+agreement as one of its four gates. That gate is *non-tautological*: it's a different tool that I
+didn't tune to my benchmark. The 96.4% comes with a 95% confidence interval [90.9%, 100%] computed
+with Wilson bounds, on findings that passed four independent filters. If anything, the gates make the
+test *harder* to pass, not easier."
 
 ---
 
@@ -244,7 +336,7 @@ Copilot review had a 22% hallucination rate in the 2024 audit. It has no recall 
 
 ## Category 5 — Test Suite
 
-### Q23. "2,805 tests — where did they come from? Did you write them all?"
+### Q23. "3,247 tests — where did they come from? Did you write them all?"
 
 Yes. Starting from Phase 1's ~30 happy-path tests, I wrote them iteratively alongside each feature. Categories: unit tests per engine, database integration tests, FastAPI endpoint tests (including auth, rate limiting, SSE), chaos engineering (Postgres/Redis failure injection), supply chain (pip-audit/npm-audit mocked), WCAG accessibility (axe-core), and property-based tests using Hypothesis. The test count is not padding — each test class is in a separate file with a specific failure scenario.
 
@@ -352,7 +444,7 @@ Two things. First, I'd add Java support earlier — Go coverage gave +28.8pp aga
 
 ### Q39. "What is CI/CD?"
 
-Continuous Integration / Continuous Deployment. Every git push triggers GitHub Actions (free for open source): linting, type checking, and all 2,805 tests run automatically. If any test fails, the push is blocked from `main`. This means every commit to `main` has passed 2,805 tests — no manual testing required. The green checkmarks in the Actions tab are the proof.
+Continuous Integration / Continuous Deployment. Every git push triggers GitHub Actions (free for open source): linting, type checking, and all 3,247 tests run automatically. If any test fails, the push is blocked from `main`. This means every commit to `main` has passed 3,247 tests — no manual testing required. The green checkmarks in the Actions tab are the proof.
 
 ---
 
@@ -425,10 +517,10 @@ It's the expected behavior of a recall-first tool. The full output maximizes rec
 | Metric | Value |
 |--------|------:|
 | Version | v5.0.0rc2 |
-| Python tests | 2,954 |
-| TypeScript tests | 63 |
-| Total tests | **3,017** |
-| CORE coverage | **87.5%** |
+| Python tests | 3,137 |
+| TypeScript tests | 110 |
+| Total tests | **3,247** |
+| CORE coverage | **88%** |
 | API endpoints | **52** |
 | Alembic migrations | 20 |
 | Eval corpus | **13 repos, 4 languages** |
@@ -498,7 +590,7 @@ application is the first external validation step.
 
 ### S5. "You're a solo student. What happens when you graduate?"
 
-Solo founder shipping a 12,000-LOC, 3,017-test, fully-attested security platform in a thesis is
+Solo founder shipping a 12,000-LOC, 3,247-test, fully-attested security platform in a thesis is
 a different signal than "grad student hobby project." The precedent: Socket ($4.6B ARR trajectory)
 was a solo project by Feross Aboukhadijeh. The advantage of solo is zero burn — the product reached
 feature parity with funded tools at $0. Phase 5 recruits one industry security advisor and targets

@@ -137,12 +137,13 @@ def hook_slide(prs):
     _run(tf.paragraphs[0], "AI now writes a third of new code.", 40, WHITE, bold=True)
     p = tf.add_paragraph()
     p.space_before = Pt(16)
-    _run(p, "It also writes ", 26, RGBColor(0xC8, 0xD2, 0xE0))
-    _run(p, "1.88× more vulnerabilities", 26, GOLD, bold=True)
-    _run(p, " than humans —", 26, RGBColor(0xC8, 0xD2, 0xE0))
+    _run(p, "And ", 26, RGBColor(0xC8, 0xD2, 0xE0))
+    _run(p, "45% of AI-written code ships a known flaw", 26, GOLD, bold=True)
+    _run(p, " (Veracode '25) —", 26, RGBColor(0xC8, 0xD2, 0xE0))
     p = tf.add_paragraph()
-    _run(p, "and vulnerabilities per codebase jumped ", 26, RGBColor(0xC8, 0xD2, 0xE0))
-    _run(p, "+107% in a year.", 26, GOLD, bold=True)
+    _run(p, "while vulnerabilities per codebase jumped ", 26, RGBColor(0xC8, 0xD2, 0xE0))
+    _run(p, "+107% in a year", 26, GOLD, bold=True)
+    _run(p, " (Black Duck OSSRA '26).", 26, RGBColor(0xC8, 0xD2, 0xE0))
     p = tf.add_paragraph()
     p.space_before = Pt(28)
     _run(p, "Your scanner flags 1,900 issues. Which one breaches you?", 30, WHITE, bold=True)
@@ -297,7 +298,7 @@ def eval_table_slide(prs):
         ("Head-to-head F1", "98.2%  vs Semgrep 45.7% / Bandit 21.8%"),
         ("OWASP Top 10 coverage", "9 / 10 categories"),
         ("RealVuln 2026 leaderboard", "25.1% — beats Semgrep, Snyk, SonarQube"),
-        ("Test suite / CORE coverage", "3,017 tests · 88%"),
+        ("Test suite / CORE coverage", "3,247 tests · 88%"),
     ]
     tbl = s.shapes.add_table(len(rows) + 1, 2, Inches(0.7), Inches(1.95), Inches(12.0), Inches(4.6)).table
     tbl.columns[0].width = Inches(6.8)
@@ -491,8 +492,8 @@ def build():
         "Why this is worth solving now",
         [
             ("$10–50k", "per year for enterprise SAST"),
-            ("+107%", "vulns per codebase, YoY"),
-            ("1.88×", "more flaws in AI-written code"),
+            ("+107%", "open-source vulns / codebase, 2024 (Black Duck OSSRA)"),
+            ("45%", "of AI-written code ships a flaw (Veracode '25)"),
             ("$0", "ACR-QA, self-hosted"),
         ],
         dark=True,
@@ -576,7 +577,7 @@ def build():
         [
             B("19 analysis engines across detection, scoring, RAG, reachability, taint, attestation", 0, True, NAVY),
             B("52-endpoint FastAPI service + React 18 / TypeScript dashboard (live SSE progress)"),
-            B("3,017 tests · 88% CORE coverage; Docker Compose, Helm, Terraform, K8s operator"),
+            B("3,247 tests (3,137 Python + 110 TS) · 88% CORE coverage; Docker Compose, Helm, Terraform"),
             B("Exploit verification across 13 categories; CBoM with NIST PQC classification"),
             B("Shipped as acrqa==5.0.0rc2 — self-hosted, zero recurring cost", 0, True, GREEN),
         ],

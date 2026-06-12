@@ -1,260 +1,344 @@
-# ACR-QA — Full Speaker Script (Slides 1–20)
+# ACR-QA — Defense Speaker Script (with plain-English side notes)
 
-15 minutes total. ~45 seconds per slide. **Bold = key phrases to land clearly.** Calm pace;
-let the slide sit for 3 seconds before you speak — let the audience read the headline.
+**Maps 1:1 to `docs/ACR-QA_Defense.pptx` (20 slides).** Target: **12–15 minutes** of talking +
+**5 minutes** live demo. ~40 seconds per slide.
 
----
+**How to read this doc:**
+- **SAY** = what you say, near-word-for-word. **Bold** = phrases to land slowly and clearly.
+- **SIDE** = the plain-English meaning of every number/term on that slide — for the non-technical
+  judge, and so *you* can answer "what does that mean?" instantly. This is your safety net.
 
-## Slide 1 — Title / Cover
-
-> "Good morning. My name is Ahmed and my project is ACR-QA — an automated code-review and
-> quality assurance platform for detecting real vulnerabilities in real code. Over the next
-> 15 minutes I'm going to show you why most security scanners produce noise, what we built
-> instead, and why it's ready to ship."
-
-*(Pause. Click.)*
-
----
-
-## Slide 2 — The Hook ("AI-written code, 1.88× more vulnerabilities")
-
-> "Here's the problem. AI now generates a third of new code in enterprise teams. Researchers at
-> Stanford found that code — even AI code — carries **1.88 times more security vulnerabilities**
-> than code written by experienced developers alone. That's a 107% jump year-on-year in reported
-> CVEs. Most teams respond by running a scanner — and that scanner returns hundreds of alerts,
-> most of which are noise. So developers learn to ignore the scanner. Which one breaches you?
-> Nobody knows."
-
-*(Pause. Click.)*
+> **The golden rule for a mixed room:** every answer's *first sentence* needs zero background.
+> Lead plain-English, then add the technical depth. The numbers below are all reconciled — the
+> same figure means the same thing on every slide, in the demo, and in Q&A. (See the
+> "Number consistency" box at the end — memorise it; it's how you survive "are you making this up?")
 
 ---
 
-## Slide 3 — Problem: The Noise Tax
+## Slide 1 — Title
 
-> "This is the actual problem. It's not that scanners miss bugs — it's that they produce so
-> many alerts that **the signal drowns in the noise**. A team I interviewed was ignoring their
-> scanner after it hit a 70% false-positive rate. The cost isn't just wasted time; it's the one
-> real vulnerability that got buried under 500 false ones. That's the noise tax — and every
-> team pays it."
+**SAY:** "Good morning. I'm Ahmed. My project is **ACR-QA** — an automated code-review platform
+that doesn't just *find* security bugs, it *proves* which ones are real. Over the next fifteen
+minutes I'll show you the problem, what I built, the results, and a live demo where you'll watch
+it attack a real vulnerability and then prove the fix holds."
 
-*(Click.)*
-
----
-
-## Slide 4 — ACR-QA: The One-Line Answer
-
-> "ACR-QA's answer is not 'a better scanner.' It's a **trust layer on top of detection**. We don't
-> just flag a vulnerability — we verify it is real, grade its trustworthiness, and sign the result.
-> The headline number is **96.4% precision** on the Confirmed Tier — meaning fewer than 4 in 100
-> confirmed findings are false positives. That's high enough to **automatically block a merge**
-> without a human review."
-
-*(Click.)*
+**SIDE:** *Set the frame: this is a "trust" tool, not "another scanner." Say the word "prove"
+twice — it's the whole thesis. Don't rush; let them read the title.*
 
 ---
 
-## Slide 5 — Market Reality (Stat Cards)
+## Slide 2 — The Hook
 
-> "The market context: enterprise static analysis tools cost between ten and fifty thousand
-> dollars per year. ACR-QA is **fully self-hosted, open-source, zero licence cost**. The
-> regulatory wind is in our favour — the EU Cyber Resilience Act and SLSA supply-chain
-> requirements are now mandatory; ACR-QA already produces **SLSA-grade signed attestations**.
-> We're not building for the market that exists — we're building for the market that's arriving."
+**SAY:** "AI now writes about a third of new code. But **45% of AI-written code ships with a known
+security flaw** — that's Veracode's 2025 study. And the number of vulnerabilities in a typical
+codebase **jumped 107% in a single year** — Black Duck's 2026 report. So your scanner now flags
+nineteen hundred issues per project. **Which one breaches you?** Nobody can review that — so teams
+either ship blind, or pay fifty thousand a year and *still* don't trust the output."
 
-*(Click.)*
-
----
-
-## Slide 6 — Core Innovations (What Makes It Different)
-
-> "Three innovations, not features. First: the **Confirmed Tier** — a four-gate filter that
-> elevates only findings that are high-severity, match a curated rule set, sit in production code
-> paths, and are confirmed by Bandit at high confidence. Second: **exploit verification** — we
-> actually fire a safe payload in a Docker sandbox and confirm the vulnerability detonates. Third:
-> **cryptographic attestation** — every scan is signed with ECDSA-P256 plus a post-quantum
-> Dilithium3 signature, so the result is tamper-evident and auditable."
-
-*(Click.)*
+**SIDE:**
+- *45% (Veracode 2025 GenAI report)* = "almost half of the code AI writes has a hole in it."
+- *+107% (Black Duck OSSRA 2026)* = "the pile of alerts doubled in one year."
+- **If asked "source?":** name Veracode 2025 and Black Duck OSSRA 2026 — both are in your presenter
+  notes. *These are the two numbers you must be able to source on demand — they anchor the sell.*
+- Takeaway for the non-technical judge: "more code, more holes, more noise, less trust."
 
 ---
 
-## Slide 7 — Architecture (Pipeline Diagram)
+## Slide 3 — Outline
 
-> "The pipeline: a CLI or GitHub Action triggers the analysis. Six tools run **in parallel** —
-> Ruff, Semgrep, Bandit, Vulture, Radon, JSCPD. Every tool output is normalised into a single
-> schema — the CanonicalFinding — so no downstream engine sees raw tool noise. The taint
-> analyser traces data flows; the quality gate enforces thresholds; the AI explanation engine
-> grounds its output in a retrieval corpus. All results land in PostgreSQL, served by a FastAPI
-> layer, displayed in a React dashboard with live scan progress over SSE."
+**SAY:** "Here's the path: the problem and the market, the solution and its core ideas, the
+architecture, then the part that matters most — **how we go from noise to trust** — the results,
+a live demo, and where this sits competitively."
 
-*(Click.)*
+**SIDE:** *Ten seconds. Point at "Evaluation" and "Live demo" (the green ones) — "those two are
+where I'd focus your attention." Then move on.*
 
 ---
 
-## Slide 8 — The Confirmed Tier (Four Gates)
+## Slide 4 — The Problem
 
-> "The Confirmed Tier in detail. Gate one: **severity HIGH** only. Gate two: rule must be in
-> our **curated 22-rule set** — not every rule Semgrep knows, only the ones we've validated.
-> Gate three: the file must be in a **production code path** — not tests, not fixtures, not
-> vendored code. Gate four: **Bandit must agree** at HIGH confidence. All four gates must pass.
-> On the payments-api demo scan: **1,942 raw tool outputs → 219 unique findings → 151 high-severity
-> → 55 Confirmed Tier**. That's the funnel. The 55 are real."
+**SAY:** "Three reasons teams can't trust automated review today. **One — quality variance:** a
+human reviewer is inconsistent; the SQL injection on line 47 slips through on the fiftieth pull
+request of the day. **Two — cost:** enterprise tools are ten to fifty thousand a year, so
+universities and startups run a basic linter or nothing. **Three — hallucination:** AI explainers
+invent confident, wrong advice; a developer gets burned once and never trusts the tool again."
 
-*(Click.)*
-
----
-
-## Slide 9 — Confirmed Tier Funnel (Visual)
-
-> "This is that funnel visually. Each bar is a gate. You can see the dramatic narrowing —
-> 1,942 down to 55. The green bar is what auto-blocks. The question a committee always asks
-> is: 'do you miss real bugs by being this strict?' Yes — recall is 25.1% on our holdout
-> corpus. We made a conscious trade: **high precision now, progressive recall later**. A
-> finding you're confident in is worth more than ten you're guessing about."
-
-*(Click.)*
+**SIDE:**
+- *"Hallucination"* for a non-technical judge = "the AI makes things up and says them confidently."
+- This slide is the *enemy*. Each card is a problem ACR-QA later kills: variance → automation;
+  cost → $0 self-hosted; hallucination → RAG grounding. You'll call back to these.
 
 ---
 
-## Slide 10 — Evaluation Results (Table)
+## Slide 5 — The Market Reality
 
-> "The evaluation. Across three datasets — RealVuln, our curated holdout, and the X6 zero-FP
-> package set — the numbers hold. Confirmed Tier precision: **96.4%**. CVE recall on RealVuln:
-> **25.1%, beating Semgrep at 17.5%**. And on six mature open-source libraries — numpy, pandas,
-> pydantic, requests, httpx, SQLAlchemy — the high-severity false-positive rate is **0.0%**.
-> The scanner stays quiet on clean code."
+**SAY:** "The same story as numbers. Enterprise scanners: **ten to fifty thousand dollars a year.**
+Vulnerabilities per codebase: **up 107%.** AI-written code shipping a flaw: **45%.** ACR-QA:
+**zero** — self-hosted, no licence, your data never leaves your machine."
 
-*(Click.)*
-
----
-
-## Slide 11 — Three Proofs (Trust / Detonation / Attestation)
-
-> "We made three claims. Here's the evidence for each. Trust: 96.4% precision on an independent
-> holdout — not our training set. Detonation: five Docker exploit tests, all passing — SQL
-> injection confirmed exploitable, safe code confirmed un-exploitable, SQL injection confirmed
-> closed after remediation. Attestation: every bundle carries an embedded public key; a fresh
-> process can verify a signature it didn't create — cross-process verification tested and green."
-
-*(Click.)*
+**SIDE:**
+- This is the "**why now, why pay attention**" slide. The contrast is the sell: the risk is
+  *rising* (107%, 45%) while the fix is *expensive* ($10–50k) — except mine is **$0**.
+- *$0 doesn't mean "cheap and worse" — say "self-hosted," which to a technical judge means
+  "no data leaves, no subscription," a real enterprise selling point (privacy + cost).*
 
 ---
 
-## Slide 12 — RAG Explanation Engine
+## Slide 6 — The Solution: ACR-QA
 
-> "One thing that sets this apart from a lint tool: the AI explanation is **grounded**. When
-> ACR-QA explains a finding, it retrieves the relevant section of its knowledge base — OWASP
-> descriptions, CWE mappings, rule rationales — and cites them. It doesn't guess. A hallucinated
-> explanation would be worse than no explanation; a grounded one is an educational asset the
-> developer actually reads."
+**SAY:** "ACR-QA is a **trust layer that sits on top of your existing scanners**. At merge time it
+answers one question: *is this finding real enough to block automatically?* Four ideas make that
+work. It uses **RAG-grounded AI** — the explanation cites the actual rule instead of guessing. It
+has a **Confirmed Tier** — a strict filter that's 96.4% precise, accurate enough to auto-block. It
+**verifies exploits** — it detonates a real attack in a sandbox, so it's proven, not claimed. And
+every scan is **cryptographically signed** — tamper-proof and auditable. All of it on-premises, at
+zero recurring cost."
 
-*(Click.)*
-
----
-
-## Slide 13 — OWASP Compliance View
-
-> "The compliance view maps every finding to an OWASP Top 10 category. Here you see the live
-> OWASP heatmap for the payments-api run — A02 Cryptographic Failures, A03 Injection, A08
-> Software Integrity, A09 Logging. The score is calculated from the categories that pass clean.
-> This is the report a security audit team asks for. It comes out of the box, automatically,
-> for every scan."
-
-*(Click.)*
+**SIDE:**
+- *RAG* = "before the AI explains, I hand it the official rule text, so it can only rephrase facts,
+  not invent them." Analogy: *open-book exam — it can't make up an answer.*
+- *Confirmed Tier* = "the small set of findings I'm so sure about, the system can block the code by
+  itself." *96.4% precise = "out of 100 it flags here, ~96 are real bugs."*
+- *Exploit verification* = "it actually breaks in, to prove the bug is real." Analogy: *a locksmith
+  who picks the lock to prove it's pickable — not a guess.*
+- *Attestation/signed* = "a tamper-proof receipt, like a notary stamp, so nobody can fake the result later."
 
 ---
 
-## Slide 14 — Live Dashboard Screenshot (Overview)
+## Slide 7 — Live Dashboard (Overview screenshot)
 
-> "This is the actual running dashboard — not a mockup. The fleet shows real production open-source
-> repos alongside our three demo apps. The Trust Layer banner at the top is live — precision,
-> recall, F1, self-scan result. The Confirmed Tier tile fetches from the API in real time.
-> Everything you see here is data from a real scan, stored in a real database, served by a real
-> API."
+**SAY:** "This is the real running dashboard — not a mockup. It's already scanned a fleet of
+projects, including open-source libraries you'll recognise: **requests, httpx, FastAPI, Flask.**
+The green banner across the top shows the live trust metrics. This is the actual product; you'll
+see it live in a few minutes."
 
-*(Click.)*
-
----
-
-## Slide 15 — Attestation Screenshot ("Signature Verified")
-
-> "And here — the attestation tab. After every scan, the system generates a signed bundle: ECDSA
-> primary signature plus a post-quantum Dilithium3 signature. The green badge says
-> **'Signature Verified'**. You can take that JSON, run it through the verify script, and
-> independently confirm this exact scan, with these exact counts, happened at this exact time.
-> That's compliance-grade provenance — for free, self-hosted."
-
-*(Click.)*
+**SIDE:**
+- *Stress "real, not a mockup" — committees assume student demos are faked.* The famous repo names
+  (requests/FastAPI) are your credibility: "I ran it on code the whole industry uses."
+- If they ask "is the data real?" → "Yes — real tools, real findings, on real open-source code."
 
 ---
 
-## Slide 16 — Competitive Matrix
+## Slide 8 — System Architecture
 
-> "How does this compare? Semgrep: strong recall, no exploit verification, no attestation, SaaS
-> pricing. Snyk: excellent dependency scanning, weak SAST, enterprise pricing, no exploit verification.
-> SonarQube: broad language support, high false-positive rate, on-prem licence cost.
-> ACR-QA: the only tool in this comparison with **exploit verification, SLSA attestation, and a
-> $0 licence cost**. The trust wedge is the moat."
+**SAY:** "End to end: a push triggers a webhook, we pull the changed code, and queue it. The
+detection layer runs **six tools in parallel** — Ruff, Semgrep, Bandit and others. Every tool's
+output is normalised into **one common format** so nothing downstream sees raw tool noise. Then the
+trust gates: confidence scoring, reachability, taint tracking, the Confirmed Tier, and exploit
+verification. The AI retrieves the rule and explains it. Everything is stored, signed, and posted
+back as PR comments. **Thirty to ninety seconds per pull request.**"
 
-*(Click.)*
-
----
-
-## Slide 17 — Current Implementation Status
-
-> "Where are we today? 3,063 tests passing — unit, integration, and exploit. CORE coverage at 88%.
-> The pipeline runs end-to-end on Python, JavaScript, and Go repos. The API, dashboard, and CLI
-> are all production-grade. Docker exploit suite: 5/5 passing. PyPI wheel built. The only thing
-> between this and a public release is the PyPI upload and a CSAF/VEX advisory stream — both
-> straightforward."
-
-*(Click.)*
+**SIDE:**
+- *"Normalise into one format"* = "different tools speak different languages; I translate them all
+  into one, so I can reason about them together." (This is the `CanonicalFinding` — the engineering
+  backbone. A technical judge will respect this.)
+- *"In parallel"* = fast; *"taint tracking"* = "following the user's input to see if it reaches a
+  dangerous place." Analogy: *tracing a dye through pipes to see where it ends up.*
+- Don't read all six tool names slowly — group them: "six analyzers at once."
 
 ---
 
-## Slide 18 — The Ask ("What ACR-QA Delivers")
+## Slide 9 — The Precision Funnel  ⭐ (the heart — and the slide most likely to trip you)
 
-> "What I'm leaving you with: **Trust** — a precision high enough to auto-block without human
-> review. **Proof** — we don't claim a vulnerability, we detonate it. **Reach** — real recall
-> on production CVEs, beating the industry baseline. **Price** — zero. Every one of those is
-> a concrete, measurable claim. The thesis documents the methodology, the evaluation, and the
-> system design. The code is running right now on this machine."
+**SAY:** "This is the core idea, measured on our **full benchmark evaluation**. The tools produced
+**1,942 raw findings** — and at that level only about 9% are real; that's the noise everyone drowns
+in. We filter by severity, then by a curated security rule set, then a taint gate — and we land on
+**55 findings in the Confirmed Tier, at 96.4% precision**, with **100% of the known CVEs still
+caught** at every step. That's the whole thesis in one picture: **we throw away the noise without
+throwing away the real bugs.**"
 
-*(Click.)*
+**SIDE — READ THIS, it's the trap:**
+- **These 1,942 → 55 numbers are the EVALUATION CORPUS** (many vulnerable apps with known answers).
+  **They are NOT the payments-api you'll demo live.** In two slides the live demo shows a *single*
+  repo with **4** confirmed findings — a small number *because it's one small app.* **Pre-empt it:**
+  say *"the funnel is the full benchmark; the live scan you'll see is just one repo, so its confirmed
+  count is small."* If you don't say this and a judge sees 55 here and 4 there, it looks like a lie.
+- *96.4% precision* = "96 of every 100 it confirms are real." *100% CVE recall* = "of the known
+  planted bugs, it missed none." *Two different things — precision is 'am I right when I flag?',
+  recall is 'did I catch them all?'* (You'll get asked the difference — that's the one-liner.)
+
+---
+
+## Slide 10 — Evaluation & Results
+
+**SAY:** "The numbers behind that. Confirmed-Tier precision: **96.4%**, with a confidence interval.
+Pre-registered CVE recall: **100% — eight of eight detectable.** Head-to-head F1 score: **98%,
+versus Semgrep at 46 and Bandit at 22** on the same repos. **Nine of ten** OWASP categories. And on
+the 2026 RealVuln real-world benchmark we score **25.1% — beating Semgrep, Snyk, and SonarQube.**"
+
+**SIDE:**
+- *"Pre-registered"* = "I wrote down which bugs I expected to catch *before* I ran the test, and
+  committed it to version control with a timestamp — so I can't be accused of picking the questions
+  after seeing the answers." Analogy: *sealing your prediction in an envelope first.*
+- **The 25.1% looks low — own it before they pounce:** "On messy real-world code everybody scores
+  low because a third of real bugs can't be caught by *any* static tool. 25% still beats every
+  traditional scanner on this benchmark; Semgrep gets 17.5%, SonarQube 6.5%." *Leading with the
+  unflattering number is your credibility move.*
+- *F1* = "a combined score of being both accurate and thorough." Higher = better.
+
+---
+
+## Slide 11 — Why You Can Trust the Numbers
+
+**SAY:** "Three reasons to trust all this. **One — I separated detection from trust:** most tools
+emit 30 to 70% false positives; the Confirmed Tier hits 96.4%. **Two — I don't *claim* a
+vulnerability, I *detonate* it:** real payloads in a sandbox — `OR 1=1` for SQL injection, `{{7×7}}`
+returning 49 for template injection — and I verified that safe code correctly does *not* fire.
+**Three — every result is signed:** ECDSA plus a public transparency log; an auditor verifies the
+exact scan in one command."
+
+**SIDE:**
+- This slide directly answers "**how do I know you're not lying?**" — every item is a mechanism that
+  makes lying *impossible*, not a promise. Say that out loud if it fits: "I built it so I *can't*
+  fudge the numbers."
+- *"safe code correctly does NOT fire"* is the subtle, important one: "it doesn't just cry wolf —
+  I proved that on clean code it stays silent."
+- *Transparency log / Rekor* = "a public ledger; once it's written, it can't be quietly changed."
+
+---
+
+## Slide 12 — Live Demo (section divider)
+
+**SAY:** "Let me show you instead of telling you. Real repo, real finding, real exploit — and a
+signed receipt at the end."
+
+**SIDE:** *Breathe. Switch to the dashboard/terminal. Follow `docs/DEFENSE_DEMO_SCRIPT.md` for the
+5-minute flow. If anything breaks, fall back to the pre-seeded run — the script has recovery lines.
+The three screenshots on the next slides are your backup if the live demo dies entirely.*
+
+---
+
+## Slide 13 — Run Detail: payments-api (screenshot)
+
+**SAY:** "This is a single real scan — a sample backend called payments-api. **64 findings, 13
+high-severity**, including a genuine SQL injection, an unsafe `eval`, and hardcoded secrets. Every
+finding carries its rule, severity, and a confidence score, and the tabs expose compliance,
+attestation, and risk."
+
+**SIDE:**
+- *This is the "one repo" from the funnel warning.* 64 findings / 13 HIGH / **4 Confirmed Tier** —
+  small confirmed count *because it's one small app*, exactly as you flagged on slide 9. Consistent.
+- If asked "why only 4 confirmed when the funnel said 55?" → "55 was across the whole benchmark of
+  many apps; this is one app. Same filter, smaller input."
+
+---
+
+## Slide 14 — OWASP Top 10 Coverage (screenshot)
+
+**SAY:** "Every finding maps to an OWASP Top 10 category — the industry's standard risk checklist.
+Here, real per-category counts for this scan: injection, cryptographic failures, and so on. And the
+flip side: on mature libraries like **numpy and pandas, ACR-QA reports zero high-severity findings —
+a 0.0% false-positive rate.** On clean code, it stays quiet."
+
+**SIDE:**
+- *OWASP Top 10* = "the universally agreed list of the ten most common web security risks." Auditors
+  ask for this by name.
+- *0.0% FP on numpy/pandas* = "I pointed it at famously clean, heavily-reviewed code and it didn't
+  raise a single false alarm." This is your answer to "doesn't it cry wolf?" — *show, don't argue.*
+
+---
+
+## Slide 15 — Cryptographic Attestation (screenshot)
+
+**SAY:** "Finally, the receipt. Every scan is signed twice — a standard **ECDSA** signature plus a
+**post-quantum** signature that stays valid even against future quantum computers. The badge says
+**Signature Verified**. Change a single finding after the fact and verification fails. This is the
+provenance regulators will demand under the EU Cyber Resilience Act this September."
+
+**SIDE:**
+- *"Signed"* = "a tamper-proof seal." *"Post-quantum"* = "future-proof against the next generation of
+  code-breaking computers" — name-drop only; don't explain lattices unless asked.
+- *EU CRA, Sept 2026* = a real, dated law forcing exactly this kind of evidence — your "why this
+  matters commercially" hook. *Ties the academic project to a market deadline.*
+
+---
+
+## Slide 16 — Competitive Position
+
+**SAY:** "Where this sits. Against Snyk, Semgrep, and GitHub Advanced Security: none of them do
+exploit verification, none re-test to prove the fix worked, none sign their results, none offer an
+auto-block tier — and all of them are paid or cloud-only. ACR-QA does all five, open-source, at
+zero cost. **That open, first-party, in-CI, attested, $0 quadrant is the one the market leaves
+empty.**"
+
+**SIDE:**
+- Don't trash competitors — say "they're excellent at detection; detection is now commoditised. The
+  scarce thing is *trust*, and that's the column I own."
+- *"first-party"* = "scans your own source code, not just your dependencies." *"in-CI"* = "runs
+  automatically on every code change."
+
+---
+
+## Slide 17 — Implementation Status
+
+**SAY:** "This is built, not a proposal. **Nineteen analysis engines.** A 52-endpoint API with a
+live React dashboard. **Over 3,200 automated tests** — 3,137 Python plus 110 frontend — at 88%
+core coverage. Exploit verification across 13 vulnerability classes. Packaged and installable today
+as `acrqa` from PyPI, self-hosted, zero recurring cost."
+
+**SIDE:**
+- *Test count is 3,247 (3,137 Python + 110 TS) — say "over 3,200." This is the reconciled number;
+  it matches the deck. Do NOT say 3,017 or 3,063 — those are stale.*
+- *"19 engines"* — if challenged ("I read 36 somewhere"): "19 *detection* engines that produce
+  findings; 36 total modules including scoring, explanation, and attestation. Two counting levels,
+  not a contradiction." (Full answer in QA_PREP.)
+
+---
+
+## Slide 18 — What ACR-QA Delivers (The Ask)
+
+**SAY:** "Four things to remember. **Trust** — 96.4% precision, high enough to auto-block. **Proof**
+— exploit-verified and signed, not guesses. **Reach** — nineteen engines, three languages, nine of
+ten OWASP, 100% CVE recall. **Price** — self-hosted, your data never leaves, zero recurring, versus
+ten to fifty thousand a year. Every one of those is a measured claim, not a slogan."
+
+**SIDE:** *This is your closing pitch — slow down, one beat per word: Trust. Proof. Reach. Price.
+If you forget everything else, these four words ARE the sell.*
 
 ---
 
 ## Slide 19 — Future Work
 
-> "Three directions. First, **progressive recall** — expanding the curated rule set as we validate
-> more rules at high precision. Second, **supply-chain integration** — SLSA provenance for
-> dependencies, not just source. Third, **CNA status** — ACR-QA is designed to issue CVE IDs for
-> vulnerabilities it discovers through exploit-verification. That's a long-term moat no open-source
-> scanner has."
+**SAY:** "Where it goes next: **inter-procedural taint analysis** — tracing data across functions,
+worth an estimated 10–15 points of recall. **Automatic pull-request generation** to apply the fix.
+More languages — Java, PHP, Rust. And an **open-core path**: the scanner stays free, a hosted
+compliance-evidence tier serves the EU CRA and SOC2 market."
 
-*(Click.)*
-
----
-
-## Slide 20 — Close / Thank You
-
-> "To summarise: we separated detection from trust. We built a four-gate filter that produces
-> 96.4% precision on confirmed findings. We added exploit-verification so we can prove — not claim
-> — a vulnerability is real. And we sign every result so the output is auditable. ACR-QA is not
-> a scanner. It's a **trust layer for software delivery pipelines**. Thank you — I'm happy to
-> take questions, or show you the live dashboard."
-
-*(Stand still. Smile. Wait for the first question.)*
+**SIDE:**
+- Naming limitations as *planned work* is a strength — it shows you know the boundaries. *"I'd
+  rather ship one layer that works than four that half-work."*
+- *Inter-procedural* = "right now it follows the data within one function; next, across the whole
+  program." Honest, scoped, not a weakness.
 
 ---
 
-## Q&A Rapid-Fire Answers
+## Slide 20 — Thank You / Questions
 
-| Question | Answer (one sentence) |
-|----------|----------------------|
-| "Why only 25% recall?" | We optimised precision first — 96.4% precision means every finding you act on is real; recall grows as we validate more rules. |
-| "Is this production-ready?" | Yes — 3,063 tests, Docker exploit suite green, API + dashboard running right now. |
-| "How does it compare to GitHub Advanced Security?" | GH Advanced Security has no exploit-verification and no attestation; it's a signal feed, not a trust layer. |
-| "What's the business model?" | Open-core: the self-hosted version is free; a SaaS tier with managed signing keys and a CVE advisory feed is the commercial layer. |
-| "Did you deploy it anywhere?" | It scanned its own repo (self-scan, 0 confirmed findings) and a suite of famous open-source repos including FastAPI, React, and requests. |
-| "What is Dilithium3?" | A post-quantum lattice-based signature scheme — NIST-standardised — so attestations remain verifiable after quantum computing breaks RSA/ECDSA. |
+**SAY:** "To summarise: most tools hand you a list and walk away. ACR-QA hands you a list, **proves
+which items are real, and signs the proof.** It's not a better scanner — it's a **trust layer**.
+Thank you. I'm happy to take questions, or show you any part of the live system."
+
+**SIDE:** *Stop. Smile. Stand still. Let the first question come. For tough questions, lead with the
+plain-English sentence, then go deep — and remember the sticky line:* **"Most tools cry wolf. Mine
+brings you the wolf — then proves the cage holds."**
+
+---
+
+## ⚠️ Number consistency — memorise this (it's how you answer "are you making this up?")
+
+Every figure below means ONE thing. If a judge cross-checks two slides, they must agree.
+
+| Number | EXACTLY what it is | Where it appears | The trap |
+|--------|-------------------|------------------|----------|
+| **1,942 → 55** | The **benchmark evaluation** (many vulnerable apps), funnel end-to-end | Slide 9 funnel | NOT one repo — it's the whole corpus |
+| **55 @ 96.4%** | Confirmed Tier on that **full benchmark** | Slides 9, 10, 18 | Pairs with "100% CVE recall" |
+| **64 / 13 HIGH / 4 confirmed** | The **single payments-api** live scan | Slides 13 + live demo | This is why the live count is "only 4" |
+| **25.1%** | RealVuln **real-world** recall (one hard benchmark) | Slide 10 | Low on purpose; beats Semgrep 17.5% |
+| **100% (8/8)** | CVE recall on the **detectable** pre-registered set | Slides 10, 18 | "detectable" matters — say it |
+| **45%** | AI code shipping a flaw — **Veracode 2025** | Slides 2, 5 | Have the source ready |
+| **+107%** | Vulns per codebase YoY — **Black Duck OSSRA 2026** | Slides 2, 5 | Open-source vulns, 2024 |
+| **3,247 tests** | 3,137 Python + 110 TS | Slides 10, 17 | Say "over 3,200" — never 3,017/3,063 |
+| **19 engines** | *Detection* engines | Slides 17, 18 | 36 = total modules; clarify if asked |
+
+**The one-line defense of all of it:** *"I report every number with the exact corpus it came from,
+including the ugly ones — because a liar hides the bad numbers, and I lead with mine."*

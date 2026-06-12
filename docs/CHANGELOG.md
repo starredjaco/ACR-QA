@@ -4,6 +4,25 @@ All notable changes to ACR-QA are documented here.
 
 ## [Unreleased] — 2026-06-12
 
+### Fixed — defense-deck number consistency sweep (credibility hardening)
+
+- **Removed the unsourceable "1.88× more vulnerabilities" stat** from the deck hook + market
+  cards. Replaced with **two web-verified figures**: *45% of AI-written code ships a known flaw*
+  (Veracode 2025 GenAI Code Security report) and *+107% open-source vulns per codebase in 2024*
+  (Black Duck OSSRA 2026). Sources noted inline so "source?" is answerable on stage.
+- **Reconciled the test count everywhere** (deck, `QA_PREP.md`, `README.md` badge + body): was a
+  mix of 2,805 / 2,954 / 3,017 / 3,063 → now a single **3,247 (3,137 Python + 110 TS)** verified
+  via `pytest --collect-only` + `vitest list`.
+- **`DEFENSE_SPEAKER_SCRIPT.md` fully rewritten** to map 1:1 to the real 20-slide deck order, with a
+  plain-English **SIDE column** explaining every number/term for non-technical judges. Fixed a
+  latent credibility bug: the old script attributed the **1,942→55 funnel (evaluation corpus)** to
+  the **payments-api live demo (64/13/4)** — now correctly separated, with slide 9 narration that
+  *pre-empts* the "55 vs 4" question before a judge can spot it.
+- **`QA_PREP.md` — new "Category 0: Trust & Skepticism"** (5 cards): "which Confirmed-Tier number is
+  real / are you cherry-picking?", "how do I know you're not lying?", "55 vs 4 inconsistency", "why
+  not a third-party benchmark?", "is 96.4% just easy code?". Each answers with the *mechanism* that
+  makes fabrication impossible (signatures, pre-registration, open source, live detonation).
+
 ### Changed — god-mode defense deck (sales narrative + real screenshots)
 
 - **`scripts/build_defense_deck.py` rebuilt** into a 20-slide sales-narrative deck: hook

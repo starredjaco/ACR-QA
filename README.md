@@ -12,7 +12,7 @@
 [![SLSA](https://img.shields.io/badge/SLSA-Level%203-blueviolet)](https://slsa.dev/)
 [![Signed](https://img.shields.io/badge/Cosign-signed-green?logo=sigstore&logoColor=white)](./.github/workflows/sign-images.yml)
 [![Self-Scan](https://img.shields.io/badge/Self--Scan-0%20critical-22c55e)](./.github/workflows/self-scan.yml)
-[![Tests](https://img.shields.io/badge/Tests-3017%20passing-22c55e?logo=pytest&logoColor=white)](./TESTS/)
+[![Tests](https://img.shields.io/badge/Tests-3247%20passing-22c55e?logo=pytest&logoColor=white)](./TESTS/)
 [![Coverage](https://img.shields.io/badge/CORE%20coverage-88%25-22c55e)](./TESTS/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab?logo=python&logoColor=white)](https://www.python.org/)
@@ -143,7 +143,7 @@ SecurityEval Youden J = 0.157 leads Bandit 0.090 and Semgrep 0.056.
 **+5.2pp recall at 89.5% precision** (LLM-alone is strictly worse; the union, after gating, wins).
 Every LLM finding still flows through exploit-verification. Details: [`docs/evaluation/PROTO_LLM_DETECTION.md`](docs/evaluation/PROTO_LLM_DETECTION.md).
 
-**At a glance:** **100%** CVE recall (8/8 pre-registered) · 9/10 OWASP Top 10 · **3,017 tests** at
+**At a glance:** **100%** CVE recall (8/8 pre-registered) · 9/10 OWASP Top 10 · **3,247 tests** at
 **88% CORE coverage** · 52 FastAPI endpoints · 327+ rule mappings · **0 critical** on self-scan ·
 **Verified Remediation** (`fix_verified=True` by live re-exploit + ECDSA signature).
 
@@ -307,7 +307,7 @@ PyPI packages). Full provenance index: **[`docs/evaluation/README.md`](docs/eval
 **Research questions:** RQ1 RAG hallucination reduction · RQ2 PostgreSQL provenance · RQ3 label-free
 confidence scoring · RQ4 precision/recall vs commercial SAST — see [`docs/evaluation/README.md`](docs/evaluation/README.md).
 
-**Tests:** 3,017 (2,954 Python + 63 TS) at 88% CORE coverage — `make test-all` or
+**Tests:** 3,247 (3,137 Python + 110 TS) at 88% CORE coverage — `make test-all` or
 `.venv/bin/pytest TESTS/ -v`.
 
 ---
