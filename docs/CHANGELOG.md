@@ -4,6 +4,19 @@ All notable changes to ACR-QA are documented here.
 
 ## [Unreleased] — 2026-06-12
 
+### Fixed — attestation signatures now verify (was always "Signature Invalid")
+
+- **Cross-process attestation verification was broken.** `AttestationEngine.verify()` used the
+  *verifier's own* ephemeral key, but the scan signed with a *different* ephemeral key (each process
+  generates its own unless `ACRQA_SIGNING_KEY` is set). So the API could never verify a signature the
+  CLI made — every run's Attestation tab showed **"Signature Invalid"**, including real eval runs.
+- Fix: embed the signing public key in the bundle (`signatures[].public_key`) and verify against it;
+  bundles are now self-verifiable across processes. Tamper-evidence preserved — altering the payload
+  still fails verification. 4 regression tests (cross-process verify, cross-process tamper, embedded key).
+- Dilithium3 keypair was also discarded at sign time (public key thrown away); ECDSA is the verified
+  signal. Re-run `make seed-demo` to regenerate attestations that verify as **Valid**.
+
+
 ### Added — generated defense deck + demo speaker script
 
 - **`scripts/build_defense_deck.py`** generates `docs/ACR-QA_Defense.pptx` (+ `.odp`) — a
