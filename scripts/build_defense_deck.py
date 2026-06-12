@@ -66,9 +66,7 @@ def _run(p, text, size, color, *, bold=False, italic=False, font="Calibri"):
 
 
 def _rect(slide, l, t, w, h, fill, *, line=None, rounded=False):
-    shp = slide.shapes.add_shape(
-        MSO_SHAPE.ROUNDED_RECTANGLE if rounded else MSO_SHAPE.RECTANGLE, l, t, w, h
-    )
+    shp = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE if rounded else MSO_SHAPE.RECTANGLE, l, t, w, h)
     shp.fill.solid()
     shp.fill.fore_color.rgb = fill
     if line:
@@ -118,7 +116,9 @@ def title_slide(prs):
     _run(p, "Automated Code Review & Quality Assurance", 24, GOLD, bold=True)
     p = tf.add_paragraph()
     _center(p)
-    _run(p, "The trust layer for AI-written code — exploit-verified, cryptographically attested", 14, WHITE, italic=True)
+    _run(
+        p, "The trust layer for AI-written code — exploit-verified, cryptographically attested", 14, WHITE, italic=True
+    )
     tf2 = _box(s, Inches(0.8), Inches(5.5), Inches(11.7), Inches(1.4))
     for txt, sz, bold in [
         ("Ahmed Mahmoud Abbas", 18, True),
@@ -148,7 +148,13 @@ def hook_slide(prs):
     _run(p, "Your scanner flags 1,900 issues. Which one breaches you?", 30, WHITE, bold=True)
     p = tf.add_paragraph()
     p.space_before = Pt(18)
-    _run(p, "Nobody can review that. So teams ship blind — or pay $50k/year and still don't trust the output.", 17, RGBColor(0x9F, 0xB0, 0xC4), italic=True)
+    _run(
+        p,
+        "Nobody can review that. So teams ship blind — or pay $50k/year and still don't trust the output.",
+        17,
+        RGBColor(0x9F, 0xB0, 0xC4),
+        italic=True,
+    )
 
 
 def problem_slide(prs):
@@ -156,9 +162,21 @@ def problem_slide(prs):
     _bg(s, WHITE)
     _title(s, "The Problem", sub="Three reasons teams can't trust automated code review today")
     cards = [
-        ("Quality variance", "Manual review is inconsistent — expertise and attention vary. The SQL injection on line 47 slips through on the 50th PR of the day.", NAVY),
-        ("Cost barrier", "Enterprise tools cost $10k–50k/year. Unaffordable for universities and startups — so they run a basic linter, or nothing.", GOLD),
-        ("Hallucination", "AI explainers invent plausible-but-wrong guidance. A developer gets burned once and never trusts the tool again.", RED),
+        (
+            "Quality variance",
+            "Manual review is inconsistent — expertise and attention vary. The SQL injection on line 47 slips through on the 50th PR of the day.",
+            NAVY,
+        ),
+        (
+            "Cost barrier",
+            "Enterprise tools cost $10k–50k/year. Unaffordable for universities and startups — so they run a basic linter, or nothing.",
+            GOLD,
+        ),
+        (
+            "Hallucination",
+            "AI explainers invent plausible-but-wrong guidance. A developer gets burned once and never trusts the tool again.",
+            RED,
+        ),
     ]
     x = Inches(0.6)
     for head, body, color in cards:
@@ -258,13 +276,21 @@ def funnel_slide(prs):
         _run(ntf.paragraphs[0], note, 12, GRAY, italic=True)
         y = Emu(y + Inches(1.18))
     foot = _box(s, Inches(0.6), Inches(6.95), Inches(12.1), Inches(0.45))
-    _run(foot.paragraphs[0], "Turn the 55 on as a required status check. The other ~1,887 stay visible and fixable — they just don't block the merge.", 12, NAVY, italic=True)
+    _run(
+        foot.paragraphs[0],
+        "Turn the 55 on as a required status check. The other ~1,887 stay visible and fixable — they just don't block the merge.",
+        12,
+        NAVY,
+        italic=True,
+    )
 
 
 def eval_table_slide(prs):
     s = prs.slides.add_slide(prs.slide_layouts[6])
     _bg(s, WHITE)
-    _title(s, "Evaluation & Results", sub="Not just built — measured on adversarial corpora, against the standard tools")
+    _title(
+        s, "Evaluation & Results", sub="Not just built — measured on adversarial corpora, against the standard tools"
+    )
     rows = [
         ("Confirmed-Tier precision (auto-block stratum)", "96.4%  (95% CI 90.9–100%)"),
         ("CVE recall (pre-registered battery)", "100% — 8 / 8 detectable"),
@@ -297,7 +323,13 @@ def eval_table_slide(prs):
             else:
                 r.font.color.rgb = INK
     foot = _box(s, Inches(0.6), Inches(6.85), Inches(12.1), Inches(0.5))
-    _run(foot.paragraphs[0], "Two corpora · pre-registered methodology · Wilson CIs · external Bandit gate (non-tautological).", 12, GRAY, italic=True)
+    _run(
+        foot.paragraphs[0],
+        "Two corpora · pre-registered methodology · Wilson CIs · external Bandit gate (non-tautological).",
+        12,
+        GRAY,
+        italic=True,
+    )
 
 
 def proofs_slide(prs):
@@ -305,9 +337,21 @@ def proofs_slide(prs):
     _bg(s, WHITE)
     _title(s, "Why You Can Trust the Numbers")
     items = [
-        ("We separated detection from trust", "Most tools emit 30–70% false positives. The Confirmed Tier hits 96.4% — precise enough to auto-block.", NAVY),
-        ("We don't claim a vulnerability — we detonate it", "Real payloads in a Docker sandbox: SQLi ' OR 1=1, SSTI {{7*7}}→49, command injection. Verified live: exploits fire; safe code correctly does NOT.", GREEN),
-        ("Every result is signed", "ECDSA-P256 + Sigstore Rekor + SLSA L3. An auditor verifies the exact scan and result in one command.", GOLD),
+        (
+            "We separated detection from trust",
+            "Most tools emit 30–70% false positives. The Confirmed Tier hits 96.4% — precise enough to auto-block.",
+            NAVY,
+        ),
+        (
+            "We don't claim a vulnerability — we detonate it",
+            "Real payloads in a Docker sandbox: SQLi ' OR 1=1, SSTI {{7*7}}→49, command injection. Verified live: exploits fire; safe code correctly does NOT.",
+            GREEN,
+        ),
+        (
+            "Every result is signed",
+            "ECDSA-P256 + Sigstore Rekor + SLSA L3. An auditor verifies the exact scan and result in one command.",
+            GOLD,
+        ),
     ]
     y = Inches(1.9)
     for head, body, color in items:
@@ -322,7 +366,11 @@ def proofs_slide(prs):
 def competitive_slide(prs):
     s = prs.slides.add_slide(prs.slide_layouts[6])
     _bg(s, WHITE)
-    _title(s, "Competitive Position", sub="The one quadrant the market leaves open: open-source, first-party, in-CI, attested, at $0")
+    _title(
+        s,
+        "Competitive Position",
+        sub="The one quadrant the market leaves open: open-source, first-party, in-CI, attested, at $0",
+    )
     headers = ["Capability", "Snyk", "Semgrep", "GHAS", "ACR-QA"]
     rows = [
         ("Exploit verification (Docker)", "✗", "✗", "✗", "✓"),
@@ -399,7 +447,14 @@ def the_ask_slide(prs):
         _run(vtf.paragraphs[0], v, 17, WHITE)
         y = Emu(y + Inches(0.92))
     foot = _box(s, Inches(0.95), Inches(6.3), Inches(11.5), Inches(0.8))
-    _run(foot.paragraphs[0], "Detection you can trust, exploit-proof you can verify, a signed record of all of it — on any machine, at zero cost.", 16, GOLD, bold=True, italic=True)
+    _run(
+        foot.paragraphs[0],
+        "Detection you can trust, exploit-proof you can verify, a signed record of all of it — on any machine, at zero cost.",
+        16,
+        GOLD,
+        bold=True,
+        italic=True,
+    )
 
 
 def B(text, level=0, bold=False, color=None):
@@ -434,7 +489,12 @@ def build():
         prs,
         "The Market Reality",
         "Why this is worth solving now",
-        [("$10–50k", "per year for enterprise SAST"), ("+107%", "vulns per codebase, YoY"), ("1.88×", "more flaws in AI-written code"), ("$0", "ACR-QA, self-hosted")],
+        [
+            ("$10–50k", "per year for enterprise SAST"),
+            ("+107%", "vulns per codebase, YoY"),
+            ("1.88×", "more flaws in AI-written code"),
+            ("$0", "ACR-QA, self-hosted"),
+        ],
         dark=True,
     )
 
@@ -443,8 +503,10 @@ def build():
         "The Solution: ACR-QA",
         [
             B("A self-hosted trust layer on top of your scanners — answers one question at merge time:", 0, True, NAVY),
-            B("\"Is this finding real enough to block automatically?\"", 1, False, GREEN),
-            B("RAG-grounded AI explanations — cites the rule, doesn't guess (entropy filter rejects 96% of hallucinated runs)"),
+            B('"Is this finding real enough to block automatically?"', 1, False, GREEN),
+            B(
+                "RAG-grounded AI explanations — cites the rule, doesn't guess (entropy filter rejects 96% of hallucinated runs)"
+            ),
             B("Confirmed Tier — a 4-gate stratum at 96.4% precision, safe to auto-block"),
             B("Exploit verification — detonates a real payload in a Docker sandbox; proven, not claimed"),
             B("ECDSA + post-quantum attestation — every scan is signed and auditable"),
@@ -465,7 +527,9 @@ def build():
         "System Architecture",
         [
             B("Push → webhook → extract PR diff → enqueue (Redis)"),
-            B("Detection: language adapter runs the tool suite in parallel (Ruff, Semgrep, Bandit, Vulture, Radon, jscpd)"),
+            B(
+                "Detection: language adapter runs the tool suite in parallel (Ruff, Semgrep, Bandit, Vulture, Radon, jscpd)"
+            ),
             B("Normalize: every tool's JSON → one CanonicalFinding schema"),
             B("Trust gates: confidence → reachability + taint → Confirmed Tier → exploit verification"),
             B("RAG: retrieve rule definition → grounded explanation → entropy-validate"),
