@@ -499,27 +499,24 @@ def B(text, level=0, bold=False, color=None):
 
 def build():
     """
-    18-slide photo-first deck.
+    15-slide photo-first deck (~14 min total: ~10 min talk + 4 min demo).
 
     Slide map:
      1  Title
-     2  Hook (dark, text)
-     3  Problem — 3 cards
-     4  Market reality — stat cards (dark)
-     5  Solution — bullets (what ACR-QA does)
-     6  FIGURE: PR_OPERATING_POINTS — "two modes, one scan" (kills numbers question)
-     7  FIGURE: arch_overview — full system diagram (replaces architecture bullets)
-     8  Live Dashboard overview screenshot
-     9  FIGURE: FUNNEL_SLIDE — 1,942 → 55 (real figure, not generated)
-    10  FIGURE: HEAD_TO_HEAD — bar chart vs Semgrep / Bandit
-    11  FIGURE: REALVULN_LEADERBOARD — real-world beats everyone
-    12  FIGURE: verified_remediation — 4-phase exploit chain (the "wow" slide)
-    13  Section divider: Live Demo
-    14  Dashboard: run-detail screenshot
-    15  Dashboard: OWASP compliance screenshot
-    16  Dashboard: attestation screenshot (Signature Verified)
-    17  Competitive table
-    18  The Ask (dark, closing sell)
+     2  Hook (dark) — 45% / +107% / $10-50k / the problem in one page
+     3  Problem — 3 cards (quality variance, cost, hallucination)
+     4  Solution — bullets + "two modes, one scan" point
+     5  FIGURE: arch_overview — full system diagram
+     6  Live Dashboard overview screenshot
+     7  FIGURE: FUNNEL_SLIDE — 1,942 → 55 (24-repo corpus)
+     8  FIGURE: REALVULN_LEADERBOARD — real-world beats everyone
+     9  FIGURE: verified_remediation — 4-phase exploit chain (the "wow" slide)
+    10  Section divider: Live Demo
+    11  Dashboard: run-detail screenshot
+    12  Dashboard: OWASP compliance screenshot
+    13  Dashboard: attestation screenshot (Signature Verified)
+    14  Competitive table
+    15  The Ask (dark, closing sell)
     """
     prs = Presentation()
     prs.slide_width, prs.slide_height = EMU_W, EMU_H
@@ -527,55 +524,28 @@ def build():
     # 1 — Title
     title_slide(prs)
 
-    # 2 — Hook
+    # 2 — Hook (market stats embedded — no separate market-reality slide needed)
     hook_slide(prs)
 
     # 3 — Problem
     problem_slide(prs)
 
-    # 4 — Market reality
-    stat_cards_slide(
-        prs,
-        "The Market Reality",
-        "Why this matters — now",
-        [
-            ("$10–50k", "per year for enterprise SAST tools"),
-            ("+107%", "open-source vulns / codebase in 2024  (Black Duck OSSRA 2026)"),
-            ("45%", "of AI-written code ships a known flaw  (Veracode 2025)"),
-            ("$0", "ACR-QA — self-hosted, your data never leaves"),
-        ],
-        dark=True,
-    )
-
-    # 5 — Solution bullets
+    # 4 — Solution bullets (two-mode point replaces the PR_OPERATING_POINTS chart slide)
     bullets_slide(
         prs,
         "The Solution: ACR-QA",
         [
             B("A trust layer on top of your scanners — answers one question at merge time:", 0, True, NAVY),
             B('"Is this finding real enough to block automatically?"', 1, False, GREEN),
+            B("Two modes, one scan: Confirmed Tier (96.4% precision, auto-block) vs Full Output (91% recall, triage)"),
             B("RAG-grounded AI — cites the rule, entropy filter rejects hallucinated explanations"),
-            B("Confirmed Tier — 4-gate filter at 96.4% precision, safe to auto-block without human review"),
             B("Exploit verification — fires a real payload in an isolated Docker sandbox"),
             B("ECDSA-P256 + post-quantum attestation — every scan signed, tamper-evident"),
             B("Self-hosted · zero recurring cost · full data privacy", 0, True, NAVY),
         ],
     )
 
-    # 6 — PR operating points (precision-recall scatter — kills "which number?" question)
-    full_image_slide(
-        prs,
-        "Two Operating Modes — One Scan",
-        FIGS / "PR_OPERATING_POINTS.png",
-        sub="Confirmed Tier (auto-block) vs Full Output (triage) — same pipeline, different strictness",
-        caption=(
-            "Top-right is the ideal zone. Confirmed Tier (gold diamond, 96.4% precision) is safe to auto-block. "
-            "Full output (navy circle, 91% recall) is the developer triage view. "
-            "Both are real — they're two points on the same precision-recall curve."
-        ),
-    )
-
-    # 7 — Architecture: real diagram (replaces bullet list)
+    # 5 — Architecture: real diagram
     full_image_slide(
         prs,
         "System Architecture",
@@ -587,7 +557,7 @@ def build():
         ),
     )
 
-    # 8 — Live dashboard overview
+    # 6 — Live dashboard overview
     image_slide(
         prs,
         "Live Dashboard — Fleet Overview",
@@ -599,12 +569,12 @@ def build():
         ),
     )
 
-    # 9 — Precision funnel (real thesis figure)
+    # 7 — Precision funnel (real thesis figure)
     full_image_slide(
         prs,
         "The Precision Funnel — From Noise to Trust",
         FIGS / "FUNNEL_SLIDE.png",
-        sub="24-repo adversarial corpus · 1,942 raw findings → 55 Confirmed Tier · CVE recall preserved at every rung",
+        sub="24-repo adversarial corpus · 1,942 raw findings → 55 Confirmed Tier · >52 pp precision over Semgrep CE",
         caption=(
             "Note: these numbers are the full evaluation corpus (24 repos). "
             "The live demo scans one app and produces proportionally fewer confirmed findings. "
@@ -612,19 +582,7 @@ def build():
         ),
     )
 
-    # 10 — Head-to-head bar chart (real thesis figure)
-    full_image_slide(
-        prs,
-        "Head-to-Head Benchmark — Precision · CVE Recall · F₁",
-        FIGS / "HEAD_TO_HEAD.png",
-        sub="Same 30-repo adversarial corpus · same 8-CVE recall battery · conservative triage",
-        caption=(
-            "ACR-QA P4 (Confirmed Tier): 96% precision · 100% CVE recall · F₁ = 98.2% — "
-            ">52 pp margin over Semgrep CE. Source: docs/evaluation/HEAD_TO_HEAD_BENCHMARK.md"
-        ),
-    )
-
-    # 11 — RealVuln leaderboard (real thesis figure)
+    # 8 — RealVuln leaderboard (real thesis figure)
     full_image_slide(
         prs,
         "RealVuln 2026 — Real-World Recall Leaderboard",
@@ -636,7 +594,7 @@ def build():
         ),
     )
 
-    # 12 — Verified remediation flow (the "wow" slide before demo)
+    # 9 — Verified remediation flow (the "wow" slide before demo)
     full_image_slide(
         prs,
         "Exploit Verification — Proven, Not Claimed",
@@ -650,10 +608,10 @@ def build():
         ),
     )
 
-    # 13 — Live demo divider
+    # 10 — Live demo divider
     section_slide(prs, "Live Demo", "Real repo · real finding · real exploit · signed receipt")
 
-    # 14 — Run detail
+    # 11 — Run detail
     image_slide(
         prs,
         "Run Detail — payments-api",
@@ -665,7 +623,7 @@ def build():
         ),
     )
 
-    # 15 — OWASP compliance
+    # 12 — OWASP compliance
     image_slide(
         prs,
         "OWASP Top 10 — Compliance View",
@@ -677,7 +635,7 @@ def build():
         ),
     )
 
-    # 16 — Attestation
+    # 13 — Attestation
     image_slide(
         prs,
         "Cryptographic Attestation — Signature Verified",
@@ -690,10 +648,10 @@ def build():
         ),
     )
 
-    # 17 — Competitive table
+    # 14 — Competitive table
     competitive_slide(prs)
 
-    # 18 — The Ask (closing sell)
+    # 15 — The Ask (closing sell)
     the_ask_slide(prs)
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
