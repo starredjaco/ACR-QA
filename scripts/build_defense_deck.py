@@ -36,6 +36,7 @@ SLATE = RGBColor(0x27, 0x33, 0x42)
 
 ROOT = Path(__file__).resolve().parent.parent
 SHOTS = ROOT / "docs" / "presentation_assets" / "shots"
+FIGS = ROOT / "ACR-QA-Book" / "figures"
 LOGO = ROOT / "docs" / "presentation_assets" / "ksiu-logo.png"
 OUT = ROOT / "docs" / "ACR-QA_Defense.pptx"
 
@@ -253,6 +254,40 @@ def image_slide(prs, title, img, *, caption=None, sub=None):
         _run(ctf.paragraphs[0], caption, 12, GRAY, italic=True)
 
 
+def full_image_slide(prs, title, img, *, sub=None, caption=None, dark=False):
+    """Figure slide: title bar at top, image fills the remaining space edge-to-edge."""
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    bg_color = NAVY if dark else WHITE
+    _bg(s, bg_color)
+    title_color = WHITE if dark else NAVY
+    # compact title strip
+    tf = _box(s, Inches(0.55), Inches(0.22), Inches(12.2), Inches(0.75))
+    _run(tf.paragraphs[0], title, 24, title_color, bold=True)
+    _rect(s, Inches(0.57), Inches(0.93), Inches(1.5), Pt(3), GOLD)
+    if sub:
+        stf = _box(s, Inches(0.57), Inches(0.97), Inches(12.0), Inches(0.38))
+        _run(stf.paragraphs[0], sub, 12, GOLD, italic=True)
+    # image: tall content zone 1.4" → 7.1" = 5.7" tall, full width
+    img_top = Inches(1.42)
+    img_h_max = Inches(5.7) if not caption else Inches(5.3)
+    if img.exists():
+        # add at full width first to get true aspect
+        pic = s.shapes.add_picture(str(img), Inches(0.5), img_top, width=Inches(12.33))
+        if pic.height > img_h_max:
+            # too tall — constrain by height instead
+            s.shapes._spTree.remove(pic._element)
+            pic = s.shapes.add_picture(str(img), Inches(0.5), img_top, height=img_h_max)
+            # centre horizontally
+            pic.left = int((EMU_W - pic.width) / 2)
+        # bring to front
+        spTree = s.shapes._spTree
+        spTree.remove(pic._element)
+        spTree.append(pic._element)
+    if caption:
+        ctf = _box(s, Inches(0.55), Inches(6.88), Inches(12.2), Inches(0.52))
+        _run(ctf.paragraphs[0], caption, 11, GRAY, italic=True)
+
+
 def funnel_slide(prs):
     s = prs.slides.add_slide(prs.slide_layouts[6])
     _bg(s, WHITE)
@@ -463,140 +498,203 @@ def B(text, level=0, bold=False, color=None):
 
 
 def build():
+    """
+    18-slide photo-first deck.
+
+    Slide map:
+     1  Title
+     2  Hook (dark, text)
+     3  Problem — 3 cards
+     4  Market reality — stat cards (dark)
+     5  Solution — bullets (what ACR-QA does)
+     6  FIGURE: PR_OPERATING_POINTS — "two modes, one scan" (kills numbers question)
+     7  FIGURE: arch_overview — full system diagram (replaces architecture bullets)
+     8  Live Dashboard overview screenshot
+     9  FIGURE: FUNNEL_SLIDE — 1,942 → 55 (real figure, not generated)
+    10  FIGURE: HEAD_TO_HEAD — bar chart vs Semgrep / Bandit
+    11  FIGURE: REALVULN_LEADERBOARD — real-world beats everyone
+    12  FIGURE: verified_remediation — 4-phase exploit chain (the "wow" slide)
+    13  Section divider: Live Demo
+    14  Dashboard: run-detail screenshot
+    15  Dashboard: OWASP compliance screenshot
+    16  Dashboard: attestation screenshot (Signature Verified)
+    17  Competitive table
+    18  The Ask (dark, closing sell)
+    """
     prs = Presentation()
     prs.slide_width, prs.slide_height = EMU_W, EMU_H
 
+    # 1 — Title
     title_slide(prs)
+
+    # 2 — Hook
     hook_slide(prs)
 
-    bullets_slide(
-        prs,
-        "Outline",
-        [
-            B("The problem & the market"),
-            B("Solution & core innovations"),
-            B("Architecture · RAG engine · data model"),
-            B("From noise to trust — the Confirmed Tier"),
-            B("Evaluation & results", 0, True, GREEN),
-            B("Live demo", 0, True, GREEN),
-            B("Competitive position · the ask"),
-        ],
-    )
-
+    # 3 — Problem
     problem_slide(prs)
 
-    # Market / cost reality — selling numbers
+    # 4 — Market reality
     stat_cards_slide(
         prs,
         "The Market Reality",
-        "Why this is worth solving now",
+        "Why this matters — now",
         [
-            ("$10–50k", "per year for enterprise SAST"),
-            ("+107%", "open-source vulns / codebase, 2024 (Black Duck OSSRA)"),
-            ("45%", "of AI-written code ships a flaw (Veracode '25)"),
-            ("$0", "ACR-QA, self-hosted"),
+            ("$10–50k", "per year for enterprise SAST tools"),
+            ("+107%", "open-source vulns / codebase in 2024  (Black Duck OSSRA 2026)"),
+            ("45%", "of AI-written code ships a known flaw  (Veracode 2025)"),
+            ("$0", "ACR-QA — self-hosted, your data never leaves"),
         ],
         dark=True,
     )
 
+    # 5 — Solution bullets
     bullets_slide(
         prs,
         "The Solution: ACR-QA",
         [
-            B("A self-hosted trust layer on top of your scanners — answers one question at merge time:", 0, True, NAVY),
+            B("A trust layer on top of your scanners — answers one question at merge time:", 0, True, NAVY),
             B('"Is this finding real enough to block automatically?"', 1, False, GREEN),
-            B(
-                "RAG-grounded AI explanations — cites the rule, doesn't guess (entropy filter rejects 96% of hallucinated runs)"
-            ),
-            B("Confirmed Tier — a 4-gate stratum at 96.4% precision, safe to auto-block"),
-            B("Exploit verification — detonates a real payload in a Docker sandbox; proven, not claimed"),
-            B("ECDSA + post-quantum attestation — every scan is signed and auditable"),
-            B("On-premises, zero cloud, zero recurring cost — full data privacy", 0, True, NAVY),
+            B("RAG-grounded AI — cites the rule, entropy filter rejects hallucinated explanations"),
+            B("Confirmed Tier — 4-gate filter at 96.4% precision, safe to auto-block without human review"),
+            B("Exploit verification — fires a real payload in an isolated Docker sandbox"),
+            B("ECDSA-P256 + post-quantum attestation — every scan signed, tamper-evident"),
+            B("Self-hosted · zero recurring cost · full data privacy", 0, True, NAVY),
         ],
     )
 
-    image_slide(
+    # 6 — PR operating points (precision-recall scatter — kills "which number?" question)
+    full_image_slide(
         prs,
-        "Live Dashboard — Overview",
-        SHOTS / "overview.png",
-        sub="Real scans · the green Trust Layer banner shows live KPIs",
-        caption="Confirmed Tier tile shows the real, server-classified count — never an estimate. Top repos include psf/requests, encode/httpx.",
+        "Two Operating Modes — One Scan",
+        FIGS / "PR_OPERATING_POINTS.png",
+        sub="Confirmed Tier (auto-block) vs Full Output (triage) — same pipeline, different strictness",
+        caption=(
+            "Top-right is the ideal zone. Confirmed Tier (gold diamond, 96.4% precision) is safe to auto-block. "
+            "Full output (navy circle, 91% recall) is the developer triage view. "
+            "Both are real — they're two points on the same precision-recall curve."
+        ),
     )
 
-    bullets_slide(
+    # 7 — Architecture: real diagram (replaces bullet list)
+    full_image_slide(
         prs,
         "System Architecture",
-        [
-            B("Push → webhook → extract PR diff → enqueue (Redis)"),
-            B(
-                "Detection: language adapter runs the tool suite in parallel (Ruff, Semgrep, Bandit, Vulture, Radon, jscpd)"
-            ),
-            B("Normalize: every tool's JSON → one CanonicalFinding schema"),
-            B("Trust gates: confidence → reachability + taint → Confirmed Tier → exploit verification"),
-            B("RAG: retrieve rule definition → grounded explanation → entropy-validate"),
-            B("Persist to PostgreSQL (full audit trail) → ECDSA-sign → post PR comments by severity"),
-            B("End to end: 30–90 seconds per PR", 0, True, GREEN),
-        ],
-        sub="Python, JavaScript/TypeScript, and Go adapters implemented",
+        FIGS / "arch_overview.png",
+        sub="19 engines · 3 language adapters · 12-stage async pipeline · 52-endpoint FastAPI",
+        caption=(
+            "Push triggers a Celery worker: 12 tools run in parallel, every output normalised to CanonicalFinding, "
+            "trust gates applied, results signed and persisted. End-to-end: 14–90 s."
+        ),
     )
 
-    funnel_slide(prs)
+    # 8 — Live dashboard overview
+    image_slide(
+        prs,
+        "Live Dashboard — Fleet Overview",
+        SHOTS / "overview.png",
+        sub="Real scans on real repos — psf/requests · encode/httpx · FastAPI · Flask",
+        caption=(
+            "Confirmed Tier tile fetches live from the API — never estimated. "
+            "Trust Layer banner shows precision, recall, F1, and self-scan result in real time."
+        ),
+    )
 
-    eval_table_slide(prs)
-    proofs_slide(prs)
+    # 9 — Precision funnel (real thesis figure)
+    full_image_slide(
+        prs,
+        "The Precision Funnel — From Noise to Trust",
+        FIGS / "FUNNEL_SLIDE.png",
+        sub="24-repo adversarial corpus · 1,942 raw findings → 55 Confirmed Tier · CVE recall preserved at every rung",
+        caption=(
+            "Note: these numbers are the full evaluation corpus (24 repos). "
+            "The live demo scans one app and produces proportionally fewer confirmed findings. "
+            "Same filter — smaller input."
+        ),
+    )
 
-    # Live demo section + screenshots
-    section_slide(prs, "Live Demo", "Real repos · real findings · real exploits")
+    # 10 — Head-to-head bar chart (real thesis figure)
+    full_image_slide(
+        prs,
+        "Head-to-Head Benchmark — Precision · CVE Recall · F₁",
+        FIGS / "HEAD_TO_HEAD.png",
+        sub="Same 30-repo adversarial corpus · same 8-CVE recall battery · conservative triage",
+        caption=(
+            "ACR-QA P4 (Confirmed Tier): 96% precision · 100% CVE recall · F₁ = 98.2% — "
+            ">52 pp margin over Semgrep CE. Source: docs/evaluation/HEAD_TO_HEAD_BENCHMARK.md"
+        ),
+    )
+
+    # 11 — RealVuln leaderboard (real thesis figure)
+    full_image_slide(
+        prs,
+        "RealVuln 2026 — Real-World Recall Leaderboard",
+        FIGS / "REALVULN_LEADERBOARD.png",
+        sub="22 real-world Python CVE apps · third-party ground truth (arXiv:2604.13764) · strict CWE+file+line±10 matching",
+        caption=(
+            "ACR-QA Full Output: 25.1% beats Bandit (19.4%), Semgrep CE (17.5%), Snyk (17.4%), SonarQube (6.5%). "
+            "+LLM augmented: 32.4%. ACR-QA detectable-subset recall: 37.8%."
+        ),
+    )
+
+    # 12 — Verified remediation flow (the "wow" slide before demo)
+    full_image_slide(
+        prs,
+        "Exploit Verification — Proven, Not Claimed",
+        FIGS / "verified_remediation.png",
+        sub="4-phase chain: detect → detonate → patch → re-detonate · ECDSA-signed bundle at every stage",
+        caption=(
+            "Phase 1: rule→exploit category mapping (13 categories). "
+            "Phase 2: Docker sandbox fires real payload (SQLi ' OR 1=1, CMDi ; echo PWNED, SSTI {{7*7}}). "
+            "Phase 3: AI patch applied, exploit re-fired → must fail. "
+            "Phase 4: (vuln_proof, fix_diff, fix_proof) signed as one attestation bundle."
+        ),
+    )
+
+    # 13 — Live demo divider
+    section_slide(prs, "Live Demo", "Real repo · real finding · real exploit · signed receipt")
+
+    # 14 — Run detail
     image_slide(
         prs,
         "Run Detail — payments-api",
         SHOTS / "run-detail.png",
-        sub="64 findings · 13 HIGH · real SQL injection, eval, hardcoded secrets",
-        caption="Every finding carries a canonical rule, severity, and a confidence score; the tabs expose compliance, attestation, and PR risk.",
-    )
-    image_slide(
-        prs,
-        "OWASP Top 10 Coverage",
-        SHOTS / "compliance.png",
-        sub="Real per-category counts for this scan — A03 Injection: 8, A02: 3 …",
-        caption="Compliance score derived from passed categories. On mature packages (numpy, pandas) ACR-QA reports 0 HIGH — 0.0% false-positive rate.",
-    )
-    image_slide(
-        prs,
-        "Cryptographic Attestation",
-        SHOTS / "attestation.png",
-        sub="Every scan ECDSA-P256 + post-quantum (Dilithium3) signed — Signature Verified",
-        caption="Tamper-evident provenance: alter any finding and verification fails. An auditor confirms the exact scan and result in one command.",
+        sub="64 findings · 13 HIGH · 4 Confirmed Tier — SQL injection, eval, hardcoded secrets",
+        caption=(
+            "Each finding: canonical rule ID, severity, confidence score, taint-confirmed flag. "
+            "Tabs: compliance mapping, attestation, PR risk score."
+        ),
     )
 
+    # 15 — OWASP compliance
+    image_slide(
+        prs,
+        "OWASP Top 10 — Compliance View",
+        SHOTS / "compliance.png",
+        sub="A03 Injection: 8 findings · A02 Crypto: 3 · 9/10 categories covered",
+        caption=(
+            "Score calculated from passed categories. On numpy, pandas, pydantic, requests — "
+            "0 HIGH findings reported (0.0% false-positive rate on clean, mature code)."
+        ),
+    )
+
+    # 16 — Attestation
+    image_slide(
+        prs,
+        "Cryptographic Attestation — Signature Verified",
+        SHOTS / "attestation.png",
+        sub="ECDSA-P256 primary · Dilithium3 post-quantum · public key embedded in bundle",
+        caption=(
+            "Tamper-evident: alter any finding and verification fails instantly. "
+            "Verify in one command: python scripts/verify_attestation.py <bundle.json>. "
+            "EU CRA Sept 2026 requires this class of provenance."
+        ),
+    )
+
+    # 17 — Competitive table
     competitive_slide(prs)
 
-    bullets_slide(
-        prs,
-        "Implementation Status",
-        [
-            B("19 analysis engines across detection, scoring, RAG, reachability, taint, attestation", 0, True, NAVY),
-            B("52-endpoint FastAPI service + React 18 / TypeScript dashboard (live SSE progress)"),
-            B("3,247 tests (3,137 Python + 110 TS) · 88% CORE coverage; Docker Compose, Helm, Terraform"),
-            B("Exploit verification across 13 categories; CBoM with NIST PQC classification"),
-            B("Shipped as acrqa==5.0.0rc2 — self-hosted, zero recurring cost", 0, True, GREEN),
-        ],
-    )
-
+    # 18 — The Ask (closing sell)
     the_ask_slide(prs)
-
-    bullets_slide(
-        prs,
-        "Future Work",
-        [
-            B("Inter-procedural taint analysis — est. +10–15pp injection-class recall"),
-            B("Automatic pull-request generation via the GitHub API"),
-            B("PHP / Java / Rust dedicated adapters; parallel exploit-sandbox scale-out"),
-            B("Open-core path: free scanner + hosted compliance-evidence tier (EU CRA, SOC2)", 0, True, NAVY),
-        ],
-    )
-
-    section_slide(prs, "Thank You", "Questions?")
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     prs.save(OUT)

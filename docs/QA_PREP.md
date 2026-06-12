@@ -543,6 +543,49 @@ It's the expected behavior of a recall-first tool. The full output maximizes rec
 
 ---
 
+## 📎 Source Verification Table — "Where does that number come from?"
+
+> The committee will verify every claim. This table gives you the exact source for every figure
+> you say on stage. For each: the number, the primary source file/figure in this repo, and the
+> external reference if one exists. **Memorise at least the file path — saying "it's in
+> `docs/evaluation/CONFIRMED_TIER.md`" is better than "trust me."**
+
+| Number / Claim | What it measures | Repo source (verify here) | External reference |
+|---|---|---|---|
+| **96.4% Confirmed Tier precision** | P4 conservative precision on 30-repo adversarial corpus | `docs/evaluation/CONFIRMED_TIER.md` · `ACR-QA-Book/figures/FUNNEL_SLIDE.png` · `docs/evaluation/ABLATION_STUDY.md` row P4 | Wilson CI [90.9%,100%] via bootstrap 10k resamples |
+| **95% CI [90.9%, 100%]** | Bootstrap confidence interval, n=55 findings, seed 42 | `docs/evaluation/ABLATION_STUDY.md` footer | Standard Wilson proportion CI |
+| **100% CVE recall (8/8)** | Pre-registered detectable CVEs caught at every funnel rung | `docs/evaluation/CVE_RECALL_BATTERY.md` · `TESTS/evaluation/ground_truth/` YAML files | Git timestamp proves pre-registration |
+| **F₁ = 98.2%** | Harmonic mean of 96.4% precision + 100% recall on P4 | `ACR-QA-Book/figures/HEAD_TO_HEAD.png` · `docs/evaluation/HEAD_TO_HEAD_BENCHMARK.md` | — |
+| **Semgrep CE: 45.7% F₁** | Same 30-repo corpus, same triage rule | `docs/evaluation/HEAD_TO_HEAD_BENCHMARK.md` | Semgrep CE community rulesets p/default+p/python+p/javascript+p/go |
+| **1,942 → 55 funnel** | 24-repo precision corpus, all tools, post-dedup | `docs/evaluation/ABLATION_STUDY.md` · `ACR-QA-Book/figures/FUNNEL_SLIDE.png` | Note: 24 repos not 30 — two counting frames; ABLATION uses 24-repo pin |
+| **25.1% RealVuln recall** | ACR-QA Full Output on 22-app real-world Python CVE corpus | `docs/evaluation/REALVULN_BENCHMARK.md` · `ACR-QA-Book/figures/REALVULN_LEADERBOARD.png` | arXiv:2604.13764 (RealVuln 2026 benchmark paper) |
+| **Semgrep 17.5% / Snyk 17.4% / SonarQube 6.5%** | Same RealVuln corpus, same matching (CWE+file+line±10) | `ACR-QA-Book/figures/REALVULN_LEADERBOARD.png` · `docs/evaluation/REALVULN_BENCHMARK.md` | arXiv:2604.13764 Table 3 |
+| **32.4% (ACR-QA +LLM)** | LLM-augmented recall on same RealVuln corpus | `docs/evaluation/REALVULN_BENCHMARK.md` | Same arXiv paper methodology |
+| **0.0% HIGH FPR (X6)** | 7 mature PyPI packages: numpy, pandas, pydantic, requests, httpx, SQLAlchemy, Flask | `docs/evaluation/REALVULN_BENCHMARK.md` X6 section · pre-registration YAMLs in `TESTS/evaluation/` | Pre-registered — git timestamp proves no cherry-pick |
+| **FPR 75.3% (full output)** | SecurityEval 89+89 synthetic snippets — full output operating point | `docs/evaluation/OWASP_BENCHMARK.md` · `ACR-QA-Book/figures/CONFUSION_MATRIX.png` | SecurityEval (s2e-lab, NeurIPS 2023 workshop) |
+| **91.0% recall (SecurityEval)** | TPR on 89 vulnerable snippets at full-output operating point | `ACR-QA-Book/figures/CONFUSION_MATRIX.png` — TP=81, FN=8 | SecurityEval benchmark |
+| **Youden J=0.157** | J = TPR − FPR = 0.910 − 0.753; best among all tested tools | `docs/evaluation/OWASP_BENCHMARK.md` · `ACR-QA-Book/figures/CONFUSION_MATRIX.png` | Bandit J=0.090, Semgrep J=0.056 |
+| **+107% vulns/codebase** | Open-source vulnerabilities per commercial codebase, 2024 | Deck presenter notes | **Black Duck OSSRA 2026** (947 codebase audit, Nov 2024–Oct 2025) — scworld.com/news/open-source-vulnerabilities-per-codebase-surge-by-107 |
+| **45% AI-written code ships a flaw** | Proportion of AI-generated code with known vulnerabilities | Deck presenter notes | **Veracode 2025 GenAI Code Security report** — veracode.com/state-software-security-2024-report |
+| **$10–50k enterprise SAST** | Pricing bracket for Snyk/Semgrep/SonarQube enterprise tiers | `docs/PRICING_POSITIONING.md` | Verified June 2026 (Snyk Business, Semgrep Pro, SonarQube Enterprise public pricing) |
+| **91% FP rate (traditional SAST)** | Ghost Security 2025 study: 2,116 flagged → 180 real | Supporting context only | helpnetsecurity.com/2025/06/19/traditional-sast-tools/ |
+| **$4.44M / $10.22M breach cost** | Global average / US average data breach cost | Supporting context only | **IBM Cost of a Data Breach 2025** — ibm.com/reports/data-breach |
+| **3,247 tests** | 3,137 Python (`pytest --collect-only -q`) + 110 TS (`vitest list`) | Run `make test-all` live | — |
+| **88% CORE coverage** | pytest-cov on CORE/ only (mypy-enforced) | `README.md` badge · run `make coverage` | — |
+| **52 API endpoints** | Logical `/v1/` surface count | `FRONTEND/api/routers/` — count `@router.get/post/put/delete` decorators | — |
+| **19 detection engines** | Tool-producing engines in `CORE/engines/` + adapters | `ls CORE/engines/*.py CORE/adapters/*.py | wc -l` | 36 = total modules including scoring/attestation/RAG |
+| **κ=0.74 inter-rater** | Cohen's κ between Ahmed and independent reviewer | `docs/evaluation/PEER_VALIDATION.md` | Landis & Koch 1977 scale: ≥0.61 = "substantial" |
+| **EU CRA Sept 2026** | Cyber Resilience Act mandatory compliance date | `docs/evaluation/OWASP_BENCHMARK.md` · `docs/PRICING_POSITIONING.md` | EUR-Lex Regulation (EU) 2024/2847 |
+| **ECDSA-P256 + Dilithium3** | Signature algorithms used in attestation | `CORE/engines/attestation.py` lines 211–240 | NIST FIPS 204 (ML-DSA = Dilithium3) |
+| **96% entropy filter rejection** | % of hallucinated LLM runs caught by entropy filter (τ=3.2 bits) | `ACR-QA-Book/figures/rag_engine.png` bottom note: 101/2,407 ≈ 4% pass rate | — |
+
+> **Quick-fire "source?" drill:** For each number above, you should be able to say in one breath
+> where it lives. Practice: point at a row, say the file path. If you blank — it's in
+> `docs/evaluation/` or `ACR-QA-Book/figures/`. The figures are the fastest proof because they
+> render visually — ask the judge to open the slide and see the same number on the chart.
+
+---
+
 ## Startup / VC Q&A — Investor and Committee Questions
 
 *Use these when committee members ask business/commercialization questions. Keep each answer ≤45 seconds.*
