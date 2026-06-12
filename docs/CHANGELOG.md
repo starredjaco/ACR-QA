@@ -4,6 +4,16 @@ All notable changes to ACR-QA are documented here.
 
 ## [Unreleased] — 2026-06-12
 
+### Changed — god-mode defense deck (sales narrative + real screenshots)
+
+- **`scripts/build_defense_deck.py` rebuilt** into a 20-slide sales-narrative deck: hook
+  ("AI writes 1.88× more vulns"), market-reality hero stats ($10–50k vs $0), the
+  Confirmed-Tier **funnel visual** (1,942 → 55), an Evaluation table, three trust proofs,
+  a competitive matrix, a "What ACR-QA Delivers" closing, and **real embedded dashboard
+  screenshots** (Overview, run detail, OWASP heatmap, verified attestation) captured live
+  via Playwright. KSIU navy/gold branding + logo. Rendered and visually verified.
+- Screenshots stored under `docs/presentation_assets/shots/`.
+
 ### Fixed — attestation signatures now verify (was always "Signature Invalid")
 
 - **Cross-process attestation verification was broken.** `AttestationEngine.verify()` used the
