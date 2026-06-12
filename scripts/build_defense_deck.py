@@ -493,6 +493,82 @@ def the_ask_slide(prs):
     )
 
 
+def _exploit_verification_slide(prs):
+    """Horizontal 4-box flow — fully legible at any projector scale."""
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    _bg(s, NAVY)
+    tf = _box(s, Inches(0.55), Inches(0.22), Inches(12.2), Inches(0.75))
+    _run(tf.paragraphs[0], "Exploit Verification — Proven, Not Claimed", 26, WHITE, bold=True)
+    _rect(s, Inches(0.57), Inches(0.93), Inches(1.5), Pt(3), GOLD)
+    stf = _box(s, Inches(0.57), Inches(0.97), Inches(12.0), Inches(0.38))
+    _run(
+        stf.paragraphs[0],
+        "4-phase chain: detect → detonate → patch → re-detonate · ECDSA-signed bundle at every stage",
+        12,
+        GOLD,
+        italic=True,
+    )
+
+    phases = [
+        ("1", "DETECT", "Rule maps to exploit\ncategory: SQLi, CMDi,\nSSTI — 13 categories", NAVY2),
+        (
+            "2",
+            "DETONATE",
+            "Docker sandbox fires\nreal payload:\n' OR 1=1 · ;echo PWNED\n{{7×7}}→49",
+            RGBColor(0x7B, 0x1F, 0x1F),
+        ),
+        ("3", "PATCH", "AI generates fix.\nSame exact payload\nfires again —\nmust FAIL.", RGBColor(0x0D, 0x54, 0x30)),
+        (
+            "4",
+            "SIGN",
+            "vuln_proof + fix_diff\n+ fix_proof signed as\none ECDSA-P256\n+ Dilithium3 bundle.",
+            RGBColor(0x1A, 0x3A, 0x6B),
+        ),
+    ]
+
+    box_w = Inches(2.85)
+    gap = Inches(0.22)
+    start_x = Inches(0.55)
+    box_top = Inches(1.52)
+    box_h = Inches(4.5)
+
+    for idx, (num, label, body, color) in enumerate(phases):
+        x = Emu(start_x + idx * (box_w + gap))
+        # box background
+        _rect(s, x, box_top, box_w, box_h, color, rounded=True)
+        # phase number circle (gold accent bar at top)
+        _rect(s, x, box_top, box_w, Inches(0.55), GOLD, rounded=False)
+        ntf = _box(s, x, box_top + Inches(0.04), box_w, Inches(0.5))
+        ntf.vertical_anchor = MSO_ANCHOR.MIDDLE
+        p = ntf.paragraphs[0]
+        _center(p)
+        _run(p, f"Phase {num}", 15, NAVY, bold=True)
+        # label
+        ltf = _box(s, x + Inches(0.12), box_top + Inches(0.65), box_w - Inches(0.24), Inches(0.65))
+        p2 = ltf.paragraphs[0]
+        _center(p2)
+        _run(p2, label, 20, WHITE, bold=True)
+        # body
+        btf = _box(s, x + Inches(0.15), box_top + Inches(1.38), box_w - Inches(0.3), Inches(2.9))
+        btf.word_wrap = True
+        p3 = btf.paragraphs[0]
+        _center(p3)
+        _run(p3, body, 14, RGBColor(0xD0, 0xE4, 0xFF))
+        # arrow between phases
+        if idx < 3:
+            ax = Emu(x + box_w + Inches(0.03))
+            _arrow(s, ax, box_top + Inches(1.9), Inches(0.16), Inches(0.5), GOLD)
+
+    foot = _box(s, Inches(0.55), Inches(6.15), Inches(12.2), Inches(0.45))
+    _run(
+        foot.paragraphs[0],
+        "No static analysis — a real Docker container boots, a real attack runs, and the cage is proven to hold.",
+        13,
+        GOLD,
+        italic=True,
+    )
+
+
 def B(text, level=0, bold=False, color=None):
     return (text, level, bold, color)
 
@@ -574,7 +650,7 @@ def build():
         prs,
         "The Precision Funnel — From Noise to Trust",
         FIGS / "FUNNEL_SLIDE.png",
-        sub="24-repo adversarial corpus · 1,942 raw findings → 55 Confirmed Tier · >52 pp precision over Semgrep CE",
+        sub="24-repo adversarial corpus · 1,942 raw findings → 55 Confirmed Tier · >52 pp F₁ over Semgrep CE",
         caption=(
             "Note: these numbers are the full evaluation corpus (24 repos). "
             "The live demo scans one app and produces proportionally fewer confirmed findings. "
@@ -594,19 +670,8 @@ def build():
         ),
     )
 
-    # 9 — Verified remediation flow (the "wow" slide before demo)
-    full_image_slide(
-        prs,
-        "Exploit Verification — Proven, Not Claimed",
-        FIGS / "verified_remediation.png",
-        sub="4-phase chain: detect → detonate → patch → re-detonate · ECDSA-signed bundle at every stage",
-        caption=(
-            "Phase 1: rule→exploit category mapping (13 categories). "
-            "Phase 2: Docker sandbox fires real payload (SQLi ' OR 1=1, CMDi ; echo PWNED, SSTI {{7*7}}). "
-            "Phase 3: AI patch applied, exploit re-fired → must fail. "
-            "Phase 4: (vuln_proof, fix_diff, fix_proof) signed as one attestation bundle."
-        ),
-    )
+    # 9 — Exploit verification — horizontal 4-box flow (fully legible at projector scale)
+    _exploit_verification_slide(prs)
 
     # 10 — Live demo divider
     section_slide(prs, "Live Demo", "Real repo · real finding · real exploit · signed receipt")

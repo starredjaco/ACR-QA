@@ -116,7 +116,7 @@ produced **1,942 raw findings** — at that level only 8.6% are real. We filter 
 a curated security rule set, then by reachability and taint — and we land on **55 findings in the
 Confirmed Tier, at 96.4% precision**, with **100% CVE recall preserved at every step.** Note the
 right column — green all the way down. **We throw away the noise without throwing away the real bugs.**
-That 52-percentage-point precision margin over Semgrep is what makes the auto-block safe."
+That **52-percentage-point F₁ margin over Semgrep** is what makes the auto-block safe."
 
 **⚠️ PRE-EMPT the trap — say this out loud:**
 > "These numbers — 1,942 and 55 — are the *evaluation corpus*, twenty-four repos combined. The
@@ -263,7 +263,7 @@ If a judge cross-references two slides, these must agree. Know every row.
 |--------|-----------|----------|-------------|
 | **1,942 → 55 @ 96.4%** | Eval corpus (24 repos) funnel | 7 | `ABLATION_STUDY.md` + `FUNNEL_SLIDE.png` |
 | **64 / 13 / 4** | payments-api single live scan | 11 | Live DB — run `make seed-demo` |
-| **>52 pp over Semgrep** | Precision margin (P4 vs Semgrep CE) | 7 | `HEAD_TO_HEAD_BENCHMARK.md` |
+| **>52 pp F₁ over Semgrep** | F₁ margin (98.2% − 45.7%) on 30-repo corpus | 7 | `HEAD_TO_HEAD_BENCHMARK.md` |
 | **25.1%** | RealVuln real-world recall | 8 | `REALVULN_LEADERBOARD.png` + arXiv:2604.13764 |
 | **100% (8/8)** | Pre-registered CVE recall | 7, 15 | `CVE_RECALL_BATTERY.md` |
 | **45%** | AI code shipping a flaw | 2 | Veracode 2025 |
