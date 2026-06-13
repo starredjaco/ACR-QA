@@ -118,7 +118,20 @@ export function SupplyChainPage() {
                 <span className="n">{deps.length}</span>
               </h3>
             </div>
-            <DependencyTree deps={deps} />
+            {deps.length === 0 ? (
+              <div className="empty" style={{ textAlign: "center", padding: "2rem 1rem" }}>
+                <Package size={36} style={{ opacity: 0.3 }} aria-hidden />
+                <p style={{ fontWeight: 600, marginTop: 8 }}>No third-party dependencies in this app</p>
+                <p style={{ opacity: 0.7, maxWidth: 460, margin: "4px auto 0", fontSize: 13 }}>
+                  This sample vendors no external packages, so there is no dependency manifest
+                  (<code>requirements.txt</code> / <code>package.json</code>) to analyse. Software-composition
+                  analysis and the CycloneDX SBOM populate automatically for any repo that ships one — pick a
+                  run with a manifest from the selector above to see the dependency tree and CVE mapping.
+                </p>
+              </div>
+            ) : (
+              <DependencyTree deps={deps} />
+            )}
           </>
         )}
       </div>
