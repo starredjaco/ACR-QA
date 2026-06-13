@@ -12,6 +12,11 @@ All notable changes to ACR-QA are documented here.
   (`x <= 1 ? x*100 : x`) so it is correct whether the value arrives as 0–1 or 0–100. Verified live
   on the running dashboard (re-screenshotted) and with the 110-test Vitest suite.
 
+- **Cost & ROI page showed `NaN×` for Avg ROI.** Each run's `roi_multiplier` is `"∞"` when analysis
+  cost is $0 (a free tool has unbounded ROI); `parseFloat("∞")` is `NaN`, so the average collapsed to
+  NaN. Now averages only the finite values and shows **`∞`** when every run was free — which is the
+  actual selling point (zero cost vs. $100/hr manual review). `cost.tsx`.
+
 ### Changed — dashboard polish (god-mode live review)
 
 - **Supply Chain page: intentional empty state.** When a run has no dependency manifest the page

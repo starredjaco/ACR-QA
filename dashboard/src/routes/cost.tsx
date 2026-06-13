@@ -38,13 +38,18 @@ export function CostPage() {
   const totalSaved  = costs.reduce((s, c) => s + c.dev_cost_saved_usd, 0);
   const totalHours  = costs.reduce((s, c) => s + c.hours_saved, 0);
   const totalFindings = costs.reduce((s, c) => s + c.total_findings, 0);
-  const avgRoi      = costs.length ? parseFloat(costs.reduce((s, c) => s + parseFloat(c.roi_multiplier ?? "0"), 0).toFixed(1)) / costs.length : 0;
+  // roi_multiplier is "∞" when analysis cost is $0 (the whole point: a free tool has
+  // unbounded ROI). parseFloat("∞") is NaN, so average only the finite values; if none
+  // are finite (every run was free), the honest answer is ∞, not NaN.
+  const finiteRois  = costs.map((c) => parseFloat(c.roi_multiplier ?? "0")).filter((v) => Number.isFinite(v));
+  const avgRoi      = finiteRois.length ? finiteRois.reduce((s, v) => s + v, 0) / finiteRois.length : null;
+  const avgRoiLabel = avgRoi === null ? "∞" : `${avgRoi.toFixed(1)}×`;
 
   const SUMMARY = [
     { icon: <DollarSign size={18} />, label: "Total Analysis Cost", value: `$${totalCost.toFixed(4)}`, sub: "AI explanation budget", color: "var(--purple)" },
     { icon: <TrendingUp size={18} />, label: "Developer Cost Saved", value: `$${totalSaved.toFixed(2)}`, sub: "at $100/hr equivalent", color: "var(--emerald)" },
     { icon: <Clock size={18} />, label: "Hours Saved", value: `${totalHours.toFixed(1)} h`, sub: "manual review time", color: "var(--blue)" },
-    { icon: <Zap size={18} />, label: "Avg ROI", value: `${avgRoi.toFixed(1)}×`, sub: "return on analysis cost", color: "var(--med)" },
+    { icon: <Zap size={18} />, label: "Avg ROI", value: avgRoiLabel, sub: "return on analysis cost", color: "var(--med)" },
   ];
 
   return (
