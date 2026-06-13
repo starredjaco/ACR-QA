@@ -43,10 +43,14 @@ STAGING = Path("/tmp/acrqa-demo")
 # Curated demo apps: (sample-dir, dashboard repo name). Honest, descriptive names —
 # each is a sample application with intentionally-planted vulnerabilities (the same
 # kind used in security training). The tool's detection on them is real.
+# Order matters: the LAST app seeded becomes the "latest completed run" that the
+# dashboard landing banner and default views feature — so payments-api (the demo's
+# hero, with the live SQL-injection story) is seeded last. Its findings are unchanged
+# by ordering; only its recency/run-id is.
 DEMO_APPS = [
-    ("comprehensive-issues", "payments-api"),
-    ("realistic-issues", "web-backend"),
     ("seeded-repo", "internal-tools"),
+    ("realistic-issues", "web-backend"),
+    ("comprehensive-issues", "payments-api"),
 ]
 
 

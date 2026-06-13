@@ -19,6 +19,11 @@ All notable changes to ACR-QA are documented here.
   external packages; SCA + CycloneDX SBOM populate for any repo that ships a `requirements.txt` /
   `package.json`) so the page reads as deliberate rather than unfinished. `supply-chain.tsx`.
 
+- **`seed_demo_scan.py` — payments-api now seeded last.** The dashboard landing banner and default
+  views feature the *latest completed run*; with payments-api seeded first, the banner pointed at
+  `internal-tools` instead of the demo's SQL-injection hero. Reordered `DEMO_APPS` so payments-api
+  is seeded last. Its findings (64 / 13 high / 6 med / 4 Confirmed Tier) are unchanged by ordering.
+
 ## [Unreleased] — 2026-06-12
 
 ### Fixed — defense-deck number consistency sweep (credibility hardening)
