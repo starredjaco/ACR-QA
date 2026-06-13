@@ -2,6 +2,16 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Unreleased] — 2026-06-13
+
+### Fixed — dashboard display bug (god-mode live review)
+
+- **Confidence score rendered as `8500%` instead of `85%`** on the run-detail findings list and the
+  finding modal — the API returns confidence on a 0–100 scale but the frontend multiplied by 100
+  again. Fixed `FindingsTable.tsx` + `FindingModal.tsx` with a scale-defensive formula
+  (`x <= 1 ? x*100 : x`) so it is correct whether the value arrives as 0–1 or 0–100. Verified live
+  on the running dashboard (re-screenshotted) and with the 110-test Vitest suite.
+
 ## [Unreleased] — 2026-06-12
 
 ### Fixed — defense-deck number consistency sweep (credibility hardening)

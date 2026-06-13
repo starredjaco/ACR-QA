@@ -76,7 +76,8 @@ export function FindingsTable({ findings, onSelect }: Props) {
         ) : (
           filtered.map((f) => {
             const sevCls = f.severity === "high" || f.severity === "critical" ? "high" : f.severity === "medium" ? "med" : "low";
-            const conf = Math.round((f.confidence ?? 0) * 100);
+            const rawConf = f.confidence ?? 0;
+            const conf = Math.round(rawConf <= 1 ? rawConf * 100 : rawConf);
             return (
               <div
                 key={f.id}

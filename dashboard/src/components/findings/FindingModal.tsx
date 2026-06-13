@@ -93,10 +93,10 @@ export function FindingModal({ finding, runId, onClose }: Props) {
               <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
                 <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--fg-5)" }}>CONF</span>
                 <div style={{ width: 48, height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 999, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${Math.round((finding.confidence ?? 0) * 100)}%`, background: "var(--gradient)", borderRadius: 999 }} />
+                  <div style={{ height: "100%", width: `${Math.round((finding.confidence ?? 0) <= 1 ? (finding.confidence ?? 0) * 100 : (finding.confidence ?? 0))}%`, background: "var(--gradient)", borderRadius: 999 }} />
                 </div>
                 <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--fg-3)", fontWeight: 600 }}>
-                  {Math.round((finding.confidence ?? 0) * 100)}%
+                  {Math.round((finding.confidence ?? 0) <= 1 ? (finding.confidence ?? 0) * 100 : (finding.confidence ?? 0))}%
                 </span>
               </span>
             </div>
