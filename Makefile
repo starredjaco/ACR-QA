@@ -197,7 +197,7 @@ seed-admin:
 
 seed-demo:
 	@echo "🌱 Seeding dashboard with a real demo scan..."
-	.venv/bin/python3 scripts/seed_demo_scan.py
+	.venv/bin/python3 scripts/seed_demo_scan.py --reset
 
 deck:
 	@echo "📊 Building defense deck (.pptx + .odp)..."

@@ -29,6 +29,16 @@ All notable changes to ACR-QA are documented here.
   `internal-tools` instead of the demo's SQL-injection hero. Reordered `DEMO_APPS` so payments-api
   is seeded last. Its findings (64 / 13 high / 6 med / 4 Confirmed Tier) are unchanged by ordering.
 
+- **`make seed-demo` is now idempotent.** The target now passes `--reset`, so re-seeding deletes the
+  prior demo runs first instead of piling up duplicates (the dashboard was accumulating 3× runs per
+  demo repo on repeated seeds). Only ever touches the curated demo repos, never real/eval repos.
+
+### Added — dashboard showcase guide
+
+- **`docs/DASHBOARD_SHOWCASE.md`** — defense-day click-path for the dashboard (pre-flight, a 6-stop
+  hero tour ending on the signed attestation, supporting pages, and two "be ready for" Q&A items),
+  verified live against seeded run #1073.
+
 ## [Unreleased] — 2026-06-12
 
 ### Fixed — defense-deck number consistency sweep (credibility hardening)
