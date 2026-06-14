@@ -5,7 +5,8 @@ import { Shield, ChevronLeft, ChevronRight } from "lucide-react";
 import { StatusBar } from "@/components/ui/StatusBar";
 
 const SEV_OPTS = ["", "high", "medium", "low"] as const;
-const STATUS_OPTS = ["", "open", "confirmed", "dismissed", "fixed"] as const;
+// Must match the DB vuln_status_enum exactly — "open" is not a valid value and 500s the API.
+const STATUS_OPTS = ["", "detected", "confirmed", "in_progress", "fixed", "dismissed"] as const;
 
 export function VulnerabilitiesPage() {
   const [page, setPage] = useState(0);

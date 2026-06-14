@@ -159,7 +159,7 @@ async def stride_model(
     """Generate a STRIDE threat model from open vulnerabilities in a repo."""
     rows = db.execute(
         """
-        SELECT v.canonical_rule_id, v.severity, v.file_path, v.title, v.short_id
+        SELECT v.canonical_rule_id, v.severity, v.file_path, v.message, v.short_id
         FROM vulnerabilities v
         JOIN findings f ON f.vulnerability_id = v.id
         JOIN analysis_runs ar ON ar.id = f.run_id
@@ -186,7 +186,7 @@ async def stride_model(
                         "rule": rule,
                         "severity": r["severity"],
                         "file": r["file_path"],
-                        "title": r["title"],
+                        "title": r["message"],
                     }
                 )
                 matched = True

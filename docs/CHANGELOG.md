@@ -17,6 +17,16 @@ All notable changes to ACR-QA are documented here.
   NaN. Now averages only the finite values and shows **`∞`** when every run was free — which is the
   actual selling point (zero cost vs. $100/hr manual review). `cost.tsx`.
 
+- **Fleet → STRIDE tab returned 500.** The threat-model query selected `v.title`, a column that does
+  not exist on `vulnerabilities` (it's `message`), so any repo selection crashed. Fixed the column in
+  `FRONTEND/api/routers/fleet.py`; STRIDE now renders the full threat model per repo. Verified live
+  (payments-api → Tampering 5, DoS 5, EoP 2).
+
+- **Vulnerabilities status filter 500'd on "Open".** The frontend offered an `"open"` option that the
+  DB `vuln_status_enum` has no value for (`detected/confirmed/assigned/in_progress/fixed/verified/
+  regressed/dismissed`), raising `InvalidTextRepresentation`. Aligned `STATUS_OPTS` in
+  `vulnerabilities.tsx` to the real enum values. Filter no longer crashes; verified by clicking through.
+
 ### Changed — dashboard polish (god-mode live review)
 
 - **Supply Chain page: intentional empty state.** When a run has no dependency manifest the page
