@@ -2,6 +2,30 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Unreleased] — 2026-06-15
+
+### Added — KSIU template defense deck + speaker script rework
+
+- **`scripts/build_template_deck.py`** — new defense deck builder that recreates Dr. Samy's required
+  KSIU faculty template from scratch: navy #002060 + gold #D4AF37, KSIU logo top-right, project-title
+  header bar on every content slide, blue section headings, white content slides. Colours extracted
+  from the friend's reference PPTX theme XML. Previous `build_defense_deck.py` kept as reference only.
+
+- **15-slide academic deck** matching the mandated spine: Title → Outline → Introduction → Problem
+  Statement → Motivation → Methodology (Architecture) → Methodology (Exploit Verification) →
+  Results (Funnel) → Results & Evaluation → Use Cases 1 (Education/Startups) → Use Cases 2
+  (Open Source/Enterprise) → Conclusion → Future Work → Any Questions → Thank You. Gemini AI photos
+  integrated: `Gemini_1.png` (title hero), `Gemini_6.png` (conclusion panel), `Gemini_2.png`
+  (thank-you hero, full-bleed with dimmed navy overlay via `a:alpha` XML node).
+
+- **`docs/DEFENSE_SPEAKER_SCRIPT.md`** — fully remapped to 15-slide template deck (was 17 slides
+  from the old photo-first builder). Includes per-slide SAY/SIDE/SOURCE, LIVE DEMO insertion point
+  between slides 9 and 10, recovery lines, number consistency table updated to new slide refs,
+  all 10 hard-claim verification lines, and 8 concept Q&A entries (SQ1–SQ9).
+
+- **`Makefile` `deck:` target** — now points to `build_template_deck.py` instead of `build_defense_deck.py`.
+  ODP conversion runs inline so `make deck` emits both `.pptx` and `.odp`.
+
 ## [Unreleased] — 2026-06-13
 
 ### Fixed — dashboard display bug (god-mode live review)

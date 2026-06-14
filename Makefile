@@ -201,7 +201,7 @@ seed-demo:
 
 deck:
 	@echo "📊 Building defense deck (.pptx + .odp)..."
-	.venv/bin/python3 scripts/build_defense_deck.py
+	.venv/bin/python3 scripts/build_template_deck.py
 	@command -v libreoffice >/dev/null 2>&1 && libreoffice --headless --convert-to odp --outdir docs/ docs/ACR-QA_Defense.pptx || echo "(install libreoffice to also emit .odp)"
 
 # ============================================
