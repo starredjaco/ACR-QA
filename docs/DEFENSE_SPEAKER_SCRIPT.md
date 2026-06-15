@@ -1,6 +1,6 @@
 # ACR-QA — Defense Speaker Script (15 slides · KSIU template)
 
-**Maps 1:1 to `scripts/build_template_deck.py`** — 15 slides. Target: **~11 min** talk + **3 min** demo = **~14 min total**.
+**Maps 1:1 to `scripts/build_template_deck.py`** — 16 slides. Target: **~12 min** talk + **3 min** demo = **~15 min total**.
 ~40–50 seconds per slide. Demo falls between Slides 9 and 10.
 
 **How to read:**
@@ -32,16 +32,16 @@ AbdelNabi**. Thank you for your time — I'll take about fifteen minutes."
 
 ## Slide 2 — Presentation Outline
 
-**SAY:** "Here is the roadmap for today. I will cover seven sections: **Introduction** — why AI-written
-code is the right problem right now. **Problem Statement** — three reasons teams can't trust automated
-review. **Motivation** — what the market is missing. **Methodology** — the system I built and how it
-works. **Results and Evaluation** — numbers and a live demo. **Use Cases** — who benefits and how.
-Then I'll close with **Conclusion and Future Work**."
+**SAY:** "Here is the roadmap for today. Eight sections: **Introduction** — why AI-written code is
+the right problem right now. **Problem Statement** — three reasons teams can't trust automated review.
+**Solution** — what ACR-QA is and the three design decisions that make it work. **Methodology** —
+how the system is built. **Results and Evaluation** — the numbers, including a live demo. **Use Cases**
+— who benefits. **Future Work** — honest gaps and the roadmap. And **Conclusion**."
 
 **SIDE:**
-- Dr. Samy's seven mandated sections, in order: Introduction → Problem → Motivation → Methodology
-  → Results → Use Cases → Conclusion & Future Work. Name each one as you point to it.
-- ~15 seconds — name the seven, don't elaborate yet.
+- Eight sections in order: Introduction → Problem → Solution → Methodology → Results → Use Cases
+  → Future Work → Conclusion. Name each one as you point at it.
+- ~15 seconds — name the eight, don't elaborate yet.
 
 ---
 
@@ -81,21 +81,23 @@ confident, wrong advice. A developer gets burned once and never trusts the tool 
 
 ---
 
-## Slide 5 — Motivation
+## Slide 5 — Solution — ACR-QA
 
-**SAY:** "Detection is now a commodity. Any AI can find thousands of issues. **The scarce,
-valuable thing is proof that a finding is real** — real enough to stop a release on its own.
-Every tool competes on finding more. None answer: *is this one real?* ACR-QA is a trust layer
-on top of your scanners — it answers one question at merge time. Two modes, one scan: the
-**Confirmed Tier at 96.4% precision** — high enough to auto-block — or **Full Output at 91%
-recall** for developer triage. And critically: we don't just claim a vulnerability. We detonate
-it — then sign the proof."
+**SAY:** "ACR-QA is a trust layer on top of your existing scanners. One question at merge time:
+*is this finding real enough to stop a release on its own?* Three design decisions answer it.
+**Confirmed Tier** — four gates: HIGH severity, a 22-rule security set, production code path,
+and Bandit HIGH confidence. That combination reaches **96.4% precision — safe to auto-block
+without a human in the loop.** **Exploit Verification** — we don't claim a vulnerability, we
+detonate it. A Docker sandbox fires a real payload, then fires it again after the AI patch —
+it must now fail. Binary ground truth, not static re-analysis. **Cryptographic Attestation** —
+every scan is ECDSA-P256 and Dilithium3 signed as a tamper-evident bundle. EU Cyber Resilience
+Act compliance out of the box, at zero recurring cost."
 
 **SIDE:**
-- This is the pivot: "detection is commoditised, trust is scarce." That's the business argument
-  and the academic argument in one sentence.
-- Pre-empt the "two numbers" question here: "one scan, two settings — like a car's 0-to-60 vs
-  fuel economy. Both true, neither contradicts the other."
+- Three cards map to three committee questions: "how precise?" / "how do you know it's real?" /
+  "how do you prove it later?"
+- "Safe to auto-block" = the key claim. Everything else in the presentation justifies this one line.
+- **SOURCE:** `docs/evaluation/CONFIRMED_TIER.md` · `CORE/engines/exploit_verifier.py` · `CORE/engines/attestation.py`.
 
 ---
 
@@ -236,7 +238,22 @@ Dilithium3 signed. One command to verify the entire chain. EU CRA-ready provenan
 
 ---
 
-## Slide 12 — Conclusion
+## Slide 12 — Future Work
+
+**SAY:** "Four honest gaps I identified and plan to close. **Inter-procedural taint analysis** —
+tracing tainted data across files and functions, worth an estimated 10 to 15 percentage points of
+recall. **More languages** — Java, C#, and Rust adapters. **A managed offering** — a one-click
+GitHub App so teams adopt the trust layer without self-hosting. **Independent expert labelling**
+— a multi-annotator ground-truth study to harden the precision numbers further. These are not
+weaknesses I am hiding — they are the research roadmap."
+
+**SIDE:**
+- "These are not weaknesses I am hiding" = the committee respects honesty about scope more than
+  pretending the system is complete. Name the gap before they do.
+
+---
+
+## Slide 13 — Conclusion
 
 **SAY:** "Four words. **Trust** — 96.4% Confirmed-Tier precision, high enough to auto-block
 without a human review. **Proof** — exploit-verified in a sandbox, cryptographically signed —
@@ -256,22 +273,7 @@ running system.**"
 
 ---
 
-## Slide 13 — Future Work
-
-**SAY:** "Four honest gaps I identified and plan to close. **Inter-procedural taint analysis** —
-tracing tainted data across files and functions, worth an estimated 10 to 15 percentage points of
-recall. **More languages** — Java, C#, and Rust adapters. **A managed offering** — a one-click
-GitHub App so teams adopt the trust layer without self-hosting. **Independent expert labelling**
-— a multi-annotator ground-truth study to harden the precision numbers further. These are not
-weaknesses I am hiding — they are the research roadmap."
-
-**SIDE:**
-- "These are not weaknesses I am hiding" = the committee respects honesty about scope more than
-  pretending the system is complete. Name the gap before they do.
-
----
-
-## Slide 14 — Any Questions?
+## Slide 14 — Any Questions?  ← section closer (dark slide)
 
 **SAY:** "I'm happy to go deeper on any number, any slide."
 
@@ -279,7 +281,7 @@ weaknesses I am hiding — they are the research roadmap."
 
 ---
 
-## Slide 15 — Thank You
+## Slide 15 — Thank You  ← section closer (dark slide, Gemini_2 hero)
 
 **SAY (only if prompted, otherwise just bow):** "Thank you — Ahmed Mahmoud Abbas, supervised by
 Dr. Samy Abdel Nabi."

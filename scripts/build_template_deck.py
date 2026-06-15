@@ -196,16 +196,17 @@ def outline_slide(prs):
     sections = [
         "Introduction",
         "Problem Statement",
-        "Motivation",
+        "Solution",
         "Methodology",
         "Results & Evaluation",
         "Use Cases",
-        "Conclusion & Future Work",
+        "Future Work",
+        "Conclusion",
     ]
     x = Inches(4.3)
     w = Inches(8.4)
-    row_h = Inches(0.74)
-    top = Inches(0.7)
+    row_h = Inches(0.62)
+    top = Inches(0.55)
     for i, sec in enumerate(sections):
         y = Emu(top + i * row_h)
         _rect(s, x, y, Inches(0.7), Inches(0.6), GOLD)
@@ -242,21 +243,22 @@ def introduction_slide(prs):
         _center(p2)
         _run(p2, lab, 11, GRAY)
         x = Emu(x + Inches(2.15))
-    # feature pills
-    feats = [
-        "Detect — 19 engines, 3 languages",
-        "Prove — exploit-verified in a sandbox",
-        "Sign — cryptographic attestation",
+    # three pillars — full width, no screenshot
+    pillars = [
+        ("Detect", "19 engines · 3 languages · 12-stage async pipeline", NAVY),
+        ("Prove", "Exploit-verified in a real Docker sandbox — binary ground truth", RED),
+        ("Sign", "ECDSA-P256 + Dilithium3 — every scan is cryptographically attested", GREEN),
     ]
-    y = Inches(4.45)
-    for f in feats:
-        _rect(s, Inches(0.5), y, Inches(6.2), Inches(0.55), WHITE, line=NAVY, rounded=True)
-        ftf = _box(s, Inches(0.7), y, Inches(5.9), Inches(0.55))
-        ftf.vertical_anchor = MSO_ANCHOR.MIDDLE
-        _run(ftf.paragraphs[0], f, 13, NAVY, bold=True)
-        y = Emu(y + Inches(0.68))
-    # dashboard screenshot on the right
-    _fit_image(s, SHOTS / "overview.png", Inches(7.1), Inches(1.7), Inches(5.9), Inches(4.7))
+    x = Inches(0.5)
+    for label, body, col in pillars:
+        _rect(s, x, Inches(4.3), Inches(4.05), Inches(2.2), LIGHT, rounded=True)
+        _rect(s, x, Inches(4.3), Inches(4.05), Inches(0.14), col)
+        c = _box(s, x + Inches(0.25), Inches(4.55), Inches(3.6), Inches(1.8))
+        _run(c.paragraphs[0], label, 20, col, bold=True)
+        p = c.add_paragraph()
+        p.space_before = Pt(6)
+        _run(p, body, 13, INK)
+        x = Emu(x + Inches(4.2))
 
 
 def problem_slide(prs):
@@ -288,27 +290,48 @@ def problem_slide(prs):
         x = Emu(x + Inches(4.15))
 
 
-def motivation_slide(prs):
-    s = _content(prs, "Motivation", 5)
-    big = _box(s, Inches(0.5), Inches(1.7), Inches(12.3), Inches(1.0))
-    _run(big.paragraphs[0], "Detection is commoditised. An AI can find thousands of issues.", 20, INK, bold=True)
-    p = big.add_paragraph()
-    p.space_before = Pt(4)
-    _run(p, "The scarce, valuable thing is ", 20, INK)
-    _run(p, "proof that a finding is real", 20, GREEN, bold=True)
-    _run(p, " — real enough to stop a release on its own.", 20, INK)
-    points = [
-        "Every tool competes on finding MORE. None answer: is this one real?",
-        "ACR-QA is a trust layer on top of your scanners — one question at merge time.",
-        "Two modes, one scan: Confirmed Tier (96.4% precision, auto-block) vs Full Output (triage).",
-        "We don't claim a vulnerability — we detonate it, then sign the proof.",
+def solution_slide(prs):
+    s = _content(prs, "Solution — ACR-QA", 5)
+    tf = _box(s, Inches(0.5), Inches(1.55), Inches(12.3), Inches(0.75))
+    _run(tf.paragraphs[0], "A trust layer on top of your scanners — one question at merge time:", 20, INK, bold=True)
+    p = tf.add_paragraph()
+    p.space_before = Pt(2)
+    _run(p, "Is this finding real enough to stop a release on its own?", 20, GREEN, bold=True)
+    # three design pillars as cards
+    pillars = [
+        (
+            "Confirmed Tier",
+            "Four gates: HIGH severity + 22-rule set + production path + Bandit HIGH confidence.",
+            "96.4% precision — safe to auto-block without human review.",
+            NAVY,
+        ),
+        (
+            "Exploit Verification",
+            "Docker sandbox fires a real payload. Same payload must FAIL after the AI patch.",
+            "Binary ground truth — not static re-analysis. 5/5 verified live.",
+            RED,
+        ),
+        (
+            "Cryptographic Attestation",
+            "ECDSA-P256 + Dilithium3 (post-quantum) sign every scan as a tamper-evident bundle.",
+            "EU CRA Sept 2026 compliance out of the box, at zero recurring cost.",
+            GREEN,
+        ),
     ]
-    y = Inches(3.5)
-    for pt in points:
-        _rect(s, Inches(0.6), Emu(y + Inches(0.06)), Inches(0.16), Inches(0.16), GOLD)
-        t = _box(s, Inches(0.95), y, Inches(11.6), Inches(0.6))
-        _run(t.paragraphs[0], pt, 15, INK)
-        y = Emu(y + Inches(0.72))
+    x = Inches(0.5)
+    cw = Inches(4.05)
+    for head, body, payoff, col in pillars:
+        _rect(s, x, Inches(2.55), cw, Inches(4.0), LIGHT, rounded=True)
+        _rect(s, x, Inches(2.55), cw, Inches(0.14), col)
+        c = _box(s, x + Inches(0.22), Inches(2.85), Emu(cw - Inches(0.44)), Inches(3.5))
+        _run(c.paragraphs[0], head, 17, col, bold=True)
+        p = c.add_paragraph()
+        p.space_before = Pt(7)
+        _run(p, body, 12, INK)
+        p2 = c.add_paragraph()
+        p2.space_before = Pt(9)
+        _run(p2, payoff, 11.5, col, bold=True)
+        x = Emu(x + Inches(4.2))
 
 
 def methodology_arch_slide(prs):
@@ -489,7 +512,7 @@ def use_cases_2_slide(prs):
 
 
 def conclusion_slide(prs):
-    s = _content(prs, "Conclusion", 12)
+    s = _content(prs, "Conclusion", 13)
     tf = _box(s, Inches(0.5), Inches(1.6), Inches(7.0), Inches(0.9))
     _run(tf.paragraphs[0], "The open, attested, $0 quadrant the market leaves empty.", 19, INK, bold=True)
     lines = [
@@ -514,7 +537,7 @@ def conclusion_slide(prs):
 
 
 def future_work_slide(prs):
-    s = _content(prs, "Future Work", 13)
+    s = _content(prs, "Future Work", 12)
     items = [
         (
             "Inter-procedural taint analysis",
@@ -563,14 +586,15 @@ def build():
     outline_slide(prs)  # 2
     introduction_slide(prs)  # 3
     problem_slide(prs)  # 4
-    motivation_slide(prs)  # 5
+    solution_slide(prs)  # 5
     methodology_arch_slide(prs)  # 6
     methodology_exploit_slide(prs)  # 7
     funnel_slide(prs)  # 8
     results_slide(prs)  # 9
     use_cases_1_slide(prs)  # 10
     use_cases_2_slide(prs)  # 11
-    conclusion_slide(prs)  # 12
+    future_work_slide(prs)  # 12
+    conclusion_slide(prs)  # 13
     future_work_slide(prs)  # 13
     section_closer(prs, "Any Questions?", "Happy to go deeper on any number, any slide.")  # 14
     section_closer(
