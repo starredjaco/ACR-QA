@@ -68,6 +68,11 @@ ACR-QA-Book/*.pdf
 ACR-QA-Book/*.lof
 ACR-QA-Book/*.lot
 ACR-QA-Book/figures/*
+# Deck assets that must be tracked (PUML source + rendered PNG for slide builder)
+!ACR-QA-Book/figures/exploit_flow_slide.puml
+!ACR-QA-Book/figures/exploit_flow_slide.png
+
+docs/references_pptx
 
 # PowerPoint files (replaced by LaTeX)
 *.pptx
@@ -125,6 +130,7 @@ CLAUDE.md
 ACR-QA_BANNER.html
 ACR-QA_Poster.html
 ACR-QA_Q1.html
+docs/archive
 
 # Dashboard build output (large bundles)
 FRONTEND/static/dashboard/
