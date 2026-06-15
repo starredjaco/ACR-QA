@@ -243,11 +243,18 @@ def introduction_slide(prs):
         lt.vertical_anchor = MSO_ANCHOR.MIDDLE
         _run(lt.paragraphs[0], lab, 13, INK)
         y = Emu(y + Inches(1.08))
-    # live dashboard screenshot on the right — the credibility anchor
-    _fit_image(s, SHOTS / "overview.png", Inches(6.8), Inches(1.7), Inches(6.2), Inches(4.0))
-    cap = _box(s, Inches(6.8), Inches(5.75), Inches(6.2), Inches(0.5))
+    # PR comment mockup — the developer-facing output, immediate and concrete
+    _fit_image(
+        s,
+        ROOT / "docs" / "media" / "pr-comment-mockup1.png",
+        Inches(6.8),
+        Inches(1.65),
+        Inches(6.2),
+        Inches(4.1),
+    )
+    cap = _box(s, Inches(6.8), Inches(5.8), Inches(6.2), Inches(0.5))
     _center(cap.paragraphs[0])
-    _run(cap.paragraphs[0], "The live ACR-QA dashboard — a running system, not a mockup.", 12, GRAY, italic=True)
+    _run(cap.paragraphs[0], "What a developer sees on their PR — within 90 seconds of a push.", 12, GRAY, italic=True)
 
 
 def problem_slide(prs):
@@ -334,15 +341,15 @@ def _arrow(slide, x, y, w, h, color):
 
 def methodology_arch_slide(prs):
     s = _content(prs, "Methodology — System Architecture", 6)
-    sub = _box(s, Inches(0.5), Inches(1.5), Inches(12.3), Inches(0.4))
+    sub = _box(s, Inches(0.5), Inches(1.5), Inches(8.8), Inches(0.4))
     _run(
         sub.paragraphs[0],
-        "19 engines · 3 language adapters · 12-stage async pipeline · 52-endpoint FastAPI",
+        "36 engine modules · 3 language adapters · 12-stage async pipeline · 52-endpoint FastAPI",
         13,
         GOLD,
         italic=True,
     )
-    # ── native horizontal pipeline (6 stages + arrows) ──
+    # ── native horizontal pipeline — left 65% of slide ──
     stages = [
         ("1", "Push / PR", "Git webhook triggers a Celery worker", NAVY),
         ("2", "19 Tools", "Ruff · Semgrep · Bandit · ESLint · staticcheck — in parallel", NAVY),
@@ -351,12 +358,12 @@ def methodology_arch_slide(prs):
         ("5", "RAG Explain", "Retrieves the rule first — the AI can't hallucinate", GOLD),
         ("6", "Sign & Post", "ECDSA-P256 + Dilithium3, posted back to the PR", GREEN),
     ]
-    left, right = Inches(0.5), Inches(12.83)
+    left, right = Inches(0.5), Inches(8.6)
     n = len(stages)
-    gap = Inches(0.28)
+    gap = Inches(0.22)
     bw = Emu(int((right - left - (n - 1) * gap) / n))
-    bh = Inches(2.5)
-    top = Inches(2.3)
+    bh = Inches(2.7)
+    top = Inches(2.1)
     x = left
     for num, head, body, col in stages:
         _rect(s, x, top, bw, bh, LIGHT, rounded=True)
@@ -365,63 +372,50 @@ def methodology_arch_slide(prs):
         ht.vertical_anchor = MSO_ANCHOR.MIDDLE
         hp = ht.paragraphs[0]
         _center(hp)
-        _run(hp, f"{num}  {head}", 12.5, WHITE, bold=True)
-        bt = _box(s, Emu(x + Inches(0.12)), Emu(top + Inches(0.62)), Emu(bw - Inches(0.24)), Inches(1.7))
-        _run(bt.paragraphs[0], body, 10.5, INK)
+        _run(hp, f"{num}  {head}", 11, WHITE, bold=True)
+        bt = _box(s, Emu(x + Inches(0.1)), Emu(top + Inches(0.6)), Emu(bw - Inches(0.2)), Inches(1.9))
+        _run(bt.paragraphs[0], body, 9.5, INK)
         if x + bw < right - Inches(0.1):
-            _arrow(s, Emu(x + bw - Inches(0.05)), Emu(top + Inches(0.9)), Inches(0.32), Inches(0.6), GOLD)
+            _arrow(s, Emu(x + bw - Inches(0.05)), Emu(top + Inches(0.9)), Inches(0.26), Inches(0.55), GOLD)
         x = Emu(x + bw + gap)
-    # heart-of-the-system callout band
-    band_y = Inches(5.25)
-    _rect(s, Inches(0.5), band_y, Inches(12.33), Inches(1.1), NAVY, rounded=True)
-    bt = _box(s, Inches(0.8), band_y, Inches(11.7), Inches(1.1))
-    bt.vertical_anchor = MSO_ANCHOR.MIDDLE
-    _run(bt.paragraphs[0], "The Trust Gates are the heart:  ", 13, GOLD, bold=True)
-    _run(
-        bt.paragraphs[0],
-        "Confidence Scoring → Reachability → Taint Analysis → Confirmed Tier (96.4% precision).   "
-        "End to end: 14–90 seconds per scan.",
-        13,
-        WHITE,
-    )
+    # heart-of-the-system callout band (spans left pipeline only)
+    band_y = Inches(5.2)
+    _rect(s, Inches(0.5), band_y, Inches(8.1), Inches(1.15), NAVY, rounded=True)
+    bt2 = _box(s, Inches(0.75), band_y, Inches(7.6), Inches(1.15))
+    bt2.vertical_anchor = MSO_ANCHOR.MIDDLE
+    _run(bt2.paragraphs[0], "Trust Gates: ", 12, GOLD, bold=True)
+    _run(bt2.paragraphs[0], "Confidence → Reachability → Taint → Confirmed Tier (96.4%)  ·  14–90 s/scan", 12, WHITE)
+    # ── real pipeline diagram — right 32% ──
+    _fit_image(s, FIGS / "ACR-QA-Pipeline-Stages.png", Inches(8.8), Inches(1.5), Inches(4.3), Inches(5.0))
+    cap = _box(s, Inches(8.8), Inches(6.55), Inches(4.3), Inches(0.4))
+    _center(cap.paragraphs[0])
+    _run(cap.paragraphs[0], "Full pipeline — Fig. 3.1 in thesis", 11, GRAY, italic=True)
 
 
 def methodology_exploit_slide(prs):
     s = _content(prs, "Methodology — Exploit Verification", 7)
-    sub = _box(s, Inches(0.5), Inches(1.5), Inches(12.3), Inches(0.4))
+    sub = _box(s, Inches(0.5), Inches(1.5), Inches(12.3), Inches(0.45))
     _run(
         sub.paragraphs[0],
-        "We don't claim a vulnerability — we detonate it in a sandbox, then re-detonate the fix.",
-        13,
+        "We don't claim a vulnerability — we detonate it in a Docker sandbox, then re-detonate the fix.",
+        14,
         GOLD,
         italic=True,
     )
-    phases = [
-        ("1  DETECT", "Rule maps to an exploit category — SQLi, command injection, SSTI (13 categories).", NAVY),
-        ("2  DETONATE", "Docker sandbox fires a real canary payload: ' OR 1=1 · {{7×7}}→49. Attack confirmed.", RED),
-        ("3  PATCH", "AI generates a fix. The SAME payload fires again — it must now FAIL.", GREEN),
-        ("4  SIGN", "vuln-proof + fix-diff + fix-proof signed as one ECDSA-P256 + Dilithium3 bundle.", NAVY),
-    ]
-    x = Inches(0.5)
-    bw = Inches(2.95)
-    for label, body, col in phases:
-        _rect(s, x, Inches(2.55), bw, Inches(2.9), LIGHT, rounded=True)
-        _rect(s, x, Inches(2.55), bw, Inches(0.6), col)
-        h = _box(s, x, Inches(2.63), bw, Inches(0.5))
-        h.vertical_anchor = MSO_ANCHOR.MIDDLE
-        hp = h.paragraphs[0]
-        _center(hp)
-        _run(hp, label, 15, WHITE, bold=True)
-        b = _box(s, x + Inches(0.18), Inches(3.35), Emu(bw - Inches(0.36)), Inches(2.0))
-        _run(b.paragraphs[0], body, 13, INK)
-        x = Emu(x + Inches(3.07))
-    foot = _box(s, Inches(0.5), Inches(5.95), Inches(12.3), Inches(0.5))
+    # ── exploit flow diagram (generated from exploit_flow_slide.puml) ──
+    _fit_image(s, FIGS / "exploit_flow_slide.png", Inches(0.5), Inches(2.05), Inches(12.33), Inches(3.5))
+    # result strip
+    result_y = Inches(5.7)
+    _rect(s, Inches(0.5), result_y, Inches(12.33), Inches(1.05), NAVY, rounded=True)
+    rt = _box(s, Inches(0.8), result_y, Inches(11.7), Inches(1.05))
+    rt.vertical_anchor = MSO_ANCHOR.MIDDLE
+    _run(rt.paragraphs[0], "5/5 live:  ", 13, GOLD, bold=True)
+    _run(rt.paragraphs[0], "SQLi · CMDi · SSTI — all EXPLOITED then BLOCKED.  ", 13, WHITE)
     _run(
-        foot.paragraphs[0],
-        "Verified live: 5/5 exploit tests — SQLi & SSTI fire; safe code is proven UN-exploitable.",
+        rt.paragraphs[0],
+        "Binary ground truth — static re-analysis can lie, re-detonation cannot.",
         13,
-        GREEN,
-        bold=True,
+        WHITE,
         italic=True,
     )
 
@@ -572,7 +566,10 @@ def conclusion_slide(prs):
         vt.vertical_anchor = MSO_ANCHOR.MIDDLE
         _run(vt.paragraphs[0], v, 12.5, INK)
         y = Emu(y + Inches(0.92))
-    _fit_image(s, PHOTOS / "Gemini_6.png", Inches(7.7), Inches(1.9), Inches(5.3), Inches(4.2))
+    _fit_image(s, SHOTS / "overview.png", Inches(7.5), Inches(1.9), Inches(5.5), Inches(4.2))
+    cap = _box(s, Inches(7.5), Inches(6.1), Inches(5.5), Inches(0.4))
+    _center(cap.paragraphs[0])
+    _run(cap.paragraphs[0], "Live dashboard — not a mockup.", 11, GRAY, italic=True)
     # closing line — not a proposal, a running system
     kill = _box(s, Inches(0.5), Inches(6.55), Inches(12.3), Inches(0.6))
     _run(kill.paragraphs[0], "This is not a proposal — it is a running system.", 16, NAVY, bold=True, italic=True)

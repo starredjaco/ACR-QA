@@ -53,16 +53,18 @@ real codebases, not a survey. Meanwhile, open-source vulnerabilities per codebas
 one year** — Black Duck OSSRA 2026. And the tooling to catch this costs enterprise teams
 **ten to fifty thousand dollars a year**. So your scanner flags nineteen hundred issues, the team
 cannot review them all, and **nobody can tell you which one breaches you**. That is the gap ACR-QA
-closes — and what you're looking at on the right is the **live, running dashboard**, not a mockup.
-The *how* — exactly how ACR-QA answers 'which one is real' — is the next slide."
+closes — and on the right is **exactly what a developer sees, ninety seconds after they push**.
+That is not a mockup. That is the real bot comment, on a real PR, with a real SQL injection finding —
+bad code, good code, fix right there."
 
-*(Gesture to the live dashboard screenshot on the right as you say "live, running dashboard.")*
+*(Gesture to the PR comment screenshot on the right. Point to the HIGH badge, then the good-code block.)*
 
 **SIDE:**
 - *45%* — **SOURCE:** Veracode 2025 GenAI Code Security report.
 - *+107%* — **SOURCE:** Black Duck OSSRA 2026, SC Media coverage.
 - *$10–50k* — **SOURCE:** Snyk/Semgrep/SonarQube public pricing pages.
-- The dashboard screenshot on the right is the live running system — not a mockup.
+- The PR bot comment on the right is the actual GitHub output — what the developer sees within 90 seconds.
+- Point to the HIGH badge, the bad/good code diff, and the "Mark as False Positive" button — this is the product.
 
 ---
 
@@ -117,7 +119,8 @@ end to end.**"
   Pydantic schema so I can reason across tools. `CORE/engines/normalizer.py`.
 - *"In parallel"* = fast AND independent — no tool's noise pollutes another.
 - *"Retrieves the rule"* = RAG: Retrieval-Augmented Generation. Open-book exam — can't invent.
-- **SOURCE:** `ACR-QA-Book/figures/arch_overview.png` — generated from `arch_overview.puml`.
+- The pipeline diagram on the right is `ACR-QA-Book/figures/ACR-QA-Pipeline-Stages.png` — the full 12-stage flowchart, also Fig. 3.1 in the thesis.
+- **SOURCE:** `CORE/engines/normalizer.py` · `CORE/detection/tool_runner.py` · `CORE/engines/confirmed_tier.py`.
 
 ---
 
