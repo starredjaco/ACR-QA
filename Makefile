@@ -202,7 +202,16 @@ seed-demo:
 deck:
 	@echo "📊 Building defense deck (.pptx + .odp)..."
 	.venv/bin/python3 scripts/build_template_deck.py
-	@command -v libreoffice >/dev/null 2>&1 && libreoffice --headless --convert-to odp --outdir docs/ docs/ACR-QA_Defense.pptx || echo "(install libreoffice to also emit .odp)"
+	@if pgrep -x soffice.bin >/dev/null 2>&1; then \
+		echo "⚠️  LibreOffice is running — close the open deck, the .odp was NOT regenerated."; \
+		echo "    (Re-run 'make deck' after closing it, or the .odp stays stale.)"; \
+	elif command -v libreoffice >/dev/null 2>&1; then \
+		libreoffice --headless -env:UserInstallation=file:///tmp/lo_deck_profile \
+			--convert-to odp --outdir docs/ docs/ACR-QA_Defense.pptx && \
+		echo "✓ .odp regenerated from fresh .pptx"; \
+	else \
+		echo "(install libreoffice to also emit .odp)"; \
+	fi
 
 # ============================================
 # Testing

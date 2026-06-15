@@ -223,42 +223,31 @@ def outline_slide(prs):
 
 def introduction_slide(prs):
     s = _content(prs, "Introduction", 3)
-    tf = _box(s, Inches(0.5), Inches(1.55), Inches(6.4), Inches(0.9))
-    _run(tf.paragraphs[0], "AI now writes a third of new code — and trust hasn't caught up.", 19, INK, bold=True)
-    # stat pills
+    tf = _box(s, Inches(0.5), Inches(1.55), Inches(6.4), Inches(1.2))
+    _run(tf.paragraphs[0], "AI now writes a third of new code —", 19, INK, bold=True)
+    p = tf.add_paragraph()
+    _run(p, "and trust hasn't caught up.", 19, INK, bold=True)
+    # stat pills — stacked on the left
     stats = [
-        ("45%", "of AI code\nships a flaw", RED),
-        ("+107%", "vulns / codebase\nin one year", RED),
-        ("$10–50k", "/yr for tools\nmost can't afford", NAVY),
+        ("45%", "of AI code ships a known flaw", RED),
+        ("+107%", "vulns / codebase in one year", RED),
+        ("$10–50k", "/yr for tools most can't afford", NAVY),
     ]
-    x = Inches(0.5)
+    y = Inches(2.9)
     for big, lab, col in stats:
-        _rect(s, x, Inches(2.65), Inches(2.0), Inches(1.4), LIGHT, rounded=True)
-        c = _box(s, x, Inches(2.78), Inches(2.0), Inches(1.2))
-        c.vertical_anchor = MSO_ANCHOR.MIDDLE
-        pp = c.paragraphs[0]
-        _center(pp)
-        _run(pp, big, 26, col, bold=True)
-        p2 = c.add_paragraph()
-        _center(p2)
-        _run(p2, lab, 11, GRAY)
-        x = Emu(x + Inches(2.15))
-    # three pillars — full width, no screenshot
-    pillars = [
-        ("Detect", "19 engines · 3 languages · 12-stage async pipeline", NAVY),
-        ("Prove", "Exploit-verified in a real Docker sandbox — binary ground truth", RED),
-        ("Sign", "ECDSA-P256 + Dilithium3 — every scan is cryptographically attested", GREEN),
-    ]
-    x = Inches(0.5)
-    for label, body, col in pillars:
-        _rect(s, x, Inches(4.3), Inches(4.05), Inches(2.2), LIGHT, rounded=True)
-        _rect(s, x, Inches(4.3), Inches(4.05), Inches(0.14), col)
-        c = _box(s, x + Inches(0.25), Inches(4.55), Inches(3.6), Inches(1.8))
-        _run(c.paragraphs[0], label, 20, col, bold=True)
-        p = c.add_paragraph()
-        p.space_before = Pt(6)
-        _run(p, body, 13, INK)
-        x = Emu(x + Inches(4.2))
+        _rect(s, Inches(0.5), y, Inches(5.9), Inches(0.95), LIGHT, rounded=True)
+        bt = _box(s, Inches(0.7), y, Inches(2.1), Inches(0.95))
+        bt.vertical_anchor = MSO_ANCHOR.MIDDLE
+        _run(bt.paragraphs[0], big, 28, col, bold=True)
+        lt = _box(s, Inches(2.7), y, Inches(3.6), Inches(0.95))
+        lt.vertical_anchor = MSO_ANCHOR.MIDDLE
+        _run(lt.paragraphs[0], lab, 13, INK)
+        y = Emu(y + Inches(1.08))
+    # live dashboard screenshot on the right — the credibility anchor
+    _fit_image(s, SHOTS / "overview.png", Inches(6.8), Inches(1.7), Inches(6.2), Inches(4.0))
+    cap = _box(s, Inches(6.8), Inches(5.75), Inches(6.2), Inches(0.5))
+    _center(cap.paragraphs[0])
+    _run(cap.paragraphs[0], "The live ACR-QA dashboard — a running system, not a mockup.", 12, GRAY, italic=True)
 
 
 def problem_slide(prs):
@@ -280,13 +269,13 @@ def problem_slide(prs):
     ]
     x = Inches(0.5)
     for head, body, col in cards:
-        _rect(s, x, Inches(2.4), Inches(3.95), Inches(3.9), LIGHT, rounded=True)
-        _rect(s, x, Inches(2.4), Inches(3.95), Inches(0.14), col)
-        c = _box(s, x + Inches(0.25), Inches(2.7), Inches(3.45), Inches(3.4))
+        _rect(s, x, Inches(2.85), Inches(3.95), Inches(2.7), LIGHT, rounded=True)
+        _rect(s, x, Inches(2.85), Inches(3.95), Inches(0.14), col)
+        c = _box(s, x + Inches(0.25), Inches(3.12), Inches(3.45), Inches(2.3))
         _run(c.paragraphs[0], head, 18, col if col != GOLD else RGBColor(0xB8, 0x8A, 0x1E), bold=True)
         p = c.add_paragraph()
         p.space_before = Pt(8)
-        _run(p, body, 13, INK)
+        _run(p, body, 13.5, INK)
         x = Emu(x + Inches(4.15))
 
 
@@ -321,9 +310,9 @@ def solution_slide(prs):
     x = Inches(0.5)
     cw = Inches(4.05)
     for head, body, payoff, col in pillars:
-        _rect(s, x, Inches(2.55), cw, Inches(4.0), LIGHT, rounded=True)
-        _rect(s, x, Inches(2.55), cw, Inches(0.14), col)
-        c = _box(s, x + Inches(0.22), Inches(2.85), Emu(cw - Inches(0.44)), Inches(3.5))
+        _rect(s, x, Inches(2.75), cw, Inches(3.2), LIGHT, rounded=True)
+        _rect(s, x, Inches(2.75), cw, Inches(0.14), col)
+        c = _box(s, x + Inches(0.22), Inches(3.05), Emu(cw - Inches(0.44)), Inches(2.7))
         _run(c.paragraphs[0], head, 17, col, bold=True)
         p = c.add_paragraph()
         p.space_before = Pt(7)
@@ -332,6 +321,15 @@ def solution_slide(prs):
         p2.space_before = Pt(9)
         _run(p2, payoff, 11.5, col, bold=True)
         x = Emu(x + Inches(4.2))
+
+
+def _arrow(slide, x, y, w, h, color):
+    a = slide.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, x, y, w, h)
+    a.fill.solid()
+    a.fill.fore_color.rgb = color
+    a.line.fill.background()
+    a.shadow.inherit = False
+    return a
 
 
 def methodology_arch_slide(prs):
@@ -344,7 +342,48 @@ def methodology_arch_slide(prs):
         GOLD,
         italic=True,
     )
-    _fit_image(s, FIGS / "arch_overview.png", Inches(0.6), Inches(1.95), Inches(12.1), Inches(4.6))
+    # ── native horizontal pipeline (6 stages + arrows) ──
+    stages = [
+        ("1", "Push / PR", "Git webhook triggers a Celery worker", NAVY),
+        ("2", "19 Tools", "Ruff · Semgrep · Bandit · ESLint · staticcheck — in parallel", NAVY),
+        ("3", "Normalize", "Every output → one CanonicalFinding schema", NAVY),
+        ("4", "Trust Gates", "Confidence · Reachability · Taint · Confirmed Tier", RED),
+        ("5", "RAG Explain", "Retrieves the rule first — the AI can't hallucinate", GOLD),
+        ("6", "Sign & Post", "ECDSA-P256 + Dilithium3, posted back to the PR", GREEN),
+    ]
+    left, right = Inches(0.5), Inches(12.83)
+    n = len(stages)
+    gap = Inches(0.28)
+    bw = Emu(int((right - left - (n - 1) * gap) / n))
+    bh = Inches(2.5)
+    top = Inches(2.3)
+    x = left
+    for num, head, body, col in stages:
+        _rect(s, x, top, bw, bh, LIGHT, rounded=True)
+        _rect(s, x, top, bw, Inches(0.5), col)
+        ht = _box(s, x, top, bw, Inches(0.5))
+        ht.vertical_anchor = MSO_ANCHOR.MIDDLE
+        hp = ht.paragraphs[0]
+        _center(hp)
+        _run(hp, f"{num}  {head}", 12.5, WHITE, bold=True)
+        bt = _box(s, Emu(x + Inches(0.12)), Emu(top + Inches(0.62)), Emu(bw - Inches(0.24)), Inches(1.7))
+        _run(bt.paragraphs[0], body, 10.5, INK)
+        if x + bw < right - Inches(0.1):
+            _arrow(s, Emu(x + bw - Inches(0.05)), Emu(top + Inches(0.9)), Inches(0.32), Inches(0.6), GOLD)
+        x = Emu(x + bw + gap)
+    # heart-of-the-system callout band
+    band_y = Inches(5.25)
+    _rect(s, Inches(0.5), band_y, Inches(12.33), Inches(1.1), NAVY, rounded=True)
+    bt = _box(s, Inches(0.8), band_y, Inches(11.7), Inches(1.1))
+    bt.vertical_anchor = MSO_ANCHOR.MIDDLE
+    _run(bt.paragraphs[0], "The Trust Gates are the heart:  ", 13, GOLD, bold=True)
+    _run(
+        bt.paragraphs[0],
+        "Confidence Scoring → Reachability → Taint Analysis → Confirmed Tier (96.4% precision).   "
+        "End to end: 14–90 seconds per scan.",
+        13,
+        WHITE,
+    )
 
 
 def methodology_exploit_slide(prs):
@@ -366,17 +405,17 @@ def methodology_exploit_slide(prs):
     x = Inches(0.5)
     bw = Inches(2.95)
     for label, body, col in phases:
-        _rect(s, x, Inches(2.2), bw, Inches(3.7), LIGHT, rounded=True)
-        _rect(s, x, Inches(2.2), bw, Inches(0.6), col)
-        h = _box(s, x, Inches(2.28), bw, Inches(0.5))
+        _rect(s, x, Inches(2.55), bw, Inches(2.9), LIGHT, rounded=True)
+        _rect(s, x, Inches(2.55), bw, Inches(0.6), col)
+        h = _box(s, x, Inches(2.63), bw, Inches(0.5))
         h.vertical_anchor = MSO_ANCHOR.MIDDLE
         hp = h.paragraphs[0]
         _center(hp)
         _run(hp, label, 15, WHITE, bold=True)
-        b = _box(s, x + Inches(0.18), Inches(3.0), Emu(bw - Inches(0.36)), Inches(2.8))
+        b = _box(s, x + Inches(0.18), Inches(3.35), Emu(bw - Inches(0.36)), Inches(2.0))
         _run(b.paragraphs[0], body, 13, INK)
         x = Emu(x + Inches(3.07))
-    foot = _box(s, Inches(0.5), Inches(6.1), Inches(12.3), Inches(0.5))
+    foot = _box(s, Inches(0.5), Inches(5.95), Inches(12.3), Inches(0.5))
     _run(
         foot.paragraphs[0],
         "Verified live: 5/5 exploit tests — SQLi & SSTI fire; safe code is proven UN-exploitable.",
@@ -461,9 +500,9 @@ def use_cases_1_slide(prs):
     _persona_card(
         s,
         Inches(0.5),
-        Inches(1.7),
+        Inches(2.1),
         Inches(6.0),
-        Inches(4.6),
+        Inches(3.4),
         "The University Instructor",
         "Grades hundreds of student repos a term. Enterprise scanners cost $10–50k — out of reach. "
         "Needs to catch the real SQL injection without drowning in style noise.",
@@ -473,9 +512,9 @@ def use_cases_1_slide(prs):
     _persona_card(
         s,
         Inches(6.8),
-        Inches(1.7),
+        Inches(2.1),
         Inches(6.0),
-        Inches(4.6),
+        Inches(3.4),
         "The Startup / CI Tech Lead",
         "Ships dozens of AI-written PRs a day. Needs an auto-block at merge that won't cry wolf, "
         "and a signed audit trail for compliance (EU CRA, Sept 2026).",
@@ -489,9 +528,9 @@ def use_cases_2_slide(prs):
     _persona_card(
         s,
         Inches(0.5),
-        Inches(1.7),
+        Inches(2.1),
         Inches(6.0),
-        Inches(4.6),
+        Inches(3.4),
         "The Open-Source Maintainer",
         "Reviews drive-by PRs from strangers with no time and no budget. Can't tell a real fix "
         "from a subtle supply-chain attack.",
@@ -501,9 +540,9 @@ def use_cases_2_slide(prs):
     _persona_card(
         s,
         Inches(6.8),
-        Inches(1.7),
+        Inches(2.1),
         Inches(6.0),
-        Inches(4.6),
+        Inches(3.4),
         "The Enterprise Security Auditor",
         "Must prove to regulators what was scanned, when, and what was found — months later, " "tamper-free.",
         "→ Every scan ECDSA + Dilithium3 signed · verify in one command · EU CRA-ready provenance.",
@@ -521,19 +560,22 @@ def conclusion_slide(prs):
         ("Reach", "19 engines · Python / JS / Go · 9/10 OWASP · 100% CVE recall."),
         ("Price", "Self-hosted, your data never leaves, $0 recurring — vs $10–50k/year."),
     ]
-    y = Inches(2.7)
+    y = Inches(2.75)
     for k, v in lines:
-        _rect(s, Inches(0.6), y, Inches(1.5), Inches(0.6), GOLD, rounded=True)
-        kt = _box(s, Inches(0.6), y, Inches(1.5), Inches(0.6))
+        _rect(s, Inches(0.6), y, Inches(1.6), Inches(0.75), GOLD, rounded=True)
+        kt = _box(s, Inches(0.6), y, Inches(1.6), Inches(0.75))
         kt.vertical_anchor = MSO_ANCHOR.MIDDLE
         kp = kt.paragraphs[0]
         _center(kp)
-        _run(kp, k, 15, NAVY, bold=True)
-        vt = _box(s, Inches(2.3), y, Inches(5.0), Inches(0.6))
+        _run(kp, k, 17, NAVY, bold=True)
+        vt = _box(s, Inches(2.4), y, Inches(4.9), Inches(0.75))
         vt.vertical_anchor = MSO_ANCHOR.MIDDLE
         _run(vt.paragraphs[0], v, 12.5, INK)
-        y = Emu(y + Inches(0.82))
-    _fit_image(s, PHOTOS / "Gemini_6.png", Inches(7.7), Inches(2.0), Inches(5.3), Inches(4.2))
+        y = Emu(y + Inches(0.92))
+    _fit_image(s, PHOTOS / "Gemini_6.png", Inches(7.7), Inches(1.9), Inches(5.3), Inches(4.2))
+    # closing line — not a proposal, a running system
+    kill = _box(s, Inches(0.5), Inches(6.55), Inches(12.3), Inches(0.6))
+    _run(kill.paragraphs[0], "This is not a proposal — it is a running system.", 16, NAVY, bold=True, italic=True)
 
 
 def future_work_slide(prs):
@@ -595,7 +637,6 @@ def build():
     use_cases_2_slide(prs)  # 11
     future_work_slide(prs)  # 12
     conclusion_slide(prs)  # 13
-    future_work_slide(prs)  # 13
     section_closer(prs, "Any Questions?", "Happy to go deeper on any number, any slide.")  # 14
     section_closer(
         prs, "Thank You", "Ahmed Mahmoud Abbas · Supervisor: Dr. Samy Abdel Nabi", photo="Gemini_2.png"

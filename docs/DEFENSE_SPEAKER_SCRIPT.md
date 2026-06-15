@@ -52,11 +52,11 @@ and **45% of AI-written code ships with a known security flaw**. That is Veracod
 real codebases, not a survey. Meanwhile, open-source vulnerabilities per codebase **jumped 107% in
 one year** — Black Duck OSSRA 2026. And the tooling to catch this costs enterprise teams
 **ten to fifty thousand dollars a year**. So your scanner flags nineteen hundred issues, the team
-cannot review them all, and **nobody can tell you which one breaches you**. ACR-QA answers that
-question with three capabilities: **Detect** — nineteen engines across three languages. **Prove**
-— exploit-verified in a real sandbox. **Sign** — every scan is cryptographically attested."
+cannot review them all, and **nobody can tell you which one breaches you**. That is the gap ACR-QA
+closes — and what you're looking at on the right is the **live, running dashboard**, not a mockup.
+The *how* — exactly how ACR-QA answers 'which one is real' — is the next slide."
 
-*(Point to the live dashboard screenshot on the right as you say "running system.")*
+*(Gesture to the live dashboard screenshot on the right as you say "live, running dashboard.")*
 
 **SIDE:**
 - *45%* — **SOURCE:** Veracode 2025 GenAI Code Security report.

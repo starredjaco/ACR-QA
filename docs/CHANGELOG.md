@@ -4,6 +4,26 @@ All notable changes to ACR-QA are documented here.
 
 ## [Unreleased] — 2026-06-15
 
+### Fixed — defense deck polish pass (final visual review)
+
+- **Duplicate Future Work slide removed.** The Motivation→Solution reorder left a stale
+  `future_work_slide(prs)` call, producing a 16-slide deck with Future Work appearing twice (both
+  badged page 12). Deck is now exactly **15 slides**, sequential page numbers.
+- **Architecture slide (6) rebuilt as a native horizontal pipeline.** The portrait `arch_overview.png`
+  (1887×2217, aspect 0.85) rendered tiny and unreadable on a 16:9 slide. Replaced with a hand-drawn
+  6-stage pipeline (Push → 19 Tools → Normalize → Trust Gates → RAG Explain → Sign) with gold flow
+  arrows and a navy "Trust Gates are the heart" callout band. Fully legible, on-brand.
+- **Introduction slide (3): dashboard screenshot restored.** Dropping it had made slides 3/4/5 three
+  consecutive three-card layouts, and slide 3's Detect/Prove/Sign cards pre-stated slide 5's Solution
+  triad — blunting the strongest slide. Now: 3 stacked stat pills (left) + live dashboard screenshot
+  (right) — breaks the card monotony and plants "real running system" credibility early.
+- **Whitespace pass on card slides.** Problem (4), Solution (5), Exploit (7), and both Use Cases
+  (10/11) had cards 3.9–4.6" tall with text in the top third. Shortened all to hug content.
+- **Conclusion slide (13)** closes with "This is not a proposal — it is a running system." filling
+  prior bottom dead space; Trust/Proof/Reach/Price pills enlarged.
+- **Makefile `deck:` hardened** — detects a running LibreOffice (which silently skips the .odp
+  conversion, leaving a stale .odp) and uses an isolated `-env:UserInstallation` profile.
+
 ### Added — KSIU template defense deck + speaker script rework
 
 - **`scripts/build_template_deck.py`** — new defense deck builder that recreates Dr. Samy's required
