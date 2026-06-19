@@ -1,0 +1,39 @@
+@startuml arch_flow_slide
+left to right direction
+scale 2.0
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam defaultFontSize 17
+skinparam shadowing false
+skinparam ArrowColor #002060
+skinparam ArrowThickness 2.5
+skinparam ArrowFontSize 14
+skinparam ArrowFontColor #374151
+
+skinparam component {
+  BackgroundColor #F2F4F9
+  BorderColor #002060
+  BorderThickness 2.5
+  FontColor #1A1F2B
+  FontSize 16
+  FontStyle bold
+}
+
+component "PUSH / PR\n \nGit webhook\ntriggers Celery\nworker\n \nSSE stream\nopens" as PUSH #EBF5FB
+
+component "19 TOOLS\n(parallel)\n \nPython:\nRuff · Bandit\nSemgrep · Vulture\nRadon · SCA\n \nJS/TS:\nESLint · Semgrep\n \nGo:\nstaticcheck\nSemgrep\n \n300s timeout" as TOOLS #EBF5FB
+
+component "NORMALIZE\n \nEvery tool output\nmaps to one\nCanonicalFinding\nschema\n \nfingerprint +\ndedup +\nrule_id" as NORM #EBF5FB
+
+component "TRUST GATES\n \n1 Confidence\n   scoring\n2 Reachability\n   (call-graph)\n3 Taint\n   analysis\n4 Confirmed\n   Tier filter\n \n96.4% precision" as TRUST #FDECEA
+
+component "RAG EXPLAIN\n \nRetrieves rule\nfrom local KB\nfirst\n \nGroq LLaMA\n3.3-70B x3 runs\n \nCannot\nhallucinate" as RAG #FFFDE7
+
+component "SIGN & POST\n \nECDSA-P256\n+ Dilithium3\nbundle\n \nPost inline\nPR comment\n \nStore to DB\nSARIF 2.1" as SIGN #E8F8F0
+
+PUSH --> TOOLS : findings
+TOOLS --> NORM : raw JSON
+NORM --> TRUST : CanonicalFinding
+TRUST --> RAG : confirmed
+RAG --> SIGN : explained
+@enduml

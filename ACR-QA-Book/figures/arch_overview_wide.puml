@@ -1,0 +1,74 @@
+@startuml arch_overview_wide
+scale 2.0
+'──────────────────────────────────────────────────────────────
+'  ACR-QA  —  High-Level System Architecture  (LANDSCAPE variant)
+'  Same content as arch_overview.puml, flowed left→right for slides
+'──────────────────────────────────────────────────────────────
+!theme plain
+left to right direction
+
+skinparam backgroundColor    #FFFFFF
+skinparam defaultFontName    "Arial"
+skinparam defaultFontSize    15
+skinparam shadowing          false
+skinparam wrapWidth          330
+
+skinparam rectangle {
+  BorderThickness  2.5
+  RoundCorner      10
+  FontSize         14
+}
+skinparam package {
+  BorderThickness  2.5
+  FontStyle        bold
+  FontSize         15
+}
+skinparam arrow {
+  Thickness  2.5
+  Color      #002654
+  FontColor  #374151
+  FontSize   13
+}
+skinparam note {
+  BackgroundColor #FFFDE7
+  BorderColor     #C9A84C
+  FontSize        13
+}
+
+package "① CLIENTS" as T1 #DBEAFE {
+  rectangle "Developer · CI/CD\nGitHub Webhook\nReact 18 Dashboard\nREST CLI · MCP Server" as CLI #BFDBFE
+}
+
+package "② FastAPI REST\n52 endpoints · JWT" as T2 #DCFCE7 {
+  rectangle "Scan · Results · Autofix\nAttestation · SARIF\nFeedback · RBAC\nRate-limit (Redis)" as API #BBF7D0
+}
+
+package "③ Celery Workers\n4 concurrent · Redis" as T3 #E0F2FE {
+  rectangle "run_analysis_pipeline()\nbind=True · max_retries=2\nAsync execution\nPostgreSQL status" as WRK #BAE6FD
+}
+
+package "④ 12-Stage Pipeline\nCORE/main.py" as T4 #FEF9C3 {
+  rectangle "Ingest · 12-Tool Dispatch\nNormalise → CanonicalFinding\nTaint · Dedup · Reachability\n5-Signal Confidence\nRAG+LLM-Aug · SCA+CBoM\nQuality Gate · SARIF · PR" as PL #FEF3C7
+}
+
+package "⑤ 19 Engines · 3 Adapters" as T5 #F0FFF4 {
+  rectangle "Python: Ruff · Bandit\nSemgrep · Vulture · Radon\nJS/TS: ESLint · npm audit\nGo: gosec · staticcheck\nv5.0: Risk · Time-Travel · IaC" as ENG #A7F3D0
+}
+
+package "⑥ Storage & Observability" as T6 #FFF7ED {
+  rectangle "PostgreSQL 15 · 13 tables\n18 migrations · provenance\nRedis 7.2 (broker)\nPrometheus + Grafana" as STO #FED7AA
+}
+
+CLI --> API  : HTTP
+API --> WRK  : enqueue
+WRK --> PL   : execute
+PL  --> ENG  : subprocess
+ENG --> PL   : findings
+PL  --> STO  : persist
+
+note bottom of T4
+  <b>96.4%</b> precision · <b>100%</b> CVE recall (8/8)
+  F₁ = <b>98.2%</b> vs Semgrep 45.7% · 3,247 tests · 88%
+end note
+
+@enduml

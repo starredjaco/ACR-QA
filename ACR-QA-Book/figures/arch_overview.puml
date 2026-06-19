@@ -71,7 +71,7 @@ note right of T4
   <b>96.4%</b> Confirmed Tier precision
   <b>100%</b> CVE recall (8/8)
   F₁ = <b>98.2%</b>  vs Semgrep 45.7%
-  2,897 tests · 84.89% coverage
+  3,247 tests · 88% coverage
 end note
 
 @enduml

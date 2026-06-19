@@ -1,0 +1,31 @@
+@startuml arch_system_slide
+left to right direction
+scale 2.2
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam ArrowColor #002060
+skinparam ArrowThickness 3
+skinparam ArrowFontSize 15
+skinparam ArrowFontColor #374151
+
+skinparam component {
+  BackgroundColor #F2F4F9
+  BorderColor #002060
+  BorderThickness 3
+  FontColor #1A1F2B
+  FontSize 19
+  FontStyle bold
+}
+
+component "CLIENTS\n \nGitHub · CI/CD\nDashboard · CLI\nMCP Server" as CLIENTS #EBF5FB
+component "API\n \nFastAPI\n52 endpoints\nJWT · RBAC" as API #E8F8F0
+component "WORKERS\n \nCelery × 4\nRedis broker\nasync queue" as WORK #FFFDE7
+component "PIPELINE\n \n19 Tools → Trust\nGates → Verify\n→ Sign\n \n96.4% · 14–90s" as PIPE #FDECEA
+component "STORAGE\n \nPostgreSQL\nSARIF 2.1\nPrometheus\nGrafana · OTel" as STORE #EBF5FB
+
+CLIENTS --> API : push / PR
+API --> WORK : enqueue
+WORK --> PIPE : run
+PIPE --> STORE : persist
+@enduml

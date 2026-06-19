@@ -1,0 +1,68 @@
+@startuml detection_fanin
+scale 2.0
+'──────────────────────────────────────────────────────────────
+'  ACR-QA  —  Deterministic Detection  (19 tools → 1 schema)
+'  Same visual language as arch_overview_wide.puml
+'──────────────────────────────────────────────────────────────
+!theme plain
+left to right direction
+
+skinparam backgroundColor    #FFFFFF
+skinparam defaultFontName    "Arial"
+skinparam defaultFontSize    15
+skinparam shadowing          false
+skinparam wrapWidth          330
+
+skinparam rectangle {
+  BorderThickness  2.5
+  RoundCorner      10
+  FontSize         14
+}
+skinparam package {
+  BorderThickness  2.5
+  FontStyle        bold
+  FontSize         15
+}
+skinparam arrow {
+  Thickness  2.5
+  Color      #002654
+  FontColor  #374151
+  FontSize   13
+}
+skinparam note {
+  BackgroundColor #FFFDE7
+  BorderColor     #C9A84C
+  FontSize        13
+}
+
+package "① PYTHON adapter" as P1 #DBEAFE {
+  rectangle "Ruff — lint / style\nBandit — security\nSemgrep — patterns\nVulture — dead code\nRadon — complexity\nSCA · Secrets" as PY #BFDBFE
+}
+
+package "② JS / TS adapter" as P2 #DCFCE7 {
+  rectangle "ESLint — lint / security\nSemgrep — patterns\nnpm audit — deps" as JS #BBF7D0
+}
+
+package "③ GO adapter" as P3 #FEF9C3 {
+  rectangle "gosec — security\nstaticcheck — analysis\nSemgrep — patterns" as GO #FEF3C7
+}
+
+package "④ NORMALIZE" as P4 #E0F2FE {
+  rectangle "Every raw tool output →\none CanonicalFinding\n \nfingerprint · dedup\n66 rules → 422 mappings\nseverity · file · line · evidence" as NORM #BAE6FD
+}
+
+package "⑤ ONE CONTRACT" as P5 #F3E8FF {
+  rectangle "CanonicalFinding schema\n \nEvery downstream engine\nsees ONLY this.\nNo tool noise crosses over.\n \nSame code → same findings" as SCHEMA #E9D5FF
+}
+
+PY --> NORM
+JS --> NORM
+GO --> NORM
+NORM --> SCHEMA : 19 tools →\n1 contract
+
+note bottom of P4
+  <b>Rule-based · runs in parallel · 300 s timeout</b>
+  Reproducible — the same code yields the same findings, every run.
+end note
+
+@enduml
