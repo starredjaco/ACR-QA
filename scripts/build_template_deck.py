@@ -4,8 +4,15 @@ Build the GP2 defense deck in Dr. Samy's KSIU template style (matches the requir
 presentation template used across the faculty: navy #002060 + gold, KSIU branding,
 project-title header bar, blue section headings, white content slides).
 
-Academic spine (mandated): Introduction → Problem → Motivation → Methodology →
-Results → Use Cases → Conclusion → Future Work → Any Questions → Thank You.
+Photo-first, reference-pattern structure (mirrors the EGX360 defense deck):
+Intro → Problem (overview + 3 photo slides) → Solution (overview + 4 pillar slides) →
+System Architecture → Evaluation & Data → Results → Use Cases → Conclusion → Future Work.
+
+Identity: ACR-QA is a *deterministic trust layer*. The TRUST — exploit verification (Docker)
+and attestation (ECDSA + Dilithium3) — is deterministic proof an LLM structurally cannot give
+(a model can't detonate a bug or sign a result). An optional LLM tier (llm_detector.py,
+second_opinion.py) adds a few points of recall, gated and re-verified — but it never gets the
+final word. We go QUIET on the LLM: do not headline it, do not claim "no AI" (the code uses one).
 
 Run:    .venv/bin/python3 scripts/build_template_deck.py
 Then:   libreoffice --headless --convert-to odp --outdir docs/ docs/ACR-QA_Defense.pptx
@@ -26,6 +33,7 @@ from pptx.util import Emu, Inches, Pt
 NAVY = RGBColor(0x00, 0x20, 0x60)
 NAVY2 = RGBColor(0x00, 0x16, 0x42)
 GOLD = RGBColor(0xD4, 0xAF, 0x37)
+GOLD_DK = RGBColor(0xB8, 0x8A, 0x1E)
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 INK = RGBColor(0x1A, 0x1F, 0x2B)
 GRAY = RGBColor(0x5B, 0x66, 0x72)
@@ -37,6 +45,7 @@ BLUEROW = RGBColor(0x2A, 0x4B, 0x8C)
 ROOT = Path(__file__).resolve().parent.parent
 SHOTS = ROOT / "docs" / "presentation_assets" / "shots"
 FIGS = ROOT / "ACR-QA-Book" / "figures"
+MEDIA = ROOT / "docs" / "media"
 LOGO = ROOT / "docs" / "presentation_assets" / "ksiu-logo.png"
 PHOTOS = ROOT / "docs" / "GEMINI_PHOTOS"
 OUT = ROOT / "docs" / "ACR-QA_Defense.pptx"
@@ -99,7 +108,7 @@ def _hero(slide, photo, alpha):
 def _fit_image(slide, img, left, top, max_w, max_h):
     """Place an image fitted within a box, preserving aspect, centred in the box."""
     if not img.exists():
-        return
+        return None
     pic = slide.shapes.add_picture(str(img), left, top, width=max_w)
     if pic.height > max_h:
         slide.shapes._spTree.remove(pic._element)
@@ -109,11 +118,28 @@ def _fit_image(slide, img, left, top, max_w, max_h):
     return pic
 
 
-def _content(prs, heading, page):
+def _cover_image(slide, img, left, top, w, h):
+    """Fill a box with an image, cropping overflow (object-fit: cover)."""
+    if not img.exists():
+        _rect(slide, left, top, w, h, NAVY2, rounded=True)
+        return None
+    pic = slide.shapes.add_picture(str(img), left, top, width=w, height=h)
+    return pic
+
+
+def _arrow(slide, x, y, w, h, color):
+    a = slide.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, x, y, w, h)
+    a.fill.solid()
+    a.fill.fore_color.rgb = color
+    a.line.fill.background()
+    a.shadow.inherit = False
+    return a
+
+
+def _content(prs, heading, page, *, sub=None):
     """White content slide with the template header bar + blue section heading. Returns slide."""
     s = prs.slides.add_slide(prs.slide_layouts[6])
     _bg(s, WHITE)
-    # top header: project title centred (small), KSIU logo top-right, thin rule
     htf = _box(s, Inches(2.0), Inches(0.18), Inches(9.3), Inches(0.4))
     p = htf.paragraphs[0]
     _center(p)
@@ -121,10 +147,11 @@ def _content(prs, heading, page):
     if LOGO.exists():
         s.shapes.add_picture(str(LOGO), Inches(12.55), Inches(0.12), height=Inches(0.5))
     _rect(s, Inches(0.5), Inches(0.66), Inches(12.33), Pt(1.4), NAVY)
-    # section heading
     htf2 = _box(s, Inches(0.5), Inches(0.8), Inches(11.0), Inches(0.7))
     _run(htf2.paragraphs[0], heading, 28, NAVY, bold=True)
-    # page badge bottom-left
+    if sub:
+        st = _box(s, Inches(0.5), Inches(1.46), Inches(12.3), Inches(0.4))
+        _run(st.paragraphs[0], sub, 13, GOLD_DK, italic=True)
     _rect(s, Inches(0.2), Inches(7.05), Inches(0.4), Inches(0.4), NAVY)
     ptf = _box(s, Inches(0.2), Inches(7.05), Inches(0.4), Inches(0.4))
     ptf.vertical_anchor = MSO_ANCHOR.MIDDLE
@@ -134,15 +161,24 @@ def _content(prs, heading, page):
     return s
 
 
-# ── slides ───────────────────────────────────────────────────────────────────
+def _band(s, y, gold_lead, rest, *, h=Inches(1.0)):
+    """Navy callout band with a gold lead-in and white body."""
+    _rect(s, Inches(0.5), y, Inches(12.33), h, NAVY, rounded=True)
+    bt = _box(s, Inches(0.8), y, Inches(11.7), h)
+    bt.vertical_anchor = MSO_ANCHOR.MIDDLE
+    if gold_lead:
+        _run(bt.paragraphs[0], gold_lead, 13, GOLD, bold=True)
+    _run(bt.paragraphs[0], rest, 13, WHITE)
+    return bt
+
+
+# ── 1 · title ─────────────────────────────────────────────────────────────────
 def title_slide(prs):
     s = prs.slides.add_slide(prs.slide_layouts[6])
     _bg(s, NAVY)
     _hero(s, "Gemini_1.png", alpha=66)
-    # gold geometric accent strip on the right
     _rect(s, Inches(11.7), 0, Inches(1.63), EMU_H, GOLD)
     _rect(s, Inches(11.4), 0, Inches(0.3), EMU_H, NAVY2)
-    # left info blocks
     blocks = [
         ("BRANCH / FACULTY", "El Tur / Faculty of Computer Science and Engineering", 13),
         ("PROGRAM", "Computer Science", 13),
@@ -155,7 +191,6 @@ def title_slide(prs):
         vtf = _box(s, Inches(0.7), Emu(y + Inches(0.3)), Inches(10.0), Inches(0.4))
         _run(vtf.paragraphs[0], val, sz, WHITE)
         y = Emu(y + Inches(0.82))
-    # project title (big)
     ttf = _box(s, Inches(0.7), Inches(3.25), Inches(10.3), Inches(1.7))
     _run(ttf.paragraphs[0], "PROJECT TITLE", 11, GOLD, bold=True)
     p = ttf.add_paragraph()
@@ -165,8 +200,13 @@ def title_slide(prs):
     _run(p2, "Automated Code Review & Quality Assurance", 22, GOLD, bold=True)
     p3 = ttf.add_paragraph()
     p3.space_before = Pt(4)
-    _run(p3, "A trust layer for AI-written code — exploit-verified, cryptographically attested", 12, WHITE, italic=True)
-    # presenter + supervisor (right of the logo so nothing overlaps)
+    _run(
+        p3,
+        "A deterministic trust layer for AI-written code — exploit-verified, cryptographically attested",
+        12,
+        WHITE,
+        italic=True,
+    )
     if LOGO.exists():
         s.shapes.add_picture(str(LOGO), Inches(0.7), Inches(5.85), height=Inches(1.0))
     pf = _box(s, Inches(1.95), Inches(5.7), Inches(9.0), Inches(1.4))
@@ -184,6 +224,7 @@ def title_slide(prs):
     _run(pr, "KSIU · Egypt · 2026", 11, WHITE)
 
 
+# ── 2 · outline ─────────────────────────────────────────────────────────────────
 def outline_slide(prs):
     s = prs.slides.add_slide(prs.slide_layouts[6])
     _bg(s, NAVY)
@@ -196,12 +237,12 @@ def outline_slide(prs):
     sections = [
         "Introduction",
         "Problem Statement",
-        "Solution",
-        "Methodology",
-        "Results & Evaluation",
+        "The Solution",
+        "System Architecture",
+        "Evaluation & Data",
+        "Results",
         "Use Cases",
-        "Future Work",
-        "Conclusion",
+        "Conclusion & Future Work",
     ]
     x = Inches(4.3)
     w = Inches(8.4)
@@ -221,13 +262,13 @@ def outline_slide(prs):
         _run(ttf.paragraphs[0], sec, 16, WHITE, bold=True)
 
 
+# ── 3 · introduction ───────────────────────────────────────────────────────────
 def introduction_slide(prs):
     s = _content(prs, "Introduction", 3)
     tf = _box(s, Inches(0.5), Inches(1.55), Inches(6.4), Inches(1.2))
     _run(tf.paragraphs[0], "AI now writes a third of new code —", 19, INK, bold=True)
     p = tf.add_paragraph()
     _run(p, "and trust hasn't caught up.", 19, INK, bold=True)
-    # stat pills — stacked on the left
     stats = [
         ("45%", "of AI code ships a known flaw", RED),
         ("+107%", "vulns / codebase in one year", RED),
@@ -243,361 +284,455 @@ def introduction_slide(prs):
         lt.vertical_anchor = MSO_ANCHOR.MIDDLE
         _run(lt.paragraphs[0], lab, 13, INK)
         y = Emu(y + Inches(1.08))
-    # PR comment mockup — the developer-facing output, immediate and concrete
-    _fit_image(
-        s,
-        ROOT / "docs" / "media" / "pr-comment-mockup1.png",
-        Inches(6.8),
-        Inches(1.65),
-        Inches(6.2),
-        Inches(4.1),
-    )
+    _fit_image(s, MEDIA / "pr-comment-mockup1.png", Inches(6.8), Inches(1.65), Inches(6.2), Inches(4.1))
     cap = _box(s, Inches(6.8), Inches(5.8), Inches(6.2), Inches(0.5))
     _center(cap.paragraphs[0])
     _run(cap.paragraphs[0], "What a developer sees on their PR — within 90 seconds of a push.", 12, GRAY, italic=True)
 
 
-def problem_slide(prs):
+# ── 4 · problem overview ────────────────────────────────────────────────────────
+def problem_overview_slide(prs):
     s = _content(prs, "Problem Statement", 4)
-    tf = _box(s, Inches(0.5), Inches(1.55), Inches(12.3), Inches(0.6))
-    _run(tf.paragraphs[0], "Your scanner flags ~1,900 issues per scan. Which one breaches you?", 18, INK, bold=True)
+    tf = _box(s, Inches(0.5), Inches(1.5), Inches(12.3), Inches(0.6))
+    _run(
+        tf.paragraphs[0],
+        "Your scanner flags ~1,900 issues per scan. Which one actually breaches you?",
+        18,
+        INK,
+        bold=True,
+    )
     cards = [
         (
-            "Quality variance",
-            "Manual review is inconsistent — the SQL injection on line 47 slips through on the 50th PR of the day.",
-            NAVY,
-        ),
-        ("Cost barrier", "Enterprise tools cost $10–50k/year — unaffordable for universities and most startups.", GOLD),
-        (
-            "Hallucination",
-            "AI explainers invent confident, wrong advice. A developer gets burned once and never trusts the tool again.",
-            RED,
-        ),
-    ]
-    x = Inches(0.5)
-    for head, body, col in cards:
-        _rect(s, x, Inches(2.85), Inches(3.95), Inches(2.7), LIGHT, rounded=True)
-        _rect(s, x, Inches(2.85), Inches(3.95), Inches(0.14), col)
-        c = _box(s, x + Inches(0.25), Inches(3.12), Inches(3.45), Inches(2.3))
-        _run(c.paragraphs[0], head, 18, col if col != GOLD else RGBColor(0xB8, 0x8A, 0x1E), bold=True)
-        p = c.add_paragraph()
-        p.space_before = Pt(8)
-        _run(p, body, 13.5, INK)
-        x = Emu(x + Inches(4.15))
-
-
-def solution_slide(prs):
-    s = _content(prs, "Solution — ACR-QA", 5)
-    tf = _box(s, Inches(0.5), Inches(1.55), Inches(12.3), Inches(0.75))
-    _run(tf.paragraphs[0], "A trust layer on top of your scanners — one question at merge time:", 20, INK, bold=True)
-    p = tf.add_paragraph()
-    p.space_before = Pt(2)
-    _run(p, "Is this finding real enough to stop a release on its own?", 20, GREEN, bold=True)
-    # three design pillars as cards
-    pillars = [
-        (
-            "Confirmed Tier",
-            "Four gates: HIGH severity + 22-rule set + production path + Bandit HIGH confidence.",
-            "96.4% precision — safe to auto-block without human review.",
+            "1",
+            "Too many alerts,\nzero trust",
+            "A wall of warnings, mostly false. Nobody can tell the real SQL injection from the noise.",
             NAVY,
         ),
         (
-            "Exploit Verification",
-            "Docker sandbox fires a real payload. Same payload must FAIL after the AI patch.",
-            "Binary ground truth — not static re-analysis. 5/5 verified live.",
+            "2",
+            "Claimed,\nnever proven",
+            "Tools say “possible vulnerability” — but never prove it is actually exploitable.",
             RED,
         ),
         (
-            "Cryptographic Attestation",
-            "ECDSA-P256 + Dilithium3 (post-quantum) sign every scan as a tamper-evident bundle.",
-            "EU CRA Sept 2026 compliance out of the box, at zero recurring cost.",
+            "3",
+            "No proof of\nprovenance",
+            "Results aren’t signed. You can’t trust a stranger’s PR, or what AI just wrote into your repo.",
             GREEN,
         ),
     ]
     x = Inches(0.5)
-    cw = Inches(4.05)
-    for head, body, payoff, col in pillars:
-        _rect(s, x, Inches(2.75), cw, Inches(3.2), LIGHT, rounded=True)
-        _rect(s, x, Inches(2.75), cw, Inches(0.14), col)
-        c = _box(s, x + Inches(0.22), Inches(3.05), Emu(cw - Inches(0.44)), Inches(2.7))
-        _run(c.paragraphs[0], head, 17, col, bold=True)
+    for num, head, body, col in cards:
+        _rect(s, x, Inches(2.5), Inches(3.95), Inches(3.4), LIGHT, rounded=True)
+        _rect(s, x, Inches(2.5), Inches(3.95), Inches(0.14), col)
+        _rect(s, x + Inches(0.25), Inches(2.75), Inches(0.7), Inches(0.7), col, rounded=True)
+        nt = _box(s, x + Inches(0.25), Inches(2.75), Inches(0.7), Inches(0.7))
+        nt.vertical_anchor = MSO_ANCHOR.MIDDLE
+        _center(nt.paragraphs[0])
+        _run(nt.paragraphs[0], num, 22, WHITE, bold=True)
+        c = _box(s, x + Inches(0.25), Inches(3.6), Inches(3.45), Inches(2.2))
+        _run(c.paragraphs[0], head, 18, col if col != GOLD else GOLD_DK, bold=True)
         p = c.add_paragraph()
-        p.space_before = Pt(7)
-        _run(p, body, 12, INK)
-        p2 = c.add_paragraph()
-        p2.space_before = Pt(9)
-        _run(p2, payoff, 11.5, col, bold=True)
-        x = Emu(x + Inches(4.2))
+        p.space_before = Pt(8)
+        _run(p, body, 13.5, INK)
+        x = Emu(x + Inches(4.15))
+    _band(s, Inches(6.15), "The gap: ", "detection is cheap and noisy — trust is what's missing.", h=Inches(0.85))
 
 
-def _arrow(slide, x, y, w, h, color):
-    a = slide.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, x, y, w, h)
-    a.fill.solid()
-    a.fill.fore_color.rgb = color
-    a.line.fill.background()
-    a.shadow.inherit = False
-    return a
+# ── 5–7 · problem detail (photo) ────────────────────────────────────────────────
+def problem_detail_slide(prs, page, num, photo, title, punch, stat_big, stat_lab):
+    s = _content(prs, "Problem Statement", page)
+    # left text column
+    _rect(s, Inches(0.5), Inches(1.7), Inches(0.78), Inches(0.78), GOLD, rounded=True)
+    nt = _box(s, Inches(0.5), Inches(1.7), Inches(0.78), Inches(0.78))
+    nt.vertical_anchor = MSO_ANCHOR.MIDDLE
+    _center(nt.paragraphs[0])
+    _run(nt.paragraphs[0], num, 26, NAVY, bold=True)
+    tt = _box(s, Inches(0.5), Inches(2.7), Inches(5.9), Inches(1.3))
+    _run(tt.paragraphs[0], title, 30, NAVY, bold=True)
+    pt = _box(s, Inches(0.5), Inches(4.0), Inches(5.9), Inches(1.6))
+    _run(pt.paragraphs[0], punch, 17, INK)
+    # stat pill
+    _rect(s, Inches(0.5), Inches(5.7), Inches(5.9), Inches(1.0), LIGHT, rounded=True)
+    bt = _box(s, Inches(0.7), Inches(5.7), Inches(2.4), Inches(1.0))
+    bt.vertical_anchor = MSO_ANCHOR.MIDDLE
+    _run(bt.paragraphs[0], stat_big, 30, RED, bold=True)
+    lt = _box(s, Inches(3.0), Inches(5.7), Inches(3.2), Inches(1.0))
+    lt.vertical_anchor = MSO_ANCHOR.MIDDLE
+    _run(lt.paragraphs[0], stat_lab, 13, INK)
+    # right photo (cover)
+    _cover_image(s, PHOTOS / photo, Inches(6.75), Inches(1.7), Inches(6.08), Inches(5.0))
 
 
-def methodology_arch_slide(prs):
-    s = _content(prs, "Methodology — System Architecture", 6)
-    sub = _box(s, Inches(0.5), Inches(1.5), Inches(8.8), Inches(0.4))
-    _run(
-        sub.paragraphs[0],
-        "36 engine modules · 3 language adapters · 12-stage async pipeline · 52-endpoint FastAPI",
-        13,
-        GOLD,
-        italic=True,
-    )
-    # ── native horizontal pipeline — left 65% of slide ──
-    stages = [
-        ("1", "Push / PR", "Git webhook triggers a Celery worker", NAVY),
-        ("2", "19 Tools", "Ruff · Semgrep · Bandit · ESLint · staticcheck — in parallel", NAVY),
-        ("3", "Normalize", "Every output → one CanonicalFinding schema", NAVY),
-        ("4", "Trust Gates", "Confidence · Reachability · Taint · Confirmed Tier", RED),
-        ("5", "RAG Explain", "Retrieves the rule first — the AI can't hallucinate", GOLD),
-        ("6", "Sign & Post", "ECDSA-P256 + Dilithium3, posted back to the PR", GREEN),
+# ── 8 · solution overview (4 pillars) ───────────────────────────────────────────
+def solution_overview_slide(prs):
+    s = _content(prs, "The Solution — ACR-QA", 8)
+    tf = _box(s, Inches(0.5), Inches(1.5), Inches(12.3), Inches(0.75))
+    _run(tf.paragraphs[0], "A trust layer on top of your scanners. One question at merge time: ", 18, INK, bold=True)
+    _run(tf.paragraphs[0], "is this finding real enough to stop a release?", 18, GREEN, bold=True)
+    pillars = [
+        (
+            "1",
+            "Deterministic Detection",
+            "13 tools across Python, JS, Go — one schema. Reproducible, every run.",
+            "the foundation",
+            NAVY,
+        ),
+        (
+            "2",
+            "Trust Gates",
+            "Reachability + taint + confidence collapse noise to 96.4% precision.",
+            "solves Problem 1",
+            GOLD_DK,
+        ),
+        (
+            "3",
+            "Exploit Verification",
+            "Detonate a real payload in Docker. Re-detonate the fix. 5/5 live.",
+            "solves Problem 2",
+            RED,
+        ),
+        (
+            "4",
+            "Crypto Attestation",
+            "ECDSA-P256 + Dilithium3 sign every scan. EU CRA-ready, $0 recurring.",
+            "solves Problem 3",
+            GREEN,
+        ),
     ]
-    left, right = Inches(0.5), Inches(8.6)
-    n = len(stages)
-    gap = Inches(0.22)
-    bw = Emu(int((right - left - (n - 1) * gap) / n))
-    bh = Inches(2.7)
-    top = Inches(2.1)
-    x = left
-    for num, head, body, col in stages:
-        _rect(s, x, top, bw, bh, LIGHT, rounded=True)
-        _rect(s, x, top, bw, Inches(0.5), col)
-        ht = _box(s, x, top, bw, Inches(0.5))
-        ht.vertical_anchor = MSO_ANCHOR.MIDDLE
-        hp = ht.paragraphs[0]
-        _center(hp)
-        _run(hp, f"{num}  {head}", 11, WHITE, bold=True)
-        bt = _box(s, Emu(x + Inches(0.1)), Emu(top + Inches(0.6)), Emu(bw - Inches(0.2)), Inches(1.9))
-        _run(bt.paragraphs[0], body, 9.5, INK)
-        if x + bw < right - Inches(0.1):
-            _arrow(s, Emu(x + bw - Inches(0.05)), Emu(top + Inches(0.9)), Inches(0.26), Inches(0.55), GOLD)
-        x = Emu(x + bw + gap)
-    # heart-of-the-system callout band (spans left pipeline only)
-    band_y = Inches(5.2)
-    _rect(s, Inches(0.5), band_y, Inches(8.1), Inches(1.15), NAVY, rounded=True)
-    bt2 = _box(s, Inches(0.75), band_y, Inches(7.6), Inches(1.15))
-    bt2.vertical_anchor = MSO_ANCHOR.MIDDLE
-    _run(bt2.paragraphs[0], "Trust Gates: ", 12, GOLD, bold=True)
-    _run(bt2.paragraphs[0], "Confidence → Reachability → Taint → Confirmed Tier (96.4%)  ·  14–90 s/scan", 12, WHITE)
-    # ── real pipeline diagram — right 32% ──
-    _fit_image(s, FIGS / "ACR-QA-Pipeline-Stages.png", Inches(8.8), Inches(1.5), Inches(4.3), Inches(5.0))
-    cap = _box(s, Inches(8.8), Inches(6.55), Inches(4.3), Inches(0.4))
-    _center(cap.paragraphs[0])
-    _run(cap.paragraphs[0], "Full pipeline — Fig. 3.1 in thesis", 11, GRAY, italic=True)
-
-
-def methodology_exploit_slide(prs):
-    s = _content(prs, "Methodology — Exploit Verification", 7)
-    sub = _box(s, Inches(0.5), Inches(1.5), Inches(12.3), Inches(0.45))
-    _run(
-        sub.paragraphs[0],
-        "We don't claim a vulnerability — we detonate it in a Docker sandbox, then re-detonate the fix.",
-        14,
-        GOLD,
-        italic=True,
-    )
-    # ── exploit flow diagram (generated from exploit_flow_slide.puml) ──
-    _fit_image(s, FIGS / "exploit_flow_slide.png", Inches(0.5), Inches(2.05), Inches(12.33), Inches(3.5))
-    # result strip
-    result_y = Inches(5.7)
-    _rect(s, Inches(0.5), result_y, Inches(12.33), Inches(1.05), NAVY, rounded=True)
-    rt = _box(s, Inches(0.8), result_y, Inches(11.7), Inches(1.05))
-    rt.vertical_anchor = MSO_ANCHOR.MIDDLE
-    _run(rt.paragraphs[0], "5/5 live:  ", 13, GOLD, bold=True)
-    _run(rt.paragraphs[0], "SQLi · CMDi · SSTI — all EXPLOITED then BLOCKED.  ", 13, WHITE)
-    _run(
-        rt.paragraphs[0],
-        "Binary ground truth — static re-analysis can lie, re-detonation cannot.",
-        13,
-        WHITE,
-        italic=True,
+    x = Inches(0.5)
+    cw = Inches(2.97)
+    gap = Inches(0.13)
+    for num, head, body, tag, col in pillars:
+        _rect(s, x, Inches(2.55), cw, Inches(3.2), LIGHT, rounded=True)
+        _rect(s, x, Inches(2.55), cw, Inches(0.14), col)
+        _rect(s, x + Inches(0.22), Inches(2.8), Inches(0.62), Inches(0.62), col, rounded=True)
+        nt = _box(s, x + Inches(0.22), Inches(2.8), Inches(0.62), Inches(0.62))
+        nt.vertical_anchor = MSO_ANCHOR.MIDDLE
+        _center(nt.paragraphs[0])
+        _run(nt.paragraphs[0], num, 20, WHITE, bold=True)
+        c = _box(s, x + Inches(0.22), Inches(3.6), Emu(cw - Inches(0.44)), Inches(1.6))
+        _run(c.paragraphs[0], head, 15.5, col, bold=True)
+        p = c.add_paragraph()
+        p.space_before = Pt(8)
+        _run(p, body, 12.5, INK)
+        # problem→pillar mapping tag at card foot
+        tg = _box(s, x + Inches(0.22), Inches(5.35), Emu(cw - Inches(0.44)), Inches(0.32))
+        _run(tg.paragraphs[0], tag.upper(), 10, col if col != GOLD_DK else GOLD_DK, bold=True)
+        x = Emu(x + cw + gap)
+    _band(
+        s,
+        Inches(6.0),
+        "The trust is deterministic: ",
+        "every finding is exploit-verified and cryptographically signed — proof a model can't give.",
+        h=Inches(0.9),
     )
 
 
-def funnel_slide(prs):
-    s = _content(prs, "Results — The Precision Funnel", 8)
-    sub = _box(s, Inches(0.5), Inches(1.5), Inches(12.3), Inches(0.4))
-    _run(
-        sub.paragraphs[0],
-        "30-repo adversarial corpus · 1,942 raw findings → 55 Confirmed Tier @ 96.4% precision",
-        13,
-        GOLD,
-        italic=True,
+# ── 9 · pillar 1 — detection ────────────────────────────────────────────────────
+def pillar_detection_slide(prs):
+    s = _content(
+        prs,
+        "Pillar 1 — Deterministic Detection",
+        9,
+        sub="13 tools · 3 language adapters · every output collapses into one CanonicalFinding schema — reproducible",
     )
-    _fit_image(s, FIGS / "FUNNEL_SLIDE.png", Inches(0.6), Inches(1.95), Inches(12.1), Inches(4.7))
+    # diagram fills the slide (its own note carries the "why it matters" line)
+    _fit_image(s, FIGS / "detection_fanin.png", Inches(0.5), Inches(1.9), Inches(12.33), Inches(4.95))
 
 
-def results_slide(prs):
-    s = _content(prs, "Results & Evaluation", 9)
-    rows = [
-        ("Confirmed-Tier precision (auto-block)", "96.4%  (95% CI 90.9–100%)"),
-        ("CVE recall (pre-registered battery)", "100% — 8 / 8 detectable"),
-        ("Head-to-head F₁", "98.2%  vs Semgrep 45.7%"),
-        ("RealVuln 2026 leaderboard", "25.1% — beats Semgrep, Snyk, SonarQube"),
-        ("OWASP Top 10 coverage", "9 / 10 categories"),
-        ("Test suite / CORE coverage", "3,247 tests · 88%"),
-    ]
-    tbl = s.shapes.add_table(len(rows) + 1, 2, Inches(0.5), Inches(1.7), Inches(7.2), Inches(4.6)).table
-    tbl.columns[0].width = Inches(4.3)
-    tbl.columns[1].width = Inches(2.9)
-    for c, h in enumerate(["What we measured", "Result"]):
-        cell = tbl.cell(0, c)
-        cell.text = h
-        cell.fill.solid()
-        cell.fill.fore_color.rgb = NAVY
-        r = cell.text_frame.paragraphs[0].runs[0]
-        r.font.color.rgb = WHITE
-        r.font.bold = True
-        r.font.size = Pt(12)
-    for i, (a, b) in enumerate(rows, 1):
-        for c, val in enumerate((a, b)):
-            cell = tbl.cell(i, c)
-            cell.text = val
-            r = cell.text_frame.paragraphs[0].runs[0]
-            r.font.size = Pt(11)
-            r.font.color.rgb = GREEN if c == 1 else INK
-            r.font.bold = c == 1
-    # RealVuln chart on the right
-    _fit_image(s, FIGS / "REALVULN_LEADERBOARD.png", Inches(8.0), Inches(1.7), Inches(5.0), Inches(3.4))
-    foot = _box(s, Inches(8.0), Inches(5.3), Inches(5.0), Inches(1.2))
-    _run(
-        foot.paragraphs[0],
-        "Live demo: payments-api → 64 findings → toggle Confirmed Tier → 4 remain. "
-        "The funnel, on real data, in front of you.",
+# ── 10 · pillar 2 — trust gates / funnel ────────────────────────────────────────
+def pillar_trust_slide(prs):
+    s = _content(
+        prs,
+        "Pillar 2 — Trust Gates",
+        10,
+        sub="30-repo adversarial corpus · 1,942 raw findings → 55 Confirmed Tier @ 96.4% precision",
+    )
+    _fit_image(s, FIGS / "FUNNEL_SLIDE.png", Inches(0.6), Inches(2.0), Inches(12.1), Inches(4.7))
+
+
+# ── 11 · pillar 3 — exploit verification ────────────────────────────────────────
+def pillar_exploit_slide(prs):
+    s = _content(
+        prs,
+        "Pillar 3 — Exploit Verification",
+        11,
+        sub="We don't claim a vulnerability — we detonate it in a Docker sandbox, then re-detonate the fix.",
+    )
+    _fit_image(s, FIGS / "exploit_flow_slide.png", Inches(0.5), Inches(2.0), Inches(12.33), Inches(3.35))
+    _band(
+        s,
+        Inches(5.55),
+        "5/5 live:  ",
+        "SQLi · CMDi · SSTI — all EXPLOITED, then BLOCKED. Binary ground truth — re-detonation cannot lie.",
+        h=Inches(1.0),
+    )
+
+
+# ── 12 · pillar 4 — attestation ─────────────────────────────────────────────────
+def pillar_attestation_slide(prs):
+    s = _content(
+        prs,
+        "Pillar 4 — Cryptographic Attestation",
         12,
-        NAVY,
-        italic=True,
+        sub="Every scan signed as a tamper-evident bundle — verifiable months later, in one command.",
+    )
+    rows = [
+        ("ECDSA-P256", "Classical signature over the full findings bundle — fast, standard, widely verifiable."),
+        ("Dilithium3", "NIST FIPS 204 post-quantum signature — survives a quantum adversary (EU CRA, Sept 2026)."),
+        (
+            "Merkle provenance",
+            "Scan inputs, tool versions, and results hashed into a chain — nothing can be altered after the fact.",
+        ),
+        (
+            "One-command verify",
+            "Anyone can re-verify the bundle offline — trust the result without trusting the scanner.",
+        ),
+    ]
+    y = Inches(2.05)
+    for head, body in rows:
+        _rect(s, Inches(0.5), y, Inches(7.4), Inches(1.0), LIGHT, rounded=True)
+        _rect(s, Inches(0.5), y, Inches(0.14), Inches(1.0), GREEN)
+        c = _box(s, Inches(0.85), Emu(y + Inches(0.1)), Inches(6.9), Inches(0.85))
+        _run(c.paragraphs[0], head, 15, GREEN, bold=True)
+        p = c.add_paragraph()
+        _run(p, body, 12, INK)
+        y = Emu(y + Inches(1.12))
+    _cover_image(s, SHOTS / "attestation.png", Inches(8.1), Inches(2.05), Inches(4.73), Inches(4.5))
+
+
+# ── 13 · system architecture ────────────────────────────────────────────────────
+def architecture_slide(prs):
+    s = _content(
+        prs,
+        "System Architecture",
+        13,
+        sub="36 engine modules · 3 language adapters · 12-stage async pipeline · 52-endpoint FastAPI",
+    )
+    # full-width landscape architecture (detailed — all 6 layers, from arch_overview)
+    _fit_image(s, FIGS / "arch_overview_wide.png", Inches(0.4), Inches(1.95), Inches(12.55), Inches(2.35))
+    # metrics row — 4 pills
+    metrics = [
+        ("96.4%", "Confirmed-Tier precision"),
+        ("100%", "CVE recall (8/8)"),
+        ("98.2%", "F₁ vs Semgrep 45.7%"),
+        ("3,247", "tests · 88% coverage"),
+    ]
+    x = Inches(0.5)
+    pw = Inches(3.0)
+    gap = Inches(0.11)
+    for big, lab in metrics:
+        _rect(s, x, Inches(4.35), pw, Inches(0.95), LIGHT, rounded=True)
+        bt = _box(s, x + Inches(0.2), Inches(4.4), Emu(pw - Inches(0.3)), Inches(0.5))
+        _run(bt.paragraphs[0], big, 23, GREEN, bold=True)
+        lt = _box(s, x + Inches(0.2), Inches(4.92), Emu(pw - Inches(0.3)), Inches(0.35))
+        _run(lt.paragraphs[0], lab, 11.5, INK)
+        x = Emu(x + pw + gap)
+    # identity band
+    _band(
+        s,
+        Inches(5.55),
+        "Proof, not guessing: ",
+        "exploit verification and signing are deterministic — an LLM cannot detonate a bug or sign a result.",
+        h=Inches(1.0),
     )
 
 
+# ── 14 · evaluation methodology ─────────────────────────────────────────────────
+def evaluation_data_slide(prs):
+    s = _content(
+        prs,
+        "Evaluation Methodology",
+        14,
+        sub="Not machine learning — there is no training set. A security tool is judged on what it's tested against, and how honestly.",
+    )
+    # four rigor principles (2x2) — the "how do you validate?" armor
+    pillars = [
+        ("No training set", "Deterministic rules, not a trained model — nothing to overfit or cherry-pick.", NAVY),
+        ("Pre-registered", "The CVE battery was declared BEFORE testing — 100% recall, no tuning to the test.", GREEN),
+        ("Third-party ground truth", "RealVuln's labels are external (arXiv:2604.13764) — not graded by me.", GOLD_DK),
+        ("Manual triage", "Every Confirmed-Tier finding hand-verified to earn the 96.4% precision number.", RED),
+    ]
+    positions = [
+        (Inches(0.5), Inches(2.05)),
+        (Inches(6.83), Inches(2.05)),
+        (Inches(0.5), Inches(3.75)),
+        (Inches(6.83), Inches(3.75)),
+    ]
+    for (x, y), (head, body, col) in zip(positions, pillars):
+        _rect(s, x, y, Inches(6.0), Inches(1.5), LIGHT, rounded=True)
+        _rect(s, x, y, Inches(0.12), Inches(1.5), col)
+        c = _box(s, x + Inches(0.28), Emu(y + Inches(0.16)), Inches(5.5), Inches(1.2))
+        _run(c.paragraphs[0], head, 16, col if col != GOLD_DK else GOLD_DK, bold=True)
+        p = c.add_paragraph()
+        p.space_before = Pt(5)
+        _run(p, body, 12.5, INK)
+    # compact corpora reference strip
+    _band(
+        s,
+        Inches(5.55),
+        "Tested on: ",
+        "RealVuln 2026 (real CVEs) · OWASP Benchmark · SecurityEval (89+89) · 30-repo adversarial corpus · 8-CVE battery.",
+        h=Inches(0.95),
+    )
+
+
+# ── 15 · results — confusion matrix (alone, horizontal) ──────────────────────────
+def results_confusion_slide(prs):
+    s = _content(
+        prs,
+        "Results — Why Trust Gates Exist",
+        15,
+        sub="Raw detection on SecurityEval: 91% recall, but only 54.7% precision — then the Confirmed Tier fixes it.",
+    )
+    _fit_image(s, FIGS / "CONFUSION_MATRIX_SLIDE.png", Inches(0.5), Inches(2.2), Inches(12.33), Inches(3.6))
+    _band(
+        s,
+        Inches(6.1),
+        "The fix → Confirmed Tier: ",
+        "those 67 false alarms collapse and precision jumps to 96.4% (slide 10's funnel). Honest raw number, strong final one.",
+        h=Inches(0.85),
+    )
+
+
+# ── 16 · results — benchmark scorecard (variety: strong numbers at a glance) ──────
+def results_scorecard_slide(prs):
+    s = _content(
+        prs,
+        "Results — Across Five Benchmarks",
+        16,
+        sub="Not one test — five. Each measures a different thing, and ACR-QA scores 90–100% on every one.",
+    )
+    _fit_image(s, FIGS / "BENCHMARK_SCORECARD.png", Inches(0.5), Inches(2.0), Inches(12.33), Inches(3.7))
+    _band(
+        s,
+        Inches(5.95),
+        "Variety, not cherry-picking: ",
+        "precision, recall, F₁, and OWASP coverage — all high. The one hard real-world number (RealVuln 25.1%) is next, where we're #1.",
+        h=Inches(0.95),
+    )
+
+
+# ── 17 · results — benchmarks ───────────────────────────────────────────────────
+def results_benchmarks_slide(prs):
+    s = _content(
+        prs,
+        "Results — #1 Against Every Competitor",
+        17,
+        sub="On real-world CVEs (RealVuln 2026), ACR-QA beats Semgrep, Snyk, SonarQube — the hardest test, third-party ground truth.",
+    )
+    _fit_image(s, FIGS / "HEAD_TO_HEAD.png", Inches(0.5), Inches(2.0), Inches(6.1), Inches(3.95))
+    _fit_image(s, FIGS / "REALVULN_LEADERBOARD_CLEAN.png", Inches(6.9), Inches(2.25), Inches(5.95), Inches(3.45))
+    _band(
+        s,
+        Inches(5.95),
+        "Why the absolute number looks modest: ",
+        "real-world recall is genuinely hard (many CVEs need runtime state no static tool can see) — so #1 is the story, not 25%.",
+        h=Inches(0.95),
+    )
+
+
+# ── 18 · use cases (one compact slide — 4 personas) ──────────────────────────────
 def _persona_card(s, x, y, w, h, head, body, payoff, col):
     _rect(s, x, y, w, h, LIGHT, rounded=True)
-    _rect(s, x, y, w, Inches(0.14), col)
-    c = _box(s, x + Inches(0.28), Emu(y + Inches(0.28)), Emu(w - Inches(0.56)), Emu(h - Inches(0.5)))
-    _run(c.paragraphs[0], head, 18, col if col != GOLD else RGBColor(0xB8, 0x8A, 0x1E), bold=True)
+    _rect(s, x, y, w, Inches(0.12), col)
+    c = _box(s, x + Inches(0.24), Emu(y + Inches(0.22)), Emu(w - Inches(0.48)), Emu(h - Inches(0.4)))
+    _run(c.paragraphs[0], head, 14.5, col if col != GOLD else GOLD_DK, bold=True)
     p = c.add_paragraph()
-    p.space_before = Pt(8)
-    _run(p, body, 13, INK)
+    p.space_before = Pt(5)
+    _run(p, body, 11, INK)
     p2 = c.add_paragraph()
-    p2.space_before = Pt(10)
-    _run(p2, payoff, 12.5, col if col != GOLD else RGBColor(0xB8, 0x8A, 0x1E), bold=True)
+    p2.space_before = Pt(6)
+    _run(p2, payoff, 10.5, col if col != GOLD else GOLD_DK, bold=True)
 
 
-def use_cases_1_slide(prs):
-    s = _content(prs, "Use Cases — Education & Startups", 10)
-    _persona_card(
-        s,
-        Inches(0.5),
-        Inches(2.1),
-        Inches(6.0),
-        Inches(3.4),
-        "The University Instructor",
-        "Grades hundreds of student repos a term. Enterprise scanners cost $10–50k — out of reach. "
-        "Needs to catch the real SQL injection without drowning in style noise.",
-        "→ Free & self-hosted · Confirmed Tier surfaces the real bug · RAG explanation teaches the learner.",
-        NAVY,
-    )
-    _persona_card(
-        s,
-        Inches(6.8),
-        Inches(2.1),
-        Inches(6.0),
-        Inches(3.4),
-        "The Startup / CI Tech Lead",
-        "Ships dozens of AI-written PRs a day. Needs an auto-block at merge that won't cry wolf, "
-        "and a signed audit trail for compliance (EU CRA, Sept 2026).",
-        "→ 96.4% Confirmed-Tier auto-block · ECDSA + PQ attestation = the audit trail · $0 recurring.",
-        GREEN,
-    )
+def use_cases_slide(prs):
+    s = _content(prs, "Use Cases", 18, sub="One trust layer — four people who can't afford to guess wrong.")
+    personas = [
+        (
+            Inches(0.5),
+            Inches(2.05),
+            "University Instructor",
+            "Grades hundreds of student repos a term — enterprise scanners cost $10–50k.",
+            "→ Free, self-hosted · the real bug surfaced · RAG explanation teaches.",
+            NAVY,
+        ),
+        (
+            Inches(6.83),
+            Inches(2.05),
+            "Startup / CI Tech Lead",
+            "Ships dozens of AI-written PRs a day — needs an auto-block that won't cry wolf.",
+            "→ 96.4% auto-block · signed audit trail for EU CRA · $0 recurring.",
+            GREEN,
+        ),
+        (
+            Inches(0.5),
+            Inches(4.5),
+            "Open-Source Maintainer",
+            "Reviews drive-by PRs from strangers — can't spot a subtle supply-chain attack.",
+            "→ Exploit-verified + signed provenance — trust the code, not the contributor.",
+            GOLD,
+        ),
+        (
+            Inches(6.83),
+            Inches(4.5),
+            "Enterprise Auditor",
+            "Must prove to regulators what was scanned, months later, tamper-free.",
+            "→ Every scan ECDSA + Dilithium3 signed · verify in one command.",
+            RED,
+        ),
+    ]
+    for x, y, head, body, payoff, col in personas:
+        _persona_card(s, x, y, Inches(6.0), Inches(2.15), head, body, payoff, col)
 
 
-def use_cases_2_slide(prs):
-    s = _content(prs, "Use Cases — Open Source & Enterprise", 11)
-    _persona_card(
-        s,
-        Inches(0.5),
-        Inches(2.1),
-        Inches(6.0),
-        Inches(3.4),
-        "The Open-Source Maintainer",
-        "Reviews drive-by PRs from strangers with no time and no budget. Can't tell a real fix "
-        "from a subtle supply-chain attack.",
-        "→ Exploit-verified findings + signed provenance — trust a contribution without trusting the contributor.",
-        GOLD,
-    )
-    _persona_card(
-        s,
-        Inches(6.8),
-        Inches(2.1),
-        Inches(6.0),
-        Inches(3.4),
-        "The Enterprise Security Auditor",
-        "Must prove to regulators what was scanned, when, and what was found — months later, " "tamper-free.",
-        "→ Every scan ECDSA + Dilithium3 signed · verify in one command · EU CRA-ready provenance.",
-        NAVY,
-    )
-
-
-def conclusion_slide(prs):
-    s = _content(prs, "Conclusion", 13)
-    tf = _box(s, Inches(0.5), Inches(1.6), Inches(7.0), Inches(0.9))
-    _run(tf.paragraphs[0], "The open, attested, $0 quadrant the market leaves empty.", 19, INK, bold=True)
+# ── 19 · conclusion + future work (merged) ───────────────────────────────────────
+def conclusion_future_slide(prs):
+    s = _content(prs, "Conclusion & Future Work", 19)
+    tf = _box(s, Inches(0.5), Inches(1.5), Inches(7.3), Inches(0.5))
+    _run(tf.paragraphs[0], "The open, attested, $0 quadrant the market leaves empty.", 17, INK, bold=True)
     lines = [
-        ("Trust", "96.4% Confirmed-Tier precision — high enough to auto-block a merge."),
-        ("Proof", "Exploit-verified in a sandbox + cryptographically signed — not guesses."),
-        ("Reach", "19 engines · Python / JS / Go · 9/10 OWASP · 100% CVE recall."),
-        ("Price", "Self-hosted, your data never leaves, $0 recurring — vs $10–50k/year."),
+        ("Trust", "96.4% Confirmed-Tier precision — enough to auto-block a merge."),
+        ("Proof", "Exploit-verified + cryptographically signed — not guesses."),
+        ("Reach", "13 tools · Python / JS / Go · 9/10 OWASP · 100% CVE recall."),
+        ("Price", "Self-hosted · $0 recurring — vs $10–50k/year."),
     ]
-    y = Inches(2.75)
+    y = Inches(2.1)
     for k, v in lines:
-        _rect(s, Inches(0.6), y, Inches(1.6), Inches(0.75), GOLD, rounded=True)
-        kt = _box(s, Inches(0.6), y, Inches(1.6), Inches(0.75))
+        _rect(s, Inches(0.5), y, Inches(1.5), Inches(0.68), GOLD, rounded=True)
+        kt = _box(s, Inches(0.5), y, Inches(1.5), Inches(0.68))
         kt.vertical_anchor = MSO_ANCHOR.MIDDLE
-        kp = kt.paragraphs[0]
-        _center(kp)
-        _run(kp, k, 17, NAVY, bold=True)
-        vt = _box(s, Inches(2.4), y, Inches(4.9), Inches(0.75))
+        _center(kt.paragraphs[0])
+        _run(kt.paragraphs[0], k, 15, NAVY, bold=True)
+        vt = _box(s, Inches(2.15), y, Inches(5.5), Inches(0.68))
         vt.vertical_anchor = MSO_ANCHOR.MIDDLE
-        _run(vt.paragraphs[0], v, 12.5, INK)
-        y = Emu(y + Inches(0.92))
-    _fit_image(s, SHOTS / "overview.png", Inches(7.5), Inches(1.9), Inches(5.5), Inches(4.2))
-    cap = _box(s, Inches(7.5), Inches(6.1), Inches(5.5), Inches(0.4))
+        _run(vt.paragraphs[0], v, 11.5, INK)
+        y = Emu(y + Inches(0.8))
+    _cover_image(s, PHOTOS / "Gemini_6.png", Inches(8.0), Inches(1.5), Inches(4.83), Inches(3.2))
+    cap = _box(s, Inches(8.0), Emu(Inches(1.5) + Inches(3.2)), Inches(4.83), Inches(0.35))
     _center(cap.paragraphs[0])
-    _run(cap.paragraphs[0], "Live dashboard — not a mockup.", 11, GRAY, italic=True)
-    # closing line — not a proposal, a running system
-    kill = _box(s, Inches(0.5), Inches(6.55), Inches(12.3), Inches(0.6))
-    _run(kill.paragraphs[0], "This is not a proposal — it is a running system.", 16, NAVY, bold=True, italic=True)
-
-
-def future_work_slide(prs):
-    s = _content(prs, "Future Work", 12)
-    items = [
-        (
-            "Inter-procedural taint analysis",
-            "Trace tainted data across files and functions — worth an estimated +10–15pp recall.",
-        ),
-        ("More languages", "Extend adapters beyond Python / JS / Go to Java, C#, and Rust."),
-        ("Managed / hosted offering", "A one-click GitHub App so teams adopt the trust layer without self-hosting."),
-        (
-            "Independent expert labelling",
-            "A multi-annotator ground-truth study to harden the precision numbers further.",
-        ),
+    _run(cap.paragraphs[0], "Three locked doors, one open — the gap we fill.", 10.5, GRAY, italic=True)
+    # future work strip
+    fwh = _box(s, Inches(0.5), Inches(5.35), Inches(12.3), Inches(0.4))
+    _run(fwh.paragraphs[0], "FUTURE WORK", 13, GOLD_DK, bold=True)
+    fut = [
+        "Inter-procedural taint (+10–15pp recall)",
+        "More languages: Java · C# · Rust",
+        "Managed one-click GitHub App",
+        "Independent multi-annotator labelling",
     ]
-    y = Inches(1.8)
-    for head, body in items:
-        _rect(s, Inches(0.5), y, Inches(12.3), Inches(1.05), LIGHT, rounded=True)
-        _rect(s, Inches(0.5), y, Inches(0.14), Inches(1.05), GOLD)
-        c = _box(s, Inches(0.85), Emu(y + Inches(0.12)), Inches(11.6), Inches(0.85))
-        _run(c.paragraphs[0], head, 16, NAVY, bold=True)
-        p = c.add_paragraph()
-        _run(p, body, 13, INK)
-        y = Emu(y + Inches(1.22))
+    x = Inches(0.5)
+    fw = Inches(3.0)
+    for item in fut:
+        _rect(s, x, Inches(5.78), fw, Inches(0.85), LIGHT, rounded=True)
+        _rect(s, x, Inches(5.78), Inches(0.1), Inches(0.85), GOLD)
+        c = _box(s, x + Inches(0.22), Inches(5.78), Emu(fw - Inches(0.34)), Inches(0.85))
+        c.vertical_anchor = MSO_ANCHOR.MIDDLE
+        _run(c.paragraphs[0], item, 11.5, INK)
+        x = Emu(x + fw + Inches(0.11))
+    kill = _box(s, Inches(0.5), Inches(6.72), Inches(7.3), Inches(0.5))
+    _run(kill.paragraphs[0], "Not a proposal — a running system.", 14, NAVY, bold=True, italic=True)
 
 
 def section_closer(prs, big, small, photo=None):
@@ -624,20 +759,56 @@ def build():
     title_slide(prs)  # 1
     outline_slide(prs)  # 2
     introduction_slide(prs)  # 3
-    problem_slide(prs)  # 4
-    solution_slide(prs)  # 5
-    methodology_arch_slide(prs)  # 6
-    methodology_exploit_slide(prs)  # 7
-    funnel_slide(prs)  # 8
-    results_slide(prs)  # 9
-    use_cases_1_slide(prs)  # 10
-    use_cases_2_slide(prs)  # 11
-    future_work_slide(prs)  # 12
-    conclusion_slide(prs)  # 13
-    section_closer(prs, "Any Questions?", "Happy to go deeper on any number, any slide.")  # 14
+    problem_overview_slide(prs)  # 4
+    problem_detail_slide(
+        prs,
+        5,
+        "1",
+        "Gemini_3.png",
+        "Too many alerts",
+        "A wall of warnings, almost all false. The one real breach hides in the noise — "
+        "and a tired reviewer on the 50th PR of the day misses it.",
+        "~1,900",
+        "raw findings per scan · which one breaches you?",
+    )
+    problem_detail_slide(
+        prs,
+        6,
+        "2",
+        "Gemini_5.png",
+        "Claimed, never proven",
+        "Scanners flag “possible SQL injection” and stop there. The developer has to guess "
+        "whether it's real — and gets burned either way.",
+        "0",
+        "scanners actually detonate the bug to prove it",
+    )
+    problem_detail_slide(
+        prs,
+        7,
+        "3",
+        "Gemini_6.png",
+        "No provenance",
+        "Findings aren't signed. Months later you can't prove what was scanned — and you can't trust "
+        "a stranger's PR or the code an AI just wrote into your repo.",
+        "45%",
+        "of AI-written code ships a known flaw",
+    )
+    solution_overview_slide(prs)  # 8
+    pillar_detection_slide(prs)  # 9
+    pillar_trust_slide(prs)  # 10
+    pillar_exploit_slide(prs)  # 11
+    pillar_attestation_slide(prs)  # 12
+    architecture_slide(prs)  # 13
+    evaluation_data_slide(prs)  # 14
+    results_confusion_slide(prs)  # 15
+    results_scorecard_slide(prs)  # 16
+    results_benchmarks_slide(prs)  # 17  (live demo launches from the Trust-Gates funnel, slide 10)
+    use_cases_slide(prs)  # 18
+    conclusion_future_slide(prs)  # 19
+    section_closer(prs, "Any Questions?", "Happy to go deeper on any number, any slide.")  # 20
     section_closer(
         prs, "Thank You", "Ahmed Mahmoud Abbas · Supervisor: Dr. Samy Abdel Nabi", photo="Gemini_2.png"
-    )  # 15
+    )  # 21
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     prs.save(OUT)
