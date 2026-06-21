@@ -17,11 +17,7 @@ ENV/
 *.sqlite
 
 # Outputs (generated at runtime)
-DATA/outputs/*.json
-DATA/outputs/*.txt
-DATA/outputs/*.md
-DATA/outputs/*.csv
-DATA/outputs/provenance/
+DATA/outputs/
 outputs/
 
 # IDE
@@ -40,6 +36,7 @@ Thumbs.db
 htmlcov/
 .pytest_cache/
 .ruff_cache/
+docs/GEMINI_PHOTOS/
 
 # Node (VSCode extension)
 vscode-extension/node_modules/
@@ -95,10 +92,9 @@ MEMORY.md
 
 # Agent-generated index files (regenerated each session)
 CODEBASE_INDEX.md
+# CLAUDE.md is intentionally tracked (project instructions for Claude Code)
 tmp_repos/DVNA
 tmp_repos/NodeGoat
-
-DATA/outputs/
 
 # Eval repos (downloaded by scripts/run_evaluation.py — don't commit)
 test_targets/
@@ -122,22 +118,15 @@ scratch/
 
 # Coverage artifacts (regenerated on every test run)
 coverage.xml
-.coverage
 htmlcov/
 
 INTERVIEW_CHEATSHEET.md
 ACR-QA-Book.zip
 docs/PRESENTATION_SCRIPT.md
 docs/INSTRUCTOR_MEETING.md
-docs/INSTRUCTOR_MEETING.md
-
-CLAUDE.md
 
 # Runtime artifacts
 .acr_run_id.txt
-ACR-QA_BANNER.html
-ACR-QA_Poster.html
-ACR-QA_Q1.html
 docs/archive
 
 # Dashboard build output (large bundles)
