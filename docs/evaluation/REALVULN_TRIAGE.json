@@ -1,11 +1,11 @@
 {
-  "generated": "2026-06-03T15:03:22.059274+00:00",
+  "generated": "2026-06-21T13:00:38.432001+00:00",
   "version": "5.0.0rc2",
   "detectable_subset": {
-    "recall": 0.3782,
-    "fpr": 0.163,
-    "precision": 0.9,
-    "f3": 0.4014
+    "recall": 0.4258,
+    "fpr": 0.1848,
+    "precision": 0.8994,
+    "f3": 0.4494
   },
   "per_repo": [
     {
@@ -265,13 +265,6 @@
       ],
       "c": [
         {
-          "cwe": "CWE-22",
-          "id": "dvga-010",
-          "file": "core/helpers.py",
-          "gt_line": 25,
-          "class": "detectable"
-        },
-        {
           "cwe": "CWE-330",
           "id": "dvga-026",
           "file": "core/helpers.py",
@@ -298,6 +291,10 @@
         {
           "cwe": "CWE-347",
           "id": "dvga-007"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "dvga-010"
         },
         {
           "cwe": "CWE-798",
@@ -683,12 +680,6 @@
           "class": "borderline"
         },
         {
-          "cwe": "CWE-22",
-          "id": "dsvpwa-028",
-          "file": "dsvpwa/handlers.py",
-          "class": "detectable"
-        },
-        {
           "cwe": "CWE-209",
           "id": "dsvpwa-031",
           "file": "dsvpwa/handlers.py",
@@ -696,13 +687,6 @@
         }
       ],
       "c": [
-        {
-          "cwe": "CWE-22",
-          "id": "dsvpwa-008",
-          "file": "dsvpwa/attacks.py",
-          "gt_line": 211,
-          "class": "detectable"
-        },
         {
           "cwe": "CWE-209",
           "id": "dsvpwa-018",
@@ -750,6 +734,10 @@
           "id": "dsvpwa-007"
         },
         {
+          "cwe": "CWE-22",
+          "id": "dsvpwa-008"
+        },
+        {
           "cwe": "CWE-918",
           "id": "dsvpwa-009"
         },
@@ -760,6 +748,10 @@
         {
           "cwe": "CWE-798",
           "id": "dsvpwa-016"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "dsvpwa-028"
         }
       ],
       "fp_trap": [
@@ -805,13 +797,6 @@
           "id": "dsvw-002",
           "file": "dsvw.py",
           "gt_line": 33,
-          "class": "detectable"
-        },
-        {
-          "cwe": "CWE-22",
-          "id": "dsvw-004",
-          "file": "dsvw.py",
-          "gt_line": 37,
           "class": "detectable"
         },
         {
@@ -921,6 +906,10 @@
         {
           "cwe": "CWE-502",
           "id": "dsvw-003"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "dsvw-004"
         },
         {
           "cwe": "CWE-918",
@@ -1541,19 +1530,15 @@
           "class": "detectable"
         }
       ],
-      "c": [
-        {
-          "cwe": "CWE-215",
-          "id": "flask-xss-011",
-          "file": "app/flask_xss.py",
-          "gt_line": 26,
-          "class": "detectable"
-        }
-      ],
+      "c": [],
       "tp": [
         {
           "cwe": "CWE-798",
           "id": "flask-xss-010"
+        },
+        {
+          "cwe": "CWE-215",
+          "id": "flask-xss-011"
         },
         {
           "cwe": "CWE-259",
@@ -1718,12 +1703,6 @@
       ],
       "b": [
         {
-          "cwe": "CWE-22",
-          "id": "lets-be-bad-guys-001",
-          "file": "badguys/vulnerable/views.py",
-          "class": "detectable"
-        },
-        {
           "cwe": "CWE-79",
           "id": "lets-be-bad-guys-004",
           "file": "badguys/templates/vulnerable/xss/form.html",
@@ -1789,6 +1768,10 @@
         }
       ],
       "tp": [
+        {
+          "cwe": "CWE-22",
+          "id": "lets-be-bad-guys-001"
+        },
         {
           "cwe": "CWE-94",
           "id": "lets-be-bad-guys-002"
@@ -1975,18 +1958,6 @@
           "class": "detectable"
         },
         {
-          "cwe": "CWE-434",
-          "id": "threatbyte-013",
-          "file": "server/routes.py",
-          "class": "detectable"
-        },
-        {
-          "cwe": "CWE-22",
-          "id": "threatbyte-014",
-          "file": "server/routes.py",
-          "class": "detectable"
-        },
-        {
           "cwe": "CWE-321",
           "id": "threatbyte-017",
           "file": "server/api/v1/api_v1.py",
@@ -2006,6 +1977,20 @@
         }
       ],
       "c": [
+        {
+          "cwe": "CWE-434",
+          "id": "threatbyte-013",
+          "file": "server/routes.py",
+          "gt_line": 261,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "threatbyte-014",
+          "file": "server/routes.py",
+          "gt_line": 262,
+          "class": "detectable"
+        },
         {
           "cwe": "CWE-798",
           "id": "threatbyte-021",
@@ -2044,6 +2029,10 @@
         {
           "cwe": "CWE-89",
           "id": "threatbyte-fp-003"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "threatbyte-fp-005"
         }
       ]
     },
@@ -2108,13 +2097,6 @@
       ],
       "c": [
         {
-          "cwe": "CWE-489",
-          "id": "vampi-009",
-          "file": "app.py",
-          "gt_line": 17,
-          "class": "detectable"
-        },
-        {
           "cwe": "CWE-770",
           "id": "vampi-010",
           "file": "config.py",
@@ -2137,6 +2119,10 @@
         {
           "cwe": "CWE-321",
           "id": "vampi-008"
+        },
+        {
+          "cwe": "CWE-489",
+          "id": "vampi-009"
         }
       ],
       "fp_trap": []
@@ -2380,13 +2366,6 @@
       ],
       "c": [
         {
-          "cwe": "CWE-22",
-          "id": "vulnerable-python-apps-001",
-          "file": "Directory_Traversal/Dir_Traversal.py",
-          "gt_line": 22,
-          "class": "detectable"
-        },
-        {
           "cwe": "CWE-79",
           "id": "vulnerable-python-apps-009",
           "file": "Insecure_Frameworks/bad_mvc.py",
@@ -2423,6 +2402,10 @@
         }
       ],
       "tp": [
+        {
+          "cwe": "CWE-22",
+          "id": "vulnerable-python-apps-001"
+        },
         {
           "cwe": "CWE-798",
           "id": "vulnerable-python-apps-004"
@@ -2489,18 +2472,6 @@
           "class": "detectable"
         },
         {
-          "cwe": "CWE-22",
-          "id": "vulnerable-tornado-app-003",
-          "file": "server.py",
-          "class": "detectable"
-        },
-        {
-          "cwe": "CWE-22",
-          "id": "vulnerable-tornado-app-004",
-          "file": "server.py",
-          "class": "detectable"
-        },
-        {
           "cwe": "CWE-79",
           "id": "vulnerable-tornado-app-005",
           "file": "server.py",
@@ -2509,12 +2480,6 @@
         {
           "cwe": "CWE-798",
           "id": "vulnerable-tornado-app-007",
-          "file": "server.py",
-          "class": "detectable"
-        },
-        {
-          "cwe": "CWE-434",
-          "id": "vulnerable-tornado-app-010",
           "file": "server.py",
           "class": "detectable"
         },
@@ -2531,8 +2496,28 @@
           "class": "detectable"
         }
       ],
-      "c": [],
-      "tp": [],
+      "c": [
+        {
+          "cwe": "CWE-22",
+          "id": "vulnerable-tornado-app-003",
+          "file": "server.py",
+          "gt_line": 77,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-434",
+          "id": "vulnerable-tornado-app-010",
+          "file": "server.py",
+          "gt_line": 60,
+          "class": "detectable"
+        }
+      ],
+      "tp": [
+        {
+          "cwe": "CWE-22",
+          "id": "vulnerable-tornado-app-004"
+        }
+      ],
       "fp_trap": []
     },
     {
@@ -2646,36 +2631,6 @@
           "cwe": "CWE-89",
           "id": "vulnpy-009",
           "file": "src/vulnpy/trigger/sqli.py",
-          "class": "detectable"
-        },
-        {
-          "cwe": "CWE-22",
-          "id": "vulnpy-010",
-          "file": "src/vulnpy/trigger/pt.py",
-          "class": "detectable"
-        },
-        {
-          "cwe": "CWE-22",
-          "id": "vulnpy-011",
-          "file": "src/vulnpy/trigger/pt.py",
-          "class": "detectable"
-        },
-        {
-          "cwe": "CWE-22",
-          "id": "vulnpy-012",
-          "file": "src/vulnpy/trigger/pt.py",
-          "class": "detectable"
-        },
-        {
-          "cwe": "CWE-22",
-          "id": "vulnpy-013",
-          "file": "src/vulnpy/trigger/pt.py",
-          "class": "detectable"
-        },
-        {
-          "cwe": "CWE-22",
-          "id": "vulnpy-014",
-          "file": "src/vulnpy/trigger/pt.py",
           "class": "detectable"
         },
         {
@@ -2815,42 +2770,9 @@
           "id": "vulnpy-049",
           "file": "src/vulnpy/quart/blueprint.py",
           "class": "detectable"
-        },
-        {
-          "cwe": "CWE-79",
-          "id": "vulnpy-050",
-          "file": "src/vulnpy/wsgi/app.py",
-          "class": "detectable"
-        },
-        {
-          "cwe": "CWE-525",
-          "id": "vulnpy-074",
-          "file": "src/vulnpy/wsgi/app.py",
-          "class": "borderline"
         }
       ],
       "c": [
-        {
-          "cwe": "CWE-22",
-          "id": "vulnpy-015",
-          "file": "src/vulnpy/trigger/pt.py",
-          "gt_line": 48,
-          "class": "detectable"
-        },
-        {
-          "cwe": "CWE-22",
-          "id": "vulnpy-016",
-          "file": "src/vulnpy/trigger/pt.py",
-          "gt_line": 57,
-          "class": "detectable"
-        },
-        {
-          "cwe": "CWE-22",
-          "id": "vulnpy-017",
-          "file": "src/vulnpy/trigger/pt.py",
-          "gt_line": 66,
-          "class": "detectable"
-        },
         {
           "cwe": "CWE-643",
           "id": "vulnpy-034",
@@ -2871,6 +2793,20 @@
           "file": "src/vulnpy/trigger/xpath.py",
           "gt_line": 33,
           "class": "detectable"
+        },
+        {
+          "cwe": "CWE-79",
+          "id": "vulnpy-050",
+          "file": "src/vulnpy/wsgi/app.py",
+          "gt_line": 26,
+          "class": "detectable"
+        },
+        {
+          "cwe": "CWE-525",
+          "id": "vulnpy-074",
+          "file": "src/vulnpy/wsgi/app.py",
+          "gt_line": 33,
+          "class": "borderline"
         },
         {
           "cwe": "CWE-79",
@@ -2904,6 +2840,38 @@
         {
           "cwe": "CWE-502",
           "id": "vulnpy-006"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-010"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-011"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-012"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-013"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-014"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-015"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-016"
+        },
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-017"
         },
         {
           "cwe": "CWE-94",
@@ -2963,6 +2931,10 @@
         }
       ],
       "fp_trap": [
+        {
+          "cwe": "CWE-22",
+          "id": "vulnpy-fp-007"
+        },
         {
           "cwe": "CWE-502",
           "id": "vulnpy-fp-011"
@@ -3316,15 +3288,15 @@
     {
       "n_det_tp": 19,
       "n_det_fp": 4,
-      "tp": 4,
+      "tp": 5,
       "fp": 0,
-      "fn": 15,
+      "fn": 14,
       "tn": 4,
-      "recall": 0.2105,
+      "recall": 0.2632,
       "precision": 1.0,
       "fpr": 0.0,
-      "f3": 0.2286,
-      "mcc": 0.2105,
+      "f3": 0.2841,
+      "mcc": 0.2418,
       "slug": "realvuln-damn-vulnerable-graphql-application"
     },
     {
@@ -3344,29 +3316,29 @@
     {
       "n_det_tp": 22,
       "n_det_fp": 6,
-      "tp": 7,
+      "tp": 9,
       "fp": 1,
-      "fn": 15,
+      "fn": 13,
       "tn": 5,
-      "recall": 0.3182,
-      "precision": 0.875,
+      "recall": 0.4091,
+      "precision": 0.9,
       "fpr": 0.1667,
-      "f3": 0.3398,
-      "mcc": 0.1376,
+      "f3": 0.4327,
+      "mcc": 0.2076,
       "slug": "realvuln-dsvpwa"
     },
     {
       "n_det_tp": 21,
       "n_det_fp": 4,
-      "tp": 6,
+      "tp": 7,
       "fp": 2,
-      "fn": 15,
+      "fn": 14,
       "tn": 2,
-      "recall": 0.2857,
-      "precision": 0.75,
+      "recall": 0.3333,
+      "precision": 0.7778,
       "fpr": 0.5,
-      "f3": 0.3046,
-      "mcc": -0.1684,
+      "f3": 0.3535,
+      "mcc": -0.1273,
       "slug": "realvuln-dsvw"
     },
     {
@@ -3414,15 +3386,15 @@
     {
       "n_det_tp": 17,
       "n_det_fp": 5,
-      "tp": 3,
+      "tp": 4,
       "fp": 0,
-      "fn": 14,
+      "fn": 13,
       "tn": 5,
-      "recall": 0.1765,
+      "recall": 0.2353,
       "precision": 1.0,
       "fpr": 0.0,
-      "f3": 0.1923,
-      "mcc": 0.2155,
+      "f3": 0.2548,
+      "mcc": 0.2557,
       "slug": "realvuln-flask-xss"
     },
     {
@@ -3456,15 +3428,15 @@
     {
       "n_det_tp": 16,
       "n_det_fp": 4,
-      "tp": 5,
+      "tp": 6,
       "fp": 0,
-      "fn": 11,
+      "fn": 10,
       "tn": 4,
-      "recall": 0.3125,
+      "recall": 0.375,
       "precision": 1.0,
       "fpr": 0.0,
-      "f3": 0.3356,
-      "mcc": 0.2887,
+      "f3": 0.4,
+      "mcc": 0.3273,
       "slug": "realvuln-lets-be-bad-guys"
     },
     {
@@ -3499,28 +3471,28 @@
       "n_det_tp": 14,
       "n_det_fp": 5,
       "tp": 6,
-      "fp": 1,
+      "fp": 2,
       "fn": 8,
-      "tn": 4,
+      "tn": 3,
       "recall": 0.4286,
-      "precision": 0.8571,
-      "fpr": 0.2,
-      "f3": 0.4511,
-      "mcc": 0.2087,
+      "precision": 0.75,
+      "fpr": 0.4,
+      "f3": 0.4478,
+      "mcc": 0.0255,
       "slug": "realvuln-threatbyte"
     },
     {
       "n_det_tp": 6,
       "n_det_fp": 2,
-      "tp": 2,
+      "tp": 3,
       "fp": 0,
-      "fn": 4,
+      "fn": 3,
       "tn": 2,
-      "recall": 0.3333,
+      "recall": 0.5,
       "precision": 1.0,
       "fpr": 0.0,
-      "f3": 0.3571,
-      "mcc": 0.3333,
+      "f3": 0.5263,
+      "mcc": 0.4472,
       "slug": "realvuln-vampi"
     },
     {
@@ -3554,43 +3526,43 @@
     {
       "n_det_tp": 18,
       "n_det_fp": 5,
-      "tp": 5,
+      "tp": 6,
       "fp": 0,
-      "fn": 13,
+      "fn": 12,
       "tn": 5,
-      "recall": 0.2778,
+      "recall": 0.3333,
       "precision": 1.0,
       "fpr": 0.0,
-      "f3": 0.2994,
-      "mcc": 0.2778,
+      "f3": 0.3571,
+      "mcc": 0.3131,
       "slug": "realvuln-vulnerable-python-apps"
     },
     {
       "n_det_tp": 9,
       "n_det_fp": 3,
-      "tp": 0,
+      "tp": 1,
       "fp": 0,
-      "fn": 9,
+      "fn": 8,
       "tn": 3,
-      "recall": 0.0,
-      "precision": 0.0,
+      "recall": 0.1111,
+      "precision": 1.0,
       "fpr": 0.0,
-      "f3": 0.0,
-      "mcc": 0.0,
+      "f3": 0.122,
+      "mcc": 0.1741,
       "slug": "realvuln-vulnerable-tornado-app"
     },
     {
       "n_det_tp": 59,
       "n_det_fp": 15,
-      "tp": 20,
-      "fp": 4,
-      "fn": 39,
-      "tn": 11,
-      "recall": 0.339,
-      "precision": 0.8333,
-      "fpr": 0.2667,
-      "f3": 0.3604,
-      "mcc": 0.0621,
+      "tp": 28,
+      "fp": 5,
+      "fn": 31,
+      "tn": 10,
+      "recall": 0.4746,
+      "precision": 0.8485,
+      "fpr": 0.3333,
+      "f3": 0.4965,
+      "mcc": 0.1142,
       "slug": "realvuln-vulnpy"
     },
     {

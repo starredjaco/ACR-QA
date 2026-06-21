@@ -1,0 +1,592 @@
+rules:
+  # ============================================================
+  # CWE-918 — SSRF (Server-Side Request Forgery)
+  # ============================================================
+
+  - id: ssrf-requests-get-user-url
+    patterns:
+      - pattern: requests.get($URL, ...)
+      - pattern-not: requests.get("...", ...)
+    message: "Potential SSRF: requests.get() called with non-literal URL — may allow SSRF"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-918
+      canonical_rule_id: SECURITY-046
+
+  - id: ssrf-requests-post-user-url
+    patterns:
+      - pattern: requests.post($URL, ...)
+      - pattern-not: requests.post("...", ...)
+    message: "Potential SSRF: requests.post() called with non-literal URL"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-918
+      canonical_rule_id: SECURITY-046
+
+  - id: ssrf-requests-put-user-url
+    patterns:
+      - pattern: requests.put($URL, ...)
+      - pattern-not: requests.put("...", ...)
+    message: "Potential SSRF: requests.put() called with non-literal URL"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-918
+      canonical_rule_id: SECURITY-046
+
+  - id: ssrf-requests-delete-user-url
+    patterns:
+      - pattern: requests.delete($URL, ...)
+      - pattern-not: requests.delete("...", ...)
+    message: "Potential SSRF: requests.delete() called with non-literal URL"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-918
+      canonical_rule_id: SECURITY-046
+
+  - id: ssrf-requests-request-user-url
+    patterns:
+      - pattern: requests.request($METHOD, $URL, ...)
+      - pattern-not: requests.request($METHOD, "...", ...)
+    message: "Potential SSRF: requests.request() called with non-literal URL"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-918
+      canonical_rule_id: SECURITY-046
+
+  - id: ssrf-urllib-urlopen
+    pattern-either:
+      - pattern: urllib.request.urlopen($URL)
+      - pattern: urllib.urlopen($URL)
+      - pattern: urllib2.urlopen($URL)
+    message: "Potential SSRF: urllib.urlopen() with variable URL — may allow SSRF if URL is user-controlled"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-918
+      canonical_rule_id: SECURITY-056
+
+  - id: ssrf-httpx-client
+    pattern-either:
+      - pattern: httpx.get($URL, ...)
+      - pattern: httpx.post($URL, ...)
+      - pattern: httpx.request($METHOD, $URL, ...)
+    message: "Potential SSRF: httpx request with variable URL"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-918
+      canonical_rule_id: SECURITY-056
+
+  - id: ssrf-urlopen-direct-import
+    patterns:
+      - pattern: urlopen($URL)
+      - pattern-not: urlopen("...")
+    message: "Potential SSRF: urlopen() with variable URL — verify URL is not user-controlled (CWE-918)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-918
+      canonical_rule_id: SECURITY-056
+
+  - id: ssrf-open-url-protocol
+    pattern: open(os.path.abspath($VAR), ...)
+    message: "Potential path traversal: open(os.path.abspath(var)) with variable — attacker may read arbitrary files (CWE-22)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-22
+      canonical_rule_id: SECURITY-049
+
+  # ============================================================
+  # CWE-22 — Path Traversal
+  # ============================================================
+
+  - id: path-traversal-open-join
+    pattern-either:
+      - pattern: open(os.path.join($BASE, $USER_INPUT), ...)
+      - pattern: open(os.path.join($BASE, $X, $USER_INPUT), ...)
+    message: "Potential path traversal: open() with os.path.join() — ensure user input is sanitized"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-22
+      canonical_rule_id: SECURITY-049
+
+  - id: path-traversal-send-file
+    pattern-either:
+      - pattern: send_file($PATH, ...)
+      - pattern: flask.send_file($PATH, ...)
+    message: "Potential path traversal: send_file() with variable path — user-controlled path may escape base directory"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-22
+      canonical_rule_id: SECURITY-049
+
+  - id: path-traversal-send-from-directory
+    pattern: send_from_directory($DIR, $FILENAME, ...)
+    message: "Verify send_from_directory() filename is not user-controlled without sanitization (path traversal)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-22
+      canonical_rule_id: SECURITY-049
+
+  - id: path-traversal-open-direct
+    pattern-either:
+      - pattern: open(request.args.get(...), ...)
+      - pattern: open(request.args[...], ...)
+      - pattern: open(request.form.get(...), ...)
+      - pattern: open(request.form[...], ...)
+      - pattern: open(request.json.get(...), ...)
+    message: "Path traversal: open() with direct request parameter — critical path traversal risk"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-22
+      canonical_rule_id: SECURITY-049
+
+  - id: path-traversal-pathlib
+    pattern-either:
+      - pattern: Path($BASE) / $USER_INPUT
+      - pattern: Path($BASE).joinpath($USER_INPUT)
+    message: "Potential path traversal: pathlib path construction with variable — verify user input is not controlling path"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-22
+      canonical_rule_id: SECURITY-049
+
+  - id: path-traversal-tarfile
+    pattern-either:
+      - pattern: tarfile.open($PATH, ...)
+      - pattern: tarfile.TarFile($PATH, ...)
+      - pattern: tarfile.TarFile.open($PATH, ...)
+    message: "Potential path traversal: tarfile with variable path — tar slip / arbitrary file read (CWE-22)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-22
+      canonical_rule_id: SECURITY-049
+
+  - id: path-traversal-bz2
+    pattern-either:
+      - pattern: bz2.BZ2File($PATH, ...)
+      - pattern: bz2.open($PATH, ...)
+    message: "Potential path traversal: bz2 file open with variable path (CWE-22)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-22
+      canonical_rule_id: SECURITY-049
+
+  - id: path-traversal-open-variable
+    patterns:
+      - pattern: open($PATH, ...)
+      - pattern-not: open("...", ...)
+      - pattern-not: open(os.path.join($BASE, ...), ...)
+      - pattern-not: open(..., encoding=...)
+    message: "Potential path traversal: open() with variable path — verify path is not user-controlled (CWE-22)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-22
+      canonical_rule_id: SECURITY-049
+
+  # ============================================================
+  # CWE-209 — Error Info Disclosure
+  # ============================================================
+
+  - id: error-info-str-exception-return
+    patterns:
+      - pattern: |
+          try:
+            ...
+          except $EXC as $E:
+            ...
+            return str($E)
+    message: "Error info disclosure: returning str(exception) leaks internal details to clients (CWE-209)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-209
+      canonical_rule_id: SECURITY-066
+
+  - id: error-info-repr-exception-return
+    patterns:
+      - pattern: |
+          try:
+            ...
+          except $EXC as $E:
+            ...
+            return repr($E)
+    message: "Error info disclosure: returning repr(exception) leaks stack details (CWE-209)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-209
+      canonical_rule_id: SECURITY-066
+
+  - id: error-info-traceback-return
+    patterns:
+      - pattern: |
+          try:
+            ...
+          except ...:
+            ...
+            return traceback.format_exc()
+    message: "Error info disclosure: returning traceback leaks full stack trace to clients (CWE-209)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-209
+      canonical_rule_id: SECURITY-066
+
+  - id: error-info-abort-with-exception
+    pattern-either:
+      - pattern: abort(500, str($E))
+      - pattern: abort(400, str($E))
+    message: "Error info disclosure: passing exception string to abort() leaks internals (CWE-209)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-209
+      canonical_rule_id: SECURITY-066
+
+  # ============================================================
+  # CWE-215 — Flask Debug Mode
+  # ============================================================
+
+  - id: flask-debug-run-true
+    pattern-either:
+      - pattern: app.run(..., debug=True, ...)
+      - pattern: $APP.run(..., debug=True, ...)
+    message: "Flask debug=True in app.run() exposes interactive debugger — never in production (CWE-215)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-215
+      canonical_rule_id: SECURITY-083
+
+  - id: flask-debug-config-true
+    pattern-either:
+      - pattern: app.config['DEBUG'] = True
+      - pattern: app.config["DEBUG"] = True
+      - pattern: $APP.config['DEBUG'] = True
+    message: "Flask DEBUG config set to True — exposes Werkzeug debugger in production (CWE-215)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-215
+      canonical_rule_id: SECURITY-083
+
+  # ============================================================
+  # CWE-79 — XSS (Jinja2 / Flask specific)
+  # ============================================================
+
+  - id: jinja2-markup-user-input
+    pattern-either:
+      - pattern: Markup($USER_INPUT)
+      - pattern: flask.Markup($USER_INPUT)
+      - pattern: markupsafe.Markup($USER_INPUT)
+    message: "XSS risk: Markup() marks content as safe without escaping — do not use with user input (CWE-79)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-79
+      canonical_rule_id: SECURITY-085
+
+  - id: render-template-string-concat
+    pattern-either:
+      - pattern: render_template_string($TMPL + $VAR, ...)
+      - pattern: render_template_string(f"...{$VAR}...", ...)
+      - pattern: render_template_string("...".format(...), ...)
+      - pattern: render_template_string("..." % $VAR, ...)
+    message: "SSTI+XSS: render_template_string() with string interpolation — user input in template string allows SSTI (CWE-79/CWE-1336)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-79
+      canonical_rule_id: SECURITY-031
+
+  - id: jinja2-environment-from-string
+    pattern-either:
+      - pattern: jinja2.Environment(...).from_string($TMPL)
+      - pattern: Environment(...).from_string($TMPL)
+    message: "SSTI risk: Jinja2 from_string() with variable template (CWE-1336/CWE-79)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-79
+      canonical_rule_id: SECURITY-031
+
+  # ============================================================
+  # CWE-79 — XSS in HTML Jinja2 templates
+  # ============================================================
+
+  - id: jinja2-autoescape-false-python
+    pattern: jinja2.Environment(autoescape=False)
+    message: "Jinja2 Environment with autoescape=False — all template variables unescaped, XSS risk (CWE-79)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-79
+      canonical_rule_id: SECURITY-085
+
+  # ============================================================
+  # CWE-89 — SQL Injection (.format() pattern)
+  # ============================================================
+
+  - id: sql-injection-format-method
+    pattern-either:
+      - pattern: $CURSOR.execute("...".format(...))
+      - pattern: $CURSOR.execute("{}".format($VAR))
+      - pattern: $CURSOR.execute("{0}".format($VAR))
+      - pattern: $DB.execute("...".format(...))
+      - pattern: $CONN.execute("...".format(...))
+    message: "SQL injection: .execute() with .format() string interpolation — use parameterized queries (CWE-89)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-89
+      canonical_rule_id: SECURITY-027
+
+  - id: sql-injection-format-cursor
+    pattern-either:
+      - pattern: cursor.execute("...".format(...))
+      - pattern: cur.execute("...".format(...))
+      - pattern: c.execute("...".format(...))
+    message: "SQL injection: cursor.execute() with .format() — user input in SQL string (CWE-89)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-89
+      canonical_rule_id: SECURITY-027
+
+  # ============================================================
+  # CWE-798 — Hardcoded Credentials
+  # ============================================================
+
+  - id: hardcoded-flask-secret-key
+    pattern-either:
+      - pattern: app.config['SECRET_KEY'] = "..."
+      - pattern: app.config["SECRET_KEY"] = "..."
+      - pattern: $APP.config['SECRET_KEY'] = "..."
+      - pattern: $APP.config['SECRET_KEY'] = '...'
+    message: "Hardcoded Flask SECRET_KEY in source code — use environment variable instead (CWE-798)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-798
+      canonical_rule_id: SECURITY-006
+
+  - id: hardcoded-flask-jwt-secret
+    pattern-either:
+      - pattern: app.config['JWT_SECRET_KEY'] = "..."
+      - pattern: app.config["JWT_SECRET_KEY"] = "..."
+      - pattern: app.config['JWT_SECRET_KEY'] = '...'
+    message: "Hardcoded JWT secret in Flask config (CWE-798)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-798
+      canonical_rule_id: SECURITY-006
+
+  - id: hardcoded-password-in-list
+    pattern-either:
+      - pattern: |
+          $VAR = [(..., "...", ...)]
+      - pattern: |
+          $VAR = [(..., '...', ...)]
+    message: "Potential hardcoded credentials in list literal — verify no passwords are hardcoded (CWE-798)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-798
+      canonical_rule_id: SECURITY-006
+
+  - id: hardcoded-api-key-assignment
+    pattern-either:
+      - pattern: API_KEY = "..."
+      - pattern: API_SECRET = "..."
+      - pattern: ACCESS_TOKEN = "..."
+      - pattern: AUTH_TOKEN = "..."
+      - pattern: SECRET_TOKEN = "..."
+    message: "Hardcoded API key/secret in source code (CWE-798)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-798
+      canonical_rule_id: SECURITY-006
+
+  # ============================================================
+  # CWE-312 — Cleartext Storage of Sensitive Info
+  # ============================================================
+
+  - id: cleartext-password-logging
+    pattern-either:
+      - pattern: logging.info("...password...", $PASSWORD)
+      - pattern: logging.debug("...password...", $PASSWORD)
+      - pattern: print("password:", $PASSWORD)
+      - pattern: print(f"...password...{$PASSWORD}...")
+    message: "Cleartext password logged or printed — sensitive data exposure (CWE-312)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-312
+      canonical_rule_id: SECURITY-066
+
+
+  # ============================================================
+  # CWE-1004 / CWE-614 — Cookie Security Flags
+  # ============================================================
+
+  - id: cookie-missing-httponly
+    pattern-either:
+      - pattern: response.set_cookie($NAME, $VALUE, httponly=False, ...)
+      - pattern: $RESP.set_cookie($NAME, $VALUE, httponly=False, ...)
+      - pattern: make_response(...).set_cookie($NAME, $VALUE)
+    message: "Cookie set without HttpOnly flag — vulnerable to XSS-based cookie theft (CWE-1004)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-1004
+      canonical_rule_id: SECURITY-087
+
+  - id: cookie-missing-secure-flag
+    pattern-either:
+      - pattern: response.set_cookie($NAME, $VALUE, secure=False, ...)
+      - pattern: $RESP.set_cookie($NAME, $VALUE, secure=False, ...)
+    message: "Cookie set with secure=False — transmitted over HTTP (CWE-614)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-614
+      canonical_rule_id: SECURITY-088
+
+  - id: session-cookie-no-secure
+    pattern-either:
+      - pattern: app.config['SESSION_COOKIE_SECURE'] = False
+      - pattern: app.config["SESSION_COOKIE_SECURE"] = False
+    message: "Flask session cookie secure flag disabled — session transmitted over HTTP (CWE-614)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-614
+      canonical_rule_id: SECURITY-088
+
+  - id: session-cookie-no-httponly
+    pattern-either:
+      - pattern: app.config['SESSION_COOKIE_HTTPONLY'] = False
+      - pattern: app.config["SESSION_COOKIE_HTTPONLY"] = False
+    message: "Flask session cookie HttpOnly flag disabled — accessible via JavaScript (CWE-1004)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-1004
+      canonical_rule_id: SECURITY-087
+
+  # ============================================================
+  # CWE-330 / CWE-338 — Weak PRNG
+  # ============================================================
+
+  - id: weak-prng-random-for-security
+    pattern-either:
+      - pattern: random.random()
+      - pattern: random.randint($A, $B)
+      - pattern: random.choice($SEQ)
+      - pattern: random.randrange($N)
+    message: "Weak PRNG: random module is not cryptographically secure — use secrets module for tokens (CWE-330)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-330
+      canonical_rule_id: SECURITY-009
+
+  # ============================================================
+  # CWE-916 — Weak Password Hash
+  # ============================================================
+
+  - id: weak-password-hash-md5
+    pattern-either:
+      - pattern: hashlib.md5($PASSWORD.encode(...))
+      - pattern: hashlib.md5($PASSWORD)
+    message: "MD5 is not suitable for password hashing — use bcrypt/argon2/pbkdf2 (CWE-916)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-916
+      canonical_rule_id: SECURITY-009
+
+  - id: weak-password-hash-sha1
+    pattern-either:
+      - pattern: hashlib.sha1($PASSWORD.encode(...))
+      - pattern: hashlib.sha1($PASSWORD)
+    message: "SHA1 is not suitable for password hashing — use bcrypt/argon2/pbkdf2 (CWE-916)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-916
+      canonical_rule_id: SECURITY-009
+
+  - id: weak-password-hash-sha256-direct
+    patterns:
+      - pattern: hashlib.sha256($PWD)
+      - pattern-not: hashlib.sha256($PWD.encode("..."))
+    message: "SHA256 without salt is not suitable for password hashing — use bcrypt/argon2 (CWE-916)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-916
+      canonical_rule_id: SECURITY-009
+
+  # ============================================================
+  # CWE-601 — Open Redirect
+  # ============================================================
+
+  - id: open-redirect-flask-redirect
+    pattern-either:
+      - pattern: redirect(request.args.get(...))
+      - pattern: redirect(request.args[...])
+      - pattern: redirect(request.form.get(...))
+      - pattern: redirect(request.form[...])
+    message: "Open redirect: redirect() with unvalidated user input — attacker can redirect to malicious URL (CWE-601)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-601
+      canonical_rule_id: SECURITY-048
+
+  - id: open-redirect-flask-variable
+    patterns:
+      - pattern: redirect($URL)
+      - pattern-not: redirect(url_for(...))
+      - pattern-not: redirect("...")
+    message: "Potential open redirect: verify redirect target is validated before use (CWE-601)"
+    severity: WARNING
+    languages: [python]
+    metadata:
+      cwe: CWE-601
+      canonical_rule_id: SECURITY-048
+
+  # ============================================================
+  # CWE-643 — XPath Injection
+  # ============================================================
+
+  - id: xpath-injection-lxml
+    pattern-either:
+      - pattern: $TREE.xpath("...".format(...))
+      - pattern: $TREE.xpath(f"...{$VAR}...")
+      - pattern: $TREE.xpath("..." + $VAR)
+      - pattern: $ELEM.xpath("...".format(...))
+    message: "XPath injection: dynamic XPath with user input — use parameterized XPath expressions (CWE-643)"
+    severity: ERROR
+    languages: [python]
+    metadata:
+      cwe: CWE-643
+      canonical_rule_id: SECURITY-067

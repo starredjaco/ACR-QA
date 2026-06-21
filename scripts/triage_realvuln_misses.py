@@ -290,17 +290,15 @@ def run_acrqa(repo_dir: str) -> list[dict]:
         pass
 
     custom = _ROOT / "TOOLS" / "semgrep" / "python-rules.yml"
-    configs = ["--config=p/python"]
+    boost = _ROOT / "TOOLS" / "semgrep" / "realvuln-boost-rules.yml"
+    py_configs = ["--config=p/python"]
     if custom.exists():
-        configs += [f"--config={custom}"]
-    try:
-        r = subprocess.run(
-            [_venv("semgrep"), *configs, "--json", "--quiet", repo_dir],
-            capture_output=True,
-            text=True,
-            timeout=300,
-        )
-        for res in json.loads(r.stdout or "{}").get("results", []):
+        py_configs += [f"--config={custom}"]
+    if boost.exists():
+        py_configs += [f"--config={boost}"]
+
+    def _parse_semgrep(data: dict) -> None:
+        for res in data.get("results", []):
             metadata = res.get("extra", {}).get("metadata", {})
             raw_cwes = metadata.get("cwe", [])
             if isinstance(raw_cwes, str):
@@ -328,8 +326,32 @@ def run_acrqa(repo_dir: str) -> list[dict]:
                         "tool": "semgrep",
                     }
                 )
+
+    try:
+        r = subprocess.run(
+            [_venv("semgrep"), *py_configs, "--json", "--quiet",
+             "--include=*.py", repo_dir],
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+        _parse_semgrep(json.loads(r.stdout or "{}"))
     except Exception:
         pass
+
+    if boost.exists():
+        try:
+            r = subprocess.run(
+                [_venv("semgrep"), f"--config={boost}", "--json", "--quiet",
+                 "--include=*.html", "--include=*.jinja2", "--include=*.j2",
+                 repo_dir],
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            _parse_semgrep(json.loads(r.stdout or "{}"))
+        except Exception:
+            pass
 
     # Deduplicate
     seen: set[tuple] = set()

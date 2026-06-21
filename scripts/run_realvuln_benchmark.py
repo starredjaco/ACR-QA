@@ -209,57 +209,85 @@ def run_bandit(repo_dir: str) -> list[dict]:
         return []
 
 
+def _parse_semgrep_output(data: dict, repo_dir: str) -> list[dict]:
+    """Parse Semgrep JSON output into normalised finding dicts."""
+    findings = []
+    for res in data.get("results", []):
+        metadata = res.get("extra", {}).get("metadata", {})
+        raw_cwes = metadata.get("cwe", [])
+        if isinstance(raw_cwes, str):
+            raw_cwes = [raw_cwes]
+        cwes = [m.group(1) for c in raw_cwes if (m := SEMGREP_CWE_RE.match(str(c)))]
+
+        rid = res.get("check_id", "")
+        canonical = RULE_MAPPING.get(rid)
+        if not cwes and canonical:
+            c = CANONICAL_CWE.get(canonical)
+            if c:
+                cwes = [c]
+        if not cwes:
+            continue
+
+        try:
+            fname = str(Path(res.get("path", "")).relative_to(repo_dir))
+        except ValueError:
+            fname = res.get("path", "")
+        fname = fname.replace("\\", "/")
+
+        for cwe in cwes:
+            findings.append(
+                {
+                    "file": fname,
+                    "cwe": cwe,
+                    "line": res.get("start", {}).get("line"),
+                    "rule_id": rid,
+                    "severity": (res.get("extra", {}).get("severity") or "").lower(),
+                }
+            )
+    return findings
+
+
 def run_semgrep_custom(repo_dir: str) -> list[dict]:
-    """Run Semgrep CE + ACR-QA custom rules; return findings."""
-    custom = _ROOT / "TOOLS" / "semgrep" / "python-rules.yml"
-    configs = ["--config=p/python"]
-    if custom.exists():
-        configs += [f"--config={custom}"]
+    """Run Semgrep CE + ACR-QA custom rules (Python + HTML); return findings."""
+    custom_py = _ROOT / "TOOLS" / "semgrep" / "python-rules.yml"
+    boost = _ROOT / "TOOLS" / "semgrep" / "realvuln-boost-rules.yml"
+
+    # Python scan: p/python + custom rules
+    py_configs = ["--config=p/python"]
+    if custom_py.exists():
+        py_configs += [f"--config={custom_py}"]
+    if boost.exists():
+        py_configs += [f"--config={boost}"]
+
+    findings: list[dict] = []
     try:
         r = subprocess.run(
-            [_venv("semgrep"), *configs, "--json", "--quiet", repo_dir],
+            [_venv("semgrep"), *py_configs, "--json", "--quiet",
+             "--include=*.py", repo_dir],
             capture_output=True,
             text=True,
             timeout=300,
         )
-        data = json.loads(r.stdout or "{}")
-        findings = []
-        for res in data.get("results", []):
-            metadata = res.get("extra", {}).get("metadata", {})
-            raw_cwes = metadata.get("cwe", [])
-            if isinstance(raw_cwes, str):
-                raw_cwes = [raw_cwes]
-            cwes = [m.group(1) for c in raw_cwes if (m := SEMGREP_CWE_RE.match(str(c)))]
-
-            rid = res.get("check_id", "")
-            canonical = RULE_MAPPING.get(rid)
-            if not cwes and canonical:
-                c = CANONICAL_CWE.get(canonical)
-                if c:
-                    cwes = [c]
-            if not cwes:
-                continue
-
-            try:
-                fname = str(Path(res.get("path", "")).relative_to(repo_dir))
-            except ValueError:
-                fname = res.get("path", "")
-            fname = fname.replace("\\", "/")
-
-            for cwe in cwes:
-                findings.append(
-                    {
-                        "file": fname,
-                        "cwe": cwe,
-                        "line": res.get("start", {}).get("line"),
-                        "rule_id": rid,
-                        "severity": (res.get("extra", {}).get("severity") or "").lower(),
-                    }
-                )
-        return findings
+        findings.extend(_parse_semgrep_output(json.loads(r.stdout or "{}"), repo_dir))
     except Exception as exc:
-        print(f"    ⚠ Semgrep: {exc}", file=sys.stderr)
-        return []
+        print(f"    ⚠ Semgrep (Python): {exc}", file=sys.stderr)
+
+    # HTML scan: boost rules only (cover Jinja2 template XSS patterns)
+    if boost.exists():
+        try:
+            r = subprocess.run(
+                [_venv("semgrep"), f"--config={boost}", "--json", "--quiet",
+                 "--include=*.html", "--include=*.jinja2", "--include=*.j2",
+                 repo_dir],
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            findings.extend(_parse_semgrep_output(json.loads(r.stdout or "{}"), repo_dir))
+        except Exception as exc:
+            print(f"    ⚠ Semgrep (HTML): {exc}", file=sys.stderr)
+
+    return findings
 
 
 def run_acrqa_full(repo_dir: str) -> list[dict]:
