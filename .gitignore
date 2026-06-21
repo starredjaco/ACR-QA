@@ -71,6 +71,14 @@ ACR-QA-Book/figures/*
 # Deck assets that must be tracked (PUML source + rendered PNG for slide builder)
 !ACR-QA-Book/figures/exploit_flow_slide.puml
 !ACR-QA-Book/figures/exploit_flow_slide.png
+!ACR-QA-Book/figures/arch_flow_slide.puml
+!ACR-QA-Book/figures/arch_flow_slide.png
+!ACR-QA-Book/figures/arch_system_slide.puml
+!ACR-QA-Book/figures/arch_system_slide.png
+!ACR-QA-Book/figures/detection_fanin.puml
+!ACR-QA-Book/figures/detection_fanin.png
+!ACR-QA-Book/figures/CONFUSION_MATRIX_SLIDE.png
+!ACR-QA-Book/figures/DERIVED_METRICS_SLIDE.png
 
 docs/references_pptx
 
@@ -155,3 +163,7 @@ docs/presentation_assets/figures/
 # Archived binaries: preserved on disk, not tracked (trip large-file hygiene)
 docs/archive/assignments/*.pdf
 docs/archive/media/*.png
+!ACR-QA-Book/figures/arch_overview_wide.puml
+!ACR-QA-Book/figures/arch_overview_wide.png
+!ACR-QA-Book/figures/REALVULN_LEADERBOARD_CLEAN.png
+!ACR-QA-Book/figures/BENCHMARK_SCORECARD.png

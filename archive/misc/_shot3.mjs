@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+import fs from 'fs';
+const token = fs.readFileSync('/tmp/acrqa_token.txt','utf8').trim();
+const BASE='http://localhost:8000', OUT='/tmp/shots';
+const browser = await chromium.launch();
+const ctx = await browser.newContext({viewport:{width:1440,height:900}, deviceScaleFactor:2});
+const page = await ctx.newPage();
+await page.goto(BASE);
+await page.evaluate((t)=>localStorage.setItem('acrqa_auth', JSON.stringify({state:{token:t,user:{email:'admin@acrqa.local',role:'admin'}},version:0})), token);
+await page.goto(BASE+'/runs/995',{waitUntil:'networkidle'}); await page.waitForTimeout(1500);
+await page.getByText('Compliance',{exact:false}).first().click(); await page.waitForTimeout(1800);
+await page.screenshot({path:`${OUT}/compliance.png`}); console.log('compliance');
