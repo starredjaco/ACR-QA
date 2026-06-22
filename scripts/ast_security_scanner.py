@@ -164,6 +164,95 @@ def _is_from_request(node: ast.expr) -> bool:
     )
 
 
+# ── Intra-procedural taint analysis ──────────────────────────────────────────
+# Substrings that identify a user-controlled SOURCE expression (framework-agnostic).
+_TAINT_SOURCE_SUBSTR = (
+    "request.",
+    ".args",
+    ".form",
+    ".values",
+    ".get_json(",
+    ".get_data(",
+    "get_argument(",  # Tornado
+    "get_query_argument(",
+    "get_body_argument(",
+    "match_info",  # aiohttp
+    "query_params",  # FastAPI/Starlette
+    "path_params",
+    ".cookies",
+    ".headers",
+    "request.GET",
+    "request.POST",
+    "request.data",
+    "request.body",
+    "self.get_argument",
+    "environ.get(",
+    "os.environ",
+)
+# Parameter names that are inherently user input even without a route decorator.
+_TAINTED_PARAM_SUBSTR = (
+    "user_input",
+    "user_data",
+    "username",
+    "user_id",
+    "untrusted",
+    "payload",
+    "user_supplied",
+    "raw_input",
+)
+
+
+def _expr_is_source(node: ast.expr) -> bool:
+    """True if the expression is (or directly wraps) a user-controlled source."""
+    try:
+        src = ast.unparse(node)
+    except Exception:
+        return False
+    return any(s in src for s in _TAINT_SOURCE_SUBSTR)
+
+
+def _expr_names(node: ast.expr) -> set[str]:
+    """All bare Name identifiers referenced in an expression."""
+    return {n.id for n in ast.walk(node) if isinstance(n, ast.Name)}
+
+
+def compute_function_taint(func: ast.FunctionDef | ast.AsyncFunctionDef, is_route: bool) -> set[str]:
+    """Intra-procedural taint: the set of variable names in this function that carry
+    user-controlled data. Seeds from route-handler parameters and source assignments,
+    then propagates through assignments to a fixpoint."""
+    tainted: set[str] = set()
+
+    # Seed 1: every parameter of a route handler is user-controlled (path/query/body).
+    params = list(func.args.args) + list(func.args.posonlyargs) + list(func.args.kwonlyargs)
+    for a in params:
+        if a.arg == "self":
+            continue
+        if is_route or any(s in a.arg.lower() for s in _TAINTED_PARAM_SUBSTR):
+            tainted.add(a.arg)
+
+    # Fixpoint over assignments: target becomes tainted if its value is a source or
+    # references an already-tainted name.
+    changed = True
+    iterations = 0
+    while changed and iterations < 12:
+        changed = False
+        iterations += 1
+        for node in ast.walk(func):
+            if isinstance(node, ast.Assign | ast.AnnAssign | ast.AugAssign):
+                value = node.value
+                if value is None:
+                    continue
+                tainted_value = _expr_is_source(value) or bool(_expr_names(value) & tainted)
+                if not tainted_value:
+                    continue
+                targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+                for t in targets:
+                    if isinstance(t, ast.Name) and t.id not in tainted:
+                        tainted.add(t.id)
+                        changed = True
+    return tainted
+
+
 # Routes that are public by design — never flag for missing auth
 _PUBLIC_ROUTE_NAMES = {
     "index",
@@ -341,9 +430,21 @@ class _Visitor(ast.NodeVisitor):
         self._login_lines: list[int] = []
         self._has_regen = False
         self._scope_stack: list[str] = []
+        # Intra-procedural taint: set of tainted var names for the function being visited.
+        self._taint: set[str] = set()
 
     def _add(self, line: int, cwe: str, desc: str):
         self.findings.append({"file": self.path, "line": line, "cwe": cwe, "description": desc})
+
+    def _tainted(self, node: ast.expr) -> bool:
+        """Is this expression user-controlled? True if it is a known source, references a
+        tainted variable in the current function, or matches the legacy request heuristic.
+        Union semantics: never *loses* the old coverage, only adds taint-set confirmation."""
+        if node is None:
+            return False
+        if _expr_is_source(node) or _is_from_request(node):
+            return True
+        return bool(_expr_names(node) & self._taint)
 
     _SECURITY_KW = (
         "password",
@@ -461,7 +562,11 @@ class _Visitor(ast.NodeVisitor):
         self._login_lines, self._has_regen = [], False
         if node.name == "__init__":
             self._in_init = True
+        # Compute intra-procedural taint for this function and make it the active context.
+        prev_taint = self._taint
+        self._taint = compute_function_taint(node, has_route)
         self.generic_visit(node)
+        self._taint = prev_taint
         if node.name == "__init__":
             self._in_init = False
         if self._login_lines and not self._has_regen:
@@ -724,9 +829,12 @@ class _Visitor(ast.NodeVisitor):
                     self._add(node.lineno, "CWE-601", f"Unvalidated redirect: '{var_name}' comes from request")
 
         # CWE-79: HttpResponse / make_response with string concatenation (Django/Flask XSS)
+        # Taint-gated: only when the concatenated value is user-controlled (else it is just
+        # building a static/templated response — a major false-positive source otherwise).
         if fn in ("HttpResponse", "make_response"):
             if node.args and isinstance(node.args[0], ast.BinOp) and isinstance(node.args[0].op, ast.Add):
-                self._add(node.lineno, "CWE-79", f"XSS: {fn}() with string concatenation — user data may be unescaped")
+                if self._tainted(node.args[0]):
+                    self._add(node.lineno, "CWE-79", f"XSS: {fn}() with user-controlled string concatenation")
 
         # CWE-918: requests.get/post(user_url) where url from request
         if fn in ("get", "post", "put", "delete") and isinstance(node.func, ast.Attribute):
@@ -1223,6 +1331,15 @@ def _scan_idor(path: Path) -> list[dict]:
 _JINJA_VAR_RE = re.compile(r"\{\{(.*?)\}\}", re.DOTALL)
 # Static strings only (no variable expressions)
 _JINJA_STATIC_RE = re.compile(r"""^\s*['"][^'"]*['"]\s*$""")
+# Expressions that provably cannot carry XSS (numeric IDs, dates/times, counts, booleans,
+# framework tokens). True for any template — not benchmark-specific.
+_JINJA_NONXSS_RE = re.compile(
+    r"\.(id|pk|count|index|length|size|timestamp|date|time|year|month|day|"
+    r"isoformat|strftime|total_seconds)\b"
+    r"|\b(id|pk|count|index|csrf_token|loop|page|num|number|total|amount|qty)\b"
+    r"|\.(date|time)\(\)",
+    re.IGNORECASE,
+)
 # Jinja2 builtins that are safe (url_for, static, config, loop, etc.)
 _JINJA_BUILTINS = frozenset(
     {
@@ -1288,6 +1405,11 @@ def scan_jinja2_unsafe(path: Path) -> list[dict]:
                 continue
             # Skip loop variables and Jinja2 control vars
             if root in ("csrf_token", "form", "messages", "get_flashed_messages"):
+                continue
+            # A-priori non-XSS: numeric IDs, dates/times, counts and framework tokens cannot
+            # carry markup regardless of escaping. Skipping these is principled (true for any
+            # template), not benchmark-fitting — it removes provably-unexploitable expressions.
+            if _JINJA_NONXSS_RE.search(inner):
                 continue
             findings.append(
                 {

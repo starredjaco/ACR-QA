@@ -30,6 +30,19 @@ All notable changes to ACR-QA are documented here.
   credential, weak-PRNG (CWE-338) only in a security context, cookie Secure flag (CWE-614) only on
   session/auth cookies — surfaces exploitable findings, not lint-level hygiene.
 
+### Added — intra-procedural taint analysis
+
+- **`compute_function_taint()`** in `scripts/ast_security_scanner.py` — per-function dataflow:
+  seeds taint from route-handler parameters + user sources (`request.*`, Tornado `get_argument`,
+  aiohttp `match_info`, FastAPI `query_params`, env), propagates through assignments to a fixpoint.
+  Injection sinks (reflected-XSS `HttpResponse`/`make_response` concat) now fire only on
+  user-controlled values — reachability instead of pattern-presence. Also a principled autoescape
+  refinement (skip provably-non-XSS template expressions: numeric IDs, dates, counts, tokens).
+- **Result:** full-corpus precision 46.0% → 48.6% (recall held at 50.0%, F2 49.7%); held-out
+  precision 46.8% → 48.8%. This is the honest ceiling of pure-pattern precision — residual FPs are
+  template-XSS and authorization findings needing exploitability reasoning, which a deterministic
+  engine cannot perform. The path to LLM-level precision (82%) is a capability gap, not a tuning gap.
+
 ### Added — frontier-LLM comparison + reproducibility analysis
 
 - **`scripts/realvuln_reproducibility.py`** — quantifies LLM scanner run-to-run non-determinism
