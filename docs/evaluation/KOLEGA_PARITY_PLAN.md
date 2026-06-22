@@ -16,7 +16,7 @@ Ordered by (competitive advantage × feasibility), respecting dependencies. All 
 | # | Phase | Why this slot | Effort | Payoff | Status |
 |---|-------|---------------|--------|--------|--------|
 | ✅ | **Auth/IDOR/CSRF detectors** (was Ph 0/2) | biggest combined-pipeline gap | done | held-out 46→51% | **DONE** |
-| **1** | **Confirmed Tier** (cross-detector agreement) | answers the #1 weakness (47% precision) *today*, trivially, no deps; proven 78.6% | ★ low | high-precision MODE + credibility | proven, ship it |
+| ✅ | **Confirmed Tier** (cross-detector agreement) | answers the #1 weakness (47% precision); proven 78.6% | ★ low | high-precision MODE + credibility | **DONE** — tiered output shipped + unit-tested |
 | **2** | **Exploit-verification PROVEN tier** (merge Docker detonation + attestation) | the categorical moat — exploit-proven findings no competitor has; turns "competitive" into "better" | ★★★ med-high | ~100%-prec PROVEN tier + PoC + signature | the headline |
 | **3** | **Ensemble expansion** (full Semgrep registry + high-prec Bandit subset) | cheap recall toward 58%+; steal from *all* tools, not just kolega | ★★ low-med | +recall (→ Confirmed tier for noisy packs) | — |
 | **4** | **External held-out corpus** (repos OUTSIDE RealVuln) | the *unfakeable* proof we generalize; gates any public "beats kolega" claim | ★★ low-med (needs repos) | believable generalization number | needs fresh repos |

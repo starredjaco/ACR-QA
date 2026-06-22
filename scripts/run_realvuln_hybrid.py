@@ -233,6 +233,32 @@ def run_static(repo_path: Path, slug: str) -> list[dict]:
     return deduped
 
 
+# ── Confidence tiering (deterministic Confirmed Tier) ──────────────────────────
+# FIRM = syntactically clear / taint-gated detectors (high precision by construction).
+# TENTATIVE = authorization heuristics (recall-heavy, lower precision — like kolega's auth detectors).
+_FIRM_CWES = {
+    "CWE-89", "CWE-78", "CWE-22", "CWE-918", "CWE-94", "CWE-95", "CWE-502", "CWE-1336",
+    "CWE-327", "CWE-916", "CWE-328", "CWE-215", "CWE-798", "CWE-400", "CWE-1333", "CWE-16",
+    "CWE-532", "CWE-338", "CWE-330", "CWE-259", "CWE-256", "CWE-287", "CWE-522", "CWE-284",
+    "CWE-601", "CWE-643", "CWE-295", "CWE-614", "CWE-1004", "CWE-384", "CWE-321", "CWE-1336",
+}
+_TENTATIVE_CWES = {"CWE-306", "CWE-862", "CWE-639", "CWE-352", "CWE-307", "CWE-200", "CWE-209", "CWE-204"}
+
+
+def _confidence_tier(cwe: str, n_sources: int) -> str:
+    """Deterministic confidence tier for a finding.
+    certain  = corroborated by >=2 independent engines (proven ~79% precision), OR
+    firm     = a single syntactically-clear / taint-gated detector,
+    tentative= an authorization heuristic (recall-heavy)."""
+    if n_sources >= 2:
+        return "certain"
+    if cwe in _FIRM_CWES:
+        return "firm"
+    if cwe in _TENTATIVE_CWES:
+        return "tentative"
+    return "firm"
+
+
 # ── Scorer ────────────────────────────────────────────────────────────────────
 
 
@@ -375,13 +401,21 @@ def run_repo(slug: str, use_static: bool, use_llm: bool) -> dict:
         print(f"    found: {len(llm_f)}")
         all_findings.extend(llm_f)
 
-    # Deduplicate across static + LLM
+    # Deduplicate across static + LLM, tracking source AGREEMENT per location for confidence tiering.
+    from collections import defaultdict
+
+    sources_per_key: dict[tuple, set] = defaultdict(set)
+    for f in all_findings:
+        key = (f["file"], f["cwe"], (f.get("line") or 0) // 5)
+        sources_per_key[key].add(f.get("source", "ast"))
+
     seen: set[tuple] = set()
     combined: list[dict] = []
     for f in all_findings:
         key = (f["file"], f["cwe"], (f.get("line") or 0) // 5)
         if key not in seen:
             seen.add(key)
+            f["confidence"] = _confidence_tier(f["cwe"], len(sources_per_key[key]))
             combined.append(f)
 
     metrics = score_findings(combined, gt_tps, gt_fps)
@@ -390,10 +424,17 @@ def run_repo(slug: str, use_static: bool, use_llm: bool) -> dict:
     metrics["static_count"] = len([f for f in combined if f.get("source") != "llm"])
     metrics["llm_count"] = len([f for f in combined if f.get("source") == "llm"])
 
+    # Confidence-tiered metrics: cumulative operating points (kolega's `certain:` done honestly).
+    certain = [f for f in combined if f["confidence"] == "certain"]
+    certain_firm = [f for f in combined if f["confidence"] in ("certain", "firm")]
+    metrics["tier_certain"] = score_findings(certain, gt_tps, gt_fps)
+    metrics["tier_certain_firm"] = score_findings(certain_firm, gt_tps, gt_fps)
+
     print(
         f"  → TP={metrics['tp']}/{metrics['total_gt']} "
         f"recall={metrics['recall']:.1%} precision={metrics['precision']:.1%} "
-        f"FP={metrics['fp']}"
+        f"FP={metrics['fp']}  |  certain P={metrics['tier_certain']['precision']:.0%} "
+        f"R={metrics['tier_certain']['recall']:.0%}"
     )
 
     # Save findings for scorer
@@ -415,6 +456,7 @@ def run_repo(slug: str, use_static: bool, use_llm: bool) -> dict:
                     "metadata": {
                         "cwe": [f["cwe"]],
                         "source": f.get("source", "hybrid"),
+                        "confidence": f.get("confidence", "firm"),
                     },
                 },
             }
@@ -470,6 +512,19 @@ def main() -> None:
     print(f"  Recall:        {recall:.1%}  ({total_tp}/{total_gt})")
     print(f"  Precision:     {precision:.1%}")
     print(f"  F2:            {f2:.1%}")
+
+    # Confidence-tiered operating points (cumulative) — the deterministic Confirmed Tier.
+    print(f"\n  {'Operating point':<22}{'TP':>5}{'FP':>5}{'Recall':>9}{'Prec':>8}{'F2':>7}")
+    for label, mkey in [("recall mode (all)", None), ("certain+firm", "tier_certain_firm"), ("CONFIRMED (certain)", "tier_certain")]:
+        if mkey is None:
+            tp, fp = total_tp, total_fp
+        else:
+            tp = sum(r[mkey]["tp"] for r in results)
+            fp = sum(r[mkey]["fp"] for r in results)
+        rr = tp / total_gt if total_gt else 0
+        pp = tp / (tp + fp) if (tp + fp) else 0
+        ff = (5 * pp * rr) / (4 * pp + rr) if (pp + rr) else 0
+        print(f"  {label:<22}{tp:>5}{fp:>5}{rr:>8.1%}{pp:>7.1%}{ff:>6.1%}")
 
     # Per-repo table
     print(f"\n{'Repo':<35} {'GT':>4} {'TP':>4} {'FP':>4} {'Recall':>8} {'Prec':>8}")

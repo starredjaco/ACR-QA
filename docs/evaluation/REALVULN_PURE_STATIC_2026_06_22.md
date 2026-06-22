@@ -67,6 +67,27 @@ held-out precision matches DEV precision, confirming the detectors generalize.
 > (repos outside RealVuln entirely) is the next rung — blocked this session by sandbox network
 > restrictions on cloning. See `[[what_is_left]]`.
 
+## Headline 0b — Deterministic Confidence Tiers (answers "precision is only 47%")
+
+Every finding is tagged with a deterministic confidence tier (`scripts/run_realvuln_hybrid.py`,
+`_confidence_tier`): **certain** = corroborated by ≥2 independent engines; **firm** = a
+syntactically-clear / taint-gated single-engine detector; **tentative** = an authorization
+heuristic. This yields honest operating points instead of one blended number (kolega's `certain:`
+prefix, done transparently):
+
+| Operating point | Recall | Precision | F2 |
+|-----------------|--------|-----------|-----|
+| recall mode (all findings) | 53.2% | 46.8% | 51.8% |
+| certain + firm | 43.5% | 51.6% | 45.0% |
+| **CONFIRMED (≥2 engines agree)** | 7.9% | **78.6%** | 9.6% |
+
+The Confirmed tier reaches **78.6% precision deterministically** — matching frontier-LLM precision
+and kolega's `certain:` tier with **no LLM**. Recall of the agreement subset is low *because AST and
+Semgrep are complementary* (auth/config vs injection), which is exactly why their union recall is
+high. A team that wants "only the bugs we're sure about" gets the 78.6%-precision list; a team that
+wants coverage gets recall mode. Verified by the official matcher; tier logic is unit-tested
+(`TESTS/test_confidence_tiering.py`).
+
 ## Headline 0 — Consistency: ACR-QA is reproducible; LLMs find more per scan but not the same bugs twice
 
 A correctness note first, because it is easy to get this wrong (we did, and corrected it). The
