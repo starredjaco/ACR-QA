@@ -132,14 +132,26 @@ def run_static(repo_path: Path, slug: str) -> list[dict]:
         "B703": "CWE-79",
     }
 
-    # Bandit — OFF by default. It contributes 330 FPs for only ~26 unique TPs under the
-    # official scorer (22.5% precision), dragging the whole pipeline down. Our deterministic
-    # AST engine + targeted Semgrep rules cover the same vulns at ~2x precision. Set
-    # ACRQA_RV_BANDIT=1 to include it (kept for ablation / comparison in the thesis).
-    if os.environ.get("ACRQA_RV_BANDIT") != "1":
+    # Bandit — CURATED high-precision subset only (3rd independent source, feeds the Confirmed tier).
+    # Running ALL of Bandit added 330 FPs (22.5% precision); the noisy rules are import/assert/random/
+    # try-except. We keep only the syntactically-confident, exploit-relevant rules below. Set
+    # ACRQA_RV_BANDIT=full for the whole ruleset (ablation), or =0 to disable.
+    _bandit_mode = os.environ.get("ACRQA_RV_BANDIT", "curated")
+    if _bandit_mode == "0":
         bandit_cmd = None
     else:
         bandit_cmd = [str(ROOT / ".venv/bin/bandit"), "-r", str(repo_path), "-f", "json", "-q", "--exit-zero"]
+    # High-precision rule allowlist (SQLi, shell-injection, deserialization, weak crypto, ssl, jinja).
+    _BANDIT_HIGH_PREC = {
+        "B608",  # hardcoded SQL → SQLi
+        "B602", "B604", "B605", "B606", "B609", "B611", "B610", "B612",  # shell / SQL injection
+        "B301", "B302", "B307",  # pickle / marshal / eval deserialization
+        "B324",  # weak hash (md5/sha1)
+        "B501", "B502", "B503", "B504",  # ssl/tls insecure
+        "B201",  # flask debug=True
+        "B701", "B702", "B703",  # jinja2 autoescape / mako / django mark_safe
+        "B608", "B506",  # SQLi, yaml unsafe load
+    }
     try:
         if bandit_cmd is None:
             raise RuntimeError("bandit disabled")
@@ -153,6 +165,8 @@ def run_static(repo_path: Path, slug: str) -> list[dict]:
             data = json.loads(r.stdout)
             for issue in data.get("results", []):
                 rule = issue.get("test_id", "")
+                if _bandit_mode != "full" and rule not in _BANDIT_HIGH_PREC:
+                    continue
                 cwe = BANDIT_CWE.get(rule)
                 if not cwe:
                     continue
@@ -409,10 +423,18 @@ def run_repo(slug: str, use_static: bool, use_llm: bool) -> dict:
         key = (f["file"], f["cwe"], (f.get("line") or 0) // 5)
         sources_per_key[key].add(f.get("source", "ast"))
 
+    # Corroboration-only sources (e.g. Bandit) UPGRADE confidence when they agree with a primary
+    # detector, but a finding flagged ONLY by them is dropped — so they grow the Confirmed tier
+    # without polluting recall-mode precision with their standalone false positives.
+    _CORROBORATION_ONLY = {"bandit"}
     seen: set[tuple] = set()
     combined: list[dict] = []
     for f in all_findings:
         key = (f["file"], f["cwe"], (f.get("line") or 0) // 5)
+        if f.get("source") in _CORROBORATION_ONLY:
+            continue  # never emit a corroboration-only finding as primary
+        if sources_per_key[key] <= _CORROBORATION_ONLY:
+            continue  # (defensive) key seen only by corroboration sources
         if key not in seen:
             seen.add(key)
             f["confidence"] = _confidence_tier(f["cwe"], len(sources_per_key[key]))

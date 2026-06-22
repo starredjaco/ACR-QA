@@ -77,15 +77,20 @@ prefix, done transparently):
 
 | Operating point | Recall | Precision | F2 |
 |-----------------|--------|-----------|-----|
-| recall mode (all findings) | 53.2% | 46.8% | 51.8% |
-| certain + firm | 43.5% | 51.6% | 45.0% |
-| **CONFIRMED (≥2 engines agree)** | 7.9% | **78.6%** | 9.6% |
+| recall mode (all findings) | 53.2% | 46.9% | 51.8% |
+| certain + firm | 43.5% | 51.7% | 45.0% |
+| **CONFIRMED (≥2 engines agree)** | 13.4% | **80.6%** | 16.1% |
 
-The Confirmed tier reaches **78.6% precision deterministically** — matching frontier-LLM precision
-and kolega's `certain:` tier with **no LLM**. Recall of the agreement subset is low *because AST and
-Semgrep are complementary* (auth/config vs injection), which is exactly why their union recall is
-high. A team that wants "only the bugs we're sure about" gets the 78.6%-precision list; a team that
-wants coverage gets recall mode. Verified by the official matcher; tier logic is unit-tested
+The Confirmed tier reaches **80.6% precision deterministically** — matching frontier-LLM precision
+and kolega's `certain:` tier with **no LLM**. A team that wants "only the bugs we're sure about" gets
+the 80.6%-precision list; a team that wants coverage gets recall mode (53.2%).
+
+**Corroboration sources:** Bandit runs as a *corroboration-only* third source — a curated
+high-precision rule subset (B608 SQLi, B602 shell, B301 pickle, B324 hash, …). Its findings **upgrade
+confidence when they agree** with the AST engine or Semgrep, but a Bandit-only finding is dropped — so
+it grows the Confirmed tier (44→75 TPs) **without polluting recall-mode precision** (unchanged at
+46.9%). This is the general pattern for adding noisy-but-sometimes-right detectors: route them to
+corroboration, not primary detection. Verified by the official matcher; tier logic unit-tested
 (`TESTS/test_confidence_tiering.py`).
 
 ## Headline 0 — Consistency: ACR-QA is reproducible; LLMs find more per scan but not the same bugs twice

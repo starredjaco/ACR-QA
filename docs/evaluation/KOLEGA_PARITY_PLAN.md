@@ -18,7 +18,7 @@ Ordered by (competitive advantage × feasibility), respecting dependencies. All 
 | ✅ | **Auth/IDOR/CSRF detectors** (was Ph 0/2) | biggest combined-pipeline gap | done | held-out 46→51% | **DONE** |
 | ✅ | **Confirmed Tier** (cross-detector agreement) | answers the #1 weakness (47% precision); proven 78.6% | ★ low | high-precision MODE + credibility | **DONE** — tiered output shipped + unit-tested |
 | **2** | **Exploit-verification PROVEN tier** (merge Docker detonation + attestation) | the categorical moat — exploit-proven findings no competitor has; turns "competitive" into "better" | ★★★ med-high | ~100%-prec PROVEN tier + PoC + signature | the headline |
-| **3** | **Ensemble expansion** (full Semgrep registry + high-prec Bandit subset) | cheap recall toward 58%+; steal from *all* tools, not just kolega | ★★ low-med | +recall (→ Confirmed tier for noisy packs) | — |
+| 🟡 | **Ensemble expansion** (high-prec Bandit subset done; Semgrep registry needs network) | corroboration source grew Confirmed tier 44→75 TP @ 80.6% | ★★ low-med | +Confirmed precision | **Bandit-corroboration DONE**; registry pending network |
 | **4** | **External held-out corpus** (repos OUTSIDE RealVuln) | the *unfakeable* proof we generalize; gates any public "beats kolega" claim | ★★ low-med (needs repos) | believable generalization number | needs fresh repos |
 | **5** | **JS + cross-file taint** (DOM XSS, Python→template) | recall lever for when the easy ones are exhausted (diminishing) | ★★★ med | +2–4pp recall | when recall stalls |
 | **6** | **Opt-in cheap-LLM precision filter** | the ONLY path to top-F2 (~60%, beats GPT-5.5) — but trades determinism, so LAST + opt-in | ★★ low-med | top-F2 *mode* at <$1 | last; opt-in only |
