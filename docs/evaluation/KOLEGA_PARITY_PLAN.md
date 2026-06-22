@@ -178,6 +178,120 @@ high-precision MODE + honest severity ranking.**
 
 ---
 
+# Beyond kolega — new & merged approaches (this is where we win)
+
+Stealing kolega's detectors caps us at *its* design: a flat list of findings with one blended
+precision number. The real leap is a **tiered, multi-engine trust architecture** that uses assets
+no competitor has. Below, new phases ordered by (differentiation × feasibility).
+
+## Phase 5 — Cross-detector agreement → a *deterministic* Confirmed Tier (HIGH value, low effort)
+
+**Insight:** a finding flagged by **two independent detectors** (our AST + Semgrep, or two distinct
+AST rules, or AST + Bandit) is dramatically more likely to be real. Agreement is a precision signal
+we already generate and throw away. **No LLM, fully deterministic.**
+
+- [ ] Tag each finding with the set of engines/rules that produced it (we already dedup by
+      `(file, cwe, line)` — keep the provenance instead of collapsing it).
+- [ ] **Confirmed Tier = agreement ≥ 2** independent sources. Measure its precision (expected ≫ 47%
+      — likely 75–90%, matching kolega's `certain:` tier) and recall.
+- [ ] Ship two official numbers: **recall mode** (union, ~54%) and **confirmed mode** (agreement,
+      high precision). This is the honest version of kolega's `certain:` prefix — and it directly
+      answers the "your precision is only 47%" critique with a real high-precision operating point.
+
+> **✅ PROVEN (measured 2026-06-22):** AST∩Semgrep agreement = **78.6% precision** (44 TP / 12 FP) —
+> matching kolega's `certain:` tier, fully deterministically. Agreement recall is low (7.9%) *because
+> AST and Semgrep are complementary* (auth/config vs injection), which is exactly why their union
+> recall is high. **Refinement:** Confirmed Tier = agreement(≥2) **OR** inherently-certain detectors
+> (hardcoded-secret literal, debug=True, ReDoS catastrophic-pattern, eval/exec, weak-hash-of-credential
+> — each ~100% precision by construction). This widens the high-precision tier without an LLM. The
+> high-precision operating point a precision-focused buyer wants now demonstrably exists.
+
+## Phase 6 — Ensemble expansion (MEDIUM value, low effort) — "steal from ALL tools, not just kolega"
+
+We've been mining kolega. But Semgrep's *full registry* (not just our boost rules), CodeQL,
+Bandit's high-precision subset, gosec, and even the LLM scan-results all catch TPs we miss. The
+**union of all available detectors** is the true recall ceiling.
+
+- [ ] Analyse FN vs **best-of-all-scanners** (not just kolega) — what does *nobody* catch (truly
+      hard) vs what does *some* tool catch (recoverable)?
+- [ ] Add Semgrep `p/python`, `p/django`, `p/flask`, `p/owasp-top-ten` registry packs (currently only
+      custom boost rules). Dedup + route low-precision packs to the non-Confirmed tier.
+- [ ] Re-add Bandit's **high-precision rules only** (B602/B608/B301/B324 — shell, SQLi, pickle, weak
+      hash), excluded by a curated allowlist rather than running all of Bandit (which we dropped for FP).
+
+## Phase 7 — Exploit-verification tier (HIGHEST differentiation) — merge ACR-QA's Docker detonation
+
+**The moat no one else has.** ACR-QA already detonates findings live in a Docker sandbox
+(`CORE/detection/`, exploit-verify engine, 5/5 verified per memory). kolega, Semgrep, and the LLMs
+**flag**; ACR-QA can **prove**. Merge this into the RealVuln pipeline:
+
+- [ ] For each high-severity finding in a runnable RealVuln repo, attempt automated detonation
+      (spin the app, send the exploit input, observe the effect — SQLi data leak, RCE marker, path
+      read of a sentinel file).
+- [ ] **PROVEN tier = exploit-confirmed** → ~100% precision, *with a reproducible PoC*. No scanner on
+      the leaderboard offers exploit-proven findings.
+- [ ] Sign each proven finding with the existing ECDSA + Dilithium3 attestation → an auditable,
+      tamper-evident "this vuln is real and here's the proof" artifact.
+- [ ] Coverage will be partial (not every RealVuln repo is trivially runnable) — that's fine; PROVEN
+      is a *premium tier on top of* recall mode, not a replacement.
+
+## Phase 8 — Optional cheap-LLM precision filter (the ONLY path to top-F2; opt-in, non-deterministic)
+
+The honest way to beat GPT-5.5 on **F2** specifically. Deterministic engine finds candidates (high
+recall, $0); one **cheap single-shot LLM call** (Groq, already integrated) classifies each
+non-Confirmed finding as exploitable / not. Promotes/demotes the tentative tier.
+
+- [ ] Batch-classify tier-3 findings with a cheap model (~$0.50/repo vs the LLM agents' $35–62).
+- [ ] Projected: ~54% recall × ~75% precision → **F2 ~60%**, beating every individual LLM agent on
+      F2 *and* cost by 50×.
+- [ ] **Strictly opt-in** (`--llm-filter`) so the default stays deterministic/$0. Report it as a
+      *separate* mode — never conflate with the deterministic numbers. (Trades the determinism wedge
+      for F2; offer both, let the user choose.)
+
+## Phase 9 — Continuous external held-out corpus (validation infra; unblocks honest "beat kolega")
+
+Our held-out is the 16 RealVuln repos we didn't tune on — but they're still *kolega's* corpus. The
+unfakeable comparison needs repos **outside RealVuln entirely**.
+
+- [ ] Clone 5–10 fresh intentionally-vulnerable Python repos NOT in RealVuln (e.g. OWASP PyGoat,
+      django.nV, Vulnerable-Flask-App variants), hand-label or use their published CVE/finding lists.
+- [ ] Freeze the engine; score on this truly-external set each release. **This number is the one a
+      committee/HN cannot attack** — and lets us claim generalization vs kolega without its home field.
+- [ ] Wire into CI as a slow nightly job.
+
+---
+
+# The unified vision — what "110% better than kolega" actually means
+
+Not a benchmark row. A **tiered, multi-engine, provable trust system**:
+
+```
+                         ┌──────────── RECALL (union of all engines) ~55–60% ───────────┐
+   AST engine  +  Semgrep registry  +  high-prec Bandit  +  (opt) LLM detectors
+                         └──────────────────────────────────────────────────────────────┘
+                                              │  every finding carries provenance
+                                              ▼
+   ┌─────────────────────── PRECISION TIERS (deterministic core) ───────────────────────┐
+   │ PROVEN     exploit-detonated in Docker + ECDSA/Dilithium attested   → ~100% prec     │
+   │ CONFIRMED  ≥2 independent detectors agree                            → ~80% prec      │
+   │ FLAGGED    single detector                                           → ~50% prec      │
+   │ (opt) LLM-filtered FLAGGED → promoted/demoted                        → ~75% prec, $   │
+   └─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**No competitor offers this combination:** kolega (closed, blended number, no proof), the LLM agents
+($35–62, non-deterministic, no proof, no recall guarantee), Semgrep/Snyk (low recall). ACR-QA would
+ship **frontier-range recall + a deterministic high-precision tier + exploit-proven findings +
+attestation + $0 + reproducibility.** That is categorically better than a 95% benchmark number that
+only holds on the author's own repos.
+
+**Recommended execution order:** Phase 5 (deterministic Confirmed Tier — answers the precision
+critique immediately) → Phase 6 (ensemble recall) → Phase 7 (exploit-proven tier — the headline moat)
+→ Phase 9 (external held-out — the unfakeable proof) → Phase 8 (opt-in LLM-filter, last, only if a
+top-F2 number is wanted). Phase 3 (JS/cross-file) slots in whenever held-out recall stalls.
+
+---
+
 ## Measurement discipline (every phase)
 
 1. **Held-out split is the oracle** — DEV = {dvpwa, djangoat, vfapi, vulnpy, tornado, pythonssti};
