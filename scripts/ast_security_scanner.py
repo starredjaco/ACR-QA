@@ -596,6 +596,19 @@ class _Visitor(ast.NodeVisitor):
 
     # ── Assignments ──────────────────────────────────────────────
 
+    _HTML_TAGS = ("<p>", "<div", "<span", "<a ", "<a>", "<script", "<html", "<body", "<br", "<li", "<td", "<h1", "<h2", "<h3", "<b>", "<input", "<form", "<img")
+
+    def visit_AugAssign(self, node: ast.AugAssign):
+        # CWE-79: building an HTML response incrementally with user input — `content += "<b>%s</b>" % user`
+        # or `response += f"<div>{user}</div>"`. A common stored/reflected-XSS construction pattern.
+        if isinstance(node.op, ast.Add) and isinstance(node.target, ast.Name):
+            tname = node.target.id.lower()
+            if any(v in tname for v in ("content", "response", "html", "body", "output", "page", "resp", "buf")):
+                vsrc = ast.unparse(node.value)
+                if any(t in vsrc for t in self._HTML_TAGS) and self._tainted(node.value):
+                    self._add(node.lineno, "CWE-79", "XSS: HTML response built with user-controlled input (+=)")
+        self.generic_visit(node)
+
     def visit_Assign(self, node: ast.Assign):
         # CWE-16: response.headers['X-XSS-Protection'] = 0
         for target in node.targets:

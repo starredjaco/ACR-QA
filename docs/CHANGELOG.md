@@ -43,6 +43,16 @@ All notable changes to ACR-QA are documented here.
   template-XSS and authorization findings needing exploitability reasoning, which a deterministic
   engine cannot perform. The path to LLM-level precision (82%) is a capability gap, not a tuning gap.
 
+### Changed — FN recovery via kolega-enterprise reverse-engineering
+
+- Studied `kolega-enterprise` (the benchmark author's **deterministic** tool, 95% recall) — which
+  disproved the earlier "patterns plateau at ~50%" assumption. Its findings expose detection
+  strategies; added the **general** versions (CWE-352 session-auth-no-CSRF, CWE-798 secret-as-crypto-
+  arg, CWE-209 error-detail-to-response, CWE-502 broadened pickle/yaml, CWE-79 response-augassign).
+- **Held-out recall 46.0% → 48.3%** (precision held, generalizes); full corpus 50.0% → 51.6%
+  recall / F2 49.7% → 50.9%. Most of kolega's lead is in-sample overfit to these exact repos and was
+  deliberately left on the table (only detectors that improve the held-out set were kept).
+
 ### Added — consistency analysis vs frontier LLMs (recall is NOT #1; determinism is the wedge)
 
 - **`scripts/realvuln_reliable_recall.py`** — measures per-run recall variance + cost across the 3

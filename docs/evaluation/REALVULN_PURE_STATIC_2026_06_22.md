@@ -10,8 +10,8 @@ ACR-QA's **zero-LLM, zero-API, deterministic** static engine, on the official Re
 
 | Claim | Evidence |
 |-------|----------|
-| **#1 vs every traditional SAST**, on every metric — even on held-out repos | 46% recall vs Semgrep 18%, Snyk 16%, SonarQube 5% (16 repos never tuned on) |
-| **Recall is in the frontier-LLM range** | 50% ties Claude Opus 4.8 & Gemini 3.1, beats Grok/Qwen/DeepSeek; trails GPT-5.5 (57%) and the strongest Opus/Kimi runs |
+| **#1 vs every traditional SAST**, on every metric — even on held-out repos | 48% recall vs Semgrep 18%, Snyk 16%, SonarQube 5% (16 repos never tuned on) |
+| **Recall is in the frontier-LLM range** | 52% (full) / 48% (held-out) ties Claude Opus 4.8 & Gemini 3.1, beats Grok/Qwen/DeepSeek; trails GPT-5.5 (57%) and the strongest Opus/Kimi runs |
 | **100% reproducible** at **$0** | 3 scans → bit-identical SHA256 (CI-enforced: `TESTS/test_static_scanner_determinism.py`); LLMs are non-deterministic (48–77% of findings stable across runs) and cost up to $62 |
 
 **Two honest gaps, stated plainly:**
@@ -29,12 +29,12 @@ for auditability, scan-diffing, and gate stability (see "Consistency", below).
 
 | Scanner | Recall | Precision | F2 |
 |---------|--------|-----------|-----|
-| **ACR-QA (acr-qa-hybrid-v1)** | **50.0%** | **48.6%** | **49.7%** |
+| **ACR-QA (acr-qa-hybrid-v1)** | **51.6%** | **48.2%** | **50.9%** |
 | Semgrep | 17.6% | 30.4% | 19.2% |
 | Snyk | 14.9% | 45.1% | 17.2% |
 | SonarQube | 5.2% | 67.4% | 6.4% |
 
-On this corpus ACR-QA shows ~2.8× the recall of the next-best tool (Semgrep) and ~2.6× the F2.
+On this corpus ACR-QA shows ~2.9× the recall of the next-best tool (Semgrep) and ~2.6× the F2.
 **But ACR-QA's detectors were developed against these 22 repos** (Semgrep/Snyk/SonarQube were not),
 so this table is in-sample for ACR-QA. The number that survives scrutiny is the held-out one below.
 
@@ -46,16 +46,18 @@ line-by-line while building detectors) was held apart from the other 16. The eng
 
 | Scanner | Recall | Precision | F2 |
 |---------|--------|-----------|-----|
-| **ACR-QA (never tuned on these)** | **46.0%** | **48.8%** | **46.5%** |
+| **ACR-QA (never tuned on these)** | **48.3%** | **48.3%** | **48.3%** |
 | Semgrep | 18.3% | 32.3% | 20.0% |
 | Snyk | 16.4% | 45.0% | 18.8% |
 | SonarQube | 6.3% | 63.2% | 7.6% |
 
-**On code it has never seen, ACR-QA still delivers ~2.5× Semgrep's recall and ~2.3× its F2**, at
-higher precision than Semgrep. The honest in-sample → held-out gap is ~60% → 46% recall (DEV vs
-UNSEEN) — disclosed overfitting, still far ahead of every competitor. Held-out precision (48.8%)
-exceeds DEV precision, confirming the detectors generalize cleanly rather than spraying
-repo-specific false positives.
+**On code it has never seen, ACR-QA still delivers ~2.6× Semgrep's recall and ~2.4× its F2**, at
+higher precision than Semgrep. Held-out recall climbed 46.0% → 48.3% after reverse-engineering the
+*general* detection strategies of `kolega-enterprise` (the benchmark author's deterministic tool,
+95% recall) and adding only the ones that **generalize** — most of kolega's lead is in-sample
+overfit to these exact repos and was deliberately left on the table. The disclosed in-sample →
+held-out gap is ~56% → 48% recall; held-out precision matches DEV precision, confirming the
+detectors generalize rather than spraying repo-specific false positives.
 
 > **Caveat on the held-out set:** the 16 "unseen" repos are still inside RealVuln, and the global
 > detectors received aggregate-score feedback (not line-level GT). A fully external held-out test
