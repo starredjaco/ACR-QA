@@ -548,6 +548,12 @@ class _Visitor(ast.NodeVisitor):
         if has_route and not has_auth and not has_inline_auth and _is_sensitive_route(node, func_src):
             self._add(node.lineno, "CWE-306", f"Sensitive route '{node.name}' missing auth check")
 
+        # CWE-352: @csrf_exempt explicitly disables CSRF protection on a view.
+        if any(d in ("csrf_exempt", "csrf_protect_m") for d in dec_names) or "csrf_exempt" in " ".join(
+            ast.unparse(d) for d in node.decorator_list
+        ):
+            self._add(node.lineno, "CWE-352", f"CSRF protection disabled via @csrf_exempt on '{node.name}'")
+
         # CWE-259: default arg passwords
         self._check_defaults(node)
 
@@ -1120,6 +1126,10 @@ class _Visitor(ast.NodeVisitor):
             if any(k in src.lower() for k in ("password", "passwd", "secret", "token", "credential")):
                 self._add(node.lineno, "CWE-532", "Sensitive data (password/token) passed to logger")
 
+        # CWE-532: sqlite set_trace_callback — SQL (with bound values) leaked to a sink/log.
+        if fn == "set_trace_callback" and node.args:
+            self._add(node.lineno, "CWE-532", "SQL trace callback leaks queries/parameters to a sink")
+
         # CWE-79: render_template with user-controlled kwargs (reflected XSS)
         if fn == "render_template" and node.args:
             for kw in node.keywords:
@@ -1398,32 +1408,39 @@ def _scan_idor(path: Path) -> list[dict]:
     while i < len(lines):
         line = lines[i]
         if _IDOR_PATTERNS.search(line):
-            # Check ±5 lines context for ownership check and request source
-            context = "\n".join(lines[max(0, i - 5) : min(len(lines), i + 6)])
-            has_request = bool(_REQUEST_VAR_RE.search(context))
-            has_ownership = any(
-                k in context
-                for k in (
-                    "current_user",
-                    "g.user",
-                    "user_id ==",
-                    "owner_id",
-                    "belongs_to",
-                    "is_owner",
-                    "verify_owner",
-                )
+            # Wider context window (the whole enclosing function is what matters for authz).
+            context = "\n".join(lines[max(0, i - 8) : min(len(lines), i + 14)])
+            # The id is user-supplied if it comes from request OR a route-param-looking variable
+            # (get(pk=message_id) where message_id is a URL kwarg).
+            has_user_id = bool(_REQUEST_VAR_RE.search(context)) or bool(
+                re.search(r"(get|filter_by|filter)\s*\(\s*(pk|id)\s*=\s*[a-z_][a-z0-9_]*", line, re.IGNORECASE)
             )
-            if has_request and not has_ownership:
+            # STRICT ownership: bare `current_user = ...` does NOT count — ownership is enforced only
+            # if the user actually scopes the query or is compared against the object, or access is
+            # explicitly denied. (kolega's "strict_owner_absence", 82% precision.)
+            has_ownership = bool(_OWNERSHIP_ENFORCED_RE.search(context))
+            if has_user_id and not has_ownership:
                 findings.append(
                     {
                         "file": str(path),
                         "line": i + 1,
                         "cwe": "CWE-639",
-                        "description": "IDOR: DB query with user-supplied ID, no ownership check",
+                        "description": "IDOR: object fetched by user-supplied ID with no ownership enforcement",
                     }
                 )
         i += 1
     return findings
+
+
+# Patterns that count as ACTUAL ownership enforcement (not the bare presence of current_user).
+_OWNERSHIP_ENFORCED_RE = re.compile(
+    r"filter(_by)?\s*\([^)]*(user|owner|account|created_by|author)"  # query scoped to the user
+    r"|(user|owner|author|created_by)_id\s*==|==\s*(current_user|g\.user|request\.user)"
+    r"|!=\s*(current_user|g\.user|request\.user)|\.owner\s*[!=]="
+    r"|abort\s*\(\s*40[13]|PermissionDenied|Http404\s*\(|\.has_perm\s*\(|user_passes_test"
+    r"|is_owner|verify_owner|belongs_to|user_owns|check_owner|ensure_owner",
+    re.IGNORECASE,
+)
 
 
 # ═══════════════════════════════════════════════════════════════
