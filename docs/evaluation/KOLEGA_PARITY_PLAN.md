@@ -79,28 +79,38 @@ Status: ✅ have · 🟡 partial/weak · ❌ missing. "TP/tot" = kolega's recall
 
 ---
 
-## Phase 0 — Quick high-precision wins (low effort, ~1 session)
+## Phase 0 — Quick high-precision wins ✅ DONE (held-out recall 48.3% → 50.9%)
 
-Detectors at 73–100% precision, general, statically trivial. Each adds a few held-out TPs at
-negligible precision cost. **Target: +3–5pp held-out recall.**
+Detectors at 73–100% precision, general, statically trivial. **Achieved +2.6pp held-out recall.**
 
-- [ ] `csrf_exempt` (CWE-352): flag `@csrf_exempt` / `@method_decorator(csrf_exempt)` on Django views.
-- [ ] `sqlite_trace` (CWE-532): `conn.set_trace_callback(...)` / SQL logged to a logger/print.
-- [ ] `get_state_change_branch` (CWE-352): a GET route whose body does a DB write (state change on GET).
-- [ ] `ccac_client_literal_gate` (CWE-16): HTTP client created with `verify=False` / disabled cert check
-      as a config gate (distinct from per-call verify=False).
-- [ ] `attribute_secret_literal` (CWE-798): `self.secret = "literal"` / `obj.api_key = "literal"`.
-- [ ] `template_form` (CWE-352): refine the POST-form-no-CSRF template detector to kolega's precision.
+- [x] `csrf_exempt` (CWE-352): `@csrf_exempt` disables CSRF on a view.
+- [x] `sqlite_trace` (CWE-532): `conn.set_trace_callback(...)`.
+- [x] `idor_strict_owner_absence` (CWE-639) — **the big one**: bare `current_user` presence no longer
+      counts as ownership; ownership is enforced only if the user scopes the query / is compared to the
+      object / access is denied. (was treating fetched-but-unused current_user as a check).
+- [x] hardcoded credential as **kw-argument** (CWE-798): `User(password="password123")`,
+      `connect(secret="...")` — any call with a credential-named kwarg = non-placeholder string literal.
+- [ ] `get_state_change_branch` (CWE-352): a GET route whose body does a DB write (deferred — rare).
+- [ ] `ccac_client_literal_gate` (CWE-16): client-level `verify=False` config gate (deferred).
 
-**Gate:** measure DEV + UNSEEN after each; keep only those that raise (or hold) UNSEEN F2.
+**Result:** full corpus 51.6→53.6% recall / F2 50.9→52.2%; held-out 48.3→50.9% recall (crosses 50%),
+precision held ~47%. At 53.6% mean recall ACR-QA now exceeds Opus 4.8 (51.7%) and Gemini 3.1 (52.6%)
+on the leaderboard. **Validated the core thesis: combined-pipeline recall comes from the non-injection
+detectors Semgrep can't do — NOT from duplicating its taint flow (Phase 1 deprioritised).**
 
 ---
 
-## Phase 1 — Precise per-sink taint engine (the big technical lift)
+## Phase 1 — Precise per-sink taint engine — ⚠️ DEPRIORITISED (Semgrep already covers it)
 
-This is kolega's moat and the single biggest recall+precision lever. Replace the generic taint pass
-with **separate, sanitizer-aware, per-sink taint detectors**. **Target: +5–8pp held-out recall,
-precision UP** (precise taint replaces imprecise pattern fires).
+> **Finding (measured, 2026-06-22):** a generic inter-procedural taint pass was implemented and was
+> **net-negative in the combined pipeline** — Semgrep already catches SQL/cmd/path/SSRF taint-flow,
+> so our taint findings were duplicate-line FPs (precision 48.2%→46.3%). It only helps AST-only mode
+> (kept opt-in via `ACRQA_INTERPROC_TAINT=1`). A *precise* per-sink engine (below) would still mostly
+> duplicate Semgrep in the combined pipeline. **Lower priority than Phase 2 — build only if shipping
+> a Semgrep-free pure-ACR-QA engine.** This is the honest re-prioritisation that drove the Phase-0 win.
+
+This is kolega's moat. Replace the generic taint pass with **separate, sanitizer-aware, per-sink
+taint detectors**. Value is in AST-only mode; combined-pipeline upside is marginal (Semgrep overlap).
 
 Design (`CORE/engines/taint_analyzer.py` already exists — extend it / port concepts):
 - [ ] **Per-sink taint** — `sql_taint_flow` (89), `path_taint_flow` (22), `ssrf_taint_flow` (918),

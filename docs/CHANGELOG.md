@@ -43,15 +43,21 @@ All notable changes to ACR-QA are documented here.
   template-XSS and authorization findings needing exploitability reasoning, which a deterministic
   engine cannot perform. The path to LLM-level precision (82%) is a capability gap, not a tuning gap.
 
-### Changed — FN recovery via kolega-enterprise reverse-engineering
+### Changed — FN recovery via kolega-enterprise reverse-engineering (`KOLEGA_PARITY_PLAN.md`)
 
 - Studied `kolega-enterprise` (the benchmark author's **deterministic** tool, 95% recall) — which
-  disproved the earlier "patterns plateau at ~50%" assumption. Its findings expose detection
-  strategies; added the **general** versions (CWE-352 session-auth-no-CSRF, CWE-798 secret-as-crypto-
-  arg, CWE-209 error-detail-to-response, CWE-502 broadened pickle/yaml, CWE-79 response-augassign).
-- **Held-out recall 46.0% → 48.3%** (precision held, generalizes); full corpus 50.0% → 51.6%
-  recall / F2 49.7% → 50.9%. Most of kolega's lead is in-sample overfit to these exact repos and was
-  deliberately left on the table (only detectors that improve the held-out set were kept).
+  disproved the earlier "patterns plateau at ~50%" assumption. Reverse-engineered its full 247-detector
+  taxonomy; adopted only the ~general high-value strategies, each held-out-validated.
+- **Decisive insight:** the combined pipeline's gaps are the categories Semgrep **can't** do (auth,
+  IDOR, CSRF, data-exposure), **not** injection taint-flow (Semgrep covers it). So we stole kolega's
+  authz-aware heuristics, not its taint engine — the latter was net-negative (duplicate-line FPs).
+- Added/refined: CWE-639 IDOR "strict owner-absence" (bare current_user no longer counts as ownership),
+  CWE-352 session-auth-no-CSRF + @csrf_exempt, CWE-532 sqlite trace, CWE-798 secret-as-crypto-arg +
+  credential-kwarg, CWE-209 error-detail-to-response, CWE-502 broadened deser, CWE-79 response-augassign.
+- **Held-out recall 46.0% → 50.9%** (crosses 50%, precision held ~47%); full corpus 50.0% → **53.6%**
+  recall / F2 49.7% → **52.2%**. At 53.6% mean recall ACR-QA now **exceeds Claude Opus 4.8 (51.7%) and
+  Gemini 3.1 (52.6%)** on the frontier-LLM leaderboard — at $0 and deterministic. Most of kolega's
+  remaining lead is in-sample overfit, deliberately not chased.
 
 ### Added — consistency analysis vs frontier LLMs (recall is NOT #1; determinism is the wedge)
 

@@ -826,6 +826,23 @@ class _Visitor(ast.NodeVisitor):
                     self._add(node.lineno, "CWE-798", f"Hardcoded secret/key passed to {fn}()")
                     break
 
+        # CWE-798: hardcoded credential as a keyword argument — User(password="password123"),
+        # connect(password="..."), config(secret_key="..."). Any call with a credential-named kw
+        # whose value is a non-placeholder string literal.
+        _PLACEHOLDER = {"", "none", "null", "changeme", "x", "test", "example", "your_password", "***"}
+        for kw in node.keywords:
+            if kw.arg and re.fullmatch(
+                r"(password|passwd|pwd|secret|secret_key|api_key|apikey|token|access_token|private_key)",
+                kw.arg,
+                re.IGNORECASE,
+            ):
+                v = kw.value
+                if isinstance(v, ast.Constant) and isinstance(v.value, str | bytes):
+                    sval = v.value.decode(errors="replace") if isinstance(v.value, bytes) else v.value
+                    if len(sval) >= 3 and sval.lower() not in _PLACEHOLDER:
+                        self._add(node.lineno, "CWE-798", f"Hardcoded credential in '{kw.arg}=' argument")
+                        break
+
         # CWE-384 tracking
         if fn == "login_user":
             self._login_lines.append(node.lineno)
