@@ -66,9 +66,27 @@ on each LLM's own shared repo set (`scripts/realvuln_reliable_recall.py`):
 | Qwen 3.5 397B | 19 | **45.4%** | 35.7% | 27.1% | **ACR-QA** |
 
 **ACR-QA's deterministic recall beats the reliable recall of all 10 frontier LLM agents — at $0.**
-The LLMs' *mean* recall (the lucky-single-run number) sometimes edges ACR-QA, but their **reliable**
-recall — what you can actually count on in a pipeline — does not. This is not a reframing trick: it
-is the benchmark's own recall-first philosophy applied honestly to a tool you must trust to run once.
+
+### Be precise about what "#1" means here (the honest caveat)
+
+This is a claim about the **strictest reliability bar**, and it is threshold-specific. Sensitivity
+across thresholds (ACR-QA recall vs LLM recall at each):
+
+| Competitor | ACR-QA | LLM mean | LLM majority (≥2/3) | LLM reliable (all 3) |
+|------------|--------|----------|---------------------|----------------------|
+| GPT-5.5 | 51.5% | 57.4% | 59.5% | **47.1%** ← ACR-QA wins |
+| Opus 4.8 | 50.2% | 51.2% | 51.1% | **44.0%** ← ACR-QA wins |
+| Sonnet 4.6 | 52.2% | 53.7% | 54.2% | **46.3%** ← ACR-QA wins |
+| Gemini 3.1 | 50.2% | 52.6% | 52.6% | **40.7%** ← ACR-QA wins |
+| GLM-5 | 53.8% | 51.9% | 48.8% | **40.8%** ← ACR-QA wins (all thresholds) |
+
+So, stated honestly: **on *typical* (mean) and *majority* recall, the top LLMs (GPT-5.5, Sonnet,
+Gemini) edge ACR-QA by a few points. On *reliable* recall — vulnerabilities found in *every* run —
+ACR-QA leads all 10.** The justification for treating reliable recall as the decisive metric: a CI
+gate scans **once per commit**; a tool that finds a vuln in only 2 of 3 runs misses it ~33% of the
+time you scan, which is not a gate you can trust. ACR-QA finds the same set every time. This is not
+a reframing trick, but it *is* a specific (defensible) choice of reliability bar — report it with
+the mean/majority numbers beside it, never instead of them.
 
 ## Headline 3 — vs. frontier LLM agents: matches their recall at $0, and is reproducible
 

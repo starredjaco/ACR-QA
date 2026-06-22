@@ -54,6 +54,9 @@ All notable changes to ACR-QA are documented here.
   Gemini, DeepSeek, Kimi, GLM, Grok, Qwen, Opus 4.6 — at **$0** vs up to $62. The benchmark ships
   3 runs per LLM *because* they are non-deterministic; applying its own recall-first philosophy
   honestly, ACR-QA is #1 on the recall you can actually trust in a CI gate.
+- **Honest caveat (documented):** on *mean* and *majority* (≥2/3) recall, the top LLMs (GPT-5.5,
+  Sonnet, Gemini) edge ACR-QA by a few points. ACR-QA's #1 is specifically at the *reliable*
+  (every-run) threshold — reported alongside the mean/majority numbers, never instead of them.
 
 ### Added — frontier-LLM comparison + reproducibility analysis
 
