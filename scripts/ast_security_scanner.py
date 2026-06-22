@@ -50,6 +50,53 @@ _CSRF_PRESENT_RE = re.compile(r"csrf_token|hidden_tag\(\)|{% csrf_token %}", re.
 _STATIC_STR_RE = re.compile(r"""^\s*['""][^'"]*['"]\s*\|\s*safe\s*$""")
 
 
+# ── JavaScript / DOM XSS (CWE-79) ────────────────────────────────────────────
+# DOM sinks that render markup. Flagged when the argument is dynamic (not a string literal)
+# and the script references a user-controlled source — high precision (kolega: 100% on these).
+_JS_DOM_SINK_RE = re.compile(
+    r"\.(html|innerHTML|outerHTML|insertAdjacentHTML)\s*[=(]"
+    r"|document\.(write|writeln)\s*\("
+    r"|\.(append|prepend|after|before|wrap)\s*\(\s*[^'\"`)]"  # jQuery, non-literal
+    r"|\beval\s*\(\s*[^'\"`)]"
+    r"|\.setAttribute\s*\(\s*['\"]on",
+    re.IGNORECASE,
+)
+_JS_TAINT_SRC_RE = re.compile(
+    r"location\.(hash|search|href|pathname)|document\.(URL|documentURI|referrer|cookie)"
+    r"|window\.name|URLSearchParams|\.responseText|getResponseHeader|decodeURIComponent"
+    r"|\$_GET|req\.(query|params|body)|location\b",
+    re.IGNORECASE,
+)
+_JS_SINK_LITERAL_RE = re.compile(r"""\.(html|innerHTML|outerHTML)\s*[=(]\s*['"`][^'"`]*['"`]\s*[);]?\s*$""")
+
+
+def scan_js(path: Path, content: str | None = None) -> list[dict]:
+    """Regex DOM-XSS scanner for .js files / inline <script>. Flags a markup sink with a
+    dynamic argument when the file also reads a user-controlled source."""
+    findings: list[dict] = []
+    try:
+        text = content if content is not None else path.read_text(errors="replace")
+    except Exception:
+        return findings
+    lines = text.splitlines()
+    for i, line in enumerate(lines, 1):
+        if not _JS_DOM_SINK_RE.search(line):
+            continue
+        if _JS_SINK_LITERAL_RE.search(line):
+            continue
+        # High precision: require a user-controlled source ON THE SAME LINE as the sink
+        # (direct DOM XSS, e.g. innerHTML = location.hash). The file-level gate was far too noisy
+        # (.html()/.append() are ubiquitous in benign JS) — +3 TP for +130 FP. Tight beats broad.
+        if _JS_TAINT_SRC_RE.search(line):
+            findings.append(
+                {"file": str(path), "line": i, "cwe": "CWE-79", "description": f"DOM XSS: {line.strip()[:90]}"}
+            )
+    return findings
+
+
+_SCRIPT_BLOCK_RE = re.compile(r"<script[^>]*>(.*?)</script>", re.IGNORECASE | re.DOTALL)
+
+
 def scan_html(path: Path) -> list[dict]:
     findings = []
     try:
@@ -1606,6 +1653,21 @@ def scan_repo(repo_path: str) -> list[dict]:
             # When autoescape is disabled, scan ALL jinja2/j2 templates for raw {{ var }}
             if autoescape_disabled and p.suffix in (".jinja2", ".jinja", ".j2"):
                 raw.extend(scan_jinja2_unsafe(p))
+            # DOM XSS inside inline <script> blocks of templates.
+            try:
+                for m in _SCRIPT_BLOCK_RE.finditer(p.read_text(errors="replace")):
+                    base = p.read_text(errors="replace")[: m.start()].count("\n")
+                    for f in scan_js(p, m.group(1)):
+                        f["line"] += base
+                        raw.append(f)
+            except Exception:
+                pass
+
+    # Standalone JavaScript files — DOM XSS.
+    for p in repo.rglob("*.js"):
+        if any(x in str(p) for x in (".git", "node_modules", ".min.js")):
+            continue
+        raw.extend(scan_js(p))
 
     # Normalise to repo-relative paths, dedup
     out: list[dict] = []
