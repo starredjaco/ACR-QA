@@ -2,6 +2,66 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Unreleased] — 2026-06-22 · Pure-static RealVuln engine (zero-LLM)
+
+### Added — deterministic AST security engine
+
+- **`scripts/ast_security_scanner.py`** — zero-LLM, zero-API Python `ast` analyzer covering
+  ~30 CWE families (injection, auth/access, config/crypto, ReDoS). Fully reproducible; regex
+  fallback handles Python-2 source that fails to parse.
+- New detectors this session: ReDoS catastrophic-regex (CWE-400/1333, stack-based nested-quantifier
+  detection), extended SSRF (`urllib`/`http.client`/single-param wrappers, CWE-918),
+  `Jinja2.from_string` SSTI (CWE-1336), cross-file `autoescape=False` template XSS (CWE-79),
+  f-string SQL with any interpolation (CWE-89, catches FastAPI route params), `os.system` dynamic
+  arg (CWE-78), Django `HttpResponse`/`HttpResponseRedirect` XSS/redirect.
+
+### Changed — honest scoring + precision discipline
+
+- **`scripts/run_realvuln_hybrid.py` inline scorer rewritten to mirror the OFFICIAL RealVuln
+  scorer** — every unmatched finding now counts as a false positive (previously only GT-trap
+  hits counted, inflating reported precision from a true ~26% to 91%). Spot-checked vs `score.py`
+  on vfapi; official `score.py` is the source of truth (all numbers below are official).
+- **Bandit disabled by default** (`ACRQA_RV_BANDIT=1` to re-enable for ablation) — it produced
+  330 FPs for ~26 unique TPs (22.5% precision).
+- Precision hardening: test/fixture/migration noise-path exclusion (0 TPs lost), CWE-306 gated
+  to sensitive/state-changing routes, dropped net-negative bare CWE-200 and per-form CWE-352 spray.
+
+### Results — RealVuln, official scorer, same 22 repos (558 GT TPs)
+
+| Scanner | Recall | Precision | F2 |
+|---------|--------|-----------|-----|
+| **ACR-QA (pure static)** | **50.0%** | **46.0%** | **49.1%** |
+| Semgrep | 17.6% | 30.4% | 19.2% |
+| Snyk | 14.9% | 45.1% | 17.2% |
+| SonarQube | 5.2% | 67.4% | 6.4% |
+
+ACR-QA leads recall by ~2.8× and F2 by ~2.5× over the next-best tool, with precision above
+Semgrep and matching Snyk. **Caveat: this is in-sample coverage** — ACR-QA's detectors were
+developed against these 22 repos, so the table measures ruleset *completeness* vs competitors'
+default rules, not held-out generalization. Held-out validation on unseen repos is still TODO.
+Full write-up: `docs/evaluation/REALVULN_PURE_STATIC_2026_06_22.md`.
+
+---
+
+## [v5.0.0] — 2026-06-19 · DEFENSE DELIVERED
+
+### Milestone
+
+- **Thesis defense completed 2026-06-19 at KSIU.** Project presented, defended, and passed.
+- Post-defense cleanup committed: archived redundant deck copies, superseded builders, root
+  HTML artifacts; canonical presented deck at `docs/ACR-QA_Defense_PRESENTED.{odp,pptx}`.
+- `.gitignore` audited: CLAUDE.md now tracked, duplicate entries removed, stale root HTML
+  entries cleaned, `docs/GEMINI_PHOTOS/` added.
+
+### Added — post-defense launch prep
+
+- `docs/business/LAUNCH_POSTS.md` — LinkedIn god-mode post + HN body updated to current
+  numbers (3,247 tests, 88% coverage, 13 tools, 36 modules, RealVuln 25.1% recall).
+- `docs/business/VIDEO_SCRIPT.md` — SecureHub-style 75-second marketing video script +
+  shot list + production stack (OBS → CapCut / AutoZoom → Descript).
+
+---
+
 ## [Unreleased] — 2026-06-15
 
 ### Fixed — defense deck polish pass (final visual review)

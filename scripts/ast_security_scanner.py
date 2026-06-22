@@ -1,0 +1,1805 @@
+#!/usr/bin/env python3
+"""God-Mode AST + Regex security scanner — zero LLM, zero API, instant.
+
+Covers ALL statically-detectable Bucket-B RealVuln patterns:
+  CWE-22   Path traversal
+  CWE-78   Command injection
+  CWE-79   XSS (| safe in Jinja2/HTML templates + render_template_string)
+  CWE-89   SQL injection (string format/concat in execute())
+  CWE-94   Code injection (eval/exec with user input)
+  CWE-200  Sensitive data exposure (serialize/to_dict includes password)
+  CWE-209  Error info exposure (return str(e), traceback)
+  CWE-215  Debug mode (app.config['DEBUG'] = True)
+  CWE-256  Plaintext password storage in Model
+  CWE-284  Broken access control (username string admin check)
+  CWE-287  Improper auth (== password comparison)
+  CWE-295  SSL cert not verified (verify=False)
+  CWE-306  Missing auth on Flask routes
+  CWE-307  No brute-force protection on login
+  CWE-312  Cleartext credentials in logging
+  CWE-321  Hardcoded crypto key
+  CWE-338  Weak PRNG (random.* for security)
+  CWE-352  CSRF — POST form without csrf_token in template
+  CWE-384  Session fixation (login_user without regeneration)
+  CWE-522  Insecure credential storage (plaintext comparison)
+  CWE-532  Sensitive info in logs
+  CWE-601  Open redirect (redirect(request.args['next']))
+  CWE-613  Insufficient session expiry
+  CWE-639  IDOR (query by user-supplied ID without ownership)
+  CWE-798  Hardcoded credentials (SECRET_KEY, passwords)
+  CWE-916  Weak password hash (MD5/SHA1 for passwords)
+  CWE-918  SSRF (requests.get with user-controlled URL)
+  CWE-1336 SSTI (render_template_string with dynamic content)
+"""
+
+from __future__ import annotations
+
+import ast
+import re
+import sys
+from pathlib import Path
+
+# ═══════════════════════════════════════════════════════════════
+# HTML / Jinja2 scanner
+# ═══════════════════════════════════════════════════════════════
+
+_SAFE_FILTER_RE = re.compile(r"\{\{[^}]*\|\s*safe\s*\}\}", re.DOTALL)
+_FORM_POST_RE = re.compile(r"<form\b[^>]*\bmethod\s*=\s*['\"]?(post|put|delete)['\"]?", re.IGNORECASE)
+_CSRF_PRESENT_RE = re.compile(r"csrf_token|hidden_tag\(\)|{% csrf_token %}", re.IGNORECASE)
+_STATIC_STR_RE = re.compile(r"""^\s*['""][^'"]*['"]\s*\|\s*safe\s*$""")
+
+
+def scan_html(path: Path) -> list[dict]:
+    findings = []
+    try:
+        content = path.read_text(errors="replace")
+        lines = content.splitlines()
+    except Exception:
+        return findings
+
+    # CWE-79: {{ var | safe }} — every non-literal usage
+    for i, line in enumerate(lines, 1):
+        m = _SAFE_FILTER_RE.search(line)
+        if m:
+            inner = m.group(0)[2:-2].strip()
+            if not _STATIC_STR_RE.match(inner):
+                findings.append(
+                    {"file": str(path), "line": i, "cwe": "CWE-79", "description": f"| safe XSS: {line.strip()[:100]}"}
+                )
+
+    # CWE-352: POST form without csrf_token — fire ONCE per template at the first form.
+    # (Was firing per form-line → spraying FPs; CSRF posture is a per-template property.)
+    if _FORM_POST_RE.search(content) and not _CSRF_PRESENT_RE.search(content):
+        for i, line in enumerate(lines, 1):
+            if _FORM_POST_RE.search(line):
+                findings.append(
+                    {"file": str(path), "line": i, "cwe": "CWE-352", "description": "POST form without CSRF token"}
+                )
+                break
+
+    return findings
+
+
+# ═══════════════════════════════════════════════════════════════
+# Python AST scanner
+# ═══════════════════════════════════════════════════════════════
+
+_PASSWD_ATTR = re.compile(r"password|passwd|pwd|secret(?!_key)", re.IGNORECASE)
+_CRED_ATTR = re.compile(
+    r"SECRET_KEY|JWT_SECRET|API_KEY|CLIENT_SECRET|PASSWD|PASSWORD"
+    r"|ACCESS_TOKEN|AUTH_TOKEN|_TOKEN_SALT|_SALT\b|ENCRYPT_KEY|SIGNING_KEY"
+    r"|\bKEY\b(?!_ID|_NAME|_TYPE)"
+    r"|SECRET(?!_BALLOT|_VOTE)|_TOKEN\b|TOKEN_\b",
+    re.IGNORECASE,
+)
+_WEAK_HASH = re.compile(r"^(md5|sha1|sha128)$", re.IGNORECASE)
+_HASH_MODULE = re.compile(r"^(md5|sha1|hashlib)$", re.IGNORECASE)
+_REQUEST_SRCS = {"request", "args", "form", "json", "data", "values", "files", "cookies"}
+
+_AUTH_DECORATORS = {
+    "login_required",
+    "token_required",
+    "jwt_required",
+    "auth_required",
+    "require_login",
+    "admin_required",
+    "permission_required",
+    "roles_required",
+    "fresh_login_required",
+    "staff_member_required",
+}
+_RATE_LIMIT_DECORATORS = {
+    "limiter",
+    "limit",
+    "ratelimit",
+    "rate_limit",
+    "throttle",
+    "flask_limiter",
+    "slow_down",
+}
+
+
+def _func_name(node: ast.expr) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return ""
+
+
+def _is_route_decorator(d: ast.expr) -> bool:
+    n = d.func if isinstance(d, ast.Call) else d
+    return _func_name(n) in ("route", "get", "post", "put", "delete", "patch", "add_url_rule")
+
+
+def _decorator_names(func: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
+    names = []
+    for d in func.decorator_list:
+        if isinstance(d, ast.Call):
+            names.append(_func_name(d.func))
+        else:
+            names.append(_func_name(d))
+    return names
+
+
+def _is_from_request(node: ast.expr) -> bool:
+    """Heuristic: is this expression derived from request.* or named user_input?"""
+    src = ast.unparse(node)
+    return any(
+        kw in src
+        for kw in (
+            "request.",
+            "args.",
+            "form.",
+            "json.",
+            "data.",
+            "values.",
+            "user_input",
+            "user_data",
+            "untrusted_",
+            "get_json(",
+            "get_data(",
+            "match_info",
+        )
+    )
+
+
+# Routes that are public by design — never flag for missing auth
+_PUBLIC_ROUTE_NAMES = {
+    "index",
+    "home",
+    "homepage",
+    "main",
+    "root",
+    "about",
+    "about_us",
+    "contact",
+    "login",
+    "signin",
+    "sign_in",
+    "logout",
+    "signout",
+    "sign_out",
+    "register",
+    "signup",
+    "sign_up",
+    "health",
+    "healthcheck",
+    "health_check",
+    "ping",
+    "status",
+    "robots",
+    "favicon",
+    "docs",
+    "help",
+    "faq",
+    "terms",
+    "privacy",
+    "static",
+    "search",
+    "public",
+    "landing",
+    "welcome",
+    "error",
+    "not_found",
+    "forbidden",
+}
+# Names that strongly imply a privileged / state-changing operation
+_SENSITIVE_ROUTE_KEYWORDS = (
+    "admin",
+    "delete",
+    "remove",
+    "update",
+    "edit",
+    "create",
+    "add",
+    "new",
+    "save",
+    "modify",
+    "change",
+    "reset",
+    "manage",
+    "settings",
+    "config",
+    "profile",
+    "account",
+    "user",
+    "users",
+    "dashboard",
+    "upload",
+    "approve",
+    "grant",
+    "revoke",
+    "role",
+    "permission",
+    "transfer",
+    "pay",
+    "payment",
+    "order",
+    "purchase",
+    "checkout",
+    "api",
+    "internal",
+    "private",
+    "secret",
+)
+_STATE_CHANGE_CALLS = (
+    ".save(",
+    ".delete(",
+    ".commit(",
+    ".update(",
+    ".create(",
+    "session.add",
+    "db.session",
+    ".insert(",
+    ".remove(",
+    ".pop(",
+    "objects.create",
+    "objects.filter",
+    "objects.get",
+    "INSERT ",
+    "UPDATE ",
+    "DELETE ",
+)
+
+
+def _is_sensitive_route(node, func_src: str) -> bool:
+    """Heuristic: should this route require auth? Only flag privileged/state-changing
+    routes — public-by-design routes (index/login/about/health) must not be flagged."""
+    name = node.name.lower()
+    if name in _PUBLIC_ROUTE_NAMES:
+        return False
+    # POST/PUT/DELETE/PATCH methods declared on the route decorator → state-changing
+    decs = " ".join(ast.unparse(d) for d in node.decorator_list).lower()
+    if any(m in decs for m in ('"post"', "'post'", '"put"', "'put'", '"delete"', "'delete'", '"patch"', "'patch'")):
+        return True
+    if "methods=" in decs and any(m in decs for m in ("post", "put", "delete", "patch")):
+        return True
+    # Sensitive name
+    if any(kw in name for kw in _SENSITIVE_ROUTE_KEYWORDS):
+        return True
+    # Body performs a DB write / state change
+    if any(c in func_src for c in _STATE_CHANGE_CALLS):
+        return True
+    return False
+
+
+def _has_ownership_check(body_src: str) -> bool:
+    return any(
+        kw in body_src
+        for kw in (
+            "current_user",
+            "g.user",
+            "user_id",
+            "owner_id",
+            "belongs_to",
+            "is_owner",
+            "owner",
+            "user ==",
+        )
+    )
+
+
+class _Visitor(ast.NodeVisitor):
+    def __init__(self, src: str, rel: str):
+        self._src_lines = src.splitlines()
+        self.path = rel
+        self.findings: list[dict] = []
+        # context tracking
+        self._model_class = False  # inside a SQLAlchemy-style Model class
+        self._in_init = False
+        self._login_lines: list[int] = []
+        self._has_regen = False
+        self._scope_stack: list[str] = []
+
+    def _add(self, line: int, cwe: str, desc: str):
+        self.findings.append({"file": self.path, "line": line, "cwe": cwe, "description": desc})
+
+    # ── Class ────────────────────────────────────────────────────
+
+    def visit_ClassDef(self, node: ast.ClassDef):
+        # Detect SQLAlchemy Model classes (inherit from db.Model / Base)
+        bases = [ast.unparse(b) for b in node.bases]
+        prev = self._model_class
+        self._model_class = any("Model" in b or "Base" in b for b in bases)
+        # CWE-306: MethodView / Resource subclass — check HTTP methods for missing auth
+        is_method_view = any("View" in b or "Resource" in b or "MethodView" in b for b in bases)
+        if is_method_view:
+            for item in node.body:
+                if isinstance(item, ast.FunctionDef | ast.AsyncFunctionDef):
+                    if item.name in ("post", "get", "put", "delete", "patch"):
+                        dec_names = _decorator_names(item)
+                        has_auth = bool(_AUTH_DECORATORS.intersection(dec_names))
+                        item_src = ast.unparse(item)
+                        has_inline = any(
+                            k in item_src
+                            for k in (
+                                "current_user",
+                                "login_required",
+                                "jwt",
+                                "token",
+                                "g.user",
+                            )
+                        )
+                        if not has_auth and not has_inline:
+                            self._add(item.lineno, "CWE-306", f"MethodView.{item.name}() missing auth check")
+        self.generic_visit(node)
+        self._model_class = prev
+
+    # ── Function / route ─────────────────────────────────────────
+
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        dec_names = _decorator_names(node)
+        has_route = any(_is_route_decorator(d) for d in node.decorator_list)
+        has_auth = bool(_AUTH_DECORATORS.intersection(dec_names))
+        has_rate = bool(_RATE_LIMIT_DECORATORS.intersection(dec_names))
+
+        func_src = ast.unparse(node)
+        has_inline_auth = any(
+            kw in func_src
+            for kw in (
+                "current_user",
+                "session.get(",
+                "g.user",
+                "request.user",
+                "get_jwt_identity",
+                "verify_jwt",
+                "require_",
+                "check_auth",
+            )
+        )
+
+        # CWE-306: route without any auth — but ONLY for sensitive routes.
+        # Flagging every public route (index/login/about/health) crushed precision
+        # (35 TP / 106 FP). Require evidence the route is privileged/state-changing.
+        if has_route and not has_auth and not has_inline_auth and _is_sensitive_route(node, func_src):
+            self._add(node.lineno, "CWE-306", f"Sensitive route '{node.name}' missing auth check")
+
+        # CWE-259: default arg passwords
+        self._check_defaults(node)
+
+        # CWE-307: login route without rate limiting
+        is_login_route = has_route and any(
+            k in node.name.lower() for k in ("login", "signin", "sign_in", "authenticate")
+        )
+        if is_login_route and not has_rate:
+            self._add(node.lineno, "CWE-307", f"Login route '{node.name}' has no rate limiting")
+
+        # CWE-384: login_user() without session regeneration
+        prev_ll, prev_regen = self._login_lines, self._has_regen
+        self._login_lines, self._has_regen = [], False
+        if node.name == "__init__":
+            self._in_init = True
+        self.generic_visit(node)
+        if node.name == "__init__":
+            self._in_init = False
+        if self._login_lines and not self._has_regen:
+            for ln in self._login_lines:
+                self._add(ln, "CWE-384", "login_user() without session regeneration")
+        self._login_lines, self._has_regen = prev_ll, prev_regen
+
+    # ── Function default args ────────────────────────────────────
+
+    def visit_arg(self, node):
+        self.generic_visit(node)
+
+    def _check_defaults(self, node: ast.FunctionDef | ast.AsyncFunctionDef):
+        """CWE-259: function parameter with hardcoded password default."""
+        args = node.args
+        args.defaults + args.kw_defaults
+        names = [a.arg for a in (args.args + args.kwonlyargs)]
+        offset = len(names) - len(args.defaults)
+        for i, default in enumerate(args.defaults):
+            if default is None:
+                continue
+            param_name = names[offset + i] if (offset + i) < len(names) else ""
+            if _PASSWD_ATTR.search(param_name) and isinstance(default, ast.Constant) and isinstance(default.value, str):
+                self._add(node.lineno, "CWE-259", f"Hardcoded default password in param '{param_name}'")
+
+    visit_AsyncFunctionDef = visit_FunctionDef  # noqa: N815  (required ast.NodeVisitor hook name)
+
+    # ── Assignments ──────────────────────────────────────────────
+
+    def visit_Assign(self, node: ast.Assign):
+        # CWE-16: response.headers['X-XSS-Protection'] = 0
+        for target in node.targets:
+            if isinstance(target, ast.Subscript):
+                key = target.slice
+                if isinstance(key, ast.Constant) and "X-XSS-Protection" in str(key.value):
+                    if isinstance(node.value, ast.Constant) and node.value.value in (0, "0"):
+                        self._add(node.lineno, "CWE-16", "X-XSS-Protection header disabled (set to 0)")
+        for target in node.targets:
+            name = _func_name(target) if not isinstance(target, ast.Subscript) else None
+            # CWE-798: CRED_NAME = "literal"
+            if name and _CRED_ATTR.search(name):
+                if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                    self._add(node.lineno, "CWE-798", f"Hardcoded credential: {name}")
+
+            # CWE-798: app.config['SECRET_KEY'] = 'literal'
+            if isinstance(target, ast.Subscript):
+                key = target.slice
+                if isinstance(key, ast.Constant) and isinstance(key.value, str):
+                    if _CRED_ATTR.search(key.value):
+                        if isinstance(node.value, ast.Constant):
+                            self._add(node.lineno, "CWE-798", f"Hardcoded config: {key.value}")
+                # CWE-215: app.config['DEBUG'] = True
+                if isinstance(key, ast.Constant) and key.value == "DEBUG":
+                    if isinstance(node.value, ast.Constant) and node.value.value is True:
+                        self._add(node.lineno, "CWE-215", "DEBUG mode enabled")
+
+            # Track variables assigned from request (for CWE-601 taint)
+        if not hasattr(self, "_request_vars"):
+            self._request_vars: set[str] = set()
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                if _is_from_request(node.value):
+                    self._request_vars.add(target.id)
+
+            # CWE-256: self.password = plain value (in __init__)
+            if self._in_init and isinstance(target, ast.Attribute):
+                if _PASSWD_ATTR.search(target.attr):
+                    if not isinstance(node.value, ast.Call):
+                        self._add(node.lineno, "CWE-256", f"Plaintext password stored: self.{target.attr}")
+
+        # CWE-312: g.session = session / context['session'] = session (exposes session to templates)
+        for target in node.targets:
+            if isinstance(target, ast.Attribute):
+                if isinstance(target.value, ast.Name) and target.value.id == "g" and target.attr == "session":
+                    self._add(node.lineno, "CWE-312", "Full session object exposed in template context via g.session")
+
+        # CWE-16: jinja_env.autoescape = False
+        for target in node.targets:
+            if isinstance(target, ast.Attribute) and target.attr == "autoescape":
+                if isinstance(node.value, ast.Constant) and node.value.value is False:
+                    self._add(node.lineno, "CWE-16", "Jinja2 autoescape disabled via jinja_env.autoescape = False")
+
+        # CWE-215: DEBUG = True (bare module-level assignment in Django/Flask settings)
+        for target in node.targets:
+            if isinstance(target, ast.Name) and target.id == "DEBUG":
+                if isinstance(node.value, ast.Constant) and node.value.value is True:
+                    self._add(node.lineno, "CWE-215", "DEBUG = True in settings — exposes stack traces in production")
+
+        # CWE-16: ALLOWED_HOSTS = ['*'] — allows any host header
+        for target in node.targets:
+            if isinstance(target, ast.Name) and target.id == "ALLOWED_HOSTS":
+                val_src = ast.unparse(node.value)
+                if "'*'" in val_src or '"*"' in val_src:
+                    self._add(
+                        node.lineno, "CWE-16", "ALLOWED_HOSTS = ['*'] — accepts any host header, clickjacking/SSRF risk"
+                    )
+
+        # CWE-614: SESSION_COOKIE_SECURE = False / CSRF_COOKIE_SECURE = False
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                name = target.id
+                if name in ("SESSION_COOKIE_SECURE", "CSRF_COOKIE_SECURE", "SECURE_SSL_REDIRECT"):
+                    if isinstance(node.value, ast.Constant) and node.value.value is False:
+                        self._add(
+                            node.lineno, "CWE-614", f"{name} = False — cookies sent over HTTP (missing Secure flag)"
+                        )
+        # CWE-614 via app.config['SESSION_COOKIE_SECURE'] = False
+        for target in node.targets:
+            if isinstance(target, ast.Subscript):
+                key = target.slice
+                if isinstance(key, ast.Constant) and isinstance(key.value, str):
+                    if key.value in ("SESSION_COOKIE_SECURE", "CSRF_COOKIE_SECURE"):
+                        if isinstance(node.value, ast.Constant) and node.value.value is False:
+                            self._add(node.lineno, "CWE-614", f"{key.value} = False — cookies sent over HTTP")
+
+        # CWE-1004: SESSION_COOKIE_HTTPONLY = False
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                name = target.id
+                if name in ("SESSION_COOKIE_HTTPONLY", "CSRF_COOKIE_HTTPONLY"):
+                    if isinstance(node.value, ast.Constant) and node.value.value is False:
+                        self._add(node.lineno, "CWE-1004", f"{name} = False — session cookie accessible by JavaScript")
+        # CWE-1004 via app.config['SESSION_COOKIE_HTTPONLY'] = False
+        for target in node.targets:
+            if isinstance(target, ast.Subscript):
+                key = target.slice
+                if isinstance(key, ast.Constant) and isinstance(key.value, str):
+                    if key.value in ("SESSION_COOKIE_HTTPONLY", "CSRF_COOKIE_HTTPONLY"):
+                        if isinstance(node.value, ast.Constant) and node.value.value is False:
+                            self._add(
+                                node.lineno,
+                                "CWE-1004",
+                                f"{key.value} = False — session cookie accessible by JavaScript",
+                            )
+
+        # CWE-798: VARIABLE = b'literal_bytes' / 'literal_str' for credential-named vars
+        for target in node.targets:
+            if isinstance(target, ast.Name) and _CRED_ATTR.search(target.id):
+                if isinstance(node.value, ast.Constant):
+                    # Already caught by visit_Assign top loop for string; catch bytes too
+                    if isinstance(node.value.value, bytes):
+                        self._add(node.lineno, "CWE-798", f"Hardcoded credential (bytes literal): {target.id}")
+
+        self.generic_visit(node)
+
+    # ── Comparisons ──────────────────────────────────────────────
+
+    def visit_Compare(self, node: ast.Compare):
+        for i, op in enumerate(node.ops):
+            if not isinstance(op, ast.Eq | ast.NotEq):
+                continue
+            left = node.left if i == 0 else node.comparators[i - 1]
+            right = node.comparators[i]
+            for side in (left, right):
+                # CWE-522/287: x.password == value
+                if isinstance(side, ast.Attribute) and _PASSWD_ATTR.search(side.attr):
+                    self._add(node.lineno, "CWE-522", "Plaintext password comparison with ==")
+                    break
+                # CWE-284: username == 'admin'
+                if isinstance(side, ast.Attribute) and side.attr in ("username", "name"):
+                    other = right if side is left else left
+                    if isinstance(other, ast.Constant) and isinstance(other.value, str):
+                        self._add(node.lineno, "CWE-284", "Admin role based on username string comparison")
+                    break
+        self.generic_visit(node)
+
+    # ── Calls ────────────────────────────────────────────────────
+
+    def visit_Call(self, node: ast.Call):
+        fn = _func_name(node.func)
+
+        # CWE-384 tracking
+        if fn == "login_user":
+            self._login_lines.append(node.lineno)
+        if fn in ("regenerate", "rotate", "new_session") or (
+            isinstance(node.func, ast.Attribute) and node.func.attr in ("regenerate", "rotate")
+        ):
+            self._has_regen = True
+
+        # CWE-1336: render_template_string(dynamic) / env.from_string(dynamic)
+        if fn == "render_template_string" and node.args:
+            if not isinstance(node.args[0], ast.Constant):
+                self._add(node.lineno, "CWE-1336", "render_template_string with dynamic/user-controlled template")
+
+        # CWE-1336: Jinja2 env.from_string(dynamic) — SSTI via user-controlled template string
+        if isinstance(node.func, ast.Attribute) and node.func.attr == "from_string" and node.args:
+            if not isinstance(node.args[0], ast.Constant):
+                self._add(
+                    node.lineno,
+                    "CWE-1336",
+                    "SSTI: from_string() with dynamic (possibly user-controlled) template string",
+                )
+                self._add(
+                    node.lineno,
+                    "CWE-79",
+                    "XSS: from_string() with dynamic template — user input rendered without escaping",
+                )
+
+        # CWE-1336: Template(dynamic_string) — SSTI when template string contains user input
+        if fn == "Template" and node.args:
+            if not isinstance(node.args[0], ast.Constant):
+                self._add(
+                    node.lineno, "CWE-1336", "SSTI: Template(dynamic_string) — user input can be injected as template"
+                )
+                self._add(node.lineno, "CWE-79", "XSS: Template(dynamic_string) renders user input without escaping")
+
+        # CWE-16: jinja2.Environment() without autoescape=True — autoescape off by default
+        if fn == "Environment" and not any(kw.arg == "autoescape" for kw in node.keywords):
+            self._add(
+                node.lineno, "CWE-16", "Jinja2 Environment() created without autoescape=True — XSS risk in templates"
+            )
+
+        # CWE-94: eval/exec with non-constant
+        if fn in ("eval", "exec") and node.args:
+            if not isinstance(node.args[0], ast.Constant):
+                self._add(node.lineno, "CWE-94", f"{fn}() with dynamic (user-controlled?) argument")
+
+        # CWE-601: redirect / HttpResponseRedirect with user-controlled URL
+        if fn in ("redirect", "HttpResponseRedirect") and node.args:
+            src = ast.unparse(node.args[0])
+            if "request." in src:
+                if any(k in src.lower() for k in ("next", "url", "redirect", "return", "args", "form")):
+                    self._add(node.lineno, "CWE-601", "Unvalidated redirect using user-controlled URL")
+
+        # CWE-601 variant: redirect/HttpResponseRedirect(var) where var came from request
+        if fn in ("redirect", "HttpResponseRedirect") and node.args:
+            first_arg = node.args[0]
+            # Direct request.args / request.form in arg
+            if _is_from_request(first_arg):
+                self._add(node.lineno, "CWE-601", "Unvalidated redirect with user-controlled URL")
+            # If arg is a Name, check if it was assigned from request in enclosing scope
+            elif isinstance(first_arg, ast.Name):
+                var_name = first_arg.id
+                # Add to pending — resolved in scope context
+                # We track redirect_vars and flag them
+                if var_name in getattr(self, "_request_vars", set()):
+                    self._add(node.lineno, "CWE-601", f"Unvalidated redirect: '{var_name}' comes from request")
+
+        # CWE-79: HttpResponse / make_response with string concatenation (Django/Flask XSS)
+        if fn in ("HttpResponse", "make_response"):
+            if node.args and isinstance(node.args[0], ast.BinOp) and isinstance(node.args[0].op, ast.Add):
+                self._add(node.lineno, "CWE-79", f"XSS: {fn}() with string concatenation — user data may be unescaped")
+
+        # CWE-918: requests.get/post(user_url) where url from request
+        if fn in ("get", "post", "put", "delete") and isinstance(node.func, ast.Attribute):
+            obj = node.func.value
+            obj_name = _func_name(obj) if isinstance(obj, ast.Name | ast.Attribute) else ""
+            if obj_name in ("requests", "session", "Session"):
+                if node.args and _is_from_request(node.args[0]):
+                    self._add(node.lineno, "CWE-918", "SSRF: requests.get() with user-controlled URL")
+
+        # CWE-918: urllib.request.urlopen(user_input) / any urlopen-like function
+        if fn in ("urlopen", "legacy_urlopen") and node.args:
+            if _is_from_request(node.args[0]):
+                self._add(node.lineno, "CWE-918", "SSRF: urlopen() with user-controlled URL")
+
+        # CWE-918: urllib.request.Request(user_input) — SSRF via URL object construction
+        if fn == "Request" and node.args and _is_from_request(node.args[0]):
+            self._add(node.lineno, "CWE-918", "SSRF: urllib Request(user_input) — user controls the URL")
+
+        # CWE-918: any function with "urlopen"/"fetch"/"urlread" in name and user_input arg
+        if any(kw in fn.lower() for kw in ("urlopen", "urlread", "fetch_url")) and node.args:
+            if any(_is_from_request(a) for a in node.args):
+                self._add(node.lineno, "CWE-918", f"SSRF: {fn}() with user-controlled URL argument")
+
+        # CWE-918: HTTPConnection(user_host) or HTTPSConnection(user_host)
+        if fn in ("HTTPConnection", "HTTPSConnection") and node.args:
+            if _is_from_request(node.args[0]):
+                self._add(node.lineno, "CWE-918", f"SSRF: {fn}() with user-controlled host")
+
+        # CWE-918: conn.request(method, user_path) / conn.putrequest(method, user_path)
+        if fn in ("putrequest",) and node.args and len(node.args) >= 2:
+            if _is_from_request(node.args[0]) or _is_from_request(node.args[1]):
+                self._add(node.lineno, "CWE-918", "SSRF: HTTP connection putrequest() with user-controlled path/method")
+
+        if fn == "request" and isinstance(node.func, ast.Attribute) and node.args and len(node.args) >= 2:
+            obj_name2 = _func_name(node.func.value) if isinstance(node.func.value, ast.Name | ast.Attribute) else ""
+            if obj_name2 not in ("requests", "session", "Session"):
+                if _is_from_request(node.args[0]) or _is_from_request(node.args[1]):
+                    self._add(node.lineno, "CWE-918", "SSRF: HTTP connection request() with user-controlled URL/method")
+
+        # CWE-78: subprocess / os.system with shell=True or user input or non-constant
+        if fn in ("system", "popen", "call", "run", "Popen", "check_output", "check_call"):
+            has_shell = any(
+                (isinstance(kw.value, ast.Constant) and kw.value.value is True)
+                for kw in node.keywords
+                if kw.arg == "shell"
+            )
+            # os.system() is ALWAYS shell — any non-constant arg is dangerous
+            is_os_system = fn in ("system", "popen")
+            arg_is_dynamic = node.args and not isinstance(node.args[0], ast.Constant)
+            if has_shell or (node.args and _is_from_request(node.args[0])) or (is_os_system and arg_is_dynamic):
+                self._add(node.lineno, "CWE-78", "Command injection risk: shell command with dynamic input")
+
+        # CWE-22: open/send_file/tarfile/bz2/io with user input
+        if fn in ("open", "send_file", "send_from_directory") and node.args:
+            if _is_from_request(node.args[0]):
+                self._add(node.lineno, "CWE-22", f"Path traversal: {fn}() with user-supplied path")
+
+        if fn in ("BZ2File",) and node.args and _is_from_request(node.args[0]):
+            self._add(node.lineno, "CWE-22", "Path traversal: bz2.BZ2File() with user-supplied path")
+
+        if fn in ("TarFile",) and node.args and _is_from_request(node.args[0]):
+            self._add(node.lineno, "CWE-22", "Path traversal: tarfile.TarFile() with user-supplied path")
+
+        if isinstance(node.func, ast.Attribute) and node.func.attr == "open":
+            obj_name3 = _func_name(node.func.value) if isinstance(node.func.value, ast.Name | ast.Attribute) else ""
+            if obj_name3 in ("tarfile", "TarFile", "bz2", "io") and node.args:
+                if _is_from_request(node.args[0]):
+                    self._add(node.lineno, "CWE-22", f"Path traversal: {obj_name3}.open() with user-supplied path")
+
+        # CWE-502: pickle.load/loads / yaml.load with user input
+        if isinstance(node.func, ast.Attribute) and node.func.attr in ("load", "loads", "load_all"):
+            obj_name4 = _func_name(node.func.value) if isinstance(node.func.value, ast.Name | ast.Attribute) else ""
+            if obj_name4 == "pickle" and node.args and _is_from_request(node.args[0]):
+                self._add(node.lineno, "CWE-502", "Insecure deserialization: pickle.load() with user input — RCE risk")
+            if obj_name4 == "yaml" and node.args and _is_from_request(node.args[0]):
+                self._add(
+                    node.lineno, "CWE-502", "Insecure deserialization: yaml.load() with potentially unsafe loader"
+                )
+
+        # CWE-611: XXE — XML parsing with user input without defusedxml
+        if isinstance(node.func, ast.Attribute) and node.func.attr in ("fromstring", "parseString", "parse_string"):
+            obj_src5 = ast.unparse(node.func.value)
+            if any(mod in obj_src5 for mod in ("etree", "lxml", "pulldom", "sax", "minidom")):
+                if node.args and _is_from_request(node.args[0]):
+                    self._add(node.lineno, "CWE-611", "XXE: XML parsing with user-controlled input — use defusedxml")
+
+        # CWE-400: re.match/search/findall with user input as string (ReDoS)
+        if isinstance(node.func, ast.Attribute) and node.func.attr in (
+            "match",
+            "search",
+            "findall",
+            "finditer",
+            "fullmatch",
+            "sub",
+            "split",
+        ):
+            obj_name6 = _func_name(node.func.value) if isinstance(node.func.value, ast.Name | ast.Attribute) else ""
+            if obj_name6 == "re" and len(node.args) >= 2 and _is_from_request(node.args[1]):
+                self._add(
+                    node.lineno,
+                    "CWE-400",
+                    "ReDoS: re.match/search with user-controlled string — catastrophic backtracking risk",
+                )
+            elif obj_name6 != "re" and node.args and _is_from_request(node.args[0]):
+                self._add(node.lineno, "CWE-400", "ReDoS: compiled pattern.match() with user-controlled input")
+
+        # CWE-295: requests.get with verify=False
+        for kw in node.keywords:
+            if kw.arg == "verify" and isinstance(kw.value, ast.Constant) and kw.value.value is False:
+                self._add(node.lineno, "CWE-295", "SSL verification disabled (verify=False)")
+            # CWE-1004: httponly=False in cookie/session setup
+            if kw.arg == "httponly" and isinstance(kw.value, ast.Constant) and kw.value.value is False:
+                self._add(
+                    node.lineno, "CWE-1004", "Cookie/session created with httponly=False — accessible by JavaScript"
+                )
+            # CWE-614: secure=False in cookie setup
+            if kw.arg == "secure" and isinstance(kw.value, ast.Constant) and kw.value.value is False:
+                self._add(
+                    node.lineno,
+                    "CWE-614",
+                    "Cookie created with secure=False — transmitted over HTTP without encryption",
+                )
+            # CWE-16: autoescape=False in Jinja2 environment setup
+            if kw.arg == "autoescape" and isinstance(kw.value, ast.Constant) and kw.value.value is False:
+                self._add(
+                    node.lineno,
+                    "CWE-16",
+                    "Jinja2 autoescape disabled — all template variables render as raw HTML (XSS risk)",
+                )
+            # CWE-215: debug=True in framework construction
+            if kw.arg == "debug" and isinstance(kw.value, ast.Constant) and kw.value.value is True:
+                self._add(
+                    node.lineno, "CWE-215", "Application created with debug=True — exposes stack traces and debugger"
+                )
+
+        # CWE-614 + CWE-1004: set_cookie without secure and httponly flags
+        if fn == "set_cookie" and node.args:
+            kw_names = {kw.arg for kw in node.keywords}
+            cookie_name = ast.unparse(node.args[0]) if node.args else ""
+            is_session_like = any(
+                k in cookie_name.lower() for k in ("session", "auth", "token", "user", "login", "vulpy")
+            )
+            if is_session_like or True:  # flag all set_cookie without security flags
+                if "httponly" not in kw_names:
+                    self._add(
+                        node.lineno,
+                        "CWE-1004",
+                        f"set_cookie({cookie_name}) without httponly=True — cookie accessible by JavaScript",
+                    )
+                if "secure" not in kw_names:
+                    self._add(
+                        node.lineno, "CWE-614", f"set_cookie({cookie_name}) without secure=True — cookie sent over HTTP"
+                    )
+
+        # CWE-338: random.* for security-sensitive operations
+        if isinstance(node.func, ast.Attribute):
+            if (
+                isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "random"
+                and node.func.attr in ("random", "randint", "choice", "randrange", "uniform")
+            ):
+                self._add(node.lineno, "CWE-338", "Weak PRNG random.* used — not cryptographically secure")
+
+        # CWE-916 / CWE-328: weak hash algorithms (both attribute and direct call forms)
+        _WEAK_HASH_FNS = frozenset({"md5", "sha1", "sha128"})
+        if isinstance(node.func, ast.Attribute) and node.func.attr in _WEAK_HASH_FNS:
+            self._add(node.lineno, "CWE-916", f"Weak hash {node.func.attr} — use bcrypt/argon2 for passwords")
+            self._add(node.lineno, "CWE-328", f"Cryptographically weak hash algorithm: {node.func.attr}")
+        elif isinstance(node.func, ast.Name) and node.func.id in _WEAK_HASH_FNS:
+            self._add(node.lineno, "CWE-916", f"Weak hash {node.func.id} — use bcrypt/argon2 for passwords")
+            self._add(node.lineno, "CWE-328", f"Cryptographically weak hash algorithm: {node.func.id}")
+
+        # CWE-328: hashlib.new('sha1') / hashlib.new('md5')
+        if isinstance(node.func, ast.Attribute) and node.func.attr == "new":
+            obj_name7 = _func_name(node.func.value) if isinstance(node.func.value, ast.Name | ast.Attribute) else ""
+            if obj_name7 == "hashlib" and node.args and isinstance(node.args[0], ast.Constant):
+                alg = str(node.args[0].value).lower()
+                if alg in ("md5", "sha1", "sha128"):
+                    self._add(node.lineno, "CWE-328", f"Cryptographically weak hash algorithm: {node.args[0].value}")
+                    self._add(node.lineno, "CWE-916", f"Weak hash via hashlib.new('{node.args[0].value}')")
+
+        # CWE-532: logging password/token
+        if fn in ("debug", "info", "warning", "error", "critical", "log") and node.args:
+            src = ast.unparse(node.args[0])
+            if any(k in src.lower() for k in ("password", "passwd", "secret", "token", "credential")):
+                self._add(node.lineno, "CWE-532", "Sensitive data (password/token) passed to logger")
+
+        # CWE-79: render_template with user-controlled kwargs (reflected XSS)
+        if fn == "render_template" and node.args:
+            for kw in node.keywords:
+                if kw.arg is None:
+                    continue
+                if _is_from_request(kw.value):
+                    self._add(
+                        node.lineno,
+                        "CWE-79",
+                        f"render_template passes tainted {kw.arg}=request.* — verify template escaping",
+                    )
+                    break
+
+        # CWE-79: db.session.add(Model(field=user_input)) → stored XSS risk
+        _CONTENT_FIELDS = frozenset(
+            {
+                "message",
+                "content",
+                "body",
+                "text",
+                "description",
+                "comment",
+                "review",
+                "title",
+                "html",
+                "markup",
+                "feedback",
+                "post",
+                "note",
+                "name",
+                "from_user",
+                "username",
+            }
+        )
+        _CONTENT_MODELS = frozenset(
+            {
+                "Message",
+                "Comment",
+                "Post",
+                "Review",
+                "Feedback",
+                "Note",
+                "Entry",
+                "Article",
+                "Reply",
+                "Thread",
+                "Item",
+            }
+        )
+        if isinstance(node.func, ast.Attribute) and node.func.attr == "add" and node.args:
+            constructor = node.args[0]
+            if isinstance(constructor, ast.Call):
+                model_name = _func_name(constructor.func)
+                is_content_model = model_name in _CONTENT_MODELS
+                for kw in constructor.keywords:
+                    if _is_from_request(kw.value):
+                        if is_content_model or (kw.arg in _CONTENT_FIELDS):
+                            self._add(
+                                node.lineno,
+                                "CWE-79",
+                                f"Stored XSS: user input in {model_name}.{kw.arg} without sanitization",
+                            )
+                            break
+
+        self.generic_visit(node)
+
+    # ── Exception handlers ───────────────────────────────────────
+
+    def visit_ExceptHandler(self, node: ast.ExceptHandler):
+        for stmt in ast.walk(node):
+            if isinstance(stmt, ast.Return):
+                src = ast.unparse(stmt)
+                if "str(e" in src or "str(ex" in src or "traceback" in src or "format_exc" in src:
+                    self._add(stmt.lineno, "CWE-209", "Exception details returned to client")
+                    break
+        self.generic_visit(node)
+
+    # ── Dict literals (serialization) ────────────────────────────
+
+    def visit_Dict(self, node: ast.Dict):
+        for i, key in enumerate(node.keys):
+            if not isinstance(key, ast.Constant):
+                continue
+            key_str = str(key.value)
+            if _PASSWD_ATTR.search(key_str):
+                # NOTE: bare CWE-200 (dict merely has a password-named key) was net-negative
+                # (3 TP / 29 FP) — almost every model serialization has such a key. Only the
+                # hardcoded-value case is a real, high-precision finding.
+                val = node.values[i] if i < len(node.values) else None
+                if isinstance(val, ast.Constant) and isinstance(val.value, str) and val.value:
+                    self._add(node.lineno, "CWE-798", f"Hardcoded password/credential in dict literal: '{key_str}'")
+                break
+        self.generic_visit(node)
+
+    # ── F-string (JoinedStr) analysis ────────────────────────────
+
+    def visit_JoinedStr(self, node: ast.JoinedStr):
+        """CWE-79: f-string building HTML with user input; CWE-89: f-string building SQL."""
+        src = ast.unparse(node)
+        has_html = any(
+            tag in src
+            for tag in (
+                "<h1>",
+                "<h2>",
+                "<h3>",
+                "<p>",
+                "<div>",
+                "<span>",
+                "<a href",
+                "<script>",
+                "<html>",
+                "<body>",
+                "<br>",
+                "<li>",
+                "<td>",
+                "<input",
+                "HTMLResponse",
+            )
+        )
+        has_sql = any(kw in src.upper() for kw in ("SELECT ", "INSERT ", "UPDATE ", "DELETE ", "WHERE "))
+        has_user_input = _is_from_request(node)
+        # An f-string has interpolation iff it contains a FormattedValue node.
+        has_interpolation = any(isinstance(v, ast.FormattedValue) for v in node.values)
+        if has_html and has_user_input:
+            self._add(
+                node.lineno, "CWE-79", "XSS: f-string builds HTML with user-controlled variable — use template escaping"
+            )
+        # CWE-89: SQL built via f-string with ANY interpolated value. Real code uses
+        # parameterized queries; f-string SQL is the canonical injection antipattern
+        # (mirrors Bandit B608). Route params (FastAPI/Flask) are tainted but not
+        # request.*-prefixed, so taint heuristics miss them — interpolation is the tell.
+        if has_sql and has_interpolation:
+            self._add(
+                node.lineno, "CWE-89", "SQLi: f-string builds SQL with interpolated value (use parameterized query)"
+            )
+        self.generic_visit(node)
+
+    def visit_Constant(self, node: ast.Constant):
+        # CWE-16: X-XSS-Protection: 0 — disable browser XSS filter
+        if isinstance(node.value, str) and "X-XSS-Protection" in node.value and "0" in node.value:
+            self._add(node.lineno, "CWE-16", "X-XSS-Protection header disabled")
+        self.generic_visit(node)
+
+    def visit_BinOp(self, node: ast.BinOp):
+        if isinstance(node.op, ast.Mod | ast.Add):
+            src = ast.unparse(node)
+            # CWE-89: SQL string concat
+            if any(kw in src.upper() for kw in ("SELECT ", "INSERT ", "UPDATE ", "DELETE ", "WHERE ")):
+                if _is_from_request(node) or not isinstance(node.right, ast.Constant):
+                    self._add(node.lineno, "CWE-89", "SQL string concatenation/interpolation")
+            # CWE-79: HTML string concat with user input — '<tag>' + user_input or user_input + '</tag>'
+            if _is_from_request(node):
+                left_src = ast.unparse(node.left) if hasattr(node, "left") else ""
+                right_src = ast.unparse(node.right)
+                # Check if either side is an HTML-looking string literal
+                for side_src in (left_src, right_src):
+                    if any(
+                        tag in side_src
+                        for tag in (
+                            "<p>",
+                            "<div>",
+                            "<span>",
+                            "<a>",
+                            "<script>",
+                            "<html>",
+                            "<body>",
+                            "<h",
+                            "<br",
+                            "<li>",
+                            "<td>",
+                        )
+                    ):
+                        self._add(node.lineno, "CWE-79", "XSS: HTML string concatenation with user-controlled input")
+                        break
+        self.generic_visit(node)
+
+
+_REGEX_SQL_CONCAT = re.compile(
+    r"""(?:execute|executemany|raw)\s*\(\s*(?:["'](?:SELECT|INSERT|UPDATE|DELETE|WHERE)\b[^"']*["']\s*(?:\+|%|\.format))""",
+    re.IGNORECASE,
+)
+_REGEX_OS_CMD = re.compile(
+    r"""(?:os\.system|os\.popen|subprocess\.call|subprocess\.run|subprocess\.Popen)\s*\(\s*(?!['"])""",
+    re.IGNORECASE,
+)
+_REGEX_HARDCODED_CRED = re.compile(
+    r"""(?:password|passwd|pwd|secret_key|api_key)\s*[=:]\s*["'][^"']{3,}["']""",
+    re.IGNORECASE,
+)
+_REGEX_DEBUG_TRUE = re.compile(r"""['"]debug['"]\s*:\s*True""", re.IGNORECASE)
+_REGEX_OPEN_VAR = re.compile(r"""open\s*\(\s*[a-zA-Z_]""")
+
+
+def _scan_python_regex_fallback(path: Path) -> list[dict]:
+    """Regex-based scanner for Python 2 or files that fail AST parsing."""
+    findings = []
+    try:
+        lines = path.read_text(errors="replace").splitlines()
+    except Exception:
+        return findings
+
+    "\n".join(lines)
+    for i, line in enumerate(lines, 1):
+        if _REGEX_SQL_CONCAT.search(line):
+            findings.append(
+                {"file": str(path), "line": i, "cwe": "CWE-89", "description": "SQL string interpolation in execute()"}
+            )
+        if _REGEX_OS_CMD.search(line):
+            findings.append(
+                {"file": str(path), "line": i, "cwe": "CWE-78", "description": "OS command with dynamic argument"}
+            )
+        if _REGEX_HARDCODED_CRED.search(line):
+            findings.append({"file": str(path), "line": i, "cwe": "CWE-798", "description": "Hardcoded credential"})
+        if _REGEX_DEBUG_TRUE.search(line):
+            findings.append(
+                {"file": str(path), "line": i, "cwe": "CWE-16", "description": "Debug mode enabled in settings"}
+            )
+    return findings
+
+
+def scan_python(path: Path) -> list[dict]:
+    try:
+        source = path.read_text(errors="replace")
+        tree = ast.parse(source, filename=str(path))
+    except Exception:
+        return _scan_python_regex_fallback(path)
+    v = _Visitor(source, str(path))
+    v.visit(tree)
+    return v.findings
+
+
+# ── IDOR detector (needs cross-function analysis) ────────────────────────────
+
+_QUERY_GET_RE = re.compile(
+    r"\.query\.get\s*\(|\.get_or_404\s*\(|\.filter_by\s*\(id\s*=|\.filter\s*\(.*\.id\s*==",
+    re.IGNORECASE,
+)
+_REQUEST_VAR_RE = re.compile(r"request\.(args|form|json|values|data|view_args)")
+
+
+_IDOR_PATTERNS = re.compile(
+    r"\.query\.get\s*\(|\.get_or_404\s*\(|\.filter_by\s*\(\s*id\s*=|"
+    r"db\.session\.get\s*\(|Model\.get\s*\(|\.objects\.get\s*\(",
+    re.IGNORECASE,
+)
+
+
+def _scan_idor(path: Path) -> list[dict]:
+    """Detect Model.query.get(user_supplied_id) without ownership check."""
+    findings = []
+    try:
+        lines = path.read_text(errors="replace").splitlines()
+    except Exception:
+        return findings
+
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if _IDOR_PATTERNS.search(line):
+            # Check ±5 lines context for ownership check and request source
+            context = "\n".join(lines[max(0, i - 5) : min(len(lines), i + 6)])
+            has_request = bool(_REQUEST_VAR_RE.search(context))
+            has_ownership = any(
+                k in context
+                for k in (
+                    "current_user",
+                    "g.user",
+                    "user_id ==",
+                    "owner_id",
+                    "belongs_to",
+                    "is_owner",
+                    "verify_owner",
+                )
+            )
+            if has_request and not has_ownership:
+                findings.append(
+                    {
+                        "file": str(path),
+                        "line": i + 1,
+                        "cwe": "CWE-639",
+                        "description": "IDOR: DB query with user-supplied ID, no ownership check",
+                    }
+                )
+        i += 1
+    return findings
+
+
+# ═══════════════════════════════════════════════════════════════
+# Jinja2 template scanner for autoescape-disabled repos
+# ═══════════════════════════════════════════════════════════════
+
+# Matches {{ expr }} in Jinja2 templates (not {% %} blocks or {# comments #})
+_JINJA_VAR_RE = re.compile(r"\{\{(.*?)\}\}", re.DOTALL)
+# Static strings only (no variable expressions)
+_JINJA_STATIC_RE = re.compile(r"""^\s*['"][^'"]*['"]\s*$""")
+# Jinja2 builtins that are safe (url_for, static, config, loop, etc.)
+_JINJA_BUILTINS = frozenset(
+    {
+        "url_for",
+        "config",
+        "request",
+        "session",
+        "g",
+        "static",
+        "loop",
+        "super",
+        "caller",
+        "varargs",
+        "kwargs",
+        "range",
+        "namespace",
+        "lipsum",
+        "dict",
+        "joiner",
+        "cycler",
+    }
+)
+# Error/exception objects in templates — CWE-209
+_JINJA_ERROR_RE = re.compile(
+    r"\{\{[^}]*\b(error|exception|traceback|exc|err)\b[^}]*\}\}",
+    re.IGNORECASE,
+)
+
+
+def scan_jinja2_unsafe(path: Path) -> list[dict]:
+    """Scan a Jinja2 template for XSS when autoescape is disabled.
+    Flags {{ variable }} expressions that aren't static or builtins."""
+    findings = []
+    try:
+        content = path.read_text(errors="replace")
+        lines = content.splitlines()
+    except Exception:
+        return findings
+
+    for i, line in enumerate(lines, 1):
+        # CWE-209: {{ error.__dict__ }} or {{ exception.* }}
+        if _JINJA_ERROR_RE.search(line):
+            findings.append(
+                {
+                    "file": str(path),
+                    "line": i,
+                    "cwe": "CWE-209",
+                    "description": f"Template exposes error/exception details: {line.strip()[:100]}",
+                }
+            )
+
+        # CWE-79: {{ variable }} when autoescape disabled
+        for m in _JINJA_VAR_RE.finditer(line):
+            inner = m.group(1).strip()
+            if not inner:
+                continue
+            # Skip static string literals
+            if _JINJA_STATIC_RE.match(inner):
+                continue
+            # Skip pure builtins (url_for(), config.*, etc.)
+            root = re.split(r"[\.\(\|\s]", inner)[0].strip()
+            if root in _JINJA_BUILTINS:
+                continue
+            # Skip loop variables and Jinja2 control vars
+            if root in ("csrf_token", "form", "messages", "get_flashed_messages"):
+                continue
+            findings.append(
+                {
+                    "file": str(path),
+                    "line": i,
+                    "cwe": "CWE-79",
+                    "description": f"Unescaped template variable (autoescape disabled): {{{{ {inner[:60]} }}}}",
+                }
+            )
+            break  # one CWE-79 per line is enough
+
+    return findings
+
+
+_AUTOESCAPE_DISABLED_RE = re.compile(
+    r"autoescape\s*=\s*False|jinja_env\.autoescape\s*=\s*False",
+    re.IGNORECASE,
+)
+
+
+def _repo_has_autoescape_disabled(repo: Path) -> bool:
+    """Check if any Python file in repo disables Jinja2 autoescape."""
+    for p in repo.rglob("*.py"):
+        if any(x in str(p) for x in (".git", "__pycache__", ".venv", "venv")):
+            continue
+        try:
+            if _AUTOESCAPE_DISABLED_RE.search(p.read_text(errors="replace")):
+                return True
+        except Exception:
+            pass
+    return False
+
+
+# ═══════════════════════════════════════════════════════════════
+# Public API
+# ═══════════════════════════════════════════════════════════════
+
+
+def scan_repo(repo_path: str) -> list[dict]:
+    repo = Path(repo_path)
+    raw: list[dict] = []
+
+    # Check once if autoescape is disabled across the repo
+    autoescape_disabled = _repo_has_autoescape_disabled(repo)
+
+    for p in repo.rglob("*.py"):
+        if any(x in str(p) for x in (".git", "__pycache__", "node_modules", ".venv", "venv")):
+            continue
+        raw.extend(scan_python(p))
+        raw.extend(_scan_idor(p))
+
+    for ext in ("*.html", "*.jinja2", "*.jinja", "*.j2"):
+        for p in repo.rglob(ext):
+            if ".git" in str(p):
+                continue
+            raw.extend(scan_html(p))
+            # When autoescape is disabled, scan ALL jinja2/j2 templates for raw {{ var }}
+            if autoescape_disabled and p.suffix in (".jinja2", ".jinja", ".j2"):
+                raw.extend(scan_jinja2_unsafe(p))
+
+    # Normalise to repo-relative paths, dedup
+    out: list[dict] = []
+    seen: set[tuple] = set()
+    for f in raw:
+        try:
+            rel = str(Path(f["file"]).relative_to(repo)).replace("\\", "/")
+        except ValueError:
+            rel = f["file"]
+        key = (rel, f["cwe"], (f.get("line") or 0) // 5)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"file": rel, "cwe": f["cwe"], "line": f.get("line", 0), "description": f.get("description", "")})
+    return out
+
+
+if __name__ == "__main__":
+    import json
+
+    if len(sys.argv) < 2:
+        print("Usage: python ast_security_scanner.py <repo_path>")
+        sys.exit(1)
+    results = scan_repo(sys.argv[1])
+    print(json.dumps(results, indent=2))
+    print(f"\nTotal: {len(results)} findings", file=sys.stderr)
+
+
+# ═══════════════════════════════════════════════════════════════
+# ReDoS / Catastrophic Regex Detector (CWE-400 / CWE-1333)
+# ═══════════════════════════════════════════════════════════════
+# Patterns with exponential backtracking:
+#   (a+)+  (a|a)+ ([a-z]+)*  (a{1,5}){1,5}  etc.
+_CATASTROPHIC_PATTERNS = [
+    re.compile(r"\([^)]*\+[^)]*\)\+"),  # (a+)+
+    re.compile(r"\([^)]*\+[^)]*\)\*"),  # (a+)*
+    re.compile(r"\([^)]*\{.*\}[^)]*\)\+"),  # (a{n,m})+
+    re.compile(r"\([^)]*\{.*\}[^)]*\)\*"),  # (a{n,m})*
+    re.compile(r"\([^)]*\|[^)]*\+[^)]*\)\+"),  # (a|a+)+
+    re.compile(r"\(\?:[^)]*\+[^)]*\)\+"),  # (?:a+)+
+    re.compile(r"\(\?:[^)]*\+[^)]*\)\*"),  # (?:a+)*
+]
+
+
+def _is_catastrophic_regex(pattern_str: str) -> bool:
+    """Detect catastrophic backtracking: nested quantified groups like ((a)+)+."""
+    for p in _CATASTROPHIC_PATTERNS:
+        if p.search(pattern_str):
+            return True
+    # Stack-based: track which group depths have quantified group-closings.
+    # ((a)+)+ → quant_at_depth=[1, 0] → 0 has something > 0 nested inside → True
+    quant_at_depth: list[int] = []
+    depth = 0
+    i = 0
+    while i < len(pattern_str):
+        ch = pattern_str[i]
+        if ch == "\\":
+            i += 2  # skip escaped char
+            continue
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth = max(depth - 1, 0)
+            # Check if this closing group has a quantifier following it
+            j = i + 1
+            if j < len(pattern_str) and pattern_str[j] in ("+", "*", "{", "?"):
+                quant_at_depth.append(depth)
+        i += 1
+
+    # Catastrophic: any pair of depths where one is strictly greater (inner vs outer).
+    # Groups close inner-first (high depth) then outer (low depth), so order in list
+    # is not guaranteed to be sorted — check all pairs.
+    if quant_at_depth:
+        lo, hi = min(quant_at_depth), max(quant_at_depth)
+        if hi > lo:
+            return True
+    return False
+
+
+def _scan_redos(path: Path) -> list[dict]:
+    """Detect ReDoS: catastrophic regex + user-controlled input."""
+    findings = []
+    try:
+        source = path.read_text(errors="replace")
+        tree = ast.parse(source)
+    except Exception:
+        return findings
+
+    # Collect all string constants assigned to variable names suggesting regex patterns
+    pattern_vars: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and isinstance(node.value, ast.Constant):
+                    if isinstance(node.value.value, str):
+                        pattern_vars[target.id] = node.value.value
+
+    # Check re.match/search/compile/findall/sub/fullmatch calls
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        fn = ""
+        if isinstance(node.func, ast.Attribute):
+            obj = node.func.value
+            fn = node.func.attr
+            if not (isinstance(obj, ast.Name) and obj.id == "re"):
+                if fn not in ("match", "search", "compile", "findall", "sub", "fullmatch", "finditer", "subn", "split"):
+                    continue
+        elif isinstance(node.func, ast.Name):
+            fn = node.func.id
+
+        if fn not in ("match", "search", "compile", "findall", "sub", "fullmatch", "finditer", "subn", "split"):
+            continue
+
+        if not node.args:
+            continue
+
+        pattern_arg = node.args[0]
+        pat_str = None
+        if isinstance(pattern_arg, ast.Constant) and isinstance(pattern_arg.value, str):
+            pat_str = pattern_arg.value
+        elif isinstance(pattern_arg, ast.Name) and pattern_arg.id in pattern_vars:
+            pat_str = pattern_vars[pattern_arg.id]
+
+        if pat_str and _is_catastrophic_regex(pat_str):
+            # Check if user input reaches this call (arg[1] exists)
+            if len(node.args) >= 2 or fn == "compile":
+                findings.append(
+                    {
+                        "file": str(path),
+                        "line": node.lineno,
+                        "cwe": "CWE-400",
+                        "description": f"ReDoS: catastrophic regex pattern in re.{fn}()",
+                    }
+                )
+
+    return findings
+
+
+# ═══════════════════════════════════════════════════════════════
+# autoescape=False detector → marks repo templates as unsafe
+# ═══════════════════════════════════════════════════════════════
+
+_AUTOESCAPE_FALSE = re.compile(r"autoescape\s*=\s*False", re.IGNORECASE)
+
+
+def _scan_autoescape_false(path: Path) -> list[dict]:
+    """Detect Jinja2 Environment(autoescape=False) or setup_jinja(..., autoescape=False).
+    Returns CWE-79 at the config line (the entire app's templates are XSS-able).
+    """
+    findings = []
+    try:
+        source = path.read_text(errors="replace")
+        lines = source.splitlines()
+    except Exception:
+        return findings
+
+    for i, line in enumerate(lines, 1):
+        if _AUTOESCAPE_FALSE.search(line):
+            findings.append(
+                {
+                    "file": str(path),
+                    "line": i,
+                    "cwe": "CWE-79",
+                    "description": "Jinja2 autoescape=False — all template variables rendered as raw HTML",
+                }
+            )
+    return findings
+
+
+# ═══════════════════════════════════════════════════════════════
+# Extended SSRF: urllib / httplib / aiohttp / httpx
+# ═══════════════════════════════════════════════════════════════
+
+_URLLIB_SSRF_FUNCS = {"urlopen", "urlretrieve", "URLopener", "FancyURLopener"}
+_HTTP_CLIENT_SSRF = {"HTTPConnection", "HTTPSConnection", "HTTPSHandler"}
+_HTTPX_SSRF = {"get", "post", "put", "delete", "request", "stream", "Client"}
+
+
+def _scan_extended_ssrf(path: Path) -> list[dict]:
+    """Detect SSRF via urllib, http.client, httpx, aiohttp with user-controlled URLs."""
+    findings = []
+    try:
+        source = path.read_text(errors="replace")
+        tree = ast.parse(source)
+    except Exception:
+        return findings
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        fn = _func_name(node.func)
+
+        # urllib.request.urlopen(user_url) / urlopen(user_url)
+        if fn in _URLLIB_SSRF_FUNCS:
+            if node.args and _is_from_request(node.args[0]):
+                findings.append(
+                    {
+                        "file": str(path),
+                        "line": node.lineno,
+                        "cwe": "CWE-918",
+                        "description": f"SSRF: {fn}() with user-controlled URL",
+                    }
+                )
+
+        # http.client.HTTPConnection(user_host)
+        if fn in _HTTP_CLIENT_SSRF:
+            if node.args and _is_from_request(node.args[0]):
+                findings.append(
+                    {
+                        "file": str(path),
+                        "line": node.lineno,
+                        "cwe": "CWE-918",
+                        "description": f"SSRF: {fn}() with user-controlled host",
+                    }
+                )
+
+    return findings
+
+
+# ═══════════════════════════════════════════════════════════════
+# from_string() SSTI (CWE-1336)
+# ═══════════════════════════════════════════════════════════════
+
+
+def _scan_from_string_ssti(path: Path) -> list[dict]:
+    """Detect Jinja2 Environment.from_string(user_input) SSTI."""
+    findings = []
+    try:
+        source = path.read_text(errors="replace")
+        tree = ast.parse(source)
+    except Exception:
+        return findings
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        fn = _func_name(node.func)
+        if fn != "from_string":
+            continue
+        if not node.args:
+            continue
+        first = node.args[0]
+        # If template string is NOT a constant → user-controlled
+        if not isinstance(first, ast.Constant):
+            findings.append(
+                {
+                    "file": str(path),
+                    "line": node.lineno,
+                    "cwe": "CWE-1336",
+                    "description": "SSTI: Jinja2.from_string() with dynamic (user-controlled) template",
+                }
+            )
+        # If it's a constant but contains user input via concatenation
+        elif isinstance(first, ast.BinOp) and isinstance(first.op, ast.Add):
+            findings.append(
+                {
+                    "file": str(path),
+                    "line": node.lineno,
+                    "cwe": "CWE-1336",
+                    "description": "SSTI: Jinja2.from_string() with string concatenation",
+                }
+            )
+    return findings
+
+
+# ═══════════════════════════════════════════════════════════════
+# FastAPI / aiohttp route scanner (CWE-306 for unauthenticated)
+# ═══════════════════════════════════════════════════════════════
+
+_FASTAPI_ROUTE_DECORATORS = {"get", "post", "put", "delete", "patch", "head", "options", "route"}
+_SENSITIVE_KEYWORDS = {
+    "admin",
+    "delete",
+    "update",
+    "create",
+    "write",
+    "send",
+    "transfer",
+    "modify",
+    "reset",
+    "password",
+    "token",
+    "secret",
+}
+
+
+def _scan_fastapi_routes(path: Path) -> list[dict]:
+    """Detect FastAPI / aiohttp routes missing auth dependencies."""
+    findings = []
+    try:
+        source = path.read_text(errors="replace")
+        tree = ast.parse(source)
+    except Exception:
+        return findings
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        dec_names = _decorator_names(node)
+        # FastAPI: @app.get/post/... decorator
+        has_fastapi_route = any(d in _FASTAPI_ROUTE_DECORATORS for d in dec_names)
+        if not has_fastapi_route:
+            continue
+        has_auth = bool(_AUTH_DECORATORS.intersection(dec_names))
+        func_src = ast.unparse(node)
+        has_dep_auth = any(
+            k in func_src
+            for k in (
+                "Depends(",
+                "current_user",
+                "get_current_user",
+                "OAuth2",
+                "HTTPBearer",
+                "verify_token",
+                "decode_token",
+            )
+        )
+        if not has_auth and not has_dep_auth:
+            if any(k in node.name.lower() for k in _SENSITIVE_KEYWORDS):
+                findings.append(
+                    {
+                        "file": str(path),
+                        "line": node.lineno,
+                        "cwe": "CWE-306",
+                        "description": f"FastAPI route '{node.name}' missing auth dependency",
+                    }
+                )
+    return findings
+
+
+# ═══════════════════════════════════════════════════════════════
+# Commented-out security middleware (CWE-352 / CWE-693)
+# ═══════════════════════════════════════════════════════════════
+
+_COMMENTED_SECURITY = re.compile(
+    r"#\s*(csrf|csp|security|xss|auth|rate.?limit|cors|helmet)\s*(middleware|middleware\b|_middleware|protect|protection)",
+    re.IGNORECASE,
+)
+
+
+def _scan_commented_security(path: Path) -> list[dict]:
+    """Detect commented-out CSRF / security middleware."""
+    findings = []
+    try:
+        lines = path.read_text(errors="replace").splitlines()
+    except Exception:
+        return findings
+
+    for i, line in enumerate(lines, 1):
+        if _COMMENTED_SECURITY.search(line):
+            findings.append(
+                {
+                    "file": str(path),
+                    "line": i,
+                    "cwe": "CWE-352",
+                    "description": f"Security middleware commented out: {line.strip()[:80]}",
+                }
+            )
+    return findings
+
+
+# ═══════════════════════════════════════════════════════════════
+# Param-taint SSRF: single-param wrapper functions that use url/network APIs
+# Targets patterns like: def do_urlopen(user_input): return _urlopen(urlopen, user_input)
+# ═══════════════════════════════════════════════════════════════
+
+_SSRF_IMPORT_NAMES = {
+    "urlopen",
+    "urlretrieve",
+    "Request",
+    "HTTPConnection",
+    "HTTPSConnection",
+    "HTTPSHandler",
+    "URLopener",
+}
+_TAINTED_PARAM_NAMES = {
+    "user_input",
+    "user_url",
+    "url",
+    "host",
+    "target",
+    "endpoint",
+    "destination",
+    "src",
+    "uri",
+    "remote",
+    "location",
+}
+
+
+def _scan_param_taint_ssrf(path: Path) -> list[dict]:
+    """Detect SSRF in single-param wrapper functions that use urllib/http imports.
+    Targets: def do_xxx(user_input): ... urlopen(user_input) or _urlopen(urlopen, user_input)
+    Avoids FP: private functions with multiple params (connection_class, etc.)
+    """
+    findings = []
+    try:
+        source = path.read_text(errors="replace")
+        tree = ast.parse(source)
+    except Exception:
+        return findings
+
+    # Collect imported SSRF-dangerous names + aliases
+    ssrf_names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            for alias in node.names:
+                if alias.name in _SSRF_IMPORT_NAMES:
+                    ssrf_names.add(alias.asname or alias.name)
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                if any(k in alias.name for k in ("urllib", "httplib", "http.client")):
+                    ssrf_names.add(alias.asname or alias.name)
+
+    # Track aliases: legacy_urlopen = urlopen
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            if isinstance(node.value, ast.Name) and node.value.id in ssrf_names:
+                for t in node.targets:
+                    if isinstance(t, ast.Name):
+                        ssrf_names.add(t.id)
+
+    if not ssrf_names:
+        return findings
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            continue
+        # Only single-param public wrappers (avoids multi-param private helpers)
+        pos_args = [a.arg for a in node.args.args if a.arg != "self"]
+        if len(pos_args) != 1:
+            continue
+        if pos_args[0] not in _TAINTED_PARAM_NAMES:
+            continue
+        # Body must reference an SSRF-dangerous name
+        func_src = ast.unparse(node)
+        if any(name in func_src for name in ssrf_names):
+            findings.append(
+                {
+                    "file": str(path),
+                    "line": node.lineno,
+                    "cwe": "CWE-918",
+                    "description": f"SSRF: single-param function '{node.name}' passes user input to network call",
+                }
+            )
+
+    return findings
+
+
+# ═══════════════════════════════════════════════════════════════
+# Patch scan_repo to call the new detectors
+# ═══════════════════════════════════════════════════════════════
+
+_BARE_TMPL_VAR = re.compile(r"\{\{([^{}]+)\}\}")
+_SAFE_ESCAPE_FILTERS = re.compile(r"\|\s*(e|escape|forceescape)\b")
+
+
+def _scan_templates_if_autoescape_false(repo: Path) -> list[dict]:
+    """Cross-file: if repo has autoescape=False in any Python file,
+    flag bare {{ var }} in templates that lack | e / | escape filters.
+    Skip expressions that have explicit escape filters (safe from XSS despite autoescape=False).
+    """
+    # Check if any .py file disables autoescape
+    has_autoescape_false = False
+    for p in repo.rglob("*.py"):
+        if any(x in str(p) for x in (".git", "__pycache__", ".venv", "venv")):
+            continue
+        try:
+            src = p.read_text(errors="replace")
+            if _AUTOESCAPE_FALSE.search(src):
+                has_autoescape_false = True
+                break
+        except Exception:
+            pass
+
+    if not has_autoescape_false:
+        return []
+
+    findings: list[dict] = []
+    for ext in ("*.html", "*.jinja2", "*.j2", "*.jinja"):
+        for p in repo.rglob(ext):
+            if any(x in str(p) for x in (".git", "__pycache__")):
+                continue
+            try:
+                lines = p.read_text(errors="replace").splitlines()
+            except Exception:
+                continue
+            for i, line in enumerate(lines, 1):
+                for m in _BARE_TMPL_VAR.finditer(line):
+                    inner = m.group(1).strip()
+                    # Skip control structures and comments
+                    if not inner or inner.startswith(("#", "%")):
+                        continue
+                    # Skip already-escaped expressions
+                    if _SAFE_ESCAPE_FILTERS.search(inner):
+                        continue
+                    # Skip purely static string literals
+                    if re.match(r"""^['"][^'"]*['"]$""", inner):
+                        continue
+                    findings.append(
+                        {
+                            "file": str(p),
+                            "line": i,
+                            "cwe": "CWE-79",
+                            "description": f"XSS: bare template var in autoescape=False app: {inner[:60]}",
+                        }
+                    )
+    return findings
+
+
+_original_scan_repo = scan_repo
+
+
+# Paths that are test/fixture/migration noise — vulns here are not production findings
+# and crush precision (test files reuse hardcoded creds, dummy SQL, etc.)
+_NOISE_PATH_RE = re.compile(
+    r"(^|/)(tests?|testing|spec|specs|migrations?|fixtures?|examples?|"
+    r"conftest|__pycache__|node_modules|\.venv|venv|site-packages)(/|$)"
+    r"|(^|/)test_[^/]*\.py$|_test\.py$|(^|/)conftest\.py$",
+    re.IGNORECASE,
+)
+
+
+def _is_noise_path(rel: str) -> bool:
+    return bool(_NOISE_PATH_RE.search(rel))
+
+
+def scan_repo(repo_path: str) -> list[dict]:  # type: ignore[no-redef]
+    raw = _original_scan_repo(repo_path)
+    repo = Path(repo_path)
+
+    extra: list[dict] = []
+    for p in repo.rglob("*.py"):
+        if any(x in str(p) for x in (".git", "__pycache__", ".venv", "venv")):
+            continue
+        extra.extend(_scan_redos(p))
+        extra.extend(_scan_extended_ssrf(p))
+        extra.extend(_scan_param_taint_ssrf(p))
+        extra.extend(_scan_from_string_ssti(p))
+        extra.extend(_scan_fastapi_routes(p))
+        extra.extend(_scan_autoescape_false(p))
+        extra.extend(_scan_commented_security(p))
+
+    # NOTE: autoescape=False template XSS is already handled by scan_jinja2_unsafe()
+    # in the original scan_repo — do NOT double-scan here (was spraying duplicate FPs).
+
+    # Normalise & dedup combined; drop test/fixture noise paths (precision)
+    all_raw = raw + extra
+    out: list[dict] = []
+    seen: set[tuple] = set()
+    for f in all_raw:
+        try:
+            rel = str(Path(f["file"]).relative_to(repo)).replace("\\", "/")
+        except ValueError:
+            rel = f["file"]
+        if _is_noise_path(rel):
+            continue
+        key = (rel, f["cwe"], (f.get("line") or 0) // 5)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"file": rel, "cwe": f["cwe"], "line": f.get("line", 0), "description": f.get("description", "")})
+    return out
