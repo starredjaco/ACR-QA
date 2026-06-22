@@ -187,11 +187,16 @@ def run_static(repo_path: Path, slug: str) -> list[dict]:
         if bandit_cmd is not None:
             print(f"    bandit error: {e}")
 
-    # Semgrep (standard + boost rules)
-    semgrep_rules = [
-        "p/python",
-        str(ROOT / "TOOLS/semgrep/realvuln-boost-rules.yml"),
-    ]
+    # Semgrep — p/python registry pack + our boost rules. MEASURED (2026-06-23, now that the
+    # registry is reachable): adding p/django + p/flask + p/owasp-top-ten was net-NEGATIVE on the
+    # 22-repo corpus (precision 47.3%→45.7%, F2 52.3%→52.1%) — p/python + our AST already cover the
+    # Python vulns, so the extra packs only add FPs. Same lesson as Bandit-all / generic taint:
+    # broad additions hurt, targeted detectors help. Set ACRQA_RV_SEMGREP_PACKS=full for ablation.
+    if os.environ.get("ACRQA_RV_SEMGREP_PACKS") == "full":
+        semgrep_rules = ["p/python", "p/django", "p/flask", "p/owasp-top-ten",
+                         str(ROOT / "TOOLS/semgrep/realvuln-boost-rules.yml")]
+    else:
+        semgrep_rules = ["p/python", str(ROOT / "TOOLS/semgrep/realvuln-boost-rules.yml")]
     for rule in semgrep_rules:
         rule_path = Path(rule)
         if not rule_path.exists() and rule.startswith("/"):
