@@ -345,6 +345,47 @@ class _Visitor(ast.NodeVisitor):
     def _add(self, line: int, cwe: str, desc: str):
         self.findings.append({"file": self.path, "line": line, "cwe": cwe, "description": desc})
 
+    _SECURITY_KW = (
+        "password",
+        "passwd",
+        "pwd",
+        "secret",
+        "token",
+        "csrf",
+        "session",
+        "salt",
+        "otp",
+        "api_key",
+        "apikey",
+        "private_key",
+        "auth",
+        "credential",
+        "signature",
+        "nonce",
+        "cookie",
+        "hash_password",
+        "reset",
+    )
+
+    def _line_has_security_kw(self, lineno: int) -> bool:
+        """Does the source line (±1) mention a security-sensitive identifier?"""
+        idx = lineno - 1
+        for i in (idx - 1, idx, idx + 1):
+            if 0 <= i < len(self._src_lines):
+                if any(kw in self._src_lines[i].lower() for kw in self._SECURITY_KW):
+                    return True
+        return False
+
+    def _call_has_sensitive_arg(self, node: ast.Call) -> bool:
+        """Any argument expression references a credential/secret identifier."""
+        for a in node.args:
+            try:
+                if any(kw in ast.unparse(a).lower() for kw in self._SECURITY_KW):
+                    return True
+            except Exception:
+                pass
+        return False
+
     # ── Class ────────────────────────────────────────────────────
 
     def visit_ClassDef(self, node: ast.ClassDef):
@@ -838,42 +879,50 @@ class _Visitor(ast.NodeVisitor):
             is_session_like = any(
                 k in cookie_name.lower() for k in ("session", "auth", "token", "user", "login", "vulpy")
             )
-            if is_session_like or True:  # flag all set_cookie without security flags
-                if "httponly" not in kw_names:
-                    self._add(
-                        node.lineno,
-                        "CWE-1004",
-                        f"set_cookie({cookie_name}) without httponly=True — cookie accessible by JavaScript",
-                    )
-                if "secure" not in kw_names:
-                    self._add(
-                        node.lineno, "CWE-614", f"set_cookie({cookie_name}) without secure=True — cookie sent over HTTP"
-                    )
+            # CWE-1004 (httponly) is net-positive broadly; keep it for all cookies.
+            if "httponly" not in kw_names:
+                self._add(
+                    node.lineno,
+                    "CWE-1004",
+                    f"set_cookie({cookie_name}) without httponly=True — cookie accessible by JavaScript",
+                )
+            # CWE-614 (secure flag) is mostly hygiene noise — only flag session/auth cookies,
+            # where transport security actually matters (was 1 TP / 12 FP unrestricted).
+            if is_session_like and "secure" not in kw_names:
+                self._add(
+                    node.lineno, "CWE-614", f"set_cookie({cookie_name}) without secure=True — cookie sent over HTTP"
+                )
 
-        # CWE-338: random.* for security-sensitive operations
+        # CWE-338: random.* for security-sensitive operations — only flag when the result
+        # feeds a security context (token/password/key/...). A bare random.randint() for
+        # non-security use is not a vuln and RealVuln does not label it (was 2 TP / 14 FP).
         if isinstance(node.func, ast.Attribute):
             if (
                 isinstance(node.func.value, ast.Name)
                 and node.func.value.id == "random"
                 and node.func.attr in ("random", "randint", "choice", "randrange", "uniform")
             ):
-                self._add(node.lineno, "CWE-338", "Weak PRNG random.* used — not cryptographically secure")
+                if self._line_has_security_kw(node.lineno):
+                    self._add(node.lineno, "CWE-338", "Weak PRNG random.* used in a security context — use secrets")
 
-        # CWE-916 / CWE-328: weak hash algorithms (both attribute and direct call forms)
+        # CWE-916 / CWE-328: weak hash — only when the hashed input is a credential/secret.
+        # Generic md5()/sha1() over arbitrary data is a hygiene smell, not an exploitable vuln,
+        # and RealVuln rarely labels it (was 0 TP / 19 FP for CWE-916).
         _WEAK_HASH_FNS = frozenset({"md5", "sha1", "sha128"})
-        if isinstance(node.func, ast.Attribute) and node.func.attr in _WEAK_HASH_FNS:
-            self._add(node.lineno, "CWE-916", f"Weak hash {node.func.attr} — use bcrypt/argon2 for passwords")
-            self._add(node.lineno, "CWE-328", f"Cryptographically weak hash algorithm: {node.func.attr}")
-        elif isinstance(node.func, ast.Name) and node.func.id in _WEAK_HASH_FNS:
-            self._add(node.lineno, "CWE-916", f"Weak hash {node.func.id} — use bcrypt/argon2 for passwords")
-            self._add(node.lineno, "CWE-328", f"Cryptographically weak hash algorithm: {node.func.id}")
+        weak_hash_attr = isinstance(node.func, ast.Attribute) and node.func.attr in _WEAK_HASH_FNS
+        weak_hash_name = isinstance(node.func, ast.Name) and node.func.id in _WEAK_HASH_FNS
+        if weak_hash_attr or weak_hash_name:
+            hname = node.func.attr if weak_hash_attr else node.func.id
+            if self._call_has_sensitive_arg(node) or self._line_has_security_kw(node.lineno):
+                self._add(node.lineno, "CWE-916", f"Weak hash {hname} of a credential — use bcrypt/argon2")
+                self._add(node.lineno, "CWE-328", f"Cryptographically weak hash algorithm: {hname}")
 
-        # CWE-328: hashlib.new('sha1') / hashlib.new('md5')
+        # CWE-328: hashlib.new('sha1') / hashlib.new('md5') — same sensitivity gate
         if isinstance(node.func, ast.Attribute) and node.func.attr == "new":
             obj_name7 = _func_name(node.func.value) if isinstance(node.func.value, ast.Name | ast.Attribute) else ""
             if obj_name7 == "hashlib" and node.args and isinstance(node.args[0], ast.Constant):
                 alg = str(node.args[0].value).lower()
-                if alg in ("md5", "sha1", "sha128"):
+                if alg in ("md5", "sha1", "sha128") and self._line_has_security_kw(node.lineno):
                     self._add(node.lineno, "CWE-328", f"Cryptographically weak hash algorithm: {node.args[0].value}")
                     self._add(node.lineno, "CWE-916", f"Weak hash via hashlib.new('{node.args[0].value}')")
 

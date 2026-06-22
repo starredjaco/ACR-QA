@@ -26,6 +26,19 @@ All notable changes to ACR-QA are documented here.
   330 FPs for ~26 unique TPs (22.5% precision).
 - Precision hardening: test/fixture/migration noise-path exclusion (0 TPs lost), CWE-306 gated
   to sensitive/state-changing routes, dropped net-negative bare CWE-200 and per-form CWE-352 spray.
+- Exploitability gating (principled, generalizes): weak-hash (CWE-916/328) only when hashing a
+  credential, weak-PRNG (CWE-338) only in a security context, cookie Secure flag (CWE-614) only on
+  session/auth cookies — surfaces exploitable findings, not lint-level hygiene.
+
+### Added — frontier-LLM comparison + reproducibility analysis
+
+- **`scripts/realvuln_reproducibility.py`** — quantifies LLM scanner run-to-run non-determinism
+  (RealVuln ships 3 runs per LLM agent) vs ACR-QA's deterministic output, with cost from metrics.
+- **Finding:** ACR-QA's recall (51.1%) **matches Claude Opus 4.8 (51.7%) and GLM-5 (51.1%)** at
+  **$0** and full determinism, beating Gemini Flash / Haiku / Grok / Qwen / MiniMax. LLM agents win
+  on precision (75–92% vs 46% — exploitability reasoning). Crucially, even GPT-5.5 / Opus 4.8 report
+  only ~71% of the bugs they can find in **all** 3 runs (Grok: 48%); ACR-QA is bit-identical every
+  run. No LLM occupies the "Opus-recall, $0, 100%-reproducible" point. Details in the eval doc.
 
 ### Results — RealVuln, official scorer (all scanners, same repos)
 

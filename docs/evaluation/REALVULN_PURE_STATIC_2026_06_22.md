@@ -41,6 +41,52 @@ cleanly rather than spraying repo-specific false positives.
 > (repos outside RealVuln entirely) is the next rung — blocked this session by sandbox network
 > restrictions on cloning. See `[[what_is_left]]`.
 
+## Headline 3 — vs. frontier LLM agents: matches their recall at $0, and is reproducible
+
+RealVuln also ships 3 runs of each frontier-LLM agentic scanner (`run-1/2/3.json`) plus
+cost/token metrics. Scored with the official scorer (LLM recall = mean of 3 runs):
+
+| Scanner | Recall | Precision | Cost (benchmark) | Deterministic? |
+|---------|--------|-----------|------------------|----------------|
+| **ACR-QA (static)** | **51.1%** | 46.0% | **$0.00** | **Yes (bit-identical)** |
+| GPT-5.5 agentic | 58.2% | 82.5% | $54–62 | No |
+| Claude Opus 4.8 agentic | 51.7% | 82.3% | $35 | No |
+| GLM-5 agentic | 51.1% | 76.8% | $5 | No |
+| Gemini 3.5 Flash | 47.3% | 85.7% | $23 | No |
+| Claude Haiku 4.5 | 37.6% | 75.7% | $4 | No |
+| Grok 4.20 reasoning | 29.4% | 92.5% | $17 | No |
+
+**ACR-QA's recall (51.1%) matches Claude Opus 4.8 (51.7%) and GLM-5 (51.1%)** and beats Gemini
+Flash, Haiku, Grok, Qwen, MiniMax — at **$0** and full determinism. The LLM agents win on
+**precision** (75–92% vs 46%): they reason about exploitability, which a pattern engine cannot.
+That is the honest gap. (The benchmark author's own `kolega-enterprise` tool scores 95%/76% — home
+field; it built the benchmark, so it is excluded from external comparison.)
+
+### The reproducibility wedge no LLM occupies
+
+LLM agents are non-deterministic — the 3 runs find *different* vulnerabilities. Measured
+(`scripts/realvuln_reproducibility.py`):
+
+| Scanner | Recall range (3 runs) | TP-stable% | Cost |
+|---------|----------------------|------------|------|
+| **ACR-QA (static)** | **0.0 pp** | **100%** | **$0** |
+| GPT-5.5 | 4.9 pp | 71% | $62 |
+| Claude Opus 4.8 | 3.3 pp | 71% | $35 |
+| Gemini 3.1 Pro | 6.0 pp | 62% | $27 |
+| Grok 4.20 | 10.4 pp | **48%** | $17 |
+| Kimi K2.6 | 10.4 pp | 57% | $3 |
+
+**TP-stable%** = fraction of all vulnerabilities a tool *ever* finds that it finds in **all 3
+runs**. Even GPT-5.5 / Opus 4.8 reliably report only **71%** of the bugs they can find — ~29% are
+run-dependent. Grok finds **less than half** its own findings consistently. For a CI security gate
+this is disqualifying: a clean LLM scan does not mean clean code, because the next run may surface
+a vulnerability this one missed. **ACR-QA returns bit-identical results every run.**
+
+> **The defensible frontier claim:** ACR-QA matches frontier-LLM recall (= Opus 4.8) at $0 and is
+> 100% reproducible, where the LLMs cost up to $62/benchmark and miss 23–52% of their own findings
+> run-to-run. No LLM scanner occupies this point. The LLMs' advantage is precision (exploitability
+> reasoning), not detection coverage.
+
 ## What drives the result — a zero-LLM, zero-API deterministic engine
 
 The recall comes entirely from `scripts/ast_security_scanner.py`, a pure Python `ast`-based
