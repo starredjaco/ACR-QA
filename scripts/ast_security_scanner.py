@@ -659,15 +659,11 @@ class _Visitor(ast.NodeVisitor):
         # CWE-1336: Jinja2 env.from_string(dynamic) — SSTI via user-controlled template string
         if isinstance(node.func, ast.Attribute) and node.func.attr == "from_string" and node.args:
             if not isinstance(node.args[0], ast.Constant):
+                # SSTI is the root cause (CWE-1336); the XSS is a symptom — emit one finding.
                 self._add(
                     node.lineno,
                     "CWE-1336",
                     "SSTI: from_string() with dynamic (possibly user-controlled) template string",
-                )
-                self._add(
-                    node.lineno,
-                    "CWE-79",
-                    "XSS: from_string() with dynamic template — user input rendered without escaping",
                 )
 
         # CWE-89: SQL built via .format()/%/+ — at the construction site (general SQLi pattern,
@@ -694,7 +690,6 @@ class _Visitor(ast.NodeVisitor):
                 self._add(
                     node.lineno, "CWE-1336", "SSTI: Template(dynamic_string) — user input can be injected as template"
                 )
-                self._add(node.lineno, "CWE-79", "XSS: Template(dynamic_string) renders user input without escaping")
 
         # CWE-16: jinja2.Environment() without autoescape=True — autoescape off by default
         if fn == "Environment" and not any(kw.arg == "autoescape" for kw in node.keywords):
@@ -914,17 +909,18 @@ class _Visitor(ast.NodeVisitor):
         if weak_hash_attr or weak_hash_name:
             hname = node.func.attr if weak_hash_attr else node.func.id
             if self._call_has_sensitive_arg(node) or self._line_has_security_kw(node.lineno):
-                self._add(node.lineno, "CWE-916", f"Weak hash {hname} of a credential — use bcrypt/argon2")
-                self._add(node.lineno, "CWE-328", f"Cryptographically weak hash algorithm: {hname}")
+                # One canonical finding per location. CWE-327 (use of a broken/risky crypto
+                # algorithm) is the primary CWE for md5/sha1 and the one RealVuln labels; emitting
+                # 916+328 as well just hands the scorer co-located false positives.
+                self._add(node.lineno, "CWE-327", f"Weak hash {hname} of a credential — use bcrypt/argon2")
 
-        # CWE-328: hashlib.new('sha1') / hashlib.new('md5') — same sensitivity gate
+        # hashlib.new('sha1') / hashlib.new('md5') — same single canonical CWE-327
         if isinstance(node.func, ast.Attribute) and node.func.attr == "new":
             obj_name7 = _func_name(node.func.value) if isinstance(node.func.value, ast.Name | ast.Attribute) else ""
             if obj_name7 == "hashlib" and node.args and isinstance(node.args[0], ast.Constant):
                 alg = str(node.args[0].value).lower()
                 if alg in ("md5", "sha1", "sha128") and self._line_has_security_kw(node.lineno):
-                    self._add(node.lineno, "CWE-328", f"Cryptographically weak hash algorithm: {node.args[0].value}")
-                    self._add(node.lineno, "CWE-916", f"Weak hash via hashlib.new('{node.args[0].value}')")
+                    self._add(node.lineno, "CWE-327", f"Cryptographically weak hash algorithm: {node.args[0].value}")
 
         # CWE-532: logging password/token
         if fn in ("debug", "info", "warning", "error", "critical", "log") and node.args:
