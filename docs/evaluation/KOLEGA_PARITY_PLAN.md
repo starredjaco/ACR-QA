@@ -6,6 +6,30 @@
 
 ---
 
+## ⭐ Execution roadmap (definitive order — do them in THIS sequence)
+
+Ordered by (competitive advantage × feasibility), respecting dependencies. All numbers below are
+**official-scorer verified** (2026-06-22): full corpus **53.8% R / 47.3% P / F2 52.3%**, held-out
+**51.2% R / 47.2% P**, confirmed-tier **78.6% P**. ACR-QA already beats Opus 4.8 (51.7%) & Gemini
+3.1 (52.6%) on mean recall, tied with Sonnet 4.6 (53.9%); only GPT-5.5 (58.2%) leads.
+
+| # | Phase | Why this slot | Effort | Payoff | Status |
+|---|-------|---------------|--------|--------|--------|
+| ✅ | **Auth/IDOR/CSRF detectors** (was Ph 0/2) | biggest combined-pipeline gap | done | held-out 46→51% | **DONE** |
+| **1** | **Confirmed Tier** (cross-detector agreement) | answers the #1 weakness (47% precision) *today*, trivially, no deps; proven 78.6% | ★ low | high-precision MODE + credibility | proven, ship it |
+| **2** | **Exploit-verification PROVEN tier** (merge Docker detonation + attestation) | the categorical moat — exploit-proven findings no competitor has; turns "competitive" into "better" | ★★★ med-high | ~100%-prec PROVEN tier + PoC + signature | the headline |
+| **3** | **Ensemble expansion** (full Semgrep registry + high-prec Bandit subset) | cheap recall toward 58%+; steal from *all* tools, not just kolega | ★★ low-med | +recall (→ Confirmed tier for noisy packs) | — |
+| **4** | **External held-out corpus** (repos OUTSIDE RealVuln) | the *unfakeable* proof we generalize; gates any public "beats kolega" claim | ★★ low-med (needs repos) | believable generalization number | needs fresh repos |
+| **5** | **JS + cross-file taint** (DOM XSS, Python→template) | recall lever for when the easy ones are exhausted (diminishing) | ★★★ med | +2–4pp recall | when recall stalls |
+| **6** | **Opt-in cheap-LLM precision filter** | the ONLY path to top-F2 (~60%, beats GPT-5.5) — but trades determinism, so LAST + opt-in | ★★ low-med | top-F2 *mode* at <$1 | last; opt-in only |
+| ⏸ | **Precise per-sink taint** (was Ph 1) | net-negative in combined pipeline (Semgrep overlaps); only for a Semgrep-free engine | — | AST-only mode | deprioritised |
+
+**One-line rationale:** lock in the high-precision tier (1) → build the exploit-proven moat (2) → grow
+recall cheaply (3) → make the claim unfakeable (4) → squeeze remaining recall (5) → optionally chase
+top-F2 with an opt-in LLM filter (6). Detailed phase write-ups below (original numbering retained).
+
+---
+
 ## 0. The honest premise (read first)
 
 kolega-enterprise scores **95% recall / 76% precision** on RealVuln — but it is the **benchmark
@@ -285,10 +309,8 @@ ship **frontier-range recall + a deterministic high-precision tier + exploit-pro
 attestation + $0 + reproducibility.** That is categorically better than a 95% benchmark number that
 only holds on the author's own repos.
 
-**Recommended execution order:** Phase 5 (deterministic Confirmed Tier — answers the precision
-critique immediately) → Phase 6 (ensemble recall) → Phase 7 (exploit-proven tier — the headline moat)
-→ Phase 9 (external held-out — the unfakeable proof) → Phase 8 (opt-in LLM-filter, last, only if a
-top-F2 number is wanted). Phase 3 (JS/cross-file) slots in whenever held-out recall stalls.
+**Execution order:** see the ⭐ roadmap table at the top of this doc. In short — Confirmed Tier →
+Exploit-proven tier → Ensemble recall → External held-out → JS/cross-file → opt-in LLM-filter (last).
 
 ---
 
