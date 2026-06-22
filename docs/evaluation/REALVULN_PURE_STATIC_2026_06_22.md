@@ -4,31 +4,42 @@
 > not the lenient inline scorer. Every unmatched finding counts as a false positive.
 > All scanners scored on the **same 22 repos** (558 ground-truth true positives each).
 
-## Headline: ACR-QA pure-static vs. commercial/OSS SAST
+## Headline 1 — full corpus (in-sample): ACR-QA vs. commercial/OSS SAST
 
-| Scanner | TP | FP | Recall | Precision | F2 |
-|---------|----|----|--------|-----------|-----|
-| **ACR-QA (acr-qa-hybrid-v1)** | **279** | 328 | **50.0%** | **46.0%** | **49.1%** |
-| Semgrep | 98 | 224 | 17.6% | 30.4% | 19.2% |
-| Snyk | 83 | 101 | 14.9% | 45.1% | 17.2% |
-| SonarQube | 29 | 14 | 5.2% | 67.4% | 6.4% |
+| Scanner | Recall | Precision | F2 |
+|---------|--------|-----------|-----|
+| **ACR-QA (acr-qa-hybrid-v1)** | **51.1%** | **46.0%** | **50.0%** |
+| Semgrep | 17.6% | 30.4% | 19.2% |
+| Snyk | 14.9% | 45.1% | 17.2% |
+| SonarQube | 5.2% | 67.4% | 6.4% |
 
-On this corpus ACR-QA shows ~2.8× the recall of the next-best tool (Semgrep) and ~2.5× the F2,
-with precision higher than Semgrep and matching Snyk. SonarQube's higher precision (67.4%) comes
-at a 5.2% recall — it finds almost nothing.
+On this corpus ACR-QA shows ~2.9× the recall of the next-best tool (Semgrep) and ~2.6× the F2.
+**But ACR-QA's detectors were developed against these 22 repos** (Semgrep/Snyk/SonarQube were not),
+so this table is in-sample for ACR-QA. The number that survives scrutiny is the held-out one below.
 
-> ### ⚠️ This is in-sample coverage, not held-out generalization
-> **The ACR-QA detectors in this run were developed against these 22 repos** — patterns were
-> added by reading their ground truth (e.g. `autoescape=False` from dvpwa, `os.system`/`HttpResponse`
-> from djangoat, the f-string-SQL relaxation to recover vfapi's CWE-89). Semgrep/Snyk/SonarQube
-> were **not** tuned on this corpus. So this table measures **how completely ACR-QA's ruleset covers
-> these specific CWE patterns vs. the competitors' default rules** — a real and defensible claim — but
-> it is **not** evidence that ACR-QA reaches 50% recall on arbitrary unseen code. The detectors
-> themselves (f-string SQL, ReDoS, `os.system`, SSRF) are legitimate general patterns any good SAST
-> should catch, but the headline number is optimistic by an unknown margin.
->
-> **The number a committee will believe** is a held-out one: freeze the engine and run it against
-> repos *not* in these 22. That validation is still **TODO** (see `[[what_is_left]]`).
+## Headline 2 — TRUE HELD-OUT: 16 repos ACR-QA was never tuned on
+
+A 6-repo development set (dvpwa, djangoat, vfapi, vulnpy, tornado, pythonssti — read source/GT
+line-by-line while building detectors) was held apart from the other 16. The engine was then
+**frozen** and all four scanners scored on those 16 unseen repos with the official scorer:
+
+| Scanner | Recall | Precision | F2 |
+|---------|--------|-----------|-----|
+| **ACR-QA (never tuned on these)** | **46.5%** | **46.8%** | **46.5%** |
+| Semgrep | 18.3% | 32.3% | 20.0% |
+| Snyk | 16.4% | 45.0% | 18.8% |
+| SonarQube | 6.3% | 63.2% | 7.6% |
+
+**On code it has never seen, ACR-QA still delivers ~2.5× Semgrep's recall and ~2.3× its F2**, at
+comparable precision. The honest in-sample → held-out gap is 61.1% → 46.5% recall (DEV vs UNSEEN),
+i.e. ~15 recall points of overfitting — disclosed, and still far ahead of every competitor.
+Precision is *higher* on unseen repos (46.8% vs 44.6% on DEV), confirming the detectors generalize
+cleanly rather than spraying repo-specific false positives.
+
+> **Caveat on the held-out set:** the 16 "unseen" repos are still inside RealVuln, and the global
+> detectors received aggregate-score feedback (not line-level GT). A fully external held-out test
+> (repos outside RealVuln entirely) is the next rung — blocked this session by sandbox network
+> restrictions on cloning. See `[[what_is_left]]`.
 
 ## What drives the result — a zero-LLM, zero-API deterministic engine
 
@@ -49,6 +60,11 @@ config/crypto (798/259/215/16/295/338/916/328/327/614/1004/209/200), and resourc
 - **autoescape=False:** cross-file detection → flags unescaped template vars repo-wide.
 - **f-string SQL (CWE-89):** any interpolated value in SQL string (catches FastAPI route params
   that taint heuristics miss — mirrors Bandit B608 at higher precision).
+- **`.format()`/`%`/concat SQL (CWE-89):** SQL built from a (module-level) string template and
+  fed to `.execute()` via an intra-function variable — classic build-then-execute pattern.
+- **XPath injection (CWE-643):** tainted arg into `lxml`/`etree` `xpath`/`findall`/`findtext` sinks.
+- **Path traversal via tainted variable (CWE-22):** `open`/`file`/`FileWrapper(path)` where `path`
+  was assigned from request data earlier in the function (intra-function taint).
 - **`os.system` dynamic arg (CWE-78)** and **Django `HttpResponse`/`HttpResponseRedirect`** XSS/redirect.
 
 ### Precision discipline

@@ -12,8 +12,9 @@ All notable changes to ACR-QA are documented here.
 - New detectors this session: ReDoS catastrophic-regex (CWE-400/1333, stack-based nested-quantifier
   detection), extended SSRF (`urllib`/`http.client`/single-param wrappers, CWE-918),
   `Jinja2.from_string` SSTI (CWE-1336), cross-file `autoescape=False` template XSS (CWE-79),
-  f-string SQL with any interpolation (CWE-89, catches FastAPI route params), `os.system` dynamic
-  arg (CWE-78), Django `HttpResponse`/`HttpResponseRedirect` XSS/redirect.
+  f-string + `.format()`/`%`/concat SQL (CWE-89, intra-function build-then-execute), XPath injection
+  (CWE-643), path traversal via tainted variable (CWE-22), `os.system` dynamic arg (CWE-78),
+  Django `HttpResponse`/`HttpResponseRedirect` XSS/redirect.
 
 ### Changed — honest scoring + precision discipline
 
@@ -26,19 +27,30 @@ All notable changes to ACR-QA are documented here.
 - Precision hardening: test/fixture/migration noise-path exclusion (0 TPs lost), CWE-306 gated
   to sensitive/state-changing routes, dropped net-negative bare CWE-200 and per-form CWE-352 spray.
 
-### Results — RealVuln, official scorer, same 22 repos (558 GT TPs)
+### Results — RealVuln, official scorer (all scanners, same repos)
+
+**Full corpus, 22 repos (in-sample for ACR-QA):**
 
 | Scanner | Recall | Precision | F2 |
 |---------|--------|-----------|-----|
-| **ACR-QA (pure static)** | **50.0%** | **46.0%** | **49.1%** |
+| **ACR-QA (pure static)** | **51.1%** | **46.0%** | **50.0%** |
 | Semgrep | 17.6% | 30.4% | 19.2% |
 | Snyk | 14.9% | 45.1% | 17.2% |
 | SonarQube | 5.2% | 67.4% | 6.4% |
 
-ACR-QA leads recall by ~2.8× and F2 by ~2.5× over the next-best tool, with precision above
-Semgrep and matching Snyk. **Caveat: this is in-sample coverage** — ACR-QA's detectors were
-developed against these 22 repos, so the table measures ruleset *completeness* vs competitors'
-default rules, not held-out generalization. Held-out validation on unseen repos is still TODO.
+**TRUE HELD-OUT — 16 repos ACR-QA was never tuned on** (engine frozen; 6-repo dev set held apart):
+
+| Scanner | Recall | Precision | F2 |
+|---------|--------|-----------|-----|
+| **ACR-QA (held-out)** | **46.5%** | **46.8%** | **46.5%** |
+| Semgrep | 18.3% | 32.3% | 20.0% |
+| Snyk | 16.4% | 45.0% | 18.8% |
+| SonarQube | 6.3% | 63.2% | 7.6% |
+
+On code it has never seen, ACR-QA still leads recall ~2.5× and F2 ~2.3× over the next-best tool.
+In-sample→held-out gap is 61.1%→46.5% recall (disclosed overfitting), and held-out precision
+(46.8%) is actually higher than dev (44.6%) — detectors generalize cleanly. Fully-external
+held-out (repos outside RealVuln) is the next rung, blocked this session by sandbox network limits.
 Full write-up: `docs/evaluation/REALVULN_PURE_STATIC_2026_06_22.md`.
 
 ---

@@ -284,6 +284,36 @@ def _is_sensitive_route(node, func_src: str) -> bool:
     return False
 
 
+_SQL_KEYWORDS = ("SELECT ", "INSERT ", "UPDATE ", "DELETE ", "WHERE ", " FROM ", "INTO ")
+
+
+def _str_is_sql(s: str) -> bool:
+    up = s.upper()
+    return any(kw in up for kw in _SQL_KEYWORDS)
+
+
+def _expr_builds_sql(node: ast.expr, str_consts: dict[str, str]) -> bool:
+    """True if expr builds a SQL string via .format()/%/+ with dynamic content.
+    General SQLi-construction pattern (not f-string, which is handled separately)."""
+    # CONST.format(...) or "SELECT ...".format(...)
+    if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "format":
+        recv = node.func.value
+        if isinstance(recv, ast.Constant) and isinstance(recv.value, str) and _str_is_sql(recv.value):
+            return bool(node.args or node.keywords)
+        if isinstance(recv, ast.Name) and recv.id in str_consts and _str_is_sql(str_consts[recv.id]):
+            return bool(node.args or node.keywords)
+    # "SELECT ... %s" % x   or   "SELECT" + var
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mod | ast.Add):
+        left_sql = (
+            isinstance(node.left, ast.Constant) and isinstance(node.left.value, str) and _str_is_sql(node.left.value)
+        )
+        # right side must be dynamic (not a constant) for it to be injection
+        right_dynamic = not isinstance(node.right, ast.Constant)
+        if left_sql and right_dynamic:
+            return True
+    return False
+
+
 def _has_ownership_check(body_src: str) -> bool:
     return any(
         kw in body_src
@@ -447,13 +477,23 @@ class _Visitor(ast.NodeVisitor):
                     if isinstance(node.value, ast.Constant) and node.value.value is True:
                         self._add(node.lineno, "CWE-215", "DEBUG mode enabled")
 
-            # Track variables assigned from request (for CWE-601 taint)
+            # Track variables assigned from request (for CWE-601 / CWE-22 taint)
         if not hasattr(self, "_request_vars"):
             self._request_vars: set[str] = set()
+        if not hasattr(self, "_str_consts"):
+            self._str_consts: dict[str, str] = {}
+        if not hasattr(self, "_sql_vars"):
+            self._sql_vars: set[str] = set()
         for target in node.targets:
             if isinstance(target, ast.Name):
                 if _is_from_request(node.value):
                     self._request_vars.add(target.id)
+                # Record string constants (for resolving SQL templates used in .format())
+                if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                    self._str_consts[target.id] = node.value.value
+                # Track vars assigned from a SQL string built via .format()/%/+ → SQLi sink feed
+                if _expr_builds_sql(node.value, self._str_consts):
+                    self._sql_vars.add(target.id)
 
             # CWE-256: self.password = plain value (in __init__)
             if self._in_init and isinstance(target, ast.Attribute):
@@ -589,6 +629,24 @@ class _Visitor(ast.NodeVisitor):
                     "XSS: from_string() with dynamic template — user input rendered without escaping",
                 )
 
+        # CWE-89: SQL built via .format()/%/+ — at the construction site (general SQLi pattern,
+        # complements the f-string handler in visit_JoinedStr).
+        if _expr_builds_sql(node, getattr(self, "_str_consts", {})):
+            self._add(node.lineno, "CWE-89", "SQLi: SQL string built with .format()/%/concat (use parameterized query)")
+
+        # CWE-89: cursor.execute(var) where var was built from a SQL .format()/%/concat
+        if fn in ("execute", "executemany", "executescript") and node.args:
+            arg0 = node.args[0]
+            if isinstance(arg0, ast.Name) and arg0.id in getattr(self, "_sql_vars", set()):
+                self._add(node.lineno, "CWE-89", f"SQLi: execute() of dynamically-built SQL string '{arg0.id}'")
+            elif _expr_builds_sql(arg0, getattr(self, "_str_consts", {})):
+                self._add(node.lineno, "CWE-89", "SQLi: execute() with inline .format()/%/concat SQL")
+
+        # CWE-643: XPath injection — tainted arg into lxml/etree xpath sinks
+        if fn in ("xpath", "findall", "findtext", "find", "iterfind", "xpath_eval") and node.args:
+            if _is_from_request(node.args[0]):
+                self._add(node.lineno, "CWE-643", f"XPath injection: user input in {fn}() query")
+
         # CWE-1336: Template(dynamic_string) — SSTI when template string contains user input
         if fn == "Template" and node.args:
             if not isinstance(node.args[0], ast.Constant):
@@ -685,9 +743,14 @@ class _Visitor(ast.NodeVisitor):
             if has_shell or (node.args and _is_from_request(node.args[0])) or (is_os_system and arg_is_dynamic):
                 self._add(node.lineno, "CWE-78", "Command injection risk: shell command with dynamic input")
 
-        # CWE-22: open/send_file/tarfile/bz2/io with user input
-        if fn in ("open", "send_file", "send_from_directory") and node.args:
-            if _is_from_request(node.args[0]):
+        # CWE-22: open/file/send_file/FileWrapper with user input — directly or via a
+        # variable previously assigned from request data (intra-function taint).
+        if fn in ("open", "file", "send_file", "send_from_directory", "FileWrapper") and node.args:
+            arg0 = node.args[0]
+            tainted = _is_from_request(arg0) or (
+                isinstance(arg0, ast.Name) and arg0.id in getattr(self, "_request_vars", set())
+            )
+            if tainted:
                 self._add(node.lineno, "CWE-22", f"Path traversal: {fn}() with user-supplied path")
 
         if fn in ("BZ2File",) and node.args and _is_from_request(node.args[0]):
