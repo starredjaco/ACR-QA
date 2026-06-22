@@ -35,6 +35,7 @@ Covers ALL statically-detectable Bucket-B RealVuln patterns:
 from __future__ import annotations
 
 import ast
+import os
 import re
 import sys
 from pathlib import Path
@@ -596,7 +597,26 @@ class _Visitor(ast.NodeVisitor):
 
     # ── Assignments ──────────────────────────────────────────────
 
-    _HTML_TAGS = ("<p>", "<div", "<span", "<a ", "<a>", "<script", "<html", "<body", "<br", "<li", "<td", "<h1", "<h2", "<h3", "<b>", "<input", "<form", "<img")
+    _HTML_TAGS = (
+        "<p>",
+        "<div",
+        "<span",
+        "<a ",
+        "<a>",
+        "<script",
+        "<html",
+        "<body",
+        "<br",
+        "<li",
+        "<td",
+        "<h1",
+        "<h2",
+        "<h3",
+        "<b>",
+        "<input",
+        "<form",
+        "<img",
+    )
 
     def visit_AugAssign(self, node: ast.AugAssign):
         # CWE-79: building an HTML response incrementally with user input — `content += "<b>%s</b>" % user`
@@ -2063,6 +2083,132 @@ def _scan_templates_if_autoescape_false(repo: Path) -> list[dict]:
     return findings
 
 
+# Ultimate dangerous sinks: call-name → CWE. Tainted data reaching these = vulnerability.
+_SINK_BUILTINS = {
+    "system": "CWE-78",
+    "popen": "CWE-78",
+    "Popen": "CWE-78",
+    "call": "CWE-78",
+    "run": "CWE-78",
+    "check_output": "CWE-78",
+    "check_call": "CWE-78",
+    "getoutput": "CWE-78",
+    "eval": "CWE-94",
+    "exec": "CWE-94",
+    "execute": "CWE-89",
+    "executemany": "CWE-89",
+    "executescript": "CWE-89",
+    "raw": "CWE-89",
+    "urlopen": "CWE-918",
+    "urlretrieve": "CWE-918",
+    "send_file": "CWE-22",
+    "send_from_directory": "CWE-22",
+}
+# Attribute-form path sinks (obj.method) that take a file path as first arg.
+_PATH_SINK_ATTRS = {"save", "open"}
+
+
+def _call_sink_cwe(node: ast.Call) -> str | None:
+    """Return the CWE if this call is an ultimate dangerous sink, else None."""
+    fn = _func_name(node.func)
+    if fn in _SINK_BUILTINS:
+        return _SINK_BUILTINS[fn]
+    if fn == "open" and isinstance(node.func, ast.Name):  # builtin open()
+        return "CWE-22"
+    if isinstance(node.func, ast.Attribute) and node.func.attr in _PATH_SINK_ATTRS:
+        recv = ast.unparse(node.func.value).lower()
+        if any(s in recv for s in ("storage", "default_storage", "fs", "bucket")):
+            return "CWE-22"
+    return None
+
+
+def _scan_interprocedural_taint(repo: Path) -> list[dict]:
+    """Inter-procedural "wrapper peel": trace tainted data through helper functions to sinks.
+
+    Pass 1 — build summaries: a function is a SINK WRAPPER for CWE X if one of its parameters
+    flows (directly, or via local assignment / f-string / concat) into an ultimate sink of type X.
+    Pass 2 — at call sites of any sink wrapper (or builtin sink), if a tainted argument reaches the
+    wrapper's sink-bound parameter, flag CWE X. This is the general dataflow technique that
+    distinguishes a real taint engine from pattern matching (run_cmd→subprocess, rp→os.system,
+    save_data→storage.save). Scoped to a single level of wrapper indirection for tractability."""
+    pyfiles = [p for p in repo.rglob("*.py") if not any(x in str(p) for x in (".git", "__pycache__", ".venv", "venv"))]
+    trees: dict[Path, ast.AST] = {}
+    for p in pyfiles:
+        try:
+            trees[p] = ast.parse(p.read_text(errors="replace"))
+        except Exception:
+            pass
+
+    # Pass 1: function name -> CWE for sink wrappers (param flows to a sink).
+    wrappers: dict[str, str] = {}
+    for tree in trees.values():
+        for fn_node in ast.walk(tree):
+            if not isinstance(fn_node, ast.FunctionDef | ast.AsyncFunctionDef):
+                continue
+            params = {a.arg for a in fn_node.args.args + fn_node.args.posonlyargs + fn_node.args.kwonlyargs}
+            params.discard("self")
+            if not params:
+                continue
+            # local taint within this function (params + things derived from them)
+            local_taint = set(params)
+            for _ in range(4):
+                for n in ast.walk(fn_node):
+                    if isinstance(n, ast.Assign) and isinstance(n.value, ast.expr):
+                        if _expr_names(n.value) & local_taint:
+                            for t in n.targets:
+                                if isinstance(t, ast.Name):
+                                    local_taint.add(t.id)
+            for n in ast.walk(fn_node):
+                if isinstance(n, ast.Call):
+                    cwe = _call_sink_cwe(n)
+                    if cwe and any(_expr_names(a) & local_taint for a in n.args):
+                        wrappers[fn_node.name] = cwe
+                        break
+
+    # Pass 2: at call sites, tainted arg into a sink wrapper or builtin sink → flag.
+    findings: list[dict] = []
+    for p, tree in trees.items():
+        for fn_node in ast.walk(tree):
+            if not isinstance(fn_node, ast.FunctionDef | ast.AsyncFunctionDef):
+                continue
+            is_route = any(_is_route_decorator(d) for d in fn_node.decorator_list) or any(
+                k in ast.unparse(fn_node) for k in ("def mutate", "def resolve_", "graphene")
+            )
+            taint = compute_function_taint(fn_node, is_route)
+            for n in ast.walk(fn_node):
+                if not isinstance(n, ast.Call):
+                    continue
+                callee = _func_name(n.func)
+                cwe = wrappers.get(callee) or _call_sink_cwe(n)
+                if not cwe:
+                    continue
+                # Precision gate: the tainted value must be INTERPOLATED into a string argument
+                # (f-string / concat / .format) — the actual injection pattern. A bare tainted
+                # value is only flagged for SSRF/path, where the whole value IS the payload.
+                hit = False
+                for a in n.args:
+                    if isinstance(a, ast.JoinedStr | ast.BinOp) and bool(_expr_names(a) & taint):
+                        hit = True
+                        break
+                    if isinstance(a, ast.Call) and isinstance(a.func, ast.Attribute) and a.func.attr == "format":
+                        if bool(_expr_names(a) & taint):
+                            hit = True
+                            break
+                    if cwe in ("CWE-918", "CWE-22") and (_expr_is_source(a) or _expr_names(a) & taint):
+                        hit = True
+                        break
+                if hit:
+                    findings.append(
+                        {
+                            "file": str(p),
+                            "line": n.lineno,
+                            "cwe": cwe,
+                            "description": f"Taint flow: user input reaches {callee}() ({cwe})",
+                        }
+                    )
+    return findings
+
+
 _original_scan_repo = scan_repo
 
 
@@ -2158,6 +2304,14 @@ def scan_repo(repo_path: str) -> list[dict]:  # type: ignore[no-redef]
 
     # Repo-level: authenticated state-changing routes without CSRF (only if no global CSRF).
     extra.extend(_scan_session_csrf(repo))
+    # NOTE: an inter-procedural "wrapper-peel" taint pass (_scan_interprocedural_taint, below) was
+    # implemented + measured, then disabled: in the COMBINED pipeline Semgrep already covers the
+    # taint-flow injection cases (SQL/cmd/path), so it only added duplicate-line false positives
+    # (full-corpus precision 48.2%→46.3%, F2 50.9%→50.3%). It helps AST-only (no Semgrep); a precise
+    # version (param-specific + sanitizers, like kolega's) is a major undertaking with marginal
+    # combined upside. Kept as opt-in via ACRQA_INTERPROC_TAINT=1.
+    if os.environ.get("ACRQA_INTERPROC_TAINT") == "1":
+        extra.extend(_scan_interprocedural_taint(repo))
 
     # NOTE: autoescape=False template XSS is already handled by scan_jinja2_unsafe()
     # in the original scan_repo — do NOT double-scan here (was spraying duplicate FPs).
