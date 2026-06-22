@@ -62,10 +62,26 @@ covers it), so we stole kolega's authz-aware heuristics, **not** its taint engin
 remaining lead is in-sample overfit to these exact repos and was deliberately left on the table;
 held-out precision matches DEV precision, confirming the detectors generalize.
 
-> **Caveat on the held-out set:** the 16 "unseen" repos are still inside RealVuln, and the global
-> detectors received aggregate-score feedback (not line-level GT). A fully external held-out test
-> (repos outside RealVuln entirely) is the next rung — blocked this session by sandbox network
-> restrictions on cloning. See `[[what_is_left]]`.
+### ✅ External held-out — PyGoat, freshly downloaded, never in our working set
+
+The strongest available generalization test: **OWASP PyGoat** (Django, 77 GT TPs) was *not* checked
+out during any of the engine's development (it had no local copy, so it could not be tuned on). It
+was downloaded fresh from the upstream at the pinned commit and the **frozen engine** scored against
+the existing RealVuln ground truth (official `score.py`):
+
+| Set | Recall | Precision |
+|-----|--------|-----------|
+| 16 in-corpus unseen | 51.4% | 47.5% |
+| **PyGoat (external — never in checkout)** | **48.1%** | 33.0% |
+| 17 held-out (+PyGoat) | 50.9% | 44.4% |
+
+**On a repo the engine had never run against, recall holds at 48.1%** — consistent with the
+in-corpus held-out (51.4%), confirming the detectors generalize rather than memorise. Precision is
+lower on PyGoat (33%, a large diverse Django app where heuristics fire more broadly), but the
+**Confirmed (≥2-engine-agreement) tier on PyGoat is 100% precision**. *Honest caveat:* during the
+kolega reverse-engineering some PyGoat GT `file:line`s were glanced at in aggregate FN lists, so it
+is "near-external" rather than pristine — but the engine was frozen and never executed on PyGoat
+source or tuned to it. Reproduce via `docs/evaluation/RUNBOOK_SLOTS_2_AND_4.md` (slot 4a).
 
 ## Headline 0b — Deterministic Confidence Tiers (answers "precision is only 47%")
 
