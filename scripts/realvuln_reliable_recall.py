@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
-"""Reliable-recall leaderboard: what a scanner finds in EVERY run, not its lucky/average run.
+"""Consistency analysis: LLM scanner run-to-run recall variance vs ACR-QA's deterministic output.
 
-RealVuln's primary metric is recall-weighted (F2/F3) because "missing a vulnerability is far
-worse than a false alarm". For a non-deterministic LLM agent, a vuln found in only 1 of 3 runs
-is — in production, where you scan once — effectively missed most of the time. The benchmark
-ships 3 runs per LLM precisely because they are non-deterministic.
+RealVuln ships 3 runs per LLM agent because LLMs are non-deterministic. This script reports, per
+scanner: mean recall, the stable/intersection recall (found in ALL 3 runs), the per-run min/max,
+and cost — so the recall *distribution* is visible, not just an average.
 
-So the honest recall for a CI security gate is the **reliable recall**: vulnerabilities found in
-ALL runs. This script computes, per scanner:
+IMPORTANT — read before quoting any number: the honest "scan once" recall is a SINGLE run's recall
+(see the min/mean/max columns in main()'s output), NOT the 3-run intersection. The intersection is
+mechanically <= any single run, so comparing ACR-QA's single deterministic run to an LLM's
+intersection unfairly handicaps the LLM. Against each LLM's *worst single run*, ACR-QA wins only
+~5/10 — the top tier (GPT-5.5, Opus 4.6/4.8, Kimi) out-recalls it even on their unluckiest run.
+ACR-QA's edge is CONSISTENCY (same finding set every run → auditability, scan-diffing, gate
+stability) at $0 — NOT a higher bug count. Do not frame the intersection as "reliable recall #1".
 
-  - mean recall  (the average run — best case if you scan once and get lucky)
-  - reliable recall (TPs found in ALL 3 runs — what you can actually depend on)
-  - reliable F2  (F2 of the finding set that is stable across all 3 runs)
-  - cost (USD)
-
-ACR-QA's static engine is deterministic: one run == every run, so reliable recall == recall.
+ACR-QA's static engine is deterministic: one run == every run.
 
 Usage (from repo root):
   .venv/bin/python scripts/realvuln_reliable_recall.py
@@ -136,14 +135,16 @@ def main() -> None:
         print(f"{sc:<30}{mr:>7.1%}{rr:>10.1%}{rf2:>11.1%}{c:>8.2f}{star}")
 
     print()
-    print("RELIABLE-R = recall counting only vulns found in ALL 3 runs (trustworthy in a CI gate).")
-    print("ACR-QA is deterministic: one run == every run. LLM mean-R is the lucky-single-run number.")
+    print("RELIABLE-R = vulns found in ALL 3 runs (the 3-run intersection — a CONSISTENCY measure,")
+    print("  NOT 'scan-once recall': the intersection is <= any single run. See the PAIRWISE min/max")
+    print("  block below for the honest single-run distribution.")
 
-    # Robust pairwise: each LLM on its OWN full shared repo set (not just the 10-way overlap).
+    # Robust pairwise: each LLM on its OWN full shared repo set. Show the HONEST single-run
+    # distribution (min/mean/max) — the min is the "scan once, unlucky" number that decides it.
     print()
-    print("PAIRWISE — ACR-QA reliable recall vs each LLM's reliable recall, on their shared repos:")
-    print(f"{'LLM':<30}{'repos':>6}{'ACR-QA R':>10}{'LLM mean-R':>11}{'LLM reliable-R':>15}{'winner':>9}")
-    wins = 0
+    print("PAIRWISE — ACR-QA recall vs each LLM's SINGLE-RUN recall distribution, on shared repos:")
+    print(f"{'LLM':<30}{'repos':>6}{'ACR-QA':>8}{'LLM-min':>8}{'LLM-mean':>9}{'LLM-max':>8}{'beats worst?':>13}")
+    beats_worst = 0
     for sc in LLMS:
         repos = [r for r in allr if len(runs(r, sc)) >= 3 and runs(r, ACR)]
         if not repos:
@@ -156,12 +157,17 @@ def main() -> None:
                     a_tp.add((repo, r.ground_truth_id))
         a_r = len(a_tp) / tg
         tps, _ = per_run_sets(sc, repos)
-        mean_r = sum(len(s) for s in tps) / 3 / tg
-        rel_r = len(set(tps[0]) & set(tps[1]) & set(tps[2])) / tg
-        winner = "ACR-QA" if a_r > rel_r else sc.split("-agentic")[0]
-        wins += a_r > rel_r
-        print(f"{sc:<30}{len(repos):>6}{a_r:>9.1%}{mean_r:>10.1%}{rel_r:>14.1%}{winner:>9}")
-    print(f"\nACR-QA's deterministic recall beats {wins}/{len(LLMS)} LLMs on reliable (all-runs) recall.")
+        run_recalls = [len(s) / tg for s in tps]
+        win = a_r > min(run_recalls)
+        beats_worst += win
+        print(
+            f"{sc:<30}{len(repos):>6}{a_r:>7.1%}{min(run_recalls):>8.1%}"
+            f"{sum(run_recalls) / 3:>9.1%}{max(run_recalls):>8.1%}{('yes' if win else 'no'):>13}"
+        )
+    print(
+        f"\nACR-QA beats the WORST single run of {beats_worst}/{len(LLMS)} LLMs. "
+        "The top tier out-recalls it per scan; ACR-QA's edge is determinism + $0, not bug count."
+    )
 
 
 if __name__ == "__main__":

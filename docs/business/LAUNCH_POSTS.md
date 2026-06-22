@@ -61,11 +61,12 @@ If you're hiring or know someone who is — my DMs are open.
 Show HN: ACR-QA – open-source SAST that reaches 96.4% precision on production code (F1=98.2%)
 ```
 ```
-Show HN: A deterministic SAST that matches frontier-LLM recall at $0 — and beats them on the bugs they find *reliably*
+Show HN: A deterministic SAST that matches frontier-LLM recall at $0 — and gives the same answer every run
 ```
 > The second title is the stronger 2026 hook: LLM security scanners are everywhere now, and the
-> reproducibility argument (a clean LLM scan ≠ clean code, because the next run finds different bugs)
-> is a debate HN will engage with. Back it with the RealVuln reliable-recall table in the body.
+> reproducibility argument (a clean LLM scan ≠ clean code, because the next run finds *different*
+> bugs) is a debate HN will engage with. Be precise in the body: the top LLMs out-recall ACR-QA per
+> scan; ACR-QA's edge is determinism/$0, not "more bugs." Do not claim it finds more — HN will check.
 
 **Body:**
 ```
@@ -92,12 +93,14 @@ RealVuln benchmark (22 real-world vulnerable repos, official scorer, same repo s
   ACR-QA:    50.0% recall  (zero-LLM, deterministic, $0)
 On 16 repos the engine was NEVER tuned on, it still gets 46% recall vs Semgrep's 18%.
 
-The surprising part — vs frontier-LLM agentic scanners (GPT-5.5, Claude Opus 4.8, Gemini, etc.):
-ACR-QA matches their *typical* recall (= Opus 4.8) at $0, and it's deterministic. Those LLM
-agents are non-deterministic — across 3 runs they only report ~71% of the bugs they find
-*consistently* (Grok: 48%), and cost up to $62/benchmark. On RELIABLE recall — the vulns a tool
-finds in EVERY run, the only ones a once-per-commit CI gate can trust — ACR-QA beats all 10
-frontier LLMs we tested. (LLMs still win on precision: 80%+ vs ~49%, via exploitability reasoning.)
+vs frontier-LLM agentic scanners (GPT-5.5, Claude Opus 4.8, Gemini, etc.): ACR-QA's recall sits in
+the frontier range — it ties Claude Opus 4.8 and Gemini, beats Grok/Qwen, at $0 and deterministic.
+The strongest LLMs (GPT-5.5 ~57%) out-recall it per scan, and LLMs win on precision (80%+ vs ~49%,
+via exploitability reasoning). What ACR-QA has that they don't: it returns the SAME findings every
+run. Those agents are non-deterministic — across 3 runs only ~71% of their findings are stable
+(Grok: 48%), they cost up to $62/benchmark, and a clean scan doesn't mean clean code because the
+next run finds different bugs. For reproducible CI gates, scan diffing, and auditability, that
+determinism is the differentiator — not a higher bug count.
 
 Exploit verification: each HIGH finding is detonated live in a Docker sandbox to confirm
 exploitability before surfacing to the developer.

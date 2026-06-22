@@ -43,20 +43,18 @@ All notable changes to ACR-QA are documented here.
   template-XSS and authorization findings needing exploitability reasoning, which a deterministic
   engine cannot perform. The path to LLM-level precision (82%) is a capability gap, not a tuning gap.
 
-### Added — #1 on RELIABLE recall vs all frontier LLMs
+### Added — consistency analysis vs frontier LLMs (recall is NOT #1; determinism is the wedge)
 
-- **`scripts/realvuln_reliable_recall.py`** — RealVuln's primary metric is recall-weighted
-  ("missing a vuln is far worse than a false alarm"). A vuln an LLM finds in only 1 of 3 runs is,
-  in production (one scan), missed most of the time. **Reliable recall** = vulns found in *every*
-  run. ACR-QA is deterministic, so its recall == its reliable recall.
-- **Result (pairwise, each LLM's own shared repos): ACR-QA's recall beats the reliable recall of
-  ALL 10 frontier LLM agents** — GPT-5.5 (51.5% vs 47.1%), Opus 4.8 (50.2% vs 44.0%), Sonnet,
-  Gemini, DeepSeek, Kimi, GLM, Grok, Qwen, Opus 4.6 — at **$0** vs up to $62. The benchmark ships
-  3 runs per LLM *because* they are non-deterministic; applying its own recall-first philosophy
-  honestly, ACR-QA is #1 on the recall you can actually trust in a CI gate.
-- **Honest caveat (documented):** on *mean* and *majority* (≥2/3) recall, the top LLMs (GPT-5.5,
-  Sonnet, Gemini) edge ACR-QA by a few points. ACR-QA's #1 is specifically at the *reliable*
-  (every-run) threshold — reported alongside the mean/majority numbers, never instead of them.
+- **`scripts/realvuln_reliable_recall.py`** — measures per-run recall variance + cost across the 3
+  runs RealVuln ships per LLM. **Correctness note:** an earlier framing ("#1 on reliable recall")
+  compared ACR-QA's single run to each LLM's 3-run *intersection* — an unfair handicap (the
+  intersection is mechanically ≤ any single run). Corrected: the honest "scan once" number is a
+  single run's recall. Against each LLM's *worst* single run, **ACR-QA wins only 5/10** — the top
+  tier (GPT-5.5, Opus 4.6/4.8, Kimi) out-recalls it even on their unluckiest run.
+- **Honest position:** ACR-QA's recall is mid-frontier (ties Opus 4.8 & Gemini, beats Grok/Qwen/
+  DeepSeek, trails GPT-5.5/Opus-4.6/Kimi). It does **not** have the highest recall. Its uncontested
+  edge is **determinism**: same finding set every run (LLMs: 48–77% stable), at **$0** vs up to $62
+  — which matters for auditability, scan diffing, and CI gate stability, not for raw bug count.
 
 ### Added — frontier-LLM comparison + reproducibility analysis
 

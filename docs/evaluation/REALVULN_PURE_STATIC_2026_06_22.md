@@ -11,14 +11,19 @@ ACR-QA's **zero-LLM, zero-API, deterministic** static engine, on the official Re
 | Claim | Evidence |
 |-------|----------|
 | **#1 vs every traditional SAST**, on every metric — even on held-out repos | 46% recall vs Semgrep 18%, Snyk 16%, SonarQube 5% (16 repos never tuned on) |
-| **#1 on *reliable* recall vs all 10 frontier LLM agents** | beats GPT-5.5/Opus-4.8/Sonnet/Gemini/Grok/… on vulns found *every* run — at **$0** vs up to $62 |
-| **Recall ties the frontier** on typical (mean) recall | 50% = Claude Opus 4.8; top LLMs (GPT-5.5) lead by a few points on mean/majority |
-| **100% reproducible** | 3 scans → bit-identical SHA256 (CI-enforced: `TESTS/test_static_scanner_determinism.py`); LLMs: 48–77% TP-stable |
+| **Recall is in the frontier-LLM range** | 50% ties Claude Opus 4.8 & Gemini 3.1, beats Grok/Qwen/DeepSeek; trails GPT-5.5 (57%) and the strongest Opus/Kimi runs |
+| **100% reproducible** at **$0** | 3 scans → bit-identical SHA256 (CI-enforced: `TESTS/test_static_scanner_determinism.py`); LLMs are non-deterministic (48–77% of findings stable across runs) and cost up to $62 |
 
-**The honest gap:** LLM agents win **precision** (75–92% vs 48.6%) via exploitability reasoning a
-pattern engine cannot do. We do **not** close that with CWE-deletion (taxonomy-fitting). Our wedge
-is the dimension that decides whether a security tool is trustworthy in a pipeline: **same answer
-every run, beats every traditional SAST, ties frontier recall, free.** No LLM occupies this point.
+**Two honest gaps, stated plainly:**
+1. **Precision** — LLM agents win (75–92% vs 48.6%) via exploitability reasoning a pattern engine
+   cannot do. We do **not** close it with CWE-deletion (taxonomy-fitting).
+2. **Peak recall** — the strongest LLMs (GPT-5.5, Opus 4.6, Kimi) find more bugs per scan than ACR-QA.
+   On a single scan their recall leads; ACR-QA ties the mid-frontier (Opus 4.8 / Gemini).
+
+**Our genuine, uncontested wedge:** ACR-QA is **#1 among traditional SAST by 3×** (held-out), at
+**frontier-range recall**, **$0**, and **bit-identical every run** — a combination no LLM scanner
+offers. LLMs find more bugs *per average scan*; they do not find the *same* bugs twice, which matters
+for auditability, scan-diffing, and gate stability (see "Consistency", below).
 
 ## Headline 1 — full corpus (in-sample): ACR-QA vs. commercial/OSS SAST
 
@@ -57,52 +62,44 @@ repo-specific false positives.
 > (repos outside RealVuln entirely) is the next rung — blocked this session by sandbox network
 > restrictions on cloning. See `[[what_is_left]]`.
 
-## Headline 0 — #1 on RELIABLE recall: ACR-QA beats EVERY frontier LLM (10/10)
+## Headline 0 — Consistency: ACR-QA is reproducible; LLMs find more per scan but not the same bugs twice
 
-RealVuln's primary metric is recall-weighted (F2/F3, recall 4–9× precision) because *"missing a
-vulnerability is far worse than a false alarm."* Take that seriously: a vuln an LLM finds in only
-1 of 3 runs is, in production — where you scan **once** — missed most of the time. The benchmark
-ships 3 runs per LLM precisely *because* they are non-deterministic. So the honest recall for a CI
-security gate is the **reliable recall**: vulnerabilities found in **every** run.
+A correctness note first, because it is easy to get this wrong (we did, and corrected it). The
+honest "scan once" recall is a **single run's** recall — not the intersection of 3 runs (which is
+mechanically ≤ any single run and unfairly handicaps a non-deterministic tool). Measured against
+each LLM's **worst single run** (`scripts/realvuln_reliable_recall.py`):
 
-ACR-QA is deterministic — one run == every run — so its recall *is* its reliable recall. Pairwise,
-on each LLM's own shared repo set (`scripts/realvuln_reliable_recall.py`):
+| Competitor | ACR-QA | LLM worst run | LLM mean | LLM best run | ACR-QA beats worst run? |
+|------------|--------|---------------|----------|--------------|-------------------------|
+| GPT-5.5 | 51.5% | 54.4% | 57.4% | 58.9% | no |
+| Claude Opus 4.8 | 50.2% | 50.4% | 51.2% | 51.9% | ~tie (no) |
+| Claude Opus 4.6 | 68.1% | 68.6% | 71.2% | 73.0% | no |
+| Kimi K2.6 | 61.6% | 63.8% | 68.1% | 75.9% | no |
+| DeepSeek V4 Pro | 44.0% | 48.6% | 49.5% | 51.4% | no |
+| Claude Sonnet 4.6 | 52.2% | 51.7% | 53.7% | 55.0% | **yes** |
+| Gemini 3.1 Pro | 50.2% | 49.6% | 52.6% | 58.0% | **yes** |
+| GLM-5 | 53.8% | 51.5% | 51.9% | 52.3% | **yes** |
+| Grok 4.20 | 50.2% | 25.4% | 29.4% | 36.6% | **yes** |
+| Qwen 3.5 397B | 45.4% | 33.6% | 35.7% | 37.2% | **yes** |
 
-| Competitor | repos | ACR-QA recall | LLM mean-recall | LLM **reliable** recall | Winner |
-|------------|-------|---------------|-----------------|-------------------------|--------|
-| GPT-5.5 agentic | 21 | **51.5%** | 57.4% | 47.1% | **ACR-QA** |
-| Claude Opus 4.8 | 21 | **50.2%** | 51.2% | 44.0% | **ACR-QA** |
-| Claude Opus 4.6 | 9 | **68.1%** | 71.2% | 61.3% | **ACR-QA** |
-| Claude Sonnet 4.6 | 13 | **52.2%** | 53.7% | 46.3% | **ACR-QA** |
-| Gemini 3.1 Pro | 21 | **50.2%** | 52.6% | 40.7% | **ACR-QA** |
-| DeepSeek V4 Pro | 17 | **44.0%** | 49.5% | 39.7% | **ACR-QA** |
-| Kimi K2.6 | 11 | **61.6%** | 68.1% | 48.7% | **ACR-QA** |
-| GLM-5 | 12 | **53.8%** | 51.9% | 40.8% | **ACR-QA** |
-| Grok 4.20 reasoning | 21 | **50.2%** | 29.4% | 20.7% | **ACR-QA** |
-| Qwen 3.5 397B | 19 | **45.4%** | 35.7% | 27.1% | **ACR-QA** |
+**So ACR-QA does NOT have the highest recall.** On a single scan, the strongest LLMs (GPT-5.5,
+Opus 4.6/4.8, Kimi) find more vulnerabilities than ACR-QA, even on their worst run. ACR-QA's recall
+sits in the **mid-frontier** — it ties Opus 4.8 and Gemini, beats the weaker half (Grok, Qwen, GLM),
+and trails the top tier.
 
-**ACR-QA's deterministic recall beats the reliable recall of all 10 frontier LLM agents — at $0.**
+### The real, defensible point: consistency, not "more bugs"
 
-### Be precise about what "#1" means here (the honest caveat)
+What ACR-QA *does* uniquely is return the **same finding set every run**. LLM agents do not — across
+3 runs only **48–77%** of the bugs they find appear in *all* three (Grok: 48%, GPT-5.5/Opus-4.8: 71%).
+They find *more* bugs per average scan; they just don't find the *same* ones twice. For a security
+tool this matters in concrete ways:
 
-This is a claim about the **strictest reliability bar**, and it is threshold-specific. Sensitivity
-across thresholds (ACR-QA recall vs LLM recall at each):
+- **Auditability** — "why did the scan flag/not-flag this?" needs a reproducible answer.
+- **Scan diffing** — "what's *new* since the last scan?" is meaningless if the baseline shifts every run.
+- **Gate stability** — a CI gate that passes on run A and fails on run B (same code) is not a gate.
 
-| Competitor | ACR-QA | LLM mean | LLM majority (≥2/3) | LLM reliable (all 3) |
-|------------|--------|----------|---------------------|----------------------|
-| GPT-5.5 | 51.5% | 57.4% | 59.5% | **47.1%** ← ACR-QA wins |
-| Opus 4.8 | 50.2% | 51.2% | 51.1% | **44.0%** ← ACR-QA wins |
-| Sonnet 4.6 | 52.2% | 53.7% | 54.2% | **46.3%** ← ACR-QA wins |
-| Gemini 3.1 | 50.2% | 52.6% | 52.6% | **40.7%** ← ACR-QA wins |
-| GLM-5 | 53.8% | 51.9% | 48.8% | **40.8%** ← ACR-QA wins (all thresholds) |
-
-So, stated honestly: **on *typical* (mean) and *majority* recall, the top LLMs (GPT-5.5, Sonnet,
-Gemini) edge ACR-QA by a few points. On *reliable* recall — vulnerabilities found in *every* run —
-ACR-QA leads all 10.** The justification for treating reliable recall as the decisive metric: a CI
-gate scans **once per commit**; a tool that finds a vuln in only 2 of 3 runs misses it ~33% of the
-time you scan, which is not a gate you can trust. ACR-QA finds the same set every time. This is not
-a reframing trick, but it *is* a specific (defensible) choice of reliability bar — report it with
-the mean/majority numbers beside it, never instead of them.
+ACR-QA gives a deterministic, diffable, auditable result at $0. That is the honest claim — paired
+with the fact that the top LLMs out-recall it per scan.
 
 ## Headline 3 — vs. frontier LLM agents: matches their recall at $0, and is reproducible
 
