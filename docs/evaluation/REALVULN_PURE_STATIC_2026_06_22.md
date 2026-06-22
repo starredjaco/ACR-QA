@@ -4,6 +4,22 @@
 > not the lenient inline scorer. Every unmatched finding counts as a false positive.
 > All scanners scored on the **same 22 repos** (558 ground-truth true positives each).
 
+## Bottom line (read this first)
+
+ACR-QA's **zero-LLM, zero-API, deterministic** static engine, on the official RealVuln scorer:
+
+| Claim | Evidence |
+|-------|----------|
+| **#1 vs every traditional SAST**, on every metric — even on held-out repos | 46% recall vs Semgrep 18%, Snyk 16%, SonarQube 5% (16 repos never tuned on) |
+| **#1 on *reliable* recall vs all 10 frontier LLM agents** | beats GPT-5.5/Opus-4.8/Sonnet/Gemini/Grok/… on vulns found *every* run — at **$0** vs up to $62 |
+| **Recall ties the frontier** on typical (mean) recall | 50% = Claude Opus 4.8; top LLMs (GPT-5.5) lead by a few points on mean/majority |
+| **100% reproducible** | 3 scans → bit-identical SHA256 (CI-enforced: `TESTS/test_static_scanner_determinism.py`); LLMs: 48–77% TP-stable |
+
+**The honest gap:** LLM agents win **precision** (75–92% vs 48.6%) via exploitability reasoning a
+pattern engine cannot do. We do **not** close that with CWE-deletion (taxonomy-fitting). Our wedge
+is the dimension that decides whether a security tool is trustworthy in a pipeline: **same answer
+every run, beats every traditional SAST, ties frontier recall, free.** No LLM occupies this point.
+
 ## Headline 1 — full corpus (in-sample): ACR-QA vs. commercial/OSS SAST
 
 | Scanner | Recall | Precision | F2 |
