@@ -748,6 +748,45 @@ class _Visitor(ast.NodeVisitor):
     def visit_Call(self, node: ast.Call):
         fn = _func_name(node.func)
 
+        # CWE-798: hardcoded secret/key passed as an argument to a crypto/sign/token function.
+        # e.g. jwt.encode(payload, 'secret', algorithm=...), Fernet(b'key'), hmac.new('key', ...).
+        _SECRET_SINK_FNS = (
+            "encode",
+            "decode",
+            "Fernet",
+            "new",
+            "sign",
+            "create_access_token",
+            "create_refresh_token",
+            "encrypt",
+            "Signer",
+            "TimestampSigner",
+            "URLSafeSerializer",
+        )
+        if fn in _SECRET_SINK_FNS:
+            obj = _func_name(node.func.value) if isinstance(node.func, ast.Attribute) else ""
+            is_crypto = obj in ("jwt", "hmac", "hashlib", "Fernet") or fn in (
+                "Fernet",
+                "create_access_token",
+                "create_refresh_token",
+                "Signer",
+                "TimestampSigner",
+                "URLSafeSerializer",
+            )
+            # jwt.encode(payload, <secret literal>) — 2nd positional arg is the key
+            key_args = []
+            if fn in ("encode", "decode") and obj == "jwt" and len(node.args) >= 2:
+                key_args.append(node.args[1])
+            elif is_crypto and node.args:
+                key_args.append(node.args[0])
+            for kw in node.keywords:
+                if kw.arg in ("key", "secret", "secret_key", "signing_key", "password"):
+                    key_args.append(kw.value)
+            for ka in key_args:
+                if isinstance(ka, ast.Constant) and isinstance(ka.value, str | bytes) and len(ka.value) >= 3:
+                    self._add(node.lineno, "CWE-798", f"Hardcoded secret/key passed to {fn}()")
+                    break
+
         # CWE-384 tracking
         if fn == "login_user":
             self._login_lines.append(node.lineno)
@@ -909,15 +948,27 @@ class _Visitor(ast.NodeVisitor):
                 if _is_from_request(node.args[0]):
                     self._add(node.lineno, "CWE-22", f"Path traversal: {obj_name3}.open() with user-supplied path")
 
-        # CWE-502: pickle.load/loads / yaml.load with user input
+        # CWE-502: insecure deserialization. pickle/cPickle/_pickle/dill/shelve.load(s) and
+        # yaml.load (without SafeLoader) are RCE-dangerous on any non-constant input — flag like
+        # Bandit B301/B506 rather than requiring traceable request-taint (route data is implicit).
         if isinstance(node.func, ast.Attribute) and node.func.attr in ("load", "loads", "load_all"):
             obj_name4 = _func_name(node.func.value) if isinstance(node.func.value, ast.Name | ast.Attribute) else ""
-            if obj_name4 == "pickle" and node.args and _is_from_request(node.args[0]):
-                self._add(node.lineno, "CWE-502", "Insecure deserialization: pickle.load() with user input — RCE risk")
-            if obj_name4 == "yaml" and node.args and _is_from_request(node.args[0]):
+            arg_dynamic = bool(node.args) and not isinstance(node.args[0], ast.Constant)
+            if obj_name4 in ("pickle", "cPickle", "_pickle", "dill", "shelve") and arg_dynamic:
                 self._add(
-                    node.lineno, "CWE-502", "Insecure deserialization: yaml.load() with potentially unsafe loader"
+                    node.lineno, "CWE-502", f"Insecure deserialization: {obj_name4}.{node.func.attr}() — RCE risk"
                 )
+            if obj_name4 == "yaml" and arg_dynamic:
+                # Safe only if an explicit SafeLoader is passed.
+                kw_src = " ".join(ast.unparse(k) for k in node.keywords) + " ".join(
+                    ast.unparse(a) for a in node.args[1:]
+                )
+                if "SafeLoader" not in kw_src and "safe_load" not in ast.unparse(node.func):
+                    self._add(node.lineno, "CWE-502", "Insecure deserialization: yaml.load() without SafeLoader")
+        # yaml.unsafe_load / yaml.full_load are inherently unsafe
+        if isinstance(node.func, ast.Attribute) and node.func.attr in ("unsafe_load", "full_load"):
+            if _func_name(node.func.value) == "yaml" and node.args:
+                self._add(node.lineno, "CWE-502", f"Insecure deserialization: yaml.{node.func.attr}()")
 
         # CWE-611: XXE — XML parsing with user input without defusedxml
         if isinstance(node.func, ast.Attribute) and node.func.attr in ("fromstring", "parseString", "parse_string"):
@@ -1105,11 +1156,30 @@ class _Visitor(ast.NodeVisitor):
     # ── Exception handlers ───────────────────────────────────────
 
     def visit_ExceptHandler(self, node: ast.ExceptHandler):
+        _ERR_DETAIL = ("traceback", "format_exc", ".output", "str(e", "str(ex", "repr(e")
+        _OUT_VARS = ("content", "response", "body", "message", "msg", "output", "result", "data", "resp", "error")
+        _OUT_SINKS = ("HttpResponse", "make_response", "render", ".write(", "send", "print(", "jsonify", "Response(")
         for stmt in ast.walk(node):
-            if isinstance(stmt, ast.Return):
+            # error detail returned, served, written, printed, or assigned to a response var
+            if isinstance(stmt, ast.Return | ast.Assign | ast.AugAssign | ast.Expr):
                 src = ast.unparse(stmt)
-                if "str(e" in src or "str(ex" in src or "traceback" in src or "format_exc" in src:
-                    self._add(stmt.lineno, "CWE-209", "Exception details returned to client")
+                if not any(e in src for e in _ERR_DETAIL):
+                    continue
+                reaches_output = (
+                    isinstance(stmt, ast.Return)
+                    or any(s in src for s in _OUT_SINKS)
+                    or (
+                        isinstance(stmt, ast.Assign | ast.AugAssign)
+                        and any(
+                            isinstance(t, ast.Name) and any(v in t.id.lower() for v in _OUT_VARS)
+                            for t in (stmt.targets if isinstance(stmt, ast.Assign) else [stmt.target])
+                        )
+                    )
+                )
+                if reaches_output:
+                    self._add(
+                        stmt.lineno, "CWE-209", "Exception details exposed to client (stack trace / error message)"
+                    )
                     break
         self.generic_visit(node)
 
@@ -1983,6 +2053,66 @@ def _scan_templates_if_autoescape_false(repo: Path) -> list[dict]:
 _original_scan_repo = scan_repo
 
 
+_CSRF_GLOBAL_RE = re.compile(r"CSRFProtect\s*\(|SeaSurf\s*\(|csrf\.init_app|WTF_CSRF_ENABLED")
+_CSRF_INLINE = ("csrf_token", "validate_csrf", "validate_on_submit", "@csrf", "csrf.protect")
+_STATE_CHANGE = (".commit(", ".add(", ".delete(", ".save(", ".update(", "objects.create", ".insert(", "set_password")
+
+
+def _scan_session_csrf(repo: Path) -> list[dict]:
+    """CWE-352: authenticated, state-changing POST/PUT/DELETE routes with no CSRF protection.
+    Only fires when the repo does NOT enable global CSRF (CSRFProtect/SeaSurf) — otherwise all
+    POST routes are auto-protected. A general, framework-level CSRF pattern (kolega's biggest
+    CSRF category). Validate on held-out: must not be repo-specific."""
+    pyfiles = [p for p in repo.rglob("*.py") if not any(x in str(p) for x in (".git", "__pycache__", ".venv", "venv"))]
+    # Repo-level: is global CSRF protection configured anywhere?
+    globally_protected = False
+    for p in pyfiles:
+        try:
+            if _CSRF_GLOBAL_RE.search(p.read_text(errors="replace")):
+                globally_protected = True
+                break
+        except Exception:
+            pass
+    if globally_protected:
+        return []
+
+    findings: list[dict] = []
+    for p in pyfiles:
+        try:
+            src = p.read_text(errors="replace")
+            tree = ast.parse(src)
+        except Exception:
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+                continue
+            decs = " ".join(ast.unparse(d) for d in node.decorator_list)
+            is_route = any(_is_route_decorator(d) for d in node.decorator_list)
+            if not is_route:
+                continue
+            # state-changing HTTP method on the route
+            dl = decs.lower()
+            is_write_method = any(m in dl for m in ("post", "put", "delete", "patch"))
+            if not is_write_method:
+                continue
+            body = ast.unparse(node)
+            authed = bool(_AUTH_DECORATORS.intersection(_decorator_names(node))) or any(
+                k in body for k in ("current_user", "login_required", "g.user", "get_jwt_identity")
+            )
+            state_changing = any(c in body for c in _STATE_CHANGE)
+            has_csrf = any(c in body for c in _CSRF_INLINE)
+            if authed and state_changing and not has_csrf:
+                findings.append(
+                    {
+                        "file": str(p),
+                        "line": node.lineno,
+                        "cwe": "CWE-352",
+                        "description": f"Authenticated state-changing route '{node.name}' without CSRF protection",
+                    }
+                )
+    return findings
+
+
 # Paths that are test/fixture/migration noise — vulns here are not production findings
 # and crush precision (test files reuse hardcoded creds, dummy SQL, etc.)
 _NOISE_PATH_RE = re.compile(
@@ -2012,6 +2142,9 @@ def scan_repo(repo_path: str) -> list[dict]:  # type: ignore[no-redef]
         extra.extend(_scan_fastapi_routes(p))
         extra.extend(_scan_autoescape_false(p))
         extra.extend(_scan_commented_security(p))
+
+    # Repo-level: authenticated state-changing routes without CSRF (only if no global CSRF).
+    extra.extend(_scan_session_csrf(repo))
 
     # NOTE: autoescape=False template XSS is already handled by scan_jinja2_unsafe()
     # in the original scan_repo — do NOT double-scan here (was spraying duplicate FPs).
