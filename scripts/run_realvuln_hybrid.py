@@ -479,15 +479,19 @@ def run_repo(slug: str, use_static: bool, use_llm: bool) -> dict:
     # Corroboration-only sources (e.g. Bandit) UPGRADE confidence when they agree with a primary
     # detector, but a finding flagged ONLY by them is dropped — so they grow the Confirmed tier
     # without polluting recall-mode precision with their standalone false positives.
+    # Exact-line dedup (the line//5 bucketing collapsed distinct same-CWE vulns within 5 lines; the
+    # official scorer already applies ±10 tolerance, so exact-line is both more accurate and recovers
+    # those TPs). A cross-source ±2 merge was tried to claw back near-dup FPs but cost more recall than
+    # it saved precision (58.8%→58.4%, held-out −0.5pp), so it was dropped.
     _CORROBORATION_ONLY = {"bandit"}
     seen: set[tuple] = set()
     combined: list[dict] = []
     for f in all_findings:
         key = (f["file"], f["cwe"], (f.get("line") or 0))
         if f.get("source") in _CORROBORATION_ONLY:
-            continue  # never emit a corroboration-only finding as primary
+            continue
         if sources_per_key[key] <= _CORROBORATION_ONLY:
-            continue  # (defensive) key seen only by corroboration sources
+            continue
         if key not in seen:
             seen.add(key)
             f["confidence"] = _confidence_tier(f["cwe"], len(sources_per_key[key]))
