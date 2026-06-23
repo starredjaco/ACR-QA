@@ -144,13 +144,28 @@ def run_static(repo_path: Path, slug: str) -> list[dict]:
     # High-precision rule allowlist (SQLi, shell-injection, deserialization, weak crypto, ssl, jinja).
     _BANDIT_HIGH_PREC = {
         "B608",  # hardcoded SQL → SQLi
-        "B602", "B604", "B605", "B606", "B609", "B611", "B610", "B612",  # shell / SQL injection
-        "B301", "B302", "B307",  # pickle / marshal / eval deserialization
+        "B602",
+        "B604",
+        "B605",
+        "B606",
+        "B609",
+        "B611",
+        "B610",
+        "B612",  # shell / SQL injection
+        "B301",
+        "B302",
+        "B307",  # pickle / marshal / eval deserialization
         "B324",  # weak hash (md5/sha1)
-        "B501", "B502", "B503", "B504",  # ssl/tls insecure
+        "B501",
+        "B502",
+        "B503",
+        "B504",  # ssl/tls insecure
         "B201",  # flask debug=True
-        "B701", "B702", "B703",  # jinja2 autoescape / mako / django mark_safe
-        "B608", "B506",  # SQLi, yaml unsafe load
+        "B701",
+        "B702",
+        "B703",  # jinja2 autoescape / mako / django mark_safe
+        "B608",
+        "B506",  # SQLi, yaml unsafe load
     }
     try:
         if bandit_cmd is None:
@@ -193,8 +208,13 @@ def run_static(repo_path: Path, slug: str) -> list[dict]:
     # Python vulns, so the extra packs only add FPs. Same lesson as Bandit-all / generic taint:
     # broad additions hurt, targeted detectors help. Set ACRQA_RV_SEMGREP_PACKS=full for ablation.
     if os.environ.get("ACRQA_RV_SEMGREP_PACKS") == "full":
-        semgrep_rules = ["p/python", "p/django", "p/flask", "p/owasp-top-ten",
-                         str(ROOT / "TOOLS/semgrep/realvuln-boost-rules.yml")]
+        semgrep_rules = [
+            "p/python",
+            "p/django",
+            "p/flask",
+            "p/owasp-top-ten",
+            str(ROOT / "TOOLS/semgrep/realvuln-boost-rules.yml"),
+        ]
     else:
         semgrep_rules = ["p/python", str(ROOT / "TOOLS/semgrep/realvuln-boost-rules.yml")]
     for rule in semgrep_rules:
@@ -245,7 +265,7 @@ def run_static(repo_path: Path, slug: str) -> list[dict]:
     seen: set[tuple] = set()
     deduped = []
     for f in findings:
-        key = (f["file"], f["cwe"], (f["line"] or 0) // 5)
+        key = (f["file"], f["cwe"], (f["line"] or 0))
         if key not in seen:
             seen.add(key)
             deduped.append(f)
@@ -256,10 +276,38 @@ def run_static(repo_path: Path, slug: str) -> list[dict]:
 # FIRM = syntactically clear / taint-gated detectors (high precision by construction).
 # TENTATIVE = authorization heuristics (recall-heavy, lower precision — like kolega's auth detectors).
 _FIRM_CWES = {
-    "CWE-89", "CWE-78", "CWE-22", "CWE-918", "CWE-94", "CWE-95", "CWE-502", "CWE-1336",
-    "CWE-327", "CWE-916", "CWE-328", "CWE-215", "CWE-798", "CWE-400", "CWE-1333", "CWE-16",
-    "CWE-532", "CWE-338", "CWE-330", "CWE-259", "CWE-256", "CWE-287", "CWE-522", "CWE-284",
-    "CWE-601", "CWE-643", "CWE-295", "CWE-614", "CWE-1004", "CWE-384", "CWE-321", "CWE-1336",
+    "CWE-89",
+    "CWE-78",
+    "CWE-22",
+    "CWE-918",
+    "CWE-94",
+    "CWE-95",
+    "CWE-502",
+    "CWE-1336",
+    "CWE-327",
+    "CWE-916",
+    "CWE-328",
+    "CWE-215",
+    "CWE-798",
+    "CWE-400",
+    "CWE-1333",
+    "CWE-16",
+    "CWE-532",
+    "CWE-338",
+    "CWE-330",
+    "CWE-259",
+    "CWE-256",
+    "CWE-287",
+    "CWE-522",
+    "CWE-284",
+    "CWE-601",
+    "CWE-643",
+    "CWE-295",
+    "CWE-614",
+    "CWE-1004",
+    "CWE-384",
+    "CWE-321",
+    "CWE-1336",
 }
 _TENTATIVE_CWES = {"CWE-306", "CWE-862", "CWE-639", "CWE-352", "CWE-307", "CWE-200", "CWE-209", "CWE-204"}
 
@@ -425,7 +473,7 @@ def run_repo(slug: str, use_static: bool, use_llm: bool) -> dict:
 
     sources_per_key: dict[tuple, set] = defaultdict(set)
     for f in all_findings:
-        key = (f["file"], f["cwe"], (f.get("line") or 0) // 5)
+        key = (f["file"], f["cwe"], (f.get("line") or 0))
         sources_per_key[key].add(f.get("source", "ast"))
 
     # Corroboration-only sources (e.g. Bandit) UPGRADE confidence when they agree with a primary
@@ -435,7 +483,7 @@ def run_repo(slug: str, use_static: bool, use_llm: bool) -> dict:
     seen: set[tuple] = set()
     combined: list[dict] = []
     for f in all_findings:
-        key = (f["file"], f["cwe"], (f.get("line") or 0) // 5)
+        key = (f["file"], f["cwe"], (f.get("line") or 0))
         if f.get("source") in _CORROBORATION_ONLY:
             continue  # never emit a corroboration-only finding as primary
         if sources_per_key[key] <= _CORROBORATION_ONLY:
@@ -542,7 +590,11 @@ def main() -> None:
 
     # Confidence-tiered operating points (cumulative) — the deterministic Confirmed Tier.
     print(f"\n  {'Operating point':<22}{'TP':>5}{'FP':>5}{'Recall':>9}{'Prec':>8}{'F2':>7}")
-    for label, mkey in [("recall mode (all)", None), ("certain+firm", "tier_certain_firm"), ("CONFIRMED (certain)", "tier_certain")]:
+    for label, mkey in [
+        ("recall mode (all)", None),
+        ("certain+firm", "tier_certain_firm"),
+        ("CONFIRMED (certain)", "tier_certain"),
+    ]:
         if mkey is None:
             tp, fp = total_tp, total_fp
         else:

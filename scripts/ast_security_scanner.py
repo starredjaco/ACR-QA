@@ -1861,7 +1861,7 @@ def scan_repo(repo_path: str) -> list[dict]:
             rel = str(Path(f["file"]).relative_to(repo)).replace("\\", "/")
         except ValueError:
             rel = f["file"]
-        key = (rel, f["cwe"], (f.get("line") or 0) // 5)
+        key = (rel, f["cwe"], (f.get("line") or 0))
         if key in seen:
             continue
         seen.add(key)
@@ -2607,7 +2607,7 @@ def scan_repo(repo_path: str) -> list[dict]:  # type: ignore[no-redef]
             rel = f["file"]
         if _is_noise_path(rel):
             continue
-        key = (rel, f["cwe"], (f.get("line") or 0) // 5)
+        key = (rel, f["cwe"], (f.get("line") or 0))
         if key in seen:
             continue
         seen.add(key)
