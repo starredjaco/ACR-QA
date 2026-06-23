@@ -655,6 +655,31 @@ class _Visitor(ast.NodeVisitor):
         if has_route and not has_auth and not has_inline_auth and _is_sensitive_route(node, func_src):
             self._add(node.lineno, "CWE-306", f"Sensitive route '{node.name}' missing auth check")
 
+        # CWE-862: missing AUTHORIZATION — an admin/privileged route that only checks that the user
+        # is *authenticated* (not that they're an admin). Any logged-in user can reach it.
+        _name = node.name.lower()
+        is_privileged = any(k in _name for k in ("admin", "staff", "superuser", "manage", "moderat"))
+        is_authed = has_auth or has_inline_auth or "user_is_authenticated" in func_src or "login_required" in func_src
+        has_authz = any(
+            k in func_src
+            for k in (
+                "is_admin",
+                "is_staff",
+                "is_superuser",
+                "has_perm",
+                "user_passes_test",
+                "admin_required",
+                "permission_required",
+                "role",
+                "PermissionDenied",
+                "abort(403",
+            )
+        )
+        if has_route and is_privileged and is_authed and not has_authz:
+            self._add(
+                node.lineno, "CWE-862", f"Missing authorization: admin route '{node.name}' only checks authentication"
+            )
+
         # CWE-352: @csrf_exempt explicitly disables CSRF protection on a view.
         if any(d in ("csrf_exempt", "csrf_protect_m") for d in dec_names) or "csrf_exempt" in " ".join(
             ast.unparse(d) for d in node.decorator_list
@@ -1488,12 +1513,19 @@ class _Visitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
+# SQL keyword inside an execute(...) call, followed (possibly across the rest of the line) by a
+# concatenation/format. Uses a SQL-keyword anchor rather than [^"']* so embedded quotes (User ='…)
+# don't break the match.
 _REGEX_SQL_CONCAT = re.compile(
-    r"""(?:execute|executemany|raw)\s*\(\s*(?:["'](?:SELECT|INSERT|UPDATE|DELETE|WHERE)\b[^"']*["']\s*(?:\+|%|\.format))""",
+    r"""(?:execute|executemany|executescript|raw|cursor\.execute)\s*\(\s*["'].*?(?:SELECT|INSERT|UPDATE|DELETE|WHERE|FROM)\b.*(?:\+|%|\.format\s*\()""",
     re.IGNORECASE,
 )
+# os.system/popen/subprocess with a DYNAMIC command: either a non-literal arg, OR a string literal
+# followed by concatenation/format (e.g. os.popen('ping '+server)). The old (?!['"]) wrongly skipped
+# the string-concat form (the common command-injection pattern).
 _REGEX_OS_CMD = re.compile(
-    r"""(?:os\.system|os\.popen|subprocess\.call|subprocess\.run|subprocess\.Popen)\s*\(\s*(?!['"])""",
+    r"""(?:os\.system|os\.popen|subprocess\.(?:call|run|Popen|check_output))\s*\("""
+    r"""(?:\s*(?!['"])|[^)]*["'][^)]*(?:\+|%|\.format\s*\())""",
     re.IGNORECASE,
 )
 _REGEX_HARDCODED_CRED = re.compile(
