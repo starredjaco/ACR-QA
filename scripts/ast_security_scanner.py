@@ -1353,17 +1353,14 @@ class _Visitor(ast.NodeVisitor):
         if fn == "set_trace_callback" and node.args:
             self._add(node.lineno, "CWE-532", "SQL trace callback leaks queries/parameters to a sink")
 
-        # CWE-79: render_template with user-controlled kwargs (reflected XSS)
+        # CWE-79: render_template passing a directly request-derived kwarg (reflected XSS). Kept
+        # tight to request.* — broadening to all render()/Django/Tornado with any tainted value
+        # crashed precision (+28 FP), because Django/Flask auto-escape by default; the real XSS is
+        # escaping-OFF (| safe / autoescape=False / mark_safe), covered by dedicated detectors.
         if fn == "render_template" and node.args:
             for kw in node.keywords:
-                if kw.arg is None:
-                    continue
-                if _is_from_request(kw.value):
-                    self._add(
-                        node.lineno,
-                        "CWE-79",
-                        f"render_template passes tainted {kw.arg}=request.* — verify template escaping",
-                    )
+                if kw.arg is not None and _is_from_request(kw.value):
+                    self._add(node.lineno, "CWE-79", f"render_template passes tainted {kw.arg}=request.*")
                     break
 
         # CWE-79: db.session.add(Model(field=user_input)) → stored XSS risk
