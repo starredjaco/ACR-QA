@@ -21,12 +21,20 @@ Ordered by (competitive advantage × feasibility), respecting dependencies. All 
 | 🟡 | **Ensemble expansion** (high-prec Bandit subset done; Semgrep registry needs network) | corroboration source grew Confirmed tier 44→75 TP @ 80.6% | ★★ low-med | +Confirmed precision | **Bandit-corroboration DONE**; registry pending network |
 | 🟡 | **External held-out corpus** | the *unfakeable* proof we generalize | ★★ low-med | believable generalization | **PyGoat DONE** (48.1% R external, codeload bypass); more repos pending |
 | **5** | **JS + cross-file taint** (DOM XSS, Python→template) | recall lever for when the easy ones are exhausted (diminishing) | ★★★ med | +2–4pp recall | when recall stalls |
-| **6** | **Opt-in cheap-LLM precision filter** | the ONLY path to top-F2 (~60%, beats GPT-5.5) — but trades determinism, so LAST + opt-in | ★★ low-med | top-F2 *mode* at <$1 | last; opt-in only |
+| ❌ | **Cheap-LLM precision filter** (`scripts/llm_precision_filter.py`) | TESTED & REJECTED — cheap/mid Groq models (8b, 70b) can't do exploitability reasoning in one pass; net-neutral-to-negative on F2 (53.8→53.5%), drops real vulns. Frontier agents are precise via expensive multi-step tool use, not a classify call. | ★★ | — | **tested-negative**, opt-in only |
 | ⏸ | **Precise per-sink taint** (was Ph 1) | net-negative in combined pipeline (Semgrep overlaps); only for a Semgrep-free engine | — | AST-only mode | deprioritised |
 
 **One-line rationale:** lock in the high-precision tier (1) → build the exploit-proven moat (2) → grow
 recall cheaply (3) → make the claim unfakeable (4) → squeeze remaining recall (5) → optionally chase
 top-F2 with an opt-in LLM filter (6). Detailed phase write-ups below (original numbering retained).
+
+> **Roadmap status (2026-06-23):** 1 ✅ · 2 ⏳ (needs your Docker — runbook + driver ready) ·
+> 3 ✅ (Bandit corroboration; registry packs tested-negative) · 4 🟡 (PyGoat external 48.1% done) ·
+> 5 ✅ · 6 ❌ (cheap-LLM filter tested-negative). **Notably, FOUR "clever shortcuts" tested
+> net-negative** — registry packs, generic inter-procedural taint, Bandit-all, and the LLM filter.
+> The consistent lesson: the deterministic engine is at a genuine ceiling that broad additions don't
+> beat; only *targeted* detectors (auth/IDOR/CSRF) and *corroboration-based* confidence (Confirmed
+> tier) move it. That negative-result discipline is itself a result worth reporting.
 
 ---
 
