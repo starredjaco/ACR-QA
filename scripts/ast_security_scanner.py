@@ -45,7 +45,7 @@ from pathlib import Path
 # ═══════════════════════════════════════════════════════════════
 
 _SAFE_FILTER_RE = re.compile(r"\{\{[^}]*\|\s*safe\s*\}\}", re.DOTALL)
-_FORM_POST_RE = re.compile(r"<form\b[^>]*\bmethod\s*=\s*['\"]?(post|put|delete)['\"]?", re.IGNORECASE)
+_FORM_POST_RE = re.compile(r"<form\b[^>]*\bmethod\s*=\s*['\"]?(post|put|delete|patch)['\"]?", re.IGNORECASE)
 _CSRF_PRESENT_RE = re.compile(r"csrf_token|hidden_tag\(\)|{% csrf_token %}", re.IGNORECASE)
 _STATIC_STR_RE = re.compile(r"""^\s*['""][^'"]*['"]\s*\|\s*safe\s*$""")
 
@@ -1398,6 +1398,17 @@ class _Visitor(ast.NodeVisitor):
         # CWE-16: X-XSS-Protection: 0 — disable browser XSS filter
         if isinstance(node.value, str) and "X-XSS-Protection" in node.value and "0" in node.value:
             self._add(node.lineno, "CWE-16", "X-XSS-Protection header disabled")
+        self.generic_visit(node)
+
+    def visit_Tuple(self, node: ast.Tuple):
+        # CWE-16: ("X-XSS-Protection", "0") / ("Strict-Transport-Security", "max-age=0") header tuples
+        # used with headers.append(...) — the single-string detector misses these.
+        strs = [e.value for e in node.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)]
+        joined = " ".join(strs)
+        if "X-XSS-Protection" in joined and "0" in strs:
+            self._add(node.lineno, "CWE-16", "X-XSS-Protection header disabled (header tuple)")
+        elif "Strict-Transport-Security" in joined and any("max-age=0" in s for s in strs):
+            self._add(node.lineno, "CWE-16", "HSTS disabled (max-age=0)")
         self.generic_visit(node)
 
     def visit_BinOp(self, node: ast.BinOp):
