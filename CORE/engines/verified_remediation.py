@@ -275,7 +275,9 @@ class VerifiedRemediationEngine:
         resolved_file = target_file.resolve()
         import tempfile
 
-        temp_dir = Path(tempfile.gettempdir()).resolve()
+        # gettempdir() here is the sandbox BOUNDARY for a defensive containment check (the target
+        # must live inside the temp dir or cwd) — not an insecure temp-file write. Reviewed safe.
+        temp_dir = Path(tempfile.gettempdir()).resolve()  # NOSONAR
         if not resolved_file.is_relative_to(temp_dir) and not resolved_file.is_relative_to(Path.cwd().resolve()):
             raise ValueError("Security violation: target path is outside sandbox")
 
