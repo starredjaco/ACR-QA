@@ -113,8 +113,10 @@ def main() -> int:
     except Exception as exc:  # noqa: BLE001
         print(f"  attestation skipped: {exc}")
 
-    print(f"✓ Seeded Go run #{run_id} — {args.repo_name}: {len(findings)} findings "
-          f"({high} high · {med} medium · {low} low). Open it in the dashboard.")
+    print(
+        f"✓ Seeded Go run #{run_id} — {args.repo_name}: {len(findings)} findings "
+        f"({high} high · {med} medium · {low} low). Open it in the dashboard."
+    )
     return 0
 
 

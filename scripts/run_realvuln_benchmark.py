@@ -262,8 +262,7 @@ def run_semgrep_custom(repo_dir: str) -> list[dict]:
     findings: list[dict] = []
     try:
         r = subprocess.run(
-            [_venv("semgrep"), *py_configs, "--json", "--quiet",
-             "--include=*.py", repo_dir],
+            [_venv("semgrep"), *py_configs, "--json", "--quiet", "--include=*.py", repo_dir],
             capture_output=True,
             text=True,
             timeout=300,
@@ -276,9 +275,16 @@ def run_semgrep_custom(repo_dir: str) -> list[dict]:
     if boost.exists():
         try:
             r = subprocess.run(
-                [_venv("semgrep"), f"--config={boost}", "--json", "--quiet",
-                 "--include=*.html", "--include=*.jinja2", "--include=*.j2",
-                 repo_dir],
+                [
+                    _venv("semgrep"),
+                    f"--config={boost}",
+                    "--json",
+                    "--quiet",
+                    "--include=*.html",
+                    "--include=*.jinja2",
+                    "--include=*.j2",
+                    repo_dir,
+                ],
                 capture_output=True,
                 text=True,
                 timeout=120,
