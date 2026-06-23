@@ -1040,6 +1040,32 @@ class _Visitor(ast.NodeVisitor):
         if _expr_builds_sql(node, getattr(self, "_str_consts", {})):
             self._add(node.lineno, "CWE-89", "SQLi: SQL string built with .format()/%/concat (use parameterized query)")
 
+        # CWE-79: HTML built via "<tag>{}</tag>".format(user_input) — reflected XSS, the .format()
+        # analogue of the f-string handler.
+        if isinstance(node.func, ast.Attribute) and node.func.attr == "format" and node.args:
+            recv = node.func.value
+            if isinstance(recv, ast.Constant) and isinstance(recv.value, str):
+                if any(
+                    t in recv.value
+                    for t in (
+                        "<p",
+                        "<div",
+                        "<span",
+                        "<a ",
+                        "<script",
+                        "<h1",
+                        "<h2",
+                        "<b>",
+                        "<td",
+                        "<li",
+                        "<input",
+                        "<form",
+                        "<img",
+                    )
+                ):
+                    if any(_is_from_request(a) or self._tainted(a) for a in node.args):
+                        self._add(node.lineno, "CWE-79", "XSS: HTML built with .format() and user-controlled value")
+
         # CWE-89: cursor.execute(var) where var was built from a SQL .format()/%/concat
         if fn in ("execute", "executemany", "executescript") and node.args:
             arg0 = node.args[0]
