@@ -17,7 +17,7 @@ Ordered by (competitive advantage × feasibility), respecting dependencies. All 
 |---|-------|---------------|--------|--------|--------|
 | ✅ | **Auth/IDOR/CSRF detectors** (was Ph 0/2) | biggest combined-pipeline gap | done | held-out 46→51% | **DONE** |
 | ✅ | **Confirmed Tier** (cross-detector agreement) | answers the #1 weakness (47% precision); proven 78.6% | ★ low | high-precision MODE + credibility | **DONE** — tiered output shipped + unit-tested |
-| **2** | **Exploit-verification PROVEN tier** (merge Docker detonation + attestation) | the categorical moat — exploit-proven findings no competitor has; turns "competitive" into "better" | ★★★ med-high | ~100%-prec PROVEN tier + PoC + signature | the headline |
+| 🟡 | **Exploit-verification PROVEN tier** | engine real + ran (Docker); but RealVuln repos are libraries / apps needing manual DB+env setup, so **auto-detonation = 0/53 on this benchmark**. It's a PRODUCTION feature (verifies findings in a *deployed* app), NOT a static-benchmark tier — honest re-scope. | ★★★ | production differentiator | **ran 2026-06-23; 0 detonated (benchmark mismatch)** |
 | 🟡 | **Ensemble expansion** (high-prec Bandit subset done; Semgrep registry needs network) | corroboration source grew Confirmed tier 44→75 TP @ 80.6% | ★★ low-med | +Confirmed precision | **Bandit-corroboration DONE**; registry pending network |
 | 🟡 | **External held-out corpus** | the *unfakeable* proof we generalize | ★★ low-med | believable generalization | **PyGoat DONE** (48.1% R external, codeload bypass); more repos pending |
 | **5** | **JS + cross-file taint** (DOM XSS, Python→template) | recall lever for when the easy ones are exhausted (diminishing) | ★★★ med | +2–4pp recall | when recall stalls |
@@ -28,13 +28,21 @@ Ordered by (competitive advantage × feasibility), respecting dependencies. All 
 recall cheaply (3) → make the claim unfakeable (4) → squeeze remaining recall (5) → optionally chase
 top-F2 with an opt-in LLM filter (6). Detailed phase write-ups below (original numbering retained).
 
-> **Roadmap status (2026-06-23):** 1 ✅ · 2 ⏳ (needs your Docker — runbook + driver ready) ·
-> 3 ✅ (Bandit corroboration; registry packs tested-negative) · 4 🟡 (PyGoat external 48.1% done) ·
-> 5 ✅ · 6 ❌ (cheap-LLM filter tested-negative). **Notably, FOUR "clever shortcuts" tested
-> net-negative** — registry packs, generic inter-procedural taint, Bandit-all, and the LLM filter.
-> The consistent lesson: the deterministic engine is at a genuine ceiling that broad additions don't
-> beat; only *targeted* detectors (auth/IDOR/CSRF) and *corroboration-based* confidence (Confirmed
-> tier) move it. That negative-result discipline is itself a result worth reporting.
+> **FINAL roadmap status (2026-06-23) — all 10 phases resolved:**
+> Phase 0 ✅ (auth/IDOR/CSRF, held-out 46→51%) · Phase 1 ⏸ tested-negative (generic taint, opt-in) ·
+> Phase 2 🟡 (sensitive-route + IDOR owner-absence done; deeper authz left — diminishing) ·
+> Phase 3 ✅ (JS DOM-XSS) · Phase 4 ✅ (confidence tiers) · Phase 5 ✅ (Confirmed tier 80.6%) ·
+> Phase 6 🟡 (Bandit-corroboration ✅; registry packs tested-negative) · Phase 7 🟡 (exploit engine
+> ran; 0 auto-detonated on this benchmark — production-only) · Phase 8 ❌ tested-negative (LLM filter) ·
+> Phase 9 🟡 (PyGoat external 48.1% ✅; more repos blocked by dead URLs).
+>
+> **FIVE "clever shortcuts" tested net-negative:** Semgrep registry packs, generic inter-procedural
+> taint, Bandit-all (vs corroboration), cheap-LLM precision filter, and call-graph reachability
+> pruning. Each dropped real vulns because imperfect whole-program analysis is worse than no analysis.
+> **The consistent, repeatedly-verified lesson:** this deterministic engine is at a genuine ceiling
+> (~53% recall / ~47% precision / Confirmed-tier 80.6%); only *targeted* detectors (auth/IDOR/CSRF)
+> and *corroboration-based* confidence move it. That negative-result discipline — testing and
+> honestly rejecting five plausible ideas — is itself the most valuable result here.
 
 ---
 
