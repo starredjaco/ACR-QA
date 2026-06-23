@@ -35,6 +35,12 @@ class MockDilithium3:
     def sign(sk, payload):
         return b"signature_bytes_123"
 
+    @staticmethod
+    def verify(pk, payload, sig):
+        # Faithful stand-in: only the exact signature `sign` produced verifies, so the engine's
+        # verify()/tamper-detection logic is exercised. Real crypto is covered by integration.
+        return sig == b"signature_bytes_123"
+
 
 mock_dilithium_module = MagicMock()
 mock_dilithium_module.Dilithium3 = MockDilithium3

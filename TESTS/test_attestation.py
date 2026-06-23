@@ -473,3 +473,81 @@ class TestPipelineIntegration:
         attest = build_attestation(1, {"repo_name": "test"})
         bundle = eng.sign(attest)
         assert eng.verify(bundle) is True
+
+
+# Post-quantum Dilithium3 (real signing + verification)
+class TestDilithium3PostQuantum:
+    """The PQ signature is genuinely wired in: stable key, embedded public key, real verification."""
+
+    def _engine(self):
+        from CORE.engines.attestation import AttestationEngine
+
+        return AttestationEngine()
+
+    def test_bundle_includes_dilithium3_signature(self):
+        from CORE.engines.attestation import build_attestation
+
+        eng = self._engine()
+        if eng._pq_sk is None:
+            import pytest
+
+            pytest.skip("dilithium-py not installed")
+        bundle = eng.sign(build_attestation(1, {"repo_name": "demo"}))
+        dil = next((s for s in bundle["signatures"] if s["algorithm"] == "Dilithium3"), None)
+        assert dil is not None
+        assert dil.get("public_key"), "Dilithium3 sig must embed its public key to be verifiable"
+
+    def test_valid_bundle_verifies(self):
+        from CORE.engines.attestation import build_attestation
+
+        eng = self._engine()
+        bundle = eng.sign(build_attestation(1, {"repo_name": "demo"}))
+        assert eng.verify(bundle) is True
+
+    def test_tampered_payload_fails(self):
+        from CORE.engines.attestation import build_attestation
+
+        eng = self._engine()
+        bundle = eng.sign(build_attestation(1, {"repo_name": "demo", "total_findings": 3}))
+        bundle["attestation"]["predicate"]["findings_count"] = 9999
+        assert eng.verify(bundle) is False
+
+    def test_corrupted_dilithium_signature_fails(self):
+        """A bad PQ signature must fail the whole bundle — proving it's actually checked, not decorative."""
+        import copy
+
+        from CORE.engines.attestation import build_attestation
+
+        eng = self._engine()
+        if eng._pq_sk is None:
+            import pytest
+
+            pytest.skip("dilithium-py not installed")
+        bundle = copy.deepcopy(eng.sign(build_attestation(1, {"repo_name": "demo"})))
+        for s in bundle["signatures"]:
+            if s["algorithm"] == "Dilithium3":
+                s["signature"] = "00" + s["signature"][2:]
+        assert eng.verify(bundle) is False
+
+
+def test_real_dilithium3_crypto_roundtrip():
+    """Prove the ACTUAL post-quantum crypto works (conftest mocks it for suite speed): a real
+    Dilithium3 signature verifies, and a tampered message fails. This is the durable evidence behind
+    the public 'post-quantum Dilithium3 signed' claim."""
+    import importlib
+    import sys
+
+    saved = {k: sys.modules.get(k) for k in ("dilithium_py", "dilithium_py.dilithium")}
+    for k in list(saved):
+        sys.modules.pop(k, None)
+    try:
+        real = importlib.import_module("dilithium_py.dilithium")
+        D = real.Dilithium3
+        pk, sk = D.keygen()
+        sig = D.sign(sk, b"acrqa-attestation-payload")
+        assert D.verify(pk, b"acrqa-attestation-payload", sig) is True
+        assert D.verify(pk, b"acrqa-attestation-payloadX", sig) is False
+    finally:
+        for k, v in saved.items():
+            if v is not None:
+                sys.modules[k] = v
