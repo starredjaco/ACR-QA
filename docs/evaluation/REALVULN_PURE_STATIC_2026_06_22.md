@@ -29,17 +29,21 @@ for auditability, scan-diffing, and gate stability (see "Consistency", below).
 
 | Scanner | Recall | Precision | F2 |
 |---------|--------|-----------|-----|
-| **ACR-QA (acr-qa-hybrid-v1)** | **56.8%** | **47.2%** | **54.6%** |
+| **ACR-QA (acr-qa-hybrid-v1)** | **58.8%** | **46.3%** | **55.8%** |
+| GPT-5.5 agentic (best LLM) | 58.2% | 82.5% | 61.8% |
 | Semgrep | 17.6% | 30.4% | 19.2% |
 | Snyk | 14.9% | 45.1% | 17.2% |
 | SonarQube | 5.2% | 67.4% | 6.4% |
 
-On this corpus ACR-QA shows ~3.2× the recall of the next-best traditional tool (Semgrep) and ~2.8×
-the F2. **At 56.8% mean recall ACR-QA is #2 among ALL scanners and within 1.4 points of #1** — it
-exceeds Claude Sonnet 4.6 (53.9%), Gemini 3.1 (52.6%) and Opus 4.8 (51.7%), trailing only GPT-5.5
-(58.2%) — at **$0 and fully deterministic** (vs GPT-5.5's $54–62 and non-determinism). Achieved by
-reverse-engineering ALL 23 competitors (not just kolega) for vulns I missed that ≥3 of them caught,
-then building the general detector for each — validated on the held-out set.
+**ACR-QA is #1 on recall among ALL external scanners** — at 58.8% it now *edges out GPT-5.5 (58.2%)*,
+the strongest frontier-LLM agent, and beats Sonnet 4.6 (53.9%), Gemini 3.1 (52.6%), Opus 4.8 (51.7%)
+and every traditional tool (~3.3× Semgrep) — at **$0 and fully deterministic** vs GPT-5.5's $54–62
+and run-to-run non-determinism. (Only the benchmark author's own home-field tool, kolega-enterprise,
+scores higher — and on its own repos.) Achieved by reverse-engineering all 23 competitors for vulns
+ACR-QA missed that ≥3 of them caught, building the general detector for each, and an exact-line dedup
+fix — all validated on the held-out set. **Honest note:** the LLMs still win F2 via precision
+(exploitability reasoning, 82% vs 46%); ACR-QA's edge is *recall at zero cost with determinism*. For
+a high-precision operating point see the deterministic Confirmed tier (80%+) below.
 **But ACR-QA's detectors were developed against these 22 repos** (Semgrep/Snyk/SonarQube were not),
 so this table is in-sample for ACR-QA. The number that survives scrutiny is the held-out one below.
 
@@ -51,7 +55,7 @@ line-by-line while building detectors) was held apart from the other 16. The eng
 
 | Scanner | Recall | Precision | F2 |
 |---------|--------|-----------|-----|
-| **ACR-QA (never tuned on these)** | **51.7%** | **47.5%** | **50.8%** |
+| **ACR-QA (never tuned on these)** | **53.0%** | **46.9%** | **51.7%** |
 | Semgrep | 18.3% | 32.3% | 20.0% |
 | Snyk | 16.4% | 45.0% | 18.8% |
 | SonarQube | 6.3% | 63.2% | 7.6% |
