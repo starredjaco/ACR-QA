@@ -1,6 +1,6 @@
 # ACR-QA Unit Economics — One-Pager
 
-> **Version:** v5.0.0rc2 · **Date:** 2026-06-10 · **Status:** pre-revenue
+> **Version:** v5.0.0 · **Date:** 2026-06-21 · **Status:** pre-revenue (defense done 2026-06-19)
 
 ---
 
@@ -55,7 +55,7 @@ recovers the full infra cost of hosting for months.**
 |---|---|
 | Current spend to v5.0.0rc2 | **$0** (thesis project) |
 | Lines of production code | ~12,000 |
-| Test suite | 3,017 tests, 87.5% CORE coverage |
+| Test suite | 3,147 tests, 88% CORE coverage |
 | Distribution channels | PyPI + GHCR + GitHub Actions Marketplace |
 | Regulatory compliance | EU CRA / SLSA L3 / FIPS 204 — all pre-built |
 | Engineering headcount | 1 (solo grad student) |

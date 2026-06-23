@@ -1,5 +1,14 @@
 # ACR-QA Defense Q&A Preparation — 40 Questions (Rehearsal Cards)
 
+> **⭐ NUMBERS UPDATED (2026-06-24) — use these, not the older ones below.** Since the defense the
+> deterministic engine has climbed to **#1 on recall on RealVuln 2026: 58.8%** (official scorer),
+> *edging out GPT-5.5 (58.2%)* and beating Opus 4.8 (51.7%), Gemini 3.1 (52.6%), Semgrep (17.6%),
+> Snyk (14.9%) — at **$0** and 100% reproducible. Held-out **53.0%**, external PyGoat **48.1%**,
+> deterministic **80.6%-precision Confirmed tier**, ECDSA + real post-quantum Dilithium3, 3,147 tests.
+> Wherever an answer below says "25.1% / 50% / 37.8% on RealVuln," **say 58.8% (#1, beats GPT-5.5 at
+> $0)** instead. The honest caveat to keep: on *held-out* code GPT-5.5 still edges precision; ACR-QA's
+> moat is recall-at-$0 + determinism + the proof layer. Source: `evaluation/REALVULN_PURE_STATIC_2026_06_22.md`.
+
 *Memorise the answer structure, not the exact words. Keep each answer under 60 seconds.*
 
 > **Companion doc:** [`DEFENSE_QA.md`](DEFENSE_QA.md) holds the long-form technical answers with
@@ -638,7 +647,7 @@ It's the expected behavior of a recall-first tool. The full output maximizes rec
 
 | Metric | Value |
 |--------|------:|
-| Version | v5.0.0rc2 |
+| Version | v5.0.0 (defense delivered 2026-06-19) |
 | Python tests | 3,137 |
 | TypeScript tests | 110 |
 | Total tests | **3,247** |
@@ -661,7 +670,7 @@ It's the expected behavior of a recall-first tool. The full output maximizes rec
 | OWASP Methodology Youden J | **0.157** (leads Bandit 0.090, Semgrep 0.056) |
 | Novel evaluations | **6** (X1–X6) |
 | Novel contributions | **13** |
-| Distribution | `pip install acrqa==5.0.0rc2` + GitHub Actions Marketplace |
+| Distribution | `pip install acrqa==5.0.0` + GitHub Actions Marketplace |
 
 ---
 

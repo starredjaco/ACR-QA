@@ -1,12 +1,12 @@
 # ACR-QA Documentation Index
 
-> **As of v5.0.0rc2 (June 2026):** All God-Mode tracks through v11 complete; X1–X6 empirical battery.
-> Tests: **3,017** (2,954 Python + 63 TS), **88% CORE coverage**. Migrations: **20**. Endpoints: **52**.
-> Ground-truth YAMLs: **23** (CVE recall battery: 20 pre-registered).
-> Headline result: **P4 Confirmed Tier — 96.4% conservative precision** (95% CI [90.9%, 100%]),
-> 100% CVE recall, F1=98.2%. See [evaluation chapter (archived draft)](archive/EVALUATION_CHAPTER.md) ·
-> **[full evaluation index →](evaluation/README.md)**.
-> Engines documented under [engines/](engines/).
+> **As of 2026-06-24 (post-defense):** Tests **3,147** · **88% CORE coverage** · 52 endpoints.
+> **Headline result — #1 on recall on RealVuln 2026:** the deterministic engine reaches **58.8% recall**
+> (official), edging out GPT-5.5 (58.2%) at $0, beating Opus 4.8 / Gemini / Semgrep / Snyk; held-out
+> 53.0%; deterministic **80.6%-precision Confirmed tier**; ECDSA-P256 + real **post-quantum Dilithium3**
+> attestation. → [`evaluation/REALVULN_PURE_STATIC_2026_06_22.md`](evaluation/REALVULN_PURE_STATIC_2026_06_22.md).
+> Defense-era headline (different corpus, still valid): P4 Confirmed Tier **96.4% precision**, 100% CVE
+> recall, F1 98.2%. **[full evaluation index →](evaluation/README.md)** · engines under [engines/](engines/).
 
 **Quick nav:** [evaluation/](evaluation/README.md) · [architecture/](architecture/) · [adr/](adr/) ·
 [business/](business/) · [legal/](legal/) · [setup/](setup/) · [sre/](sre/) · [engines/](engines/) ·

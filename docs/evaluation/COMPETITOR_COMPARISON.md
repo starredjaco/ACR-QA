@@ -1,5 +1,10 @@
 # Competitor Comparison — Bandit vs Semgrep vs ACR-QA
 
+> **⭐ CURRENT (2026-06-24):** the head-to-head has moved well beyond Bandit/Semgrep. On RealVuln 2026
+> ACR-QA's deterministic engine reaches **58.8% recall — #1, edging out GPT-5.5 (58.2%)** and beating
+> Opus 4.8 (51.7%), Gemini 3.1 (52.6%), Semgrep (17.6%), Snyk (14.9%), SonarQube (5.2%) — at $0 and
+> 100% reproducible. Full table: [`REALVULN_PURE_STATIC_2026_06_22.md`](REALVULN_PURE_STATIC_2026_06_22.md).
+
 Generated: 2026-05-31
 Corpus: 30-repo precision corpus (`precision_corpus_pins.yml`)
 Methodology: same `triage_finding()` heuristics applied to all three tool sets.

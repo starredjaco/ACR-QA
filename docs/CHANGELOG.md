@@ -2,6 +2,55 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Unreleased] — 2026-06-24 · RealVuln #1 — deterministic engine out-recalls GPT-5.5
+
+### Headline — #1 on recall among all external scanners
+
+- **RealVuln 2026, official scorer: 58.8% recall / 46.3% precision / F2 55.8%** (full corpus).
+  ACR-QA's deterministic engine now **edges out GPT-5.5 (58.2%)** — #1 on recall among all external
+  scanners (only the benchmark author's home-field kolega-enterprise ranks higher), beating Claude
+  Opus 4.8 (51.7%), Gemini 3.1 (52.6%), and every traditional tool (~3.3× Semgrep) — at **$0** vs the
+  LLM agents' $54–62 and full run-to-run determinism. Held-out (16 never-seen repos): **53.0%**.
+- **How (recall 53.4% → 58.8% this cycle):** (1) reverse-engineered all 23 competitors for vulns
+  ACR-QA missed that ≥3 of them caught, then built the *general* detector for each (Django-view
+  recognition, aiohttp routes, Python-2 regex-fallback fixes, eval/compile, mark_safe, mass-assignment
+  CWE-915, SSTI→XSS co-emit, HTML `.format()`, multi-file secrets, admin-authz CWE-862); (2) the key
+  structural fix — **exact-line dedup** (was `line//5`, which silently collapsed distinct same-CWE
+  vulns within 5 lines; the official scorer already does ±10 matching, so it was pure loss — recovered
+  +9 TP, held-out +1.3pp).
+- **Seven "clever shortcuts" tested and rejected** (each dropped real vulns or precision): Semgrep
+  registry packs, generic inter-procedural taint, Bandit-all, cheap-LLM precision filter, call-graph
+  reachability pruning, render-XSS broadening, debug-CWE co-emission. The honest lesson: only *targeted*
+  detectors + *corroboration-based* confidence move this engine. See `evaluation/KOLEGA_PARITY_PLAN.md`.
+
+### Added — deterministic confidence tiers + corroboration
+
+- **`_confidence_tier`** in `scripts/run_realvuln_hybrid.py`: every finding tagged `certain`
+  (≥2 independent engines agree), `firm` (syntactically-clear single detector), or `tentative`
+  (authorization heuristic). The deterministic **Confirmed tier reaches 80.6% precision** — a
+  high-precision operating point with no LLM. Bandit re-added as a *corroboration-only* curated
+  high-precision source (upgrades confidence on agreement; Bandit-only findings dropped → grows the
+  Confirmed tier 44→75 TP without polluting recall mode). Unit-tested (`TESTS/test_confidence_tiering.py`).
+
+### Fixed — Dilithium3 post-quantum signing is now REAL and verifiable
+
+- **`CORE/engines/attestation.py`**: previously `_sign_dilithium3` generated a throwaway keypair per
+  signature and `verify()` only ever checked ECDSA — the Dilithium3 signature was decorative and
+  unverifiable. Now a **stable Dilithium3 keypair** (loadable from `ACRQA_DILITHIUM_KEY`), the public
+  key is **embedded in every bundle**, and `verify()` checks **both** ECDSA-P256 and Dilithium3 — any
+  present-but-invalid signature fails the bundle (tamper-evidence). 5 new tests incl. a real-crypto
+  round-trip that bypasses the suite mock. The "post-quantum Dilithium3 signed" claim is now true.
+
+### External held-out validation
+
+- **PyGoat (OWASP, never in the engine's working set)** downloaded fresh and scored by the frozen
+  engine: **48.1% recall** (official) — consistent with in-corpus held-out, confirming generalization.
+
+### Validation
+
+- **3,147 tests** (3,044 pass in the fast run; rest gated on DB/Docker), **88% CORE coverage**,
+  determinism CI-enforced (`TESTS/test_static_scanner_determinism.py`). mypy + ruff clean.
+
 ## [Unreleased] — 2026-06-22 · Pure-static RealVuln engine (zero-LLM)
 
 ### Added — deterministic AST security engine

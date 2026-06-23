@@ -1,5 +1,11 @@
 # ACR-QA — Defense Presentation Content (GP2, June 2026)
 
+> **✅ POST-DEFENSE (2026-06-24):** this reflects the defense delivered 2026-06-19 and is kept as the
+> historical record. The engine has since reached **#1 on recall on RealVuln 2026 — 58.8%** (official,
+> edging out GPT-5.5 58.2% at $0; held-out 53.0%; deterministic 80.6%-precision Confirmed tier; real
+> post-quantum Dilithium3). Use 58.8% (not 25.1%/50%) for any reuse. See
+> `../evaluation/REALVULN_PURE_STATIC_2026_06_22.md` (path-adjust as needed).
+
 **Format:** 10–15 min talk + 5 min live demo. ~12 content slides + title + outline + Q&A.
 **Goal:** lead with the problem, prove it works with real numbers, show it live, end strong.
 

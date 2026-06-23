@@ -1,6 +1,19 @@
 # ACR-QA Active Roadmap — Ahmed's Personal Execution Plan
 
-> **What this is:** The actual execution log for ACR-QA v5.0.0rc2. All items below are
+> ## ⭐ CURRENT STATE (2026-06-24) — defense done, RealVuln #1
+>
+> **The engine is now #1 on recall among all external scanners on RealVuln 2026.** These supersede
+> every earlier RealVuln number in the historical task log below (25.1% / 37.8% / 50% / 53% etc.):
+>
+> - **RealVuln full corpus (official): 58.8% recall / 46.3% precision / F2 55.8%** — edges out
+>   GPT-5.5 (58.2%), beats Opus 4.8 (51.7%), Gemini 3.1 (52.6%), Semgrep 17.6%, Snyk 14.9%, at **$0**.
+> - **Held-out (16 never-seen repos): 53.0%** · **external (PyGoat): 48.1%** · deterministic, 100% reproducible.
+> - **Deterministic Confirmed tier: 80.6% precision** (≥2-engine agreement, no LLM).
+> - **3,147 tests · 88% CORE coverage** · ECDSA-P256 **+ real post-quantum Dilithium3** attestation.
+> - Method + full results: [`evaluation/REALVULN_PURE_STATIC_2026_06_22.md`](evaluation/REALVULN_PURE_STATIC_2026_06_22.md),
+>   [`evaluation/KOLEGA_PARITY_PLAN.md`](evaluation/KOLEGA_PARITY_PLAN.md). Defense: DONE. Now: open-source launch + job search.
+
+> **What this is:** The actual execution log for ACR-QA v5.0.0. All items below are
 > **completely free** (no domain, no card, no surprise bills) and realistic for a
 > fresh-grad backend + DevOps engineer.
 >
@@ -11,8 +24,8 @@
 > **Archive (do not re-execute):** v4–v10 God Mode plans — superseded, moved to
 > [`archive/`](archive/). Strategic menu for post-defense: [`GOD_MODE_V5_PLAN.md`](archive/GOD_MODE_V5_PLAN.md).
 >
-> **Created:** 2026-05-31 · **v10 repositioning:** 2026-06-04 · **Last updated:** 2026-06-05
-> **Horizon:** defense day 2026-06-25 + post-defense adoption runway
+> **Created:** 2026-05-31 · **v10 repositioning:** 2026-06-04 · **Last updated:** 2026-06-21
+> **Defense DELIVERED:** 2026-06-19 ✅ · **Now:** open-source launch + job search
 > **Total cost:** $0 ongoing. $0 setup.
 
 ---
@@ -23,7 +36,7 @@
 |---|------|------|--------|--------------|
 | 1 | **Funnel reveal slide** (1,942 → 55 → 96.4% precision) | 1 hour | ✅ | `docs/FUNNEL_SLIDE.html` — interactive Space/→ presenter slide |
 | 2 | **Docker image on `ghcr.io/ahmed-145/acrqa`** | 2 days | ✅ | `.github/workflows/sign-images.yml` — builds, pushes, Cosign-signs |
-| 3 | **5-min demo video on YouTube** | 1 day | 📋 | **Ahmed records** — script at `docs/DEMO_VIDEO_SCRIPT.md` |
+| 3 | **75-sec LinkedIn marketing video** | 1 day | 📋 | **Ahmed records** — SecureHub-style script at `docs/business/VIDEO_SCRIPT.md` |
 | 4 | **README + Codespaces "Open in" button** | 1 day | ✅ | `.devcontainer/devcontainer.json` + Codespaces badge in README |
 | 5 | **Cloudflare Pages static dashboard** at `acrqa.pages.dev` | 2 days | ✅ | `cloudflare-pages/index.html` ready — **Ahmed deploys via CF dashboard** |
 | 6 | **5-rater κ study** (closes the "in progress" eval gap) | 2.5 weeks | ✅ | `docs/kappa_study/` — materials + analyze_kappa.py — **Ahmed recruits raters** |
@@ -32,7 +45,7 @@
 | 9 | **Multi-LLM jury** (Groq + Gemini free tiers only) | 3 days | ✅ | Gemini 1.5-flash added to `second_opinion.py`; falls back gracefully |
 | 10 | **Cosign + SLSA L3 + Sigstore Rekor** | 2 days | ✅ | `sign-images.yml` upgraded with `slsa-github-generator` L3 job |
 | 11 | **Self-scan badge** on README | 1 hour | ✅ | `.github/workflows/self-scan.yml` — weekly, commits badge JSON |
-| 12 | **Hacker News post + LinkedIn article + blog** | 1 day | ✅ | `docs/LAUNCH_POSTS.md` — copy-paste ready — **Ahmed posts after defense** |
+| 12 | **Hacker News post + LinkedIn article + blog** | 1 day | 📋 | `docs/business/LAUNCH_POSTS.md` — copy-paste ready — **Ahmed posts (defense done ✅)** |
 | 13 | **Differential SAST** — new-only findings vs. last scan | 3–5 days | ✅ | `GET /v1/runs/{id}/diff` + `Database.get_run_by_id` |
 | 14 | **Counterfactual explanations** — "what would fix this?" | 3–5 days | ✅ | `POST /v1/findings/{id}/counterfactual` + `ExplanationEngine.generate_counterfactual()` |
 | 15 | **Kubernetes operator with CRDs** — `ACRQAScan` CRD | 2–3 weeks | ✅ | `deploy/operator/` — kopf controller + RBAC + example CR |

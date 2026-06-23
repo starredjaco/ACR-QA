@@ -6,7 +6,7 @@
 > **Category:** Provable AppSec Testing (PAST) — exploit-verified remediation for first-party
 > application source code, in CI, cryptographically attested, at $0.
 >
-> **Defense:** 2026-06-25 · **Version:** ACR-QA v5.0.0rc2
+> **Defense:** 2026-06-19 ✅ DELIVERED · **Version:** ACR-QA v5.0.0
 
 ---
 
@@ -116,7 +116,7 @@ regulation caught up to the design."*
 | EU CRA evidence pack | ❌ | ❌ | ❌ | ✅ `generate_evidence_pack.py` |
 | Pricing model | per-dev+severity | per-dev | per-committer | **per-core-contributor** |
 | LOC penalty | ❌ | ❌ | ✅ LOC-based | ❌ (flat) |
-| RealVuln 2026 recall (1,000 prod CVEs) | 17.4% | 17.5% | — | **25.1%** |
+| RealVuln 2026 recall (official scorer) | 14.9% | 17.6% | — | **58.8% — #1, beats GPT-5.5 at $0** |
 
 ---
 

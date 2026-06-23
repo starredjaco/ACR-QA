@@ -1,5 +1,12 @@
 # ACR-QA Evaluation Report
 
+> **⭐ CURRENT HEADLINE (2026-06-24):** On RealVuln 2026 (official scorer) ACR-QA's deterministic
+> engine is **#1 on recall among all external scanners — 58.8%** — edging out GPT-5.5 (58.2%) at $0,
+> beating Opus 4.8 / Gemini / Semgrep / Snyk; held-out 53.0%; deterministic 80.6%-precision Confirmed
+> tier; ECDSA-P256 + real post-quantum Dilithium3 attestation; 3,147 tests / 88% CORE coverage. Live
+> source of truth: [`REALVULN_PURE_STATIC_2026_06_22.md`](REALVULN_PURE_STATIC_2026_06_22.md). Earlier
+> RealVuln figures in this report (25.1% / 37.8% / 50%) are historical.
+
 > Comprehensive accuracy, benchmark, and coverage analysis for academic review.
 
 ---

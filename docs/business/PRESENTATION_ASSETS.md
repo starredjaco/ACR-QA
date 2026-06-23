@@ -1,4 +1,4 @@
-# ACR-QA — Presentation Assets (Defense Day June 25, 2026)
+# ACR-QA — Presentation Assets (Defense DELIVERED June 19, 2026 ✅)
 
 > All figures in `docs/presentation_assets/` are **300 DPI PNG**, generated from
 > real verified data by `ACR-QA-Book/figures/generate_eval_figures.py`.
@@ -28,9 +28,9 @@
 
 ### 3. `REALVULN_LEADERBOARD.png` — Third-Party Benchmark
 **Use when:** Defending against "why not just use Bandit/Semgrep/Snyk?"
-- 6 tools ranked by full-corpus recall on RealVuln 2026 (arXiv:2604.13764)
-- ACR-QA+LLM: 32.4% — ACR-QA baseline: 25.1% — Snyk: 17.4% — SonarQube: 6.5%
-- **Key message:** ACR-QA leads on a third-party ground truth benchmark you didn't control
+- All scanners ranked by full-corpus recall on RealVuln 2026 (arXiv:2604.13764), official scorer
+- **ACR-QA: 58.8% — #1** (edges out GPT-5.5 58.2%) — Opus 4.8: 51.7% — Gemini 3.1: 52.6% — Semgrep: 17.6% — Snyk: 14.9% — SonarQube: 5.2%
+- **Key message:** a free, deterministic engine out-recalls a $62 frontier-LLM agent on a third-party benchmark — at $0, same answer every run
 
 ---
 
@@ -117,8 +117,8 @@
 | F₃ (recall-heavy) | **0.854** | Key SAST metric (recall >4× precision weight) |
 | Youden J | **0.157** | Best of all 3 tools (Bandit 0.090, Semgrep 0.056) |
 | MCC | **0.210** | Balanced, dataset-size independent |
-| RealVuln Recall | **25.1%** | Third-party ground truth (arXiv:2604.13764) |
-| RealVuln + LLM | **32.4%** | +7.3pp gain with augmentation |
+| RealVuln Recall | **58.8% — #1** | Beats GPT-5.5 (58.2%); third-party GT (arXiv:2604.13764), official scorer, deterministic at $0 |
+| RealVuln held-out | **53.0%** | 16 never-seen repos — generalizes, ~2.9× Semgrep |
 | Test Count | **2,805** passing | + 104 Vitest + 55 Playwright + 14 axe |
 | Coverage | **83.60%** | CORE module (CI gate: 82%) |
 | Load Test | **500 RPS** | p50<40ms, p95<120ms, error<0.01% |

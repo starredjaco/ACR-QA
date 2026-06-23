@@ -4,9 +4,14 @@ Provenance for every headline number in the thesis (Chapter 5). The thesis repro
 figures directly; these files are the underlying derivation, methodology, and raw evidence.
 **Nothing here is deleted** — dated raw-run snapshots live in [`snapshots/`](snapshots/).
 
-> Headline results: **P4 Confirmed Tier 96.4% cons / 100% opt precision** (95% CI [90.9%, 100%]),
-> **100% CVE recall** (8/8 detectable), **RealVuln 25.1%** full / 17.5% Semgrep / 17.4% Snyk / 6.5% SonarQube,
-> **X6 0.0% HIGH FPR** on 7 mature PyPI packages.
+> **⭐ Current headline (2026-06-24):** **RealVuln 58.8% recall — #1 among all external scanners**,
+> edging out GPT-5.5 (58.2%) at $0; held-out 53.0%; deterministic 80.6%-precision Confirmed tier.
+> Live source of truth → [`REALVULN_PURE_STATIC_2026_06_22.md`](REALVULN_PURE_STATIC_2026_06_22.md)
+> and the method/roadmap → [`KOLEGA_PARITY_PLAN.md`](KOLEGA_PARITY_PLAN.md).
+>
+> Defense-era headlines (still valid, different corpus): **P4 Confirmed Tier 96.4% precision** on the
+> 30-repo adversarial corpus (95% CI [90.9%, 100%]), **100% CVE recall** (8/8), **X6 0.0% HIGH FPR**.
+> The older RealVuln figure (25.1%) is superseded by the 58.8% above.
 
 ## Precision & Confirmed Tier
 | Doc | What it covers |

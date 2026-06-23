@@ -1,5 +1,8 @@
 # T4.3 Dual-Corpus Confusion Matrix
 
+> **Note (2026-06-24):** historical snapshot. Current RealVuln headline is **58.8% recall (#1, beats
+> GPT-5.5)** — see [`REALVULN_PURE_STATIC_2026_06_22.md`](REALVULN_PURE_STATIC_2026_06_22.md).
+
 _Generated: 2026-05-29 19:51 UTC_
 
 Dual-corpus evaluation: precision corpus measures FP rate on clean production libraries; recall corpus measures detection rate on known-vulnerable apps pinned to CVE-introducing commits.

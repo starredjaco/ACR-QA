@@ -1,4 +1,11 @@
-# ACR-QA Demo Video Script
+# ACR-QA Demo Video Script ⚠️ SUPERSEDED
+
+> **Use `VIDEO_SCRIPT.md` instead** — this is the old 5-minute academic demo script
+> (Flask dashboard, "10 tools", stale numbers). The new file is the 75-second SecureHub-style
+> LinkedIn marketing video with the correct demo path (dvpwa → dashboard → 32 findings).
+
+---
+
 **Length:** ~5 minutes | **Format:** Screen recording with voiceover
 
 ---

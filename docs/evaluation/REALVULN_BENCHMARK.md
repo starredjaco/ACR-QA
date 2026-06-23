@@ -1,5 +1,11 @@
 # ACR-QA RealVuln Benchmark — Real Production Apps
 
+> **⭐ SUPERSEDED — see [`REALVULN_PURE_STATIC_2026_06_22.md`](REALVULN_PURE_STATIC_2026_06_22.md).**
+> As of 2026-06-24 the deterministic engine is **#1 on recall on RealVuln 2026: 58.8% recall / 46.3%
+> precision / F2 55.8%** (official scorer) — edging out GPT-5.5 (58.2%) at $0, beating Opus 4.8 (51.7%),
+> Gemini 3.1 (52.6%), Semgrep (17.6%), Snyk (14.9%); held-out 53.0%; deterministic 80.6%-precision
+> Confirmed tier. The early figures below (23.5% / 25.1% / 37.8% / 50%) are historical, kept for provenance.
+
 > **Created:** 2026-06-03 · **Updated:** 2026-06-03 (after Step 3+4b mapping fixes)
 > **ACR-QA version:** 5.0.0rc2
 > **Corpus:** RealVuln (kolega-ai/Real-Vuln-Benchmark) — 26 real Python apps, 697 TP + 120 FP

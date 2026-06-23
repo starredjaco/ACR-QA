@@ -1,5 +1,11 @@
 # ACR-QA — Defense Speaker Script (21 slides · KSIU template)
 
+> **✅ POST-DEFENSE (2026-06-24):** this reflects the defense delivered 2026-06-19 and is kept as the
+> historical record. The engine has since reached **#1 on recall on RealVuln 2026 — 58.8%** (official,
+> edging out GPT-5.5 58.2% at $0; held-out 53.0%; deterministic 80.6%-precision Confirmed tier; real
+> post-quantum Dilithium3). Use 58.8% (not 25.1%/50%) for any reuse. See
+> `../evaluation/REALVULN_PURE_STATIC_2026_06_22.md` (path-adjust as needed).
+
 **Maps 1:1 to `scripts/build_template_deck.py`** — 21 slides. Target: **~13 min** talk, then a **2–3 min
 live demo AFTER you finish** (not in the middle). Photo slides run fast (~20–25 s); diagram slides get
 the time (~50 s). **The full demo walkthrough is at the very end — see "POST-PRESENTATION DEMO."**
