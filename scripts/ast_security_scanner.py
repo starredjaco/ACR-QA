@@ -96,6 +96,46 @@ def scan_js(path: Path, content: str | None = None) -> list[dict]:
 
 _SCRIPT_BLOCK_RE = re.compile(r"<script[^>]*>(.*?)</script>", re.IGNORECASE | re.DOTALL)
 
+# High-confidence secrets in ANY text file (templates/xml/config) — unambiguous formats.
+_SECRET_UNAMBIGUOUS_RE = re.compile(
+    r"AKIA[0-9A-Z]{16}"  # AWS access key
+    r"|-----BEGIN [A-Z ]*PRIVATE KEY"  # private key block
+    r"|sk_live_[A-Za-z0-9]{16,}|sk_test_[A-Za-z0-9]{16,}"  # Stripe
+    r"|gh[pousr]_[A-Za-z0-9]{30,}"  # GitHub token
+    r"|eyJ[A-Za-z0-9_-]{15,}\.eyJ[A-Za-z0-9_-]{15,}"  # JWT
+    r"|xox[baprs]-[A-Za-z0-9-]{10,}"  # Slack
+)
+# Long hex (API key / token / hash) is only a secret near a credential keyword (avoids asset hashes).
+_SECRET_HEX_RE = re.compile(r"\b[a-f0-9]{40,}\b", re.IGNORECASE)
+_SECRET_CRED_CTX = re.compile(r"password|passwd|api[ _-]?key|secret|token|credential|login|admin", re.IGNORECASE)
+
+
+def scan_text_secrets(path: Path) -> list[dict]:
+    """Hardcoded secrets in non-Python text files (templates, XML, config)."""
+    findings: list[dict] = []
+    try:
+        lines = path.read_text(errors="replace").splitlines()
+    except Exception:
+        return findings
+    for i, line in enumerate(lines, 1):
+        if _SECRET_UNAMBIGUOUS_RE.search(line):
+            findings.append(
+                {"file": str(path), "line": i, "cwe": "CWE-798", "description": "Hardcoded secret/key in file"}
+            )
+            continue
+        if _SECRET_HEX_RE.search(line):
+            ctx = " ".join(lines[max(0, i - 4) : min(len(lines), i + 1)])
+            if _SECRET_CRED_CTX.search(ctx):
+                findings.append(
+                    {
+                        "file": str(path),
+                        "line": i,
+                        "cwe": "CWE-798",
+                        "description": "Hardcoded credential/API key (long hex near credential context)",
+                    }
+                )
+    return findings
+
 
 def scan_html(path: Path) -> list[dict]:
     findings = []
@@ -1723,6 +1763,13 @@ def scan_repo(repo_path: str) -> list[dict]:
         if any(x in str(p) for x in (".git", "node_modules", ".min.js")):
             continue
         raw.extend(scan_js(p))
+
+    # Hardcoded secrets in non-Python text files (templates, XML, config, env).
+    for ext in ("*.html", "*.jinja2", "*.j2", "*.xml", "*.txt", "*.conf", "*.cfg", "*.ini", "*.env", "*.yml", "*.yaml"):
+        for p in repo.rglob(ext):
+            if any(x in str(p) for x in (".git", "node_modules")):
+                continue
+            raw.extend(scan_text_secrets(p))
 
     # Normalise to repo-relative paths, dedup
     out: list[dict] = []
