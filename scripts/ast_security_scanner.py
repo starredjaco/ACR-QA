@@ -631,6 +631,27 @@ class _Visitor(ast.NodeVisitor):
     def visit_FunctionDef(self, node: ast.FunctionDef):
         dec_names = _decorator_names(node)
         has_route = any(_is_route_decorator(d) for d in node.decorator_list)
+        # Django/other request handlers don't use @route — they're registered in urls.py and take
+        # `request` as the first arg, often with @require_http_methods/@login_required. Treat these as
+        # routes so the auth/authz/CSRF detectors fire on them too.
+        _params = [a.arg for a in node.args.args]
+        _django_dec = any(
+            d
+            in (
+                "require_http_methods",
+                "require_GET",
+                "require_POST",
+                "require_safe",
+                "login_required",
+                "user_is_authenticated",
+                "permission_required",
+                "staff_member_required",
+                "user_passes_test",
+            )
+            for d in dec_names
+        )
+        if not has_route and _django_dec and _params and _params[0] == "request":
+            has_route = True
         has_auth = bool(_AUTH_DECORATORS.intersection(dec_names))
         has_rate = bool(_RATE_LIMIT_DECORATORS.intersection(dec_names))
 
