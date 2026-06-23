@@ -29,14 +29,15 @@ for auditability, scan-diffing, and gate stability (see "Consistency", below).
 
 | Scanner | Recall | Precision | F2 |
 |---------|--------|-----------|-----|
-| **ACR-QA (acr-qa-hybrid-v1)** | **53.6%** | **47.2%** | **52.2%** |
+| **ACR-QA (acr-qa-hybrid-v1)** | **55.2%** | **47.4%** | **53.4%** |
 | Semgrep | 17.6% | 30.4% | 19.2% |
 | Snyk | 14.9% | 45.1% | 17.2% |
 | SonarQube | 5.2% | 67.4% | 6.4% |
 
-On this corpus ACR-QA shows ~3.0× the recall of the next-best tool (Semgrep) and ~2.7× the F2.
-At 53.6% mean recall it now exceeds Claude Opus 4.8 (51.7%) and Gemini 3.1 (52.6%) on the
-frontier-LLM leaderboard — at $0 and deterministic.
+On this corpus ACR-QA shows ~3.1× the recall of the next-best traditional tool (Semgrep) and ~2.8×
+the F2. **At 55.2% mean recall ACR-QA is now #2 among ALL scanners on the frontier-LLM leaderboard**
+— it exceeds Claude Sonnet 4.6 (53.9%), Gemini 3.1 (52.6%) and Opus 4.8 (51.7%), trailing only
+GPT-5.5 (58.2%) — at **$0 and fully deterministic** (vs GPT-5.5's $54–62 and non-determinism).
 **But ACR-QA's detectors were developed against these 22 repos** (Semgrep/Snyk/SonarQube were not),
 so this table is in-sample for ACR-QA. The number that survives scrutiny is the held-out one below.
 
@@ -48,7 +49,7 @@ line-by-line while building detectors) was held apart from the other 16. The eng
 
 | Scanner | Recall | Precision | F2 |
 |---------|--------|-----------|-----|
-| **ACR-QA (never tuned on these)** | **50.9%** | **47.1%** | **50.1%** |
+| **ACR-QA (never tuned on these)** | **51.4%** | **47.4%** | **50.6%** |
 | Semgrep | 18.3% | 32.3% | 20.0% |
 | Snyk | 16.4% | 45.0% | 18.8% |
 | SonarQube | 6.3% | 63.2% | 7.6% |
