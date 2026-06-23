@@ -177,7 +177,27 @@ def _func_name(node: ast.expr) -> str:
 
 def _is_route_decorator(d: ast.expr) -> bool:
     n = d.func if isinstance(d, ast.Call) else d
-    return _func_name(n) in ("route", "get", "post", "put", "delete", "patch", "add_url_rule")
+    return _func_name(n) in (
+        "route",
+        "get",
+        "post",
+        "put",
+        "delete",
+        "patch",
+        "add_url_rule",
+        # aiohttp / aiohttp_jinja2 / other frameworks
+        "template",
+        "view",
+        "expose",
+        "page",
+        "endpoint",
+        "handler",
+        "add_get",
+        "add_post",
+        "add_route",
+        "get_async",
+        "post_async",
+    )
 
 
 def _decorator_names(func: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
@@ -898,6 +918,20 @@ class _Visitor(ast.NodeVisitor):
         ):
             self._has_regen = True
 
+        # CWE-79: Django mark_safe()/SafeString()/format_html() on dynamic content disables
+        # auto-escaping — a textbook stored/reflected XSS sink.
+        if fn in ("mark_safe", "SafeString", "SafeText") and node.args:
+            if not isinstance(node.args[0], ast.Constant):
+                self._add(node.lineno, "CWE-79", f"XSS: {fn}() marks dynamic content safe, bypassing auto-escaping")
+
+        # CWE-915: mass assignment — qs.update(**user_dict) / Model(**data) / .create(**data) where
+        # the unpacked dict is user-controlled, letting the user set arbitrary fields (is_admin, …).
+        if fn in ("update", "create", "save") or (bool(fn) and fn[0].isupper()):
+            for kw in node.keywords:
+                if kw.arg is None and (_is_from_request(kw.value) or self._tainted(kw.value)):
+                    self._add(node.lineno, "CWE-915", f"Mass assignment: {fn}(**user_data) sets arbitrary fields")
+                    break
+
         # CWE-1336: render_template_string(dynamic) / env.from_string(dynamic)
         if fn == "render_template_string" and node.args:
             if not isinstance(node.args[0], ast.Constant):
@@ -1161,6 +1195,16 @@ class _Visitor(ast.NodeVisitor):
             ):
                 if self._line_has_security_kw(node.lineno):
                     self._add(node.lineno, "CWE-338", "Weak PRNG random.* used in a security context — use secrets")
+            # CWE-330: random.seed(<dynamic>) — seeding the PRNG with user/predictable input makes
+            # all subsequent output predictable.
+            if (
+                isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "random"
+                and node.func.attr == "seed"
+                and node.args
+                and not isinstance(node.args[0], ast.Constant)
+            ):
+                self._add(node.lineno, "CWE-330", "Insufficient randomness: random.seed() with dynamic/user input")
 
         # CWE-916 / CWE-328: weak hash — only when the hashed input is a credential/secret.
         # Generic md5()/sha1() over arbitrary data is a hygiene smell, not an exploitable vuln,
