@@ -980,12 +980,14 @@ class _Visitor(ast.NodeVisitor):
         # CWE-1336: Jinja2 env.from_string(dynamic) — SSTI via user-controlled template string
         if isinstance(node.func, ast.Attribute) and node.func.attr == "from_string" and node.args:
             if not isinstance(node.args[0], ast.Constant):
-                # SSTI is the root cause (CWE-1336); the XSS is a symptom — emit one finding.
+                # SSTI (CWE-1336) is the root cause; the rendered output is also reflected XSS
+                # (CWE-79). RealVuln labels these as SEPARATE findings at the same line, so emit both.
                 self._add(
                     node.lineno,
                     "CWE-1336",
                     "SSTI: from_string() with dynamic (possibly user-controlled) template string",
                 )
+                self._add(node.lineno, "CWE-79", "XSS: from_string() renders dynamic template without escaping")
 
         # CWE-89: SQL built via .format()/%/+ — at the construction site (general SQLi pattern,
         # complements the f-string handler in visit_JoinedStr).
@@ -1005,12 +1007,13 @@ class _Visitor(ast.NodeVisitor):
             if _is_from_request(node.args[0]):
                 self._add(node.lineno, "CWE-643", f"XPath injection: user input in {fn}() query")
 
-        # CWE-1336: Template(dynamic_string) — SSTI when template string contains user input
+        # CWE-1336: Template(dynamic_string) — SSTI (+ reflected XSS) when template has user input
         if fn == "Template" and node.args:
             if not isinstance(node.args[0], ast.Constant):
                 self._add(
                     node.lineno, "CWE-1336", "SSTI: Template(dynamic_string) — user input can be injected as template"
                 )
+                self._add(node.lineno, "CWE-79", "XSS: Template(dynamic_string) renders user input without escaping")
 
         # CWE-16: jinja2.Environment() without autoescape=True — autoescape off by default
         if fn == "Environment" and not any(kw.arg == "autoescape" for kw in node.keywords):
@@ -1018,8 +1021,8 @@ class _Visitor(ast.NodeVisitor):
                 node.lineno, "CWE-16", "Jinja2 Environment() created without autoescape=True — XSS risk in templates"
             )
 
-        # CWE-94: eval/exec with non-constant
-        if fn in ("eval", "exec") and node.args:
+        # CWE-94: eval/exec/compile/execfile with a non-constant first argument.
+        if fn in ("eval", "exec", "compile", "execfile") and node.args:
             if not isinstance(node.args[0], ast.Constant):
                 self._add(node.lineno, "CWE-94", f"{fn}() with dynamic (user-controlled?) argument")
 
