@@ -328,7 +328,7 @@ PyPI packages). Full provenance index: **[`docs/evaluation/README.md`](docs/eval
 **Research questions:** RQ1 RAG hallucination reduction · RQ2 PostgreSQL provenance · RQ3 label-free
 confidence scoring · RQ4 precision/recall vs commercial SAST — see [`docs/evaluation/README.md`](docs/evaluation/README.md).
 
-**Tests:** 3,247 (3,137 Python + 110 TS) at 88% CORE coverage — `make test-all` or
+**Tests:** 3,147 (Python) + 110 TS dashboard at 88% CORE coverage — `make test-all` or
 `.venv/bin/pytest TESTS/ -v`.
 
 ---

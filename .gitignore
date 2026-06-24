@@ -156,3 +156,18 @@ docs/archive/media/*.png
 !ACR-QA-Book/figures/arch_overview_wide.png
 !ACR-QA-Book/figures/REALVULN_LEADERBOARD_CLEAN.png
 !ACR-QA-Book/figures/BENCHMARK_SCORECARD.png
+
+# --- 2026-06-25: GitHub-readiness + privacy ---
+# Large presentation binaries (kept on disk, not in git)
+*.odp
+# Private launch / job-search strategy — LOCAL ONLY, never public (recruiters view this repo)
+docs/business/JOB_SEARCH_PLAYBOOK.md
+docs/business/LAUNCH_POSTS.md
+# AI-agent tooling — local only, not for public/recruiter-facing repo
+.agents/
+.agent/
+.claude/
+CLAUDE.md
+AGENT_NOTES.md
+video/.*/
+video/skills/
