@@ -180,6 +180,34 @@ class AnalysisPipeline:
         logger.info("\n[3/5] Loading normalized findings...")
         findings = self._load_findings()
 
+        # Step 3a: Deep AST security pass (the deterministic engine behind the project's RealVuln
+        # results). OPT-IN via ACRQA_DEEP_SCAN=1. It massively raises security recall (≈1 → dozens of
+        # findings on a vulnerable repo), but the current per-finding engines downstream (taint /
+        # reachability / exploit-verification) were tuned for a handful of security findings and do not
+        # yet scale to the volume this produces — so it is off by default until those run only on the
+        # Confirmed tier. Additive + deduplicated; findings flow through the normal pipeline.
+        if os.environ.get("ACRQA_DEEP_SCAN", "0") == "1":
+            try:
+                from CORE.engines.deep_scanner import run_deep_scan
+
+                _deep = run_deep_scan(str(self.target_dir))
+                _existing_keys = {
+                    (str(f.get("file", "")), str(f.get("canonical_rule_id", "")), (f.get("line") or 0) // 5)
+                    for f in findings
+                }
+                _deep_added = [
+                    d
+                    for d in _deep
+                    if (str(d.get("file", "")), str(d.get("canonical_rule_id", "")), (d.get("line") or 0) // 5)
+                    not in _existing_keys
+                ]
+                findings.extend(_deep_added)
+                logger.info(
+                    f"      ✓ Deep AST scan: {len(_deep)} security findings → {len(_deep_added)} new (additive)"
+                )
+            except Exception as _deep_err:
+                logger.warning(f"Deep AST scan skipped: {_deep_err}")
+
         # Step 3b: LLM-augmented additive detection (--llm flag)
         # LLM finds what rules miss; gating holds precision ≥89%.
         # Union lift on RealVuln: +7.4pp recall (held-out: +5.2pp at 89.5% precision).
