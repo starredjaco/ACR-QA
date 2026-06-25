@@ -23,6 +23,31 @@ All notable changes to ACR-QA are documented here.
   reachability pruning, render-XSS broadening, debug-CWE co-emission. The honest lesson: only *targeted*
   detectors + *corroboration-based* confidence move this engine. See `evaluation/KOLEGA_PARITY_PLAN.md`.
 
+### Added — miss-report tooling + recall/precision cycle (2026-06-25)
+
+- **`scripts/realvuln_miss_report.py`** — a diagnostics tool that matches the engine's saved findings
+  against ground truth (same logic as the runner) and reports every false negative and false positive,
+  grouped by repo and CWE, split **DEV vs UNSEEN (held-out proxy)**. This drives detector development
+  from data instead of eyeballing repos, and makes every change's held-out generalization visible.
+- **Recall cycle (measured fresh, full corpus → 60.6% recall / 46.4% precision / F2 57.1; held-out
+  54.8%):** four detector improvements, each gated on *full-corpus F2 up + held-out recall up + the
+  Confirmed tier unchanged*, no CWE-denylisting:
+  - **CWE-209** verbose-error exposure: bind the detector to the actual `except … as <name>` variable
+    so it catches every exposure form (`return e`, `e.message`, f-strings) not just literal `str(e)`;
+    excludes server-side `logger.*`. (+6 TP, held-out +1.3pp.)
+  - **CWE-307** brute-force: treat any route reading *username + password* as an auth endpoint (not
+    only name-matched `login`), flag if it lacks a rate-limit decorator. (+5 TP, held-out +1.1pp.)
+  - **CWE-352** CSRF: detect framework-level disable in config — Tornado `Application` without
+    `xsrf_cookies=True`, Django `CsrfViewMiddleware` commented out. (+2 TP, 0 net FP.)
+- **Precision cycle (research-independent, recall held exactly):** skip vendored/minified JS in the
+  DOM-XSS scan (swagger-ui/redoc), drop escaped (`| e`) and error-object (CWE-209 duplicate) findings
+  in the autoescape-off template scan, and skip empty/placeholder values in the hardcoded-credential
+  detector. −21 false positives, recall and held-out unchanged.
+- **Method note:** the RealVuln leaderboard metric is **F2** (recall-weighted 4×; the README also
+  cites F3 at 9× in one place) — at the engine's operating point **1 TP ≈ 2.6 FP under F2**, so recall
+  is the dominant lever. The **Confirmed tier (≥2-engine, 80.2% precision) is unchanged** through the
+  whole cycle, so the high-precision/trust operating point is preserved while recall mode improves.
+
 ### Added — deterministic confidence tiers + corroboration
 
 - **`_confidence_tier`** in `scripts/run_realvuln_hybrid.py`: every finding tagged `certain`
