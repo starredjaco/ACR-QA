@@ -38,6 +38,7 @@ import ast
 import os
 import re
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 # ═══════════════════════════════════════════════════════════════
@@ -2722,6 +2723,28 @@ def _is_noise_path(rel: str) -> bool:
     return bool(_NOISE_PATH_RE.search(rel))
 
 
+# ── Detector registries ────────────────────────────────────────────────────────
+# The two extension points for the AST engine. To add a detector, write a function with the
+# matching signature and append it here — no other code changes. To disable one, remove it from
+# the list. (Order is preserved; output is deduplicated downstream, so order is cosmetic.)
+#
+# Per-file detectors: called once per non-noise Python file, take a single file Path.
+_PY_FILE_DETECTORS: list[Callable[[Path], list[dict]]] = [
+    _scan_redos,  # CWE-1333 catastrophic regex (ReDoS)
+    _scan_extended_ssrf,  # CWE-918 urllib/httpx/aiohttp SSRF
+    _scan_param_taint_ssrf,  # CWE-918 request-param → outbound request
+    _scan_from_string_ssti,  # CWE-1336 render_template_string SSTI
+    _scan_fastapi_routes,  # CWE-306 unauthenticated FastAPI/aiohttp routes
+    _scan_autoescape_false,  # CWE-79 Jinja2 autoescape=False config
+    _scan_commented_security,  # CWE-1188 security control commented out
+]
+# Repo-level detectors: called once per repo, take the repo root Path.
+_REPO_DETECTORS: list[Callable[[Path], list[dict]]] = [
+    _scan_session_csrf,  # CWE-352 authed state-changing route without CSRF
+    _scan_csrf_config,  # CWE-352 framework CSRF disabled in config
+]
+
+
 def scan_repo(repo_path: str) -> list[dict]:  # type: ignore[no-redef]
     raw = _original_scan_repo(repo_path)
     repo = Path(repo_path)
@@ -2730,18 +2753,11 @@ def scan_repo(repo_path: str) -> list[dict]:  # type: ignore[no-redef]
     for p in repo.rglob("*.py"):
         if any(x in str(p) for x in (".git", "__pycache__", ".venv", "venv")):
             continue
-        extra.extend(_scan_redos(p))
-        extra.extend(_scan_extended_ssrf(p))
-        extra.extend(_scan_param_taint_ssrf(p))
-        extra.extend(_scan_from_string_ssti(p))
-        extra.extend(_scan_fastapi_routes(p))
-        extra.extend(_scan_autoescape_false(p))
-        extra.extend(_scan_commented_security(p))
+        for detector in _PY_FILE_DETECTORS:
+            extra.extend(detector(p))
 
-    # Repo-level: authenticated state-changing routes without CSRF (only if no global CSRF).
-    extra.extend(_scan_session_csrf(repo))
-    # Repo-level: framework CSRF protection disabled in config (Tornado xsrf, Django middleware).
-    extra.extend(_scan_csrf_config(repo))
+    for detector in _REPO_DETECTORS:
+        extra.extend(detector(repo))
     # NOTE: an inter-procedural "wrapper-peel" taint pass (_scan_interprocedural_taint, below) was
     # implemented + measured, then disabled: in the COMBINED pipeline Semgrep already covers the
     # taint-flow injection cases (SQL/cmd/path), so it only added duplicate-line false positives
