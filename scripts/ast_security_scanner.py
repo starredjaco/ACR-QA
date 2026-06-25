@@ -222,6 +222,26 @@ _CRED_ATTR = re.compile(
     r"|SECRET(?!_BALLOT|_VOTE)|_TOKEN\b|TOKEN_\b",
     re.IGNORECASE,
 )
+# A string that is ENTIRELY a single placeholder token (format spec / interpolation / mask) — never
+# a real secret. Deliberately narrow: digit/hex strings are NOT here (they can be real keys).
+_PLACEHOLDER_SECRET_RE = re.compile(
+    r"^(%[sdr]|%\([^)]*\)[sdr]|\{[\w]*\}|\$\{[^}]*\}|<[^>]*>|[*x]{3,})$",
+    re.IGNORECASE,
+)
+
+
+def _is_trivial_secret_literal(value: str) -> bool:
+    """A credential-named var assigned this string is NOT a real hardcoded secret.
+
+    Skips only the unambiguous non-secrets: empty/whitespace strings and values that are entirely a
+    single placeholder token (``%s``, ``{}``, ``${VAR}``, ``****``). Digit/hex strings are kept —
+    they can be real keys. Principled (the value provably isn't a credential), not a value denylist."""
+    s = value.strip()
+    if not s:
+        return True
+    return bool(_PLACEHOLDER_SECRET_RE.match(s))
+
+
 _WEAK_HASH = re.compile(r"^(md5|sha1|sha128)$", re.IGNORECASE)
 _HASH_MODULE = re.compile(r"^(md5|sha1|hashlib)$", re.IGNORECASE)
 _REQUEST_SRCS = {"request", "args", "form", "json", "data", "values", "files", "cookies"}
@@ -842,7 +862,11 @@ class _Visitor(ast.NodeVisitor):
             name = _func_name(target) if not isinstance(target, ast.Subscript) else None
             # CWE-798: CRED_NAME = "literal"
             if name and _CRED_ATTR.search(name):
-                if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                if (
+                    isinstance(node.value, ast.Constant)
+                    and isinstance(node.value.value, str)
+                    and not _is_trivial_secret_literal(node.value.value)
+                ):
                     self._add(node.lineno, "CWE-798", f"Hardcoded credential: {name}")
 
             # CWE-798: app.config['SECRET_KEY'] = 'literal'
