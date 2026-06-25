@@ -1485,14 +1485,27 @@ class _Visitor(ast.NodeVisitor):
     # ── Exception handlers ───────────────────────────────────────
 
     def visit_ExceptHandler(self, node: ast.ExceptHandler):
-        _ERR_DETAIL = ("traceback", "format_exc", ".output", "str(e", "str(ex", "repr(e")
+        # Always-detail tokens (no bound name needed): traceback dumps, captured command output.
+        _ERR_DETAIL = ("traceback", "format_exc", "exc_info", ".output")
         _OUT_VARS = ("content", "response", "body", "message", "msg", "output", "result", "data", "resp", "error")
+        # Sinks that emit to the client (NOT logger.* — server-side logging isn't client exposure).
         _OUT_SINKS = ("HttpResponse", "make_response", "render", ".write(", "send", "print(", "jsonify", "Response(")
+        # Bind the actual exception variable (`except X as e`) so we catch every form it's exposed in:
+        # `return e`, `e.args`, `e.message`, f"{e}", str(e), "...".format(e) — not just literal str(e).
+        exc_name = node.name
+
+        def _refs_error_detail(stmt: ast.AST, src: str) -> bool:
+            if any(tok in src for tok in _ERR_DETAIL):
+                return True
+            if exc_name:
+                return any(isinstance(n, ast.Name) and n.id == exc_name for n in ast.walk(stmt))
+            return False
+
         for stmt in ast.walk(node):
             # error detail returned, served, written, printed, or assigned to a response var
             if isinstance(stmt, ast.Return | ast.Assign | ast.AugAssign | ast.Expr):
                 src = ast.unparse(stmt)
-                if not any(e in src for e in _ERR_DETAIL):
+                if not _refs_error_detail(stmt, src):
                     continue
                 reaches_output = (
                     isinstance(stmt, ast.Return)
