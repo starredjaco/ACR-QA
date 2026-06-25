@@ -47,6 +47,15 @@ All notable changes to ACR-QA are documented here.
   cites F3 at 9× in one place) — at the engine's operating point **1 TP ≈ 2.6 FP under F2**, so recall
   is the dominant lever. The **Confirmed tier (≥2-engine, 80.2% precision) is unchanged** through the
   whole cycle, so the high-precision/trust operating point is preserved while recall mode improves.
+- **Fresh held-out validation (2 never-tuned repos):** pinned-SHA clones of **PyGoat** (51.9% recall,
+  up from a prior 48.1% — this cycle's general detectors helped) and **OWASP-Web-Playground** (57.1%),
+  combined **53.3% recall** — consistent with the in-corpus held-out proxy (54.8%), confirming the gains
+  generalize rather than overfit. Precision on these is low (CWE-22 path-traversal over-fires on Django
+  file apps) — a documented limitation left **untuned on purpose** to keep the held-out evidence honest.
+- **Stopping point (honest):** further recall (IDOR/CWE-200/CWE-306) was **deliberately not pursued** —
+  those misses are ~90% in held-out repos, so building detectors for them would require tuning against
+  the held-out set (overfitting). The recall achievable under a strict develop-on-DEV / prove-on-held-out
+  discipline is exhausted; more requires expanding the *development* corpus, not writing more rules.
 
 ### Added — deterministic confidence tiers + corroboration
 
