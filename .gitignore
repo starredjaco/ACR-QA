@@ -174,3 +174,10 @@ video/skills/
 # Gemini AI-generated deck photos + prompts — local only (AI artifact + 41MB bloat)
 docs/GEMINI_PHOTOS/
 docs/GEMINI_IMAGE_PROMPTS.md
+# Internal planning / defense-prep docs — local only (read grandiose/unpolished to recruiters)
+docs/GOD_MODE_V11_PERFECT_TEN_ALL_PERSPECTIVES.md
+docs/archive/GOD_MODE_*.md
+docs/QA_PREP.md
+docs/DEFENSE_QA.md
+docs/PROJECT_DEEP_DIVE.md
+docs/ACTIVE_ROADMAP.md

@@ -69,7 +69,6 @@ docs/sre/            → SLOs and operational runbooks
    ```
 5. **Document before committing** — update ALL of:
    - `docs/CHANGELOG.md` — add a version entry describing what changed and why
-   - `docs/ACTIVE_ROADMAP.md` — mark the task complete if applicable
 6. **Run the pipeline** to verify integration:
    ```bash
    python3 CORE/main.py --target-dir TESTS/samples/comprehensive-issues --limit 3

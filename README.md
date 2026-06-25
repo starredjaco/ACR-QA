@@ -344,7 +344,7 @@ Start at the **[docs index](docs/README.md)**. Highlights:
 | [API Reference](docs/API_REFERENCE.md) | The 52 REST endpoints under `/v1/` |
 | [Policy Engine](docs/POLICY_ENGINE.md) | `.acrqa.yml` full reference |
 | [Pricing & Positioning](docs/business/PRICING_POSITIONING.md) · [Unit Economics](docs/business/UNIT_ECONOMICS.md) | Open-core model + TAM |
-| [Defense Q&A](docs/QA_PREP.md) · [Changelog](docs/CHANGELOG.md) | Rehearsal cards + version history |
+| [Changelog](docs/CHANGELOG.md) | Full version history |
 
 **Architecture Decision Records** ([`docs/adr/`](docs/adr/)): 0001 scope · 0002 multi-tool adapter ·
 0003 RAG over generic LLM · 0004 Groq provider · 0005 Postgres provenance ·

@@ -10,14 +10,12 @@
 
 **Quick nav:** [evaluation/](evaluation/README.md) · [architecture/](architecture/) · [adr/](adr/) ·
 [business/](business/) · [legal/](legal/) · [setup/](setup/) · [sre/](sre/) · [engines/](engines/) ·
-[archive/](archive/) · Defense: [QA_PREP](QA_PREP.md) + [DEFENSE_QA](DEFENSE_QA.md) ·
-Plan: [GOD_MODE_V11](GOD_MODE_V11_PERFECT_TEN_ALL_PERSPECTIVES.md) · [ACTIVE_ROADMAP](ACTIVE_ROADMAP.md)
+[archive/](archive/)
 
 ## 🆕 v5.0.0 Engines + Eval Infrastructure
 
 | Document | Description |
 |----------|-------------|
-| [God Mode v4 Plan (completed)](archive/GOD_MODE_V4_PLAN.md) | All P1–P4 + X1–X5 tracks complete (2026-05-31). Headline: P4 Confirmed Tier 96.4% / 100%. |
 | [IaC Scanner](engines/iac_scanner.md) | 28 canonical rules across Terraform / Kubernetes / Dockerfile · `POST /v1/scans/iac` · A.2 |
 | [Time-Travel Analyzer](engines/time_travel.md) | Bounded `git log -L` history for any finding · `GET /v1/findings/{fid}/history` · A.2 |
 | [Heuristic Risk Predictor](engines/risk_predictor.md) | 0–100 per-file score from 6 transparent features (NOT ML) · `GET /v1/runs/{rid}/risk-map` · A.3 |
@@ -82,7 +80,6 @@ Plan: [GOD_MODE_V11](GOD_MODE_V11_PERFECT_TEN_ALL_PERSPECTIVES.md) · [ACTIVE_RO
 
 | Document | Description |
 |----------|-------------|
-| [Defense Q&A](DEFENSE_QA.md) | Full defense-day Q&A — precision tables, Confirmed Tier, head-to-head numbers, anti-tautology defense |
 | [Defense Deck](DEFENSE_DECK.tex) | 25-slide Beamer metropolis defense slide deck |
 | [Demo Video Script](business/DEMO_VIDEO_SCRIPT.md) | 5-minute structured demo video script with timestamps and voiceover narration |
 | [LaTeX Slides (legacy)](acr_qa_presentation.tex) | Earlier presentation source |
@@ -109,8 +106,6 @@ Plan: [GOD_MODE_V11](GOD_MODE_V11_PERFECT_TEN_ALL_PERSPECTIVES.md) · [ACTIVE_RO
 
 | Document | Description |
 |----------|-------------|
-| [God Mode v11 Plan (active)](GOD_MODE_V11_PERFECT_TEN_ALL_PERSPECTIVES.md) | Dual-scoreboard (thesis + startup) plan. Earlier v4–v10 plans archived under [archive/](archive/). |
-| [Active Roadmap](ACTIVE_ROADMAP.md) | Current execution log. |
 | [Evaluation Integrity Charter](evaluation/INTEGRITY.md) | Pre-registration commitment, scoring rules, skipped-CVE log, adversarial review checklist. |
 
 ## Static UI Dashboard (v5.0.0-beta)
