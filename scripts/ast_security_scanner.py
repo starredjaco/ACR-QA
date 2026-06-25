@@ -2658,6 +2658,56 @@ def _scan_session_csrf(repo: Path) -> list[dict]:
     return findings
 
 
+def _scan_csrf_config(repo: Path) -> list[dict]:
+    """CWE-352: framework-level CSRF protection disabled/absent in configuration.
+
+    Two general, low-false-positive shapes the per-route detector can't see:
+      * Tornado: `tornado.web.Application(...)` without `xsrf_cookies=True` — Tornado's CSRF
+        protection is OFF unless this setting is enabled, so its absence is the vulnerability.
+      * Django: `CsrfViewMiddleware` commented out in a MIDDLEWARE list — an explicit disable.
+    """
+    findings: list[dict] = []
+    pyfiles = [p for p in repo.rglob("*.py") if not any(x in str(p) for x in (".git", "__pycache__", ".venv", "venv"))]
+    for p in pyfiles:
+        try:
+            src = p.read_text(errors="replace")
+            lines = src.splitlines()
+        except Exception:
+            continue
+
+        # Tornado: Application configured without xsrf_cookies.
+        if "tornado.web.Application" in src and "xsrf_cookies" not in src:
+            anchor = next((i + 1 for i, ln in enumerate(lines) if re.search(r"\bsettings\b.*=.*\{", ln)), None)
+            if anchor is None:
+                anchor = next((i + 1 for i, ln in enumerate(lines) if "tornado.web.Application" in ln), 1)
+            findings.append(
+                {
+                    "file": str(p),
+                    "line": anchor,
+                    "cwe": "CWE-352",
+                    "description": "Tornado Application has no xsrf_cookies=True — CSRF protection disabled",
+                }
+            )
+
+        # Django: CsrfViewMiddleware explicitly commented out in a MIDDLEWARE list.
+        if "MIDDLEWARE" in src:
+            commented_csrf = next(
+                (i + 1 for i, ln in enumerate(lines) if "CsrfViewMiddleware" in ln and ln.lstrip().startswith("#")),
+                None,
+            )
+            active_csrf = any("CsrfViewMiddleware" in ln and not ln.lstrip().startswith("#") for ln in lines)
+            if commented_csrf and not active_csrf:
+                findings.append(
+                    {
+                        "file": str(p),
+                        "line": commented_csrf,
+                        "cwe": "CWE-352",
+                        "description": "Django CsrfViewMiddleware is commented out — CSRF protection disabled",
+                    }
+                )
+    return findings
+
+
 # Paths that are test/fixture/migration noise — vulns here are not production findings
 # and crush precision (test files reuse hardcoded creds, dummy SQL, etc.)
 _NOISE_PATH_RE = re.compile(
@@ -2690,6 +2740,8 @@ def scan_repo(repo_path: str) -> list[dict]:  # type: ignore[no-redef]
 
     # Repo-level: authenticated state-changing routes without CSRF (only if no global CSRF).
     extra.extend(_scan_session_csrf(repo))
+    # Repo-level: framework CSRF protection disabled in config (Tornado xsrf, Django middleware).
+    extra.extend(_scan_csrf_config(repo))
     # NOTE: an inter-procedural "wrapper-peel" taint pass (_scan_interprocedural_taint, below) was
     # implemented + measured, then disabled: in the COMBINED pipeline Semgrep already covers the
     # taint-flow injection cases (SQL/cmd/path), so it only added duplicate-line false positives
