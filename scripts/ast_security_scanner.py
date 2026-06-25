@@ -70,6 +70,48 @@ _JS_TAINT_SRC_RE = re.compile(
 _JS_SINK_LITERAL_RE = re.compile(r"""\.(html|innerHTML|outerHTML)\s*[=(]\s*['"`][^'"`]*['"`]\s*[);]?\s*$""")
 
 
+# Well-known vendored JS bundles that ship inside app repos (esp. API-doc UIs). Matched as a
+# substring of the filename; the minification check below generalises to any third-party bundle.
+_VENDOR_JS_NAMES = (
+    "swagger-ui",
+    "redoc",
+    "jquery",
+    "bootstrap",
+    "angular",
+    "react.production",
+    "vue.global",
+    "popper",
+    "lodash",
+    "moment",
+    "d3.",
+    "chart",
+    ".bundle.js",
+    ".standalone.js",
+    "-min.js",
+)
+
+
+def _is_vendor_or_minified_js(path: Path) -> bool:
+    """True for third-party / minified JS that is not the application's own source.
+
+    Vendored bundles carry no ground-truth vulnerability and a regex DOM-XSS scan over minified
+    code only manufactures false positives. Detection is by vendor filename OR by minification
+    (a very long line — the reliable, name-independent signal of generated/bundled code)."""
+    name = path.name.lower()
+    if any(v in name for v in _VENDOR_JS_NAMES):
+        return True
+    try:
+        with path.open(errors="replace") as fh:
+            for idx, line in enumerate(fh):
+                if len(line) > 1000:  # minified: no human writes 1000-char lines
+                    return True
+                if idx > 200:  # only need to sample the head
+                    break
+    except OSError:
+        return False
+    return False
+
+
 def scan_js(path: Path, content: str | None = None) -> list[dict]:
     """Regex DOM-XSS scanner for .js files / inline <script>. Flags a markup sink with a
     dynamic argument when the file also reads a user-controlled source."""
@@ -1837,9 +1879,14 @@ def scan_repo(repo_path: str) -> list[dict]:
             except Exception:
                 pass
 
-    # Standalone JavaScript files — DOM XSS.
+    # Standalone JavaScript files — DOM XSS. Skip vendored/minified third-party bundles
+    # (swagger-ui, redoc, etc.): they are not the app's code, carry no ground-truth vuln, and
+    # a regex DOM-XSS scan over minified source is pure noise. Detected by name AND by
+    # minification (any very long line) so it generalises beyond a hardcoded vendor list.
     for p in repo.rglob("*.js"):
         if any(x in str(p) for x in (".git", "node_modules", ".min.js")):
+            continue
+        if _is_vendor_or_minified_js(p):
             continue
         raw.extend(scan_js(p))
 
