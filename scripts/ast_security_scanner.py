@@ -1767,6 +1767,9 @@ _JINJA_ERROR_RE = re.compile(
     r"\{\{[^}]*\b(error|exception|traceback|exc|err)\b[^}]*\}\}",
     re.IGNORECASE,
 )
+# Same error-object terms, matched against a bare inner expression (no braces) — used to skip the
+# duplicate CWE-79 on a var already reported as CWE-209 information exposure.
+_JINJA_ERR_VAR_RE = re.compile(r"\b(error|exception|traceback|exc|err)\b", re.IGNORECASE)
 
 
 def scan_jinja2_unsafe(path: Path) -> list[dict]:
@@ -1810,6 +1813,15 @@ def scan_jinja2_unsafe(path: Path) -> list[dict]:
             # carry markup regardless of escaping. Skipping these is principled (true for any
             # template), not benchmark-fitting — it removes provably-unexploitable expressions.
             if _JINJA_NONXSS_RE.search(inner):
+                continue
+            # Explicitly escaped (`| e` / `| escape` / `| forceescape`) → not XSS even with global
+            # autoescape off; the filter does the escaping. Principled, not a denylist.
+            if _SAFE_ESCAPE_FILTERS.search(inner):
+                continue
+            # Error/exception objects are an information-exposure issue (CWE-209, already emitted
+            # for this line above), not XSS. Flagging the same token as CWE-79 too is a duplicate
+            # false positive.
+            if _JINJA_ERR_VAR_RE.search(inner):
                 continue
             findings.append(
                 {
