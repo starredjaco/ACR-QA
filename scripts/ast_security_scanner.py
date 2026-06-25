@@ -816,15 +816,23 @@ class _Visitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def _check_defaults(self, node: ast.FunctionDef | ast.AsyncFunctionDef):
-        """CWE-259: function parameter with hardcoded password default."""
+        """CWE-259: function parameter with hardcoded password default.
+
+        Pairs each default with its parameter correctly: positional defaults align to the TAIL of
+        (posonlyargs + args); keyword-only defaults align 1:1 with kwonlyargs (None = no default).
+        The previous version indexed args.defaults into (args + kwonlyargs), which mismatched and
+        raised IndexError on real code using positional-only or keyword-only parameters."""
         args = node.args
-        args.defaults + args.kw_defaults
-        names = [a.arg for a in (args.args + args.kwonlyargs)]
-        offset = len(names) - len(args.defaults)
+        pairs: list[tuple[str, ast.expr | None]] = []
+        positional = args.posonlyargs + args.args
+        pos_offset = len(positional) - len(args.defaults)
         for i, default in enumerate(args.defaults):
+            pairs.append((positional[pos_offset + i].arg, default))
+        for kwarg, kw_default in zip(args.kwonlyargs, args.kw_defaults):
+            pairs.append((kwarg.arg, kw_default))
+        for param_name, default in pairs:
             if default is None:
                 continue
-            param_name = names[offset + i] if (offset + i) < len(names) else ""
             if _PASSWD_ATTR.search(param_name) and isinstance(default, ast.Constant) and isinstance(default.value, str):
                 self._add(node.lineno, "CWE-259", f"Hardcoded default password in param '{param_name}'")
 
@@ -1707,7 +1715,12 @@ def scan_python(path: Path) -> list[dict]:
     except Exception:
         return _scan_python_regex_fallback(path)
     v = _Visitor(source, str(path))
-    v.visit(tree)
+    try:
+        v.visit(tree)
+    except Exception:
+        # A detector bug on one unusual file must never abort the whole scan. Degrade gracefully:
+        # keep whatever findings were collected before the failure (robustness for real-world code).
+        return v.findings
     return v.findings
 
 
