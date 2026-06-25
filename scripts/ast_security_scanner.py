@@ -772,12 +772,25 @@ class _Visitor(ast.NodeVisitor):
         # CWE-259: default arg passwords
         self._check_defaults(node)
 
-        # CWE-307: login route without rate limiting
+        # CWE-307: authentication route without rate limiting / brute-force protection.
+        # Beyond name-matching (login/signin), recognise ANY route whose body reads BOTH a
+        # user-identifier and a password from request input — the route is credential-checking
+        # regardless of its function name (index/do_signup/post/mod_api all do this). This is the
+        # research-backed signal (auth endpoints take username+password) and catches the misses
+        # where the handler isn't literally named "login".
         is_login_route = has_route and any(
-            k in node.name.lower() for k in ("login", "signin", "sign_in", "authenticate")
+            k in node.name.lower() for k in ("login", "signin", "sign_in", "authenticate", "signup", "register")
         )
+        if has_route and not is_login_route:
+            _fsl = func_src.lower()
+            reads_password = "password" in _fsl and any(
+                s in _fsl for s in ("request", "get_argument", "get_json", ".form", ".args", ".data", ".json", "params")
+            )
+            reads_userid = any(u in _fsl for u in ("username", "email", "user_id", "userid", "'user'", '"user"'))
+            if reads_password and reads_userid:
+                is_login_route = True
         if is_login_route and not has_rate:
-            self._add(node.lineno, "CWE-307", f"Login route '{node.name}' has no rate limiting")
+            self._add(node.lineno, "CWE-307", f"Authentication route '{node.name}' has no rate limiting")
 
         # CWE-384: login_user() without session regeneration
         prev_ll, prev_regen = self._login_lines, self._has_regen
