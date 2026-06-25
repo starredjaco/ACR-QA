@@ -134,13 +134,6 @@ Plan: [GOD_MODE_V11](GOD_MODE_V11_PERFECT_TEN_ALL_PERSPECTIVES.md) · [ACTIVE_RO
 | Supply Chain | `supply-chain.html` | OSV CVEs, dep risk, SBOM export |
 | Settings | `settings.html` | Profile, API keys, policy viewer |
 
-## 🤖 AI Agent Onboarding
-
-| Document | Description |
-|----------|-------------|
-| `CLAUDE.md` (repo root) | **Read first.** Commands, architecture, change protocol, critical rules, repo layout, environment. |
-| [CODEBASE_INDEX.md](CODEBASE_INDEX.md) | Auto-generated AST map of public functions/classes. May be stale — regenerate if needed. |
-
 ## 📁 Project Root Docs
 
 | Document | Description |

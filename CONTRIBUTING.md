@@ -70,8 +70,6 @@ docs/sre/            → SLOs and operational runbooks
 5. **Document before committing** — update ALL of:
    - `docs/CHANGELOG.md` — add a version entry describing what changed and why
    - `docs/ACTIVE_ROADMAP.md` — mark the task complete if applicable
-   - `docs/GOD_MODE_V11_PERFECT_TEN_ALL_PERSPECTIVES.md` — update phase status
-   - `CLAUDE.md` if the change affects dev workflow or commit protocol
 6. **Run the pipeline** to verify integration:
    ```bash
    python3 CORE/main.py --target-dir TESTS/samples/comprehensive-issues --limit 3
