@@ -377,9 +377,7 @@ GitHub Actions + GitLab CI · SARIF v2.1.0 / Markdown / JSON export.
 | **Timeline** | October 2025 – June 2026 |
 | **Status** | v5.0.0 · Defense delivered 2026-06-19 · P4 Confirmed Tier 96.4% / F1 98.2% · SLSA L3 · X1–X6 battery complete |
 
-**Remaining (Ahmed-led):** record the demo video ([script](docs/business/DEMO_VIDEO_SCRIPT.md)) →
-YouTube → HN/LinkedIn post ([drafts](docs/business/LAUNCH_POSTS.md), after defense). Shipped: GHCR
-image (Cosign-signed, SLSA L3), Codespaces, Cloudflare Pages demo, κ study materials.
+Distribution: GHCR image (Cosign-signed, SLSA L3) · GitHub Codespaces · Cloudflare Pages demo.
 
 ---
 

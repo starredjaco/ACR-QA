@@ -45,7 +45,7 @@
 | 9 | **Multi-LLM jury** (Groq + Gemini free tiers only) | 3 days | ✅ | Gemini 1.5-flash added to `second_opinion.py`; falls back gracefully |
 | 10 | **Cosign + SLSA L3 + Sigstore Rekor** | 2 days | ✅ | `sign-images.yml` upgraded with `slsa-github-generator` L3 job |
 | 11 | **Self-scan badge** on README | 1 hour | ✅ | `.github/workflows/self-scan.yml` — weekly, commits badge JSON |
-| 12 | **Hacker News post + LinkedIn article + blog** | 1 day | 📋 | `docs/business/LAUNCH_POSTS.md` — copy-paste ready — **Ahmed posts (defense done ✅)** |
+| 12 | **Hacker News post + LinkedIn article + blog** | 1 day | 📋 | drafts ready (local) — **Ahmed posts (defense done ✅)** |
 | 13 | **Differential SAST** — new-only findings vs. last scan | 3–5 days | ✅ | `GET /v1/runs/{id}/diff` + `Database.get_run_by_id` |
 | 14 | **Counterfactual explanations** — "what would fix this?" | 3–5 days | ✅ | `POST /v1/findings/{id}/counterfactual` + `ExplanationEngine.generate_counterfactual()` |
 | 15 | **Kubernetes operator with CRDs** — `ACRQAScan` CRD | 2–3 weeks | ✅ | `deploy/operator/` — kopf controller + RBAC + example CR |
