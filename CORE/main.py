@@ -180,13 +180,13 @@ class AnalysisPipeline:
         logger.info("\n[3/5] Loading normalized findings...")
         findings = self._load_findings()
 
-        # Step 3a: Deep AST security pass (the deterministic engine behind the project's RealVuln
-        # results). OPT-IN via ACRQA_DEEP_SCAN=1. It massively raises security recall (≈1 → dozens of
-        # findings on a vulnerable repo), but the current per-finding engines downstream (taint /
-        # reachability / exploit-verification) were tuned for a handful of security findings and do not
-        # yet scale to the volume this produces — so it is off by default until those run only on the
-        # Confirmed tier. Additive + deduplicated; findings flow through the normal pipeline.
-        if os.environ.get("ACRQA_DEEP_SCAN", "0") == "1":
+        # Step 3a: Deep AST security pass — the deterministic engine behind the project's RealVuln
+        # results, now the product's primary security detector. The legacy tool pass (Ruff/Semgrep/
+        # Bandit) is strong on style/quality but produced almost no real security recall (≈1 finding on
+        # a repo with dozens of real vulns); this closes that gap. Default-on; set ACRQA_DEEP_SCAN=0 to
+        # disable. Additive + deduplicated; downstream exploit-verification is cost-capped (below) so
+        # the extra volume stays within budget.
+        if os.environ.get("ACRQA_DEEP_SCAN", "1") == "1":
             try:
                 from CORE.engines.deep_scanner import run_deep_scan
 
@@ -281,11 +281,23 @@ class AnalysisPipeline:
             )
             findings = findings[:_GLOBAL_CAP]
 
+        # ── Per-finding enrichment, bounded by cost ──────────────────────────────────
+        # Sort by severity so the most important findings get the (capped) expensive analysis first.
+        # Taint + reachability are pure-Python and cheap; exploit-verification spins a Docker sandbox
+        # per HIGH finding (~seconds each) and is the real cost. The legacy tool pass produced a
+        # handful of security findings so this never mattered; the deep AST engine emits dozens, so we
+        # bound each tier. For normal scans (few findings) both caps are no-ops — behavior unchanged.
+        _sev_rank = {"high": 0, "critical": 0, "medium": 1, "low": 2, "info": 3}
+        _ENRICH_CAP = int(os.environ.get("ACRQA_ENRICH_CAP", "150"))  # taint/reachability window
+        _EXPLOIT_CAP = int(os.environ.get("ACRQA_EXPLOIT_CAP", "10"))  # Docker exploit-verify budget
+        findings = sorted(findings, key=lambda f: _sev_rank.get((f.get("severity") or "low").lower(), 3))
+        enrich_set, enrich_rest = findings[:_ENRICH_CAP], findings[_ENRICH_CAP:]
+
         # Taint Analyzer: detect user-input → dangerous-sink flows (Feature Phase-1)
         try:
             from CORE.engines.taint_analyzer import TaintAnalyzer
 
-            findings = TaintAnalyzer().enrich_findings(findings, str(self.target_dir))
+            enrich_set = TaintAnalyzer().enrich_findings(enrich_set, str(self.target_dir))
         except Exception as _ta_err:
             logger.warning(f"Taint analysis skipped: {_ta_err}")
 
@@ -293,25 +305,30 @@ class AnalysisPipeline:
         try:
             from CORE.engines.reachability import CallGraphReachability
 
-            findings = CallGraphReachability().enrich_findings(findings, str(self.target_dir))
-            dead = sum(1 for f in findings if f.get("reachability_status") == "UNREACHABLE")
+            enrich_set = CallGraphReachability().enrich_findings(enrich_set, str(self.target_dir))
+            dead = sum(1 for f in enrich_set if f.get("reachability_status") == "UNREACHABLE")
             if dead:
                 logger.info(f"      - Reachability: {dead} finding(s) in unreachable functions (−20 confidence)")
         except Exception as _reach_err:
             logger.warning(f"Reachability enrichment skipped: {_reach_err}")
 
-        # Proof-of-Exploit: Docker-based DAST verification for HIGH findings (Feature 12)
+        # Proof-of-Exploit: Docker-based DAST verification — capped to the top HIGH findings since each
+        # spins a sandbox. enrich_set is severity-sorted, so the slice is the highest-priority findings.
         try:
             from CORE.engines.exploit_verifier import ExploitVerifier
 
-            findings = ExploitVerifier().enrich_findings(
-                findings, str(self.target_dir), db=self.db, target_repo=self.repo_name
+            exploit_set, exploit_rest = enrich_set[:_EXPLOIT_CAP], enrich_set[_EXPLOIT_CAP:]
+            exploit_set = ExploitVerifier().enrich_findings(
+                exploit_set, str(self.target_dir), db=self.db, target_repo=self.repo_name
             )
-            verified = sum(1 for f in findings if f.get("exploit_tier") == "verified-exploitable")
+            enrich_set = exploit_set + exploit_rest
+            verified = sum(1 for f in enrich_set if f.get("exploit_tier") == "verified-exploitable")
             if verified:
                 logger.info(f"      - Exploit Verifier: {verified} finding(s) confirmed exploitable via Docker PoC")
         except Exception as _ev_err:
             logger.warning(f"Exploit verification skipped: {_ev_err}")
+
+        findings = enrich_set + enrich_rest
 
         # Confirmed Tier: classify each finding against the 4-criterion + reachability gate
         try:

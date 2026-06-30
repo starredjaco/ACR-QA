@@ -10,12 +10,10 @@ This module bridges that gap: it runs the AST engine and converts its findings i
 `CanonicalFinding`-compatible dicts the rest of the pipeline consumes, so the product genuinely
 detects what the benchmark measures.
 
-OPT-IN (ACRQA_DEEP_SCAN=1), off by default. It dramatically raises security recall, but the
-downstream per-finding engines (taint / reachability / exploit-verification) were tuned for a
-handful of security findings and do not yet scale to the dozens this produces — running them on
-every recall-mode finding is slow. The proper fix is to run those expensive engines only on the
-Confirmed (≥2-engine) tier; until then this stays opt-in. The engine output here is correct and
-fast; the limitation is the pipeline that consumes it.
+Default-on (set ACRQA_DEEP_SCAN=0 to disable). It is now the product's primary security detector,
+raising security recall from ≈1 finding to dozens on a vulnerable repo. The downstream
+exploit-verification (Docker, the only costly per-finding step) is cost-capped in main.py
+(ACRQA_EXPLOIT_CAP) so the extra volume stays within a bounded scan budget.
 """
 
 from __future__ import annotations

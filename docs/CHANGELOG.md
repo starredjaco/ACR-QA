@@ -2,6 +2,32 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Unreleased] — 2026-06-30 · Product now ships the deterministic engine (recall reconnect)
+
+### Fixed — the product now actually detects what the benchmark measures
+
+- **Root issue:** the deterministic AST engine behind the RealVuln headline lived only in the
+  benchmark harness; the shipping product (`CORE/`) ran Ruff/Semgrep/Bandit and produced almost no
+  real security recall — **≈1 security finding on dvpwa, where the engine finds ~14 real vulns.** The
+  marketed recall number was effectively disconnected from the product.
+- **`CORE/engines/deep_scanner.py`** (new): runs the deterministic AST engine and normalizes its
+  output to the `CanonicalFinding` contract (CWE → canonical `SECURITY-*` id + severity + category).
+  Wired into `main.py` additively, **default-on** (`ACRQA_DEEP_SCAN=0` to disable). On a copy of
+  flask-xss scanned as a normal repo, the product's security findings rise **4 → 21** and the quality
+  gate correctly fails the merge (14 new high/critical) — i.e. the product now produces the engine's
+  findings instead of mostly lint/style.
+- **Cost-bounded enrichment:** the per-finding engines (taint, reachability, exploit-verification)
+  were tuned for a handful of security findings; exploit-verification spins a Docker sandbox per HIGH
+  finding and did not scale to the new volume (a tiny repo could exceed the scan budget). Taint /
+  reachability now run on a wide window (`ACRQA_ENRICH_CAP`, default 150); Docker exploit-verification
+  is capped to the top-N HIGH findings (`ACRQA_EXPLOIT_CAP`, default 10) and still degrades gracefully
+  when Docker is absent. Runtime is now bounded regardless of repo size; for normal scans (few
+  findings) both caps are no-ops — behavior unchanged.
+- **Robustness:** the engine previously **crashed on real-world code** (IndexError on positional-only/
+  keyword-only parameters in `requests`; one bad file aborted the whole scan). Both fixed; verified
+  byte-identical on the RealVuln corpus.
+- **Validation:** full fast suite **3044 passed**, 88.2% coverage, with the new defaults active.
+
 ## [Unreleased] — 2026-06-24 · RealVuln #1 — deterministic engine out-recalls GPT-5.5
 
 ### Headline — #1 on recall among all external scanners
