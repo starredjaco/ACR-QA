@@ -53,7 +53,10 @@ repos:
     hooks:
       - id: pytest-fast
         name: pytest (smoke test)
-        entry: .venv/bin/pytest
+        # ACRQA_DEEP_SCAN=0 keeps this smoke hook fast now that deep-scan is default-on (it runs the
+        # full pipeline across many orchestrator tests). The deep-scan path is covered by the full
+        # suite and dedicated tests; the smoke hook's job is fast regression-catching on every commit.
+        entry: env ACRQA_DEEP_SCAN=0 .venv/bin/pytest
         language: system
         args: [TESTS/, -q, --tb=short, -x, --no-header, --no-cov,
                -m, "not slow and not exploit and not smoke and not e2e",
