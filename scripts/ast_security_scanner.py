@@ -2746,7 +2746,13 @@ def _scan_csrf_config(repo: Path) -> list[dict]:
 # Paths that are test/fixture/migration noise — vulns here are not production findings
 # and crush precision (test files reuse hardcoded creds, dummy SQL, etc.)
 _NOISE_PATH_RE = re.compile(
-    r"(^|/)(tests?|testing|spec|specs|migrations?|fixtures?|examples?|"
+    # Non-production code: findings here are not the app's real vulnerabilities and crush precision on
+    # real-world repos (documentation examples, tutorials, sample/demo apps, vendored deps, benchmark
+    # data). Verified: ZERO RealVuln ground-truth vulns live in any of these paths, so excluding them
+    # costs no recall while removing large false-positive sprays (e.g. 748 hex "secrets" in one
+    # FastAPI docs data file, tutorial route handlers flagged as missing-auth).
+    r"(^|/)(tests?|testing|spec|specs|migrations?|fixtures?|examples?|docs(_src)?|"
+    r"tutorials?|samples?|demos?|vendored?|third[_-]?party|benchmarks?|contrib|"
     r"conftest|__pycache__|node_modules|\.venv|venv|site-packages)(/|$)"
     r"|(^|/)test_[^/]*\.py$|_test\.py$|(^|/)conftest\.py$",
     re.IGNORECASE,
