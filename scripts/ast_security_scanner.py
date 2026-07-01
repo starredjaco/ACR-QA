@@ -243,6 +243,10 @@ def _is_trivial_secret_literal(value: str) -> bool:
     return bool(_PLACEHOLDER_SECRET_RE.match(s))
 
 
+# Callables that, when returned from __reduce__, execute on unpickle → pickle RCE gadget (CWE-502).
+_PICKLE_GADGET_SINKS = frozenset(
+    {"system", "popen", "exec", "eval", "run", "call", "check_output", "check_call", "getoutput", "Popen", "spawn"}
+)
 _WEAK_HASH = re.compile(r"^(md5|sha1|sha128)$", re.IGNORECASE)
 _HASH_MODULE = re.compile(r"^(md5|sha1|hashlib)$", re.IGNORECASE)
 _REQUEST_SRCS = {"request", "args", "form", "json", "data", "values", "files", "cookies"}
@@ -692,6 +696,26 @@ class _Visitor(ast.NodeVisitor):
     # ── Function / route ─────────────────────────────────────────
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
+        # CWE-502: pickle RCE gadget — a __reduce__/__reduce_ex__ that returns a dangerous callable
+        # (os.system, subprocess, eval, exec, ...). Whatever it returns is executed when the object is
+        # unpickled, so this is the textbook malicious-class deserialization pattern. General, low-FP:
+        # a legitimate __reduce__ returns a constructor + state, never os.system.
+        if node.name in ("__reduce__", "__reduce_ex__"):
+            for _n in ast.walk(node):
+                if isinstance(_n, ast.Return) and _n.value is not None:
+                    _callee = (
+                        _n.value.elts[0]
+                        if isinstance(_n.value, ast.Tuple) and _n.value.elts
+                        else _n.value
+                    )
+                    if isinstance(_callee, ast.Name | ast.Attribute) and _func_name(_callee) in _PICKLE_GADGET_SINKS:
+                        self._add(
+                            _n.lineno,
+                            "CWE-502",
+                            f"Pickle RCE gadget: __reduce__ returns {_func_name(_callee)}() (runs on unpickle)",
+                        )
+                        break
+
         dec_names = _decorator_names(node)
         has_route = any(_is_route_decorator(d) for d in node.decorator_list)
         # Django/other request handlers don't use @route — they're registered in urls.py and take
