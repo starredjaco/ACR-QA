@@ -111,7 +111,12 @@ test.describe("Command palette", () => {
     await mockAuth(page);
     await page.route("/v1/**", (route) => route.fulfill({ json: { runs: [] } }));
     await page.goto("/");
+    // Wait for the authed app shell to hydrate before the keypress — otherwise Ctrl+K can fire
+    // before the global handler is attached and the palette never opens (flaky in CI, failed all
+    // retries here while the sibling open/close tests passed).
+    await expect(page.getByRole("navigation")).toBeVisible();
     await page.keyboard.press("Control+k");
+    await expect(page.getByPlaceholder("Type a command…")).toBeVisible();
     await page.getByPlaceholder("Type a command…").fill("Supply");
     await expect(page.getByText("Go to Supply Chain")).toBeVisible();
   });
