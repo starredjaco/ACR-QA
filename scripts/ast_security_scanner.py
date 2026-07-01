@@ -1183,7 +1183,15 @@ class _Visitor(ast.NodeVisitor):
 
         # CWE-94: eval/exec/compile/execfile with a non-constant first argument.
         if fn in ("eval", "exec", "compile", "execfile") and node.args:
-            if not isinstance(node.args[0], ast.Constant):
+            # `re.compile` / `regex.compile` is regex compilation, NOT code execution — a common
+            # false positive. Only the builtin compile() is a CWE-94 sink; skip module `.compile`.
+            is_regex_compile = (
+                fn == "compile"
+                and isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id in ("re", "regex", "regexp")
+            )
+            if not is_regex_compile and not isinstance(node.args[0], ast.Constant):
                 self._add(node.lineno, "CWE-94", f"{fn}() with dynamic (user-controlled?) argument")
 
         # CWE-601: redirect / HttpResponseRedirect with user-controlled URL
@@ -1827,6 +1835,16 @@ _JINJA_BUILTINS = frozenset(
     }
 )
 # Error/exception objects in templates — CWE-209
+# HTTP status code / reason on an error object — not sensitive (shown on every 404 page).
+_ERROR_STATUS_RE = re.compile(
+    r"\b(error|err|exc|exception)\.(status|code|status_code|reason|http_code|status_text)\b",
+    re.IGNORECASE,
+)
+# Error attributes that DO leak internals — if present, still flag even alongside a status field.
+_ERROR_DANGEROUS_RE = re.compile(
+    r"\b(traceback|__dict__|args|message|msg|stack|format_exc|detail|repr|str)\b",
+    re.IGNORECASE,
+)
 _JINJA_ERROR_RE = re.compile(
     r"\{\{[^}]*\b(error|exception|traceback|exc|err)\b[^}]*\}\}",
     re.IGNORECASE,
@@ -1848,7 +1866,10 @@ def scan_jinja2_unsafe(path: Path) -> list[dict]:
 
     for i, line in enumerate(lines, 1):
         # CWE-209: {{ error.__dict__ }} or {{ exception.* }}
-        if _JINJA_ERROR_RE.search(line):
+        # An HTTP status code / reason (error.status, error.code, error.status_code) is not sensitive
+        # information — it's shown on every 404 page. Only flag error objects that can leak internals.
+        _status_only = _ERROR_STATUS_RE.search(line) and not _ERROR_DANGEROUS_RE.search(line)
+        if _JINJA_ERROR_RE.search(line) and not _status_only:
             findings.append(
                 {
                     "file": str(path),
