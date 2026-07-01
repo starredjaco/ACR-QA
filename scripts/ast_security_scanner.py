@@ -703,11 +703,7 @@ class _Visitor(ast.NodeVisitor):
         if node.name in ("__reduce__", "__reduce_ex__"):
             for _n in ast.walk(node):
                 if isinstance(_n, ast.Return) and _n.value is not None:
-                    _callee = (
-                        _n.value.elts[0]
-                        if isinstance(_n.value, ast.Tuple) and _n.value.elts
-                        else _n.value
-                    )
+                    _callee = _n.value.elts[0] if isinstance(_n.value, ast.Tuple) and _n.value.elts else _n.value
                     if isinstance(_callee, ast.Name | ast.Attribute) and _func_name(_callee) in _PICKLE_GADGET_SINKS:
                         self._add(
                             _n.lineno,

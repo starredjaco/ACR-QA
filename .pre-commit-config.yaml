@@ -26,7 +26,7 @@ repos:
         entry: .venv/bin/ruff format --check
         language: system
         types: [python]
-        args: [CORE/, DATABASE/, FRONTEND/, TESTS/]
+        args: [CORE/, DATABASE/, FRONTEND/, TESTS/, scripts/]
         pass_filenames: false
 
       - id: ruff-lint
@@ -34,7 +34,7 @@ repos:
         entry: .venv/bin/ruff check
         language: system
         types: [python]
-        args: [CORE/, DATABASE/, FRONTEND/, TESTS/]
+        args: [CORE/, DATABASE/, FRONTEND/, TESTS/, scripts/]
         pass_filenames: false
 
   # mypy — type checking on CORE/ only (where we have annotations)
