@@ -900,6 +900,20 @@ class _Visitor(ast.NodeVisitor):
                 if isinstance(key, ast.Constant) and "X-XSS-Protection" in str(key.value):
                     if isinstance(node.value, ast.Constant) and node.value.value in (0, "0"):
                         self._add(node.lineno, "CWE-16", "X-XSS-Protection header disabled (set to 0)")
+
+        # CWE-295: TLS verification disabled on an ssl.SSLContext — `ctx.verify_mode = ssl.CERT_NONE`
+        # or `ctx.check_hostname = False`. Textbook, unambiguous (these attributes exist only to
+        # weaken verification), and missed by the verify=False call check above.
+        for target in node.targets:
+            if isinstance(target, ast.Attribute):
+                if (
+                    target.attr == "check_hostname"
+                    and isinstance(node.value, ast.Constant)
+                    and node.value.value is False
+                ):
+                    self._add(node.lineno, "CWE-295", "TLS hostname verification disabled (check_hostname = False)")
+                if target.attr == "verify_mode" and "CERT_NONE" in ast.unparse(node.value):
+                    self._add(node.lineno, "CWE-295", "TLS certificate verification disabled (verify_mode = CERT_NONE)")
         for target in node.targets:
             name = _func_name(target) if not isinstance(target, ast.Subscript) else None
             # CWE-798: CRED_NAME = "literal"
@@ -1364,6 +1378,11 @@ class _Visitor(ast.NodeVisitor):
                 )
             elif obj_name6 != "re" and node.args and _is_from_request(node.args[0]):
                 self._add(node.lineno, "CWE-400", "ReDoS: compiled pattern.match() with user-controlled input")
+
+        # CWE-295: ssl._create_unverified_context() — explicitly returns a context that skips
+        # certificate verification (the documented "unverified" escape hatch).
+        if _func_name(node.func) == "_create_unverified_context":
+            self._add(node.lineno, "CWE-295", "TLS verification disabled (ssl._create_unverified_context)")
 
         # CWE-295: requests.get with verify=False
         for kw in node.keywords:
