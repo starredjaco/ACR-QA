@@ -44,4 +44,4 @@ Run ACR-QA security scans, see findings as inline diagnostics, and get AI-genera
 
 ## License
 
-MIT — see [LICENSE](../LICENSE)
+PolyForm Noncommercial 1.0.0 — see [LICENSE](../LICENSE). Noncommercial use only.

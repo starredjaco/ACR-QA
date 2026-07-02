@@ -2,6 +2,15 @@
 
 All notable changes to ACR-QA are documented here.
 
+## [Unreleased] — 2026-07-02 · License change: MIT → PolyForm Noncommercial 1.0.0
+
+- **Relicensed from MIT to PolyForm Noncommercial 1.0.0** (source-available). The code remains fully
+  viewable, forkable, and usable for any **noncommercial** purpose (personal, research, education,
+  non-profit, government); **commercial use now requires a separate license from the author**, who
+  retains all commercial rights. Liability is still disclaimed (as-is, no warranty). Updated `LICENSE`,
+  README badge + License section, `pyproject.toml` (+ `acrqa-mcp`, vscode-extension) metadata, and the
+  competitive-baseline table. Note: PolyForm Noncommercial is *source-available*, not OSI "open source".
+
 ## [Unreleased] — 2026-06-30 · Product now ships the deterministic engine (recall reconnect)
 
 ### Fixed — the product now actually detects what the benchmark measures

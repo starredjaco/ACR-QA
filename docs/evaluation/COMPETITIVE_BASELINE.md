@@ -28,7 +28,7 @@
 | **MCP server (IDE integration)** | ✅ (Claude Code, Cursor, Continue) | ✅ (IDE plugin) | ✗ | ✗ | ✗ | ✅ |
 | **Interactive demo notebooks** | ✅ (5 Marimo notebooks) | ✗ | ✗ | ✗ | ✗ | ✗ |
 | **React dashboard (SSE, live progress)** | ✅ (shadcn/ui, Vite 5) | SaaS UI | SaaS UI | SaaS UI | ✗ | SaaS UI |
-| **Open source** | ✅ (MIT) | ✗ (SaaS) | ✅ (BSL) | ✗ (SaaS) | ✅ (Apache 2.0) | ✅ (LGPL) |
+| **Source-available** | ✅ (PolyForm Noncommercial) | ✗ (SaaS) | ✅ (BSL) | ✗ (SaaS) | ✅ (Apache 2.0) | ✅ (LGPL) |
 | **Self-hosted / on-premise** | ✅ | paid tier | ✅ | paid tier | ✅ | ✅ |
 | **Free for students / OSS** | ✅ | ✅ (limited) | ✅ | ✅ (public repos) | ✅ | ✅ |
 
