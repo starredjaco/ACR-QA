@@ -44,4 +44,4 @@ Run ACR-QA security scans, see findings as inline diagnostics, and get AI-genera
 
 ## License
 
-PolyForm Noncommercial 1.0.0 — see [LICENSE](../LICENSE). Noncommercial use only.
+GNU AGPL-3.0 — see [LICENSE](../LICENSE). Commercial licenses available from the author.

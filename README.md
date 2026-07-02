@@ -16,7 +16,7 @@
 [![Self-Scan](https://img.shields.io/badge/Self--Scan-0%20critical-22c55e)](./.github/workflows/self-scan.yml)
 [![Tests](https://img.shields.io/badge/Tests-3147-22c55e?logo=pytest&logoColor=white)](./TESTS/)
 [![Coverage](https://img.shields.io/badge/CORE%20coverage-88%25-22c55e)](./TESTS/)
-[![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-orange.svg)](LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-3776ab?logo=python&logoColor=white)](https://www.python.org/)
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/ahmed-145/ACR-QA?quickstart=1)
@@ -383,9 +383,16 @@ Distribution: GHCR image (Cosign-signed, SLSA L3) · GitHub Codespaces · Cloudf
 
 ## License
 
-**PolyForm Noncommercial 1.0.0** — see [LICENSE](LICENSE). Free to use, modify, and share for any
-**noncommercial** purpose (personal, research, education, non-profit, government). **Commercial use is
-not permitted** without a separate license from the author. Provided as-is, without warranty.
+**GNU AGPL-3.0** — see [LICENSE](LICENSE). Copyright (c) 2025-2026 Ahmed Mahmoud Abbas.
+
+Free and open source: use, study, modify, and share it. The AGPL's condition is **reciprocity** — if
+you distribute it or run a modified version as a network service, you must make your **full source
+available under the AGPL** too. This keeps every derivative open and prevents anyone from taking the
+project closed-source.
+
+**Dual licensing:** the author holds the copyright and offers **commercial licenses** for anyone who
+wants to use ACR-QA in a proprietary/closed-source product or service without the AGPL's source-sharing
+obligation. Contact ahmedabbass871@gmail.com. Provided as-is, without warranty.
 
 <div align="center">
 

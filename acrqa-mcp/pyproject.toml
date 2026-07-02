@@ -7,7 +7,7 @@ name = "acrqa-mcp"
 version = "1.0.0"
 description = "ACR-QA MCP Server — pre-PR security analysis for Claude Code, Cursor, and Continue"
 readme = "README.md"
-license = { text = "PolyForm-Noncommercial-1.0.0" }
+license = { text = "AGPL-3.0-or-later" }
 requires-python = ">=3.11"
 dependencies = [
     "mcp[cli]>=1.0.0",

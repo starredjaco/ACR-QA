@@ -7,13 +7,13 @@ name = "acrqa"
 version = "5.0.0rc2"
 description = "AI-powered code review with RAG-grounded explanations, 10 static analysers, and ECDSA-signed provenance"
 readme = "README.md"
-license = { text = "PolyForm-Noncommercial-1.0.0" }
+license = { text = "AGPL-3.0-or-later" }
 authors = [{ name = "Ahmed Mahmoud Abbas", email = "ahmedabbass871@gmail.com" }]
 keywords = ["code-review", "static-analysis", "security", "SAST", "AI", "RAG"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: Other/Proprietary License",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
