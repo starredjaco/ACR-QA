@@ -607,6 +607,9 @@ class _Visitor(ast.NodeVisitor):
         self._scope_stack: list[str] = []
         # Intra-procedural taint: set of tainted var names for the function being visited.
         self._taint: set[str] = set()
+        # Variables assigned a dynamically-built string (f-string / concat / .format) — used to flag
+        # injection when such a string later reaches a query sink (e.g. XPath) via a variable.
+        self._dyn_str_vars: set[str] = set()
 
     def _add(self, line: int, cwe: str, desc: str):
         self.findings.append({"file": self.path, "line": line, "cwe": cwe, "description": desc})
@@ -893,6 +896,15 @@ class _Visitor(ast.NodeVisitor):
         self.generic_visit(node)
 
     def visit_Assign(self, node: ast.Assign):
+        # Track vars assigned a dynamically-built string (for XPath/query-injection via a variable).
+        _v = node.value
+        if isinstance(_v, ast.JoinedStr | ast.BinOp) or (
+            isinstance(_v, ast.Call) and isinstance(_v.func, ast.Attribute) and _v.func.attr == "format"
+        ):
+            for _t in node.targets:
+                if isinstance(_t, ast.Name):
+                    self._dyn_str_vars.add(_t.id)
+
         # CWE-16: response.headers['X-XSS-Protection'] = 0
         for target in node.targets:
             if isinstance(target, ast.Subscript):
@@ -1383,6 +1395,20 @@ class _Visitor(ast.NodeVisitor):
         # certificate verification (the documented "unverified" escape hatch).
         if _func_name(node.func) == "_create_unverified_context":
             self._add(node.lineno, "CWE-295", "TLS verification disabled (ssl._create_unverified_context)")
+
+        # CWE-643: XPath injection — a dynamically-built XPath query passed to an XPath evaluator
+        # (lxml/ElementTree `.xpath(...)` or `etree.XPath(...)`). A string constant is safe; an
+        # f-string / concat / .format() argument means user data can alter the query structure.
+        _fn = _func_name(node.func)
+        if _fn in ("xpath", "XPath") and node.args:
+            arg = node.args[0]
+            dynamic = (
+                isinstance(arg, ast.JoinedStr | ast.BinOp)
+                or (isinstance(arg, ast.Call) and isinstance(arg.func, ast.Attribute) and arg.func.attr == "format")
+                or (isinstance(arg, ast.Name) and arg.id in self._dyn_str_vars)
+            )
+            if dynamic:
+                self._add(node.lineno, "CWE-643", "XPath injection: query built from dynamic (user?) input")
 
         # CWE-295: requests.get with verify=False
         for kw in node.keywords:
